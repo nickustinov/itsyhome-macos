@@ -1,0 +1,608 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 54;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0189B807373567481D495882 /* SceneMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3AD56C9EA919B09E7896B55 /* SceneMenuItem.swift */; };
+		08D8F3C60170681EF3187BCE /* ThermostatMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86C440D0DF207C3DF9F3A5AD /* ThermostatMenuItem.swift */; };
+		0AE9FFB43AE2BAEE112BEE83 /* HomeKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 748347D84F0BDF92DA4DE1E4 /* HomeKit.framework */; };
+		0C50A9F7E4B39D3073FCB0C2 /* BridgeProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88919649EAF34363518DE9FF /* BridgeProtocols.swift */; };
+		12B4142969F3A501717A290A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 71AB516B350323CC9A1DAEE4 /* Assets.xcassets */; };
+		14F0AEFAB30B89C65383EA67 /* macOSBridge.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 5735B31C003BD03DE4B28206 /* macOSBridge.bundle */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		1F371D887A255246B1D0476A /* ContactSensorMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97294F841A6CCBC4B68DB7E2 /* ContactSensorMenuItem.swift */; };
+		213B0C0375DDBDB66B76CDB2 /* SensorMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64DA790B8C69170774D51C97 /* SensorMenuItem.swift */; };
+		259E77A4CA92FB96D11ECD4C /* GarageDoorMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0F3944EC8821BD1947AA8C /* GarageDoorMenuItem.swift */; };
+		280C74C7265950C9756B365E /* MacOSController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29D500F71D0EA63DEF283D8B /* MacOSController.swift */; };
+		3B59DD36C2400864DCEE2CA3 /* BaseMenuItems.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CFE6ECEB559109472BA360A /* BaseMenuItems.swift */; };
+		4436CFEA7BA3F99DBA1BF890 /* LightMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73072FCFE16311A3C25C1C2C /* LightMenuItem.swift */; };
+		52BED706E1E2183D364BA285 /* BridgeProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88919649EAF34363518DE9FF /* BridgeProtocols.swift */; };
+		54727DEB4A151CC024B9D31E /* ScenesGridMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = B33028C597EEA3DAE92520C3 /* ScenesGridMenuItem.swift */; };
+		646767AF7A71690332C474E0 /* ACMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F7082F795BA2C9AA55C64A0 /* ACMenuItem.swift */; };
+		72D644C7C4F59228F3E8FB56 /* FavouritesWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4455528F37160E3FA051F7B3 /* FavouritesWindowController.swift */; };
+		806CCEC2325035CD0F9D0690 /* LockMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4374C26148C6FEAAFD207413 /* LockMenuItem.swift */; };
+		80BA4CBB1ADDA67E5A9ABB5A /* FanMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE776817A51695FBA936B1 /* FanMenuItem.swift */; };
+		89A0591720D0B4F0527FA985 /* FavouritesSectionHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = F37D58E82DEF89116DBA8936 /* FavouritesSectionHeader.swift */; };
+		98F783AA77C8DA2CF5D5A923 /* ModernSlider.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA517D9CAF4A470166D8C402 /* ModernSlider.swift */; };
+		A453BEC6F07575A955C9EF4E /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10754E8AB01F87A12A293A7 /* SceneDelegate.swift */; };
+		A5BA2A1B45F8FAAEB59ABB6C /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A88562EA2E11D2E4E9370E8 /* AppDelegate.swift */; };
+		AE2684040DE50AEBB0A3A844 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A554C4D26C15417928E429D4 /* Assets.xcassets */; };
+		CA8E1F973147B8CE2E58FA52 /* BlindMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CDA7864F1CCF19AD70E1F96 /* BlindMenuItem.swift */; };
+		CAFADC7AC3708C1CF63E3E15 /* SwitchMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51B74BF9E1E02D2CF34C9F37 /* SwitchMenuItem.swift */; };
+		CD6AE61B7DE19AA5DCD88280 /* ToggleSwitch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CD9AB0F2E79886D06C197E2 /* ToggleSwitch.swift */; };
+		D2096D71A418CA85F0ECD074 /* PreferencesManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC234CA03045239CB9D178E6 /* PreferencesManager.swift */; };
+		DB962F06C77A87E8D2AAA55E /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 181D73D7B6680B4F8CD37D4E /* DesignSystem.swift */; };
+		F0D475122112E46686ADF3C1 /* SensorSummaryMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 117549B5BED7ADDFB473C53C /* SensorSummaryMenuItem.swift */; };
+		F2A340D41E3B57E9F7FEE940 /* HomeKitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81F296FBD051BAC5B51F5322 /* HomeKitManager.swift */; };
+		FC8D776A1F8F0E75A5D9222E /* FavouritesRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05CB381453EB6F2A71F1382F /* FavouritesRowView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		1DADDE026B47226626CC7354 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B4A588E4EFB6287F5D24BFA7 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = CC47AD255BAA082E886DB587;
+			remoteInfo = macOSBridge;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		05CB381453EB6F2A71F1382F /* FavouritesRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavouritesRowView.swift; sourceTree = "<group>"; };
+		117549B5BED7ADDFB473C53C /* SensorSummaryMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorSummaryMenuItem.swift; sourceTree = "<group>"; };
+		181D73D7B6680B4F8CD37D4E /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
+		29D500F71D0EA63DEF283D8B /* MacOSController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacOSController.swift; sourceTree = "<group>"; };
+		3F7082F795BA2C9AA55C64A0 /* ACMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ACMenuItem.swift; sourceTree = "<group>"; };
+		4374C26148C6FEAAFD207413 /* LockMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockMenuItem.swift; sourceTree = "<group>"; };
+		4455528F37160E3FA051F7B3 /* FavouritesWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavouritesWindowController.swift; sourceTree = "<group>"; };
+		51B74BF9E1E02D2CF34C9F37 /* SwitchMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwitchMenuItem.swift; sourceTree = "<group>"; };
+		5735B31C003BD03DE4B28206 /* macOSBridge.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = macOSBridge.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
+		64DA790B8C69170774D51C97 /* SensorMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorMenuItem.swift; sourceTree = "<group>"; };
+		6CFE6ECEB559109472BA360A /* BaseMenuItems.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaseMenuItems.swift; sourceTree = "<group>"; };
+		71AB516B350323CC9A1DAEE4 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		73072FCFE16311A3C25C1C2C /* LightMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LightMenuItem.swift; sourceTree = "<group>"; };
+		748347D84F0BDF92DA4DE1E4 /* HomeKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = HomeKit.framework; path = System/Library/Frameworks/HomeKit.framework; sourceTree = SDKROOT; };
+		81F296FBD051BAC5B51F5322 /* HomeKitManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeKitManager.swift; sourceTree = "<group>"; };
+		86C440D0DF207C3DF9F3A5AD /* ThermostatMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThermostatMenuItem.swift; sourceTree = "<group>"; };
+		874AC367AE516CA50259C5B9 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		88919649EAF34363518DE9FF /* BridgeProtocols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BridgeProtocols.swift; sourceTree = "<group>"; };
+		8A88562EA2E11D2E4E9370E8 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		97294F841A6CCBC4B68DB7E2 /* ContactSensorMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactSensorMenuItem.swift; sourceTree = "<group>"; };
+		9CD9AB0F2E79886D06C197E2 /* ToggleSwitch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToggleSwitch.swift; sourceTree = "<group>"; };
+		9CDA7864F1CCF19AD70E1F96 /* BlindMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlindMenuItem.swift; sourceTree = "<group>"; };
+		A3AD56C9EA919B09E7896B55 /* SceneMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneMenuItem.swift; sourceTree = "<group>"; };
+		A554C4D26C15417928E429D4 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		AB0F3944EC8821BD1947AA8C /* GarageDoorMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GarageDoorMenuItem.swift; sourceTree = "<group>"; };
+		B10754E8AB01F87A12A293A7 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
+		B33028C597EEA3DAE92520C3 /* ScenesGridMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScenesGridMenuItem.swift; sourceTree = "<group>"; };
+		D0E47D2FA39B625CC3FA0E66 /* Itsyhome.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Itsyhome.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		DC234CA03045239CB9D178E6 /* PreferencesManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesManager.swift; sourceTree = "<group>"; };
+		EA517D9CAF4A470166D8C402 /* ModernSlider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModernSlider.swift; sourceTree = "<group>"; };
+		F37D58E82DEF89116DBA8936 /* FavouritesSectionHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavouritesSectionHeader.swift; sourceTree = "<group>"; };
+		F3AE776817A51695FBA936B1 /* FanMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FanMenuItem.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		06F71AD8CB1FE7F7950156E6 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0AE9FFB43AE2BAEE112BEE83 /* HomeKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		07C8C6811E7C4B5835285794 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				88919649EAF34363518DE9FF /* BridgeProtocols.swift */,
+			);
+			name = Shared;
+			path = Itsyhome/Shared;
+			sourceTree = "<group>";
+		};
+		124AEB36C1DA7177B3AE39CE /* macOSBridge */ = {
+			isa = PBXGroup;
+			children = (
+				A554C4D26C15417928E429D4 /* Assets.xcassets */,
+				874AC367AE516CA50259C5B9 /* Info.plist */,
+				29D500F71D0EA63DEF283D8B /* MacOSController.swift */,
+				D2258862CCE787F231C5D76E /* DesignSystem */,
+				F993AEE95F23CC68310DE85E /* MenuItems */,
+				9956D260C6400CA53D1F56A3 /* Settings */,
+			);
+			path = macOSBridge;
+			sourceTree = "<group>";
+		};
+		2AAE444238D06D49873AE95B /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				D0E47D2FA39B625CC3FA0E66 /* Itsyhome.app */,
+				5735B31C003BD03DE4B28206 /* macOSBridge.bundle */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		4F80545076F8F58948E76D77 /* iOS */ = {
+			isa = PBXGroup;
+			children = (
+				8A88562EA2E11D2E4E9370E8 /* AppDelegate.swift */,
+				81F296FBD051BAC5B51F5322 /* HomeKitManager.swift */,
+				B10754E8AB01F87A12A293A7 /* SceneDelegate.swift */,
+			);
+			name = iOS;
+			path = Itsyhome/iOS;
+			sourceTree = "<group>";
+		};
+		78B41F82784BDCAEC891225C /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				748347D84F0BDF92DA4DE1E4 /* HomeKit.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		9956D260C6400CA53D1F56A3 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				05CB381453EB6F2A71F1382F /* FavouritesRowView.swift */,
+				F37D58E82DEF89116DBA8936 /* FavouritesSectionHeader.swift */,
+				4455528F37160E3FA051F7B3 /* FavouritesWindowController.swift */,
+				DC234CA03045239CB9D178E6 /* PreferencesManager.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		B62472E00096185FF074E4AD /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				71AB516B350323CC9A1DAEE4 /* Assets.xcassets */,
+			);
+			name = Resources;
+			path = Itsyhome/Resources;
+			sourceTree = "<group>";
+		};
+		D2258862CCE787F231C5D76E /* DesignSystem */ = {
+			isa = PBXGroup;
+			children = (
+				181D73D7B6680B4F8CD37D4E /* DesignSystem.swift */,
+				EA517D9CAF4A470166D8C402 /* ModernSlider.swift */,
+				9CD9AB0F2E79886D06C197E2 /* ToggleSwitch.swift */,
+			);
+			path = DesignSystem;
+			sourceTree = "<group>";
+		};
+		E4D0AC95AB41872138D6349D = {
+			isa = PBXGroup;
+			children = (
+				4F80545076F8F58948E76D77 /* iOS */,
+				124AEB36C1DA7177B3AE39CE /* macOSBridge */,
+				B62472E00096185FF074E4AD /* Resources */,
+				07C8C6811E7C4B5835285794 /* Shared */,
+				78B41F82784BDCAEC891225C /* Frameworks */,
+				2AAE444238D06D49873AE95B /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		F993AEE95F23CC68310DE85E /* MenuItems */ = {
+			isa = PBXGroup;
+			children = (
+				3F7082F795BA2C9AA55C64A0 /* ACMenuItem.swift */,
+				6CFE6ECEB559109472BA360A /* BaseMenuItems.swift */,
+				9CDA7864F1CCF19AD70E1F96 /* BlindMenuItem.swift */,
+				97294F841A6CCBC4B68DB7E2 /* ContactSensorMenuItem.swift */,
+				F3AE776817A51695FBA936B1 /* FanMenuItem.swift */,
+				AB0F3944EC8821BD1947AA8C /* GarageDoorMenuItem.swift */,
+				73072FCFE16311A3C25C1C2C /* LightMenuItem.swift */,
+				4374C26148C6FEAAFD207413 /* LockMenuItem.swift */,
+				A3AD56C9EA919B09E7896B55 /* SceneMenuItem.swift */,
+				B33028C597EEA3DAE92520C3 /* ScenesGridMenuItem.swift */,
+				64DA790B8C69170774D51C97 /* SensorMenuItem.swift */,
+				117549B5BED7ADDFB473C53C /* SensorSummaryMenuItem.swift */,
+				51B74BF9E1E02D2CF34C9F37 /* SwitchMenuItem.swift */,
+				86C440D0DF207C3DF9F3A5AD /* ThermostatMenuItem.swift */,
+			);
+			path = MenuItems;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		9F0BCCA5A8B59CCDC7206C57 /* Itsyhome */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 639F29FB9B7298EE7FCDCE1E /* Build configuration list for PBXNativeTarget "Itsyhome" */;
+			buildPhases = (
+				0279C164A7CBD58B58B8C399 /* Sources */,
+				FB7E356B1CE8EBE2870B22C8 /* Resources */,
+				06F71AD8CB1FE7F7950156E6 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				C2DE6A9F6096DBCE2F0C6506 /* PBXTargetDependency */,
+			);
+			name = Itsyhome;
+			packageProductDependencies = (
+			);
+			productName = Itsyhome;
+			productReference = D0E47D2FA39B625CC3FA0E66 /* Itsyhome.app */;
+			productType = "com.apple.product-type.application";
+		};
+		CC47AD255BAA082E886DB587 /* macOSBridge */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1814D2D94883871751FF6C21 /* Build configuration list for PBXNativeTarget "macOSBridge" */;
+			buildPhases = (
+				9C1DBB788CBAA69529339F62 /* Sources */,
+				8EB327BD875F2791ABCD45F9 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = macOSBridge;
+			packageProductDependencies = (
+			);
+			productName = macOSBridge;
+			productReference = 5735B31C003BD03DE4B28206 /* macOSBridge.bundle */;
+			productType = "com.apple.product-type.bundle";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		B4A588E4EFB6287F5D24BFA7 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					9F0BCCA5A8B59CCDC7206C57 = {
+						DevelopmentTeam = R892A93W42;
+						ProvisioningStyle = Automatic;
+					};
+					CC47AD255BAA082E886DB587 = {
+						DevelopmentTeam = R892A93W42;
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 8489DF86026CFE345AE26F24 /* Build configuration list for PBXProject "Itsyhome" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = E4D0AC95AB41872138D6349D;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 54;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				9F0BCCA5A8B59CCDC7206C57 /* Itsyhome */,
+				CC47AD255BAA082E886DB587 /* macOSBridge */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		8EB327BD875F2791ABCD45F9 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AE2684040DE50AEBB0A3A844 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FB7E356B1CE8EBE2870B22C8 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				12B4142969F3A501717A290A /* Assets.xcassets in Resources */,
+				14F0AEFAB30B89C65383EA67 /* macOSBridge.bundle in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		0279C164A7CBD58B58B8C399 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A5BA2A1B45F8FAAEB59ABB6C /* AppDelegate.swift in Sources */,
+				52BED706E1E2183D364BA285 /* BridgeProtocols.swift in Sources */,
+				F2A340D41E3B57E9F7FEE940 /* HomeKitManager.swift in Sources */,
+				A453BEC6F07575A955C9EF4E /* SceneDelegate.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9C1DBB788CBAA69529339F62 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				646767AF7A71690332C474E0 /* ACMenuItem.swift in Sources */,
+				3B59DD36C2400864DCEE2CA3 /* BaseMenuItems.swift in Sources */,
+				CA8E1F973147B8CE2E58FA52 /* BlindMenuItem.swift in Sources */,
+				0C50A9F7E4B39D3073FCB0C2 /* BridgeProtocols.swift in Sources */,
+				1F371D887A255246B1D0476A /* ContactSensorMenuItem.swift in Sources */,
+				DB962F06C77A87E8D2AAA55E /* DesignSystem.swift in Sources */,
+				80BA4CBB1ADDA67E5A9ABB5A /* FanMenuItem.swift in Sources */,
+				FC8D776A1F8F0E75A5D9222E /* FavouritesRowView.swift in Sources */,
+				89A0591720D0B4F0527FA985 /* FavouritesSectionHeader.swift in Sources */,
+				72D644C7C4F59228F3E8FB56 /* FavouritesWindowController.swift in Sources */,
+				259E77A4CA92FB96D11ECD4C /* GarageDoorMenuItem.swift in Sources */,
+				4436CFEA7BA3F99DBA1BF890 /* LightMenuItem.swift in Sources */,
+				806CCEC2325035CD0F9D0690 /* LockMenuItem.swift in Sources */,
+				280C74C7265950C9756B365E /* MacOSController.swift in Sources */,
+				98F783AA77C8DA2CF5D5A923 /* ModernSlider.swift in Sources */,
+				D2096D71A418CA85F0ECD074 /* PreferencesManager.swift in Sources */,
+				0189B807373567481D495882 /* SceneMenuItem.swift in Sources */,
+				54727DEB4A151CC024B9D31E /* ScenesGridMenuItem.swift in Sources */,
+				213B0C0375DDBDB66B76CDB2 /* SensorMenuItem.swift in Sources */,
+				F0D475122112E46686ADF3C1 /* SensorSummaryMenuItem.swift in Sources */,
+				CAFADC7AC3708C1CF63E3E15 /* SwitchMenuItem.swift in Sources */,
+				08D8F3C60170681EF3187BCE /* ThermostatMenuItem.swift in Sources */,
+				CD6AE61B7DE19AA5DCD88280 /* ToggleSwitch.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		C2DE6A9F6096DBCE2F0C6506 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = CC47AD255BAA082E886DB587 /* macOSBridge */;
+			targetProxy = 1DADDE026B47226626CC7354 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		0DF183F594EF4A4EB24FCFCC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Itsyhome/Itsyhome.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 1;
+				DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER = NO;
+				INFOPLIST_FILE = Itsyhome/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Itsyhome;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nickustinov.itsyhome;
+				PRODUCT_NAME = Itsyhome;
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = YES;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = YES;
+				TARGETED_DEVICE_FAMILY = 6;
+			};
+			name = Release;
+		};
+		3616A092D8EF7E5F8AAADC31 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = R892A93W42;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.9;
+			};
+			name = Debug;
+		};
+		3E1A72B164C1C973B65BCEF4 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = macOSBridge/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nickustinov.itsyhome.macOSBridge;
+				PRODUCT_NAME = macOSBridge;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+			};
+			name = Release;
+		};
+		5DB925AF9CBE14D6CAFF48C5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Itsyhome/Itsyhome.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 1;
+				DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER = NO;
+				INFOPLIST_FILE = Itsyhome/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Itsyhome;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nickustinov.itsyhome;
+				PRODUCT_NAME = Itsyhome;
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = YES;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = YES;
+				TARGETED_DEVICE_FAMILY = 6;
+			};
+			name = Debug;
+		};
+		653AEBB07BF2D7BC95C6FA15 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = R892A93W42;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.9;
+			};
+			name = Release;
+		};
+		B25C2ACB6E782C8ECF6BBA39 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = macOSBridge/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nickustinov.itsyhome.macOSBridge;
+				PRODUCT_NAME = macOSBridge;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1814D2D94883871751FF6C21 /* Build configuration list for PBXNativeTarget "macOSBridge" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B25C2ACB6E782C8ECF6BBA39 /* Debug */,
+				3E1A72B164C1C973B65BCEF4 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		639F29FB9B7298EE7FCDCE1E /* Build configuration list for PBXNativeTarget "Itsyhome" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5DB925AF9CBE14D6CAFF48C5 /* Debug */,
+				0DF183F594EF4A4EB24FCFCC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		8489DF86026CFE345AE26F24 /* Build configuration list for PBXProject "Itsyhome" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3616A092D8EF7E5F8AAADC31 /* Debug */,
+				653AEBB07BF2D7BC95C6FA15 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = B4A588E4EFB6287F5D24BFA7 /* Project object */;
+}

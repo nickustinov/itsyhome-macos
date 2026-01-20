@@ -47,7 +47,15 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate {
     
     private func setupStatusItem() {
         if let button = statusItem.button {
-            button.image = NSImage(systemSymbolName: "house", accessibilityDescription: "HomeBar")
+            // Load custom icon from this plugin's bundle
+            let pluginBundle = Bundle(for: MacOSController.self)
+            if let icon = pluginBundle.image(forResource: "MenuBarIcon") {
+                icon.isTemplate = true
+                button.image = icon
+            } else {
+                // Fallback to SF Symbol
+                button.image = NSImage(systemSymbolName: "house.fill", accessibilityDescription: "Itsyhome")
+            }
         }
         statusItem.menu = mainMenu
         mainMenu.delegate = self
@@ -113,7 +121,7 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate {
     @objc public func showError(message: String) {
         DispatchQueue.main.async {
             let alert = NSAlert()
-            alert.messageText = "HomeBar Error"
+            alert.messageText = "Itsyhome error"
             alert.informativeText = message
             alert.alertStyle = .warning
             alert.addButton(withTitle: "OK")
@@ -207,12 +215,7 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate {
             sceneMenuItems.append(item)
         }
 
-        // Add separator if we have both scenes and services
-        if !scenes.isEmpty && !services.isEmpty {
-            mainMenu.addItem(NSMenuItem.separator())
-        }
-
-        // Add favourite services directly to main menu
+        // Add favourite services directly to main menu (no separator between types)
         for service in services.sorted(by: { $0.name < $1.name }) {
             if let item = createMenuItemForService(service) {
                 mainMenu.addItem(item)
@@ -478,7 +481,7 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate {
 
         mainMenu.addItem(NSMenuItem.separator())
 
-        let quitItem = NSMenuItem(title: "Quit HomeBar", action: #selector(quit(_:)), keyEquivalent: "q")
+        let quitItem = NSMenuItem(title: "Quit Itsyhome", action: #selector(quit(_:)), keyEquivalent: "q")
         quitItem.target = self
         mainMenu.addItem(quitItem)
     }

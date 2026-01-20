@@ -85,6 +85,7 @@ class LightMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
         brightnessSlider.doubleValue = 100
         brightnessSlider.isContinuous = false
         brightnessSlider.isHidden = true
+        brightnessSlider.progressTintColor = DS.Colors.sliderLight
         if hasBrightness {
             containerView.addSubview(brightnessSlider)
         }

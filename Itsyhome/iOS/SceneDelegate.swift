@@ -1,6 +1,6 @@
 //
 //  SceneDelegate.swift
-//  HomeBar
+//  Itsyhome
 //
 //  Handles window scenes - hides the main window on macCatalyst
 //
@@ -37,7 +37,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         vc.view.backgroundColor = .systemBackground
         
         let label = UILabel()
-        label.text = "HomeBar runs in the menu bar on Mac"
+        label.text = "Itsyhome runs in the menu bar on Mac"
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
         vc.view.addSubview(label)

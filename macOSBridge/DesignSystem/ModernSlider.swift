@@ -51,7 +51,6 @@ class ModernSlider: NSControl {
     private let trackLayer = CALayer()
     private let progressLayer = CALayer()
     private let thumbLayer = CALayer()
-    private let thumbShadowLayer = CALayer()
 
     private var trackingArea: NSTrackingArea?
     private var isDragging = false
@@ -88,14 +87,6 @@ class ModernSlider: NSControl {
         progressLayer.cornerRadius = DS.ControlSize.sliderTrackHeight / 2
         progressLayer.masksToBounds = true
         layer?.addSublayer(progressLayer)
-
-        // Thumb shadow
-        thumbShadowLayer.cornerRadius = DS.ControlSize.sliderThumbSize / 2
-        thumbShadowLayer.shadowColor = NSColor.black.cgColor
-        thumbShadowLayer.shadowOffset = CGSize(width: 0, height: 1)
-        thumbShadowLayer.shadowRadius = 3
-        thumbShadowLayer.shadowOpacity = 0.25
-        layer?.addSublayer(thumbShadowLayer)
 
         // Thumb layer
         thumbLayer.cornerRadius = DS.ControlSize.sliderThumbSize / 2
@@ -138,8 +129,6 @@ class ModernSlider: NSControl {
         let thumbFrame = CGRect(x: thumbX, y: thumbY, width: thumbSize, height: thumbSize)
 
         thumbLayer.frame = thumbFrame
-        thumbShadowLayer.frame = thumbFrame
-        thumbShadowLayer.backgroundColor = NSColor.white.cgColor
 
         // Progress frame
         let progressWidth = CGFloat(progress) * trackWidth
@@ -255,9 +244,6 @@ class ModernSlider: NSControl {
 
         thumbLayer.add(animation, forKey: "scale")
         thumbLayer.setValue(scale, forKeyPath: "transform.scale")
-
-        thumbShadowLayer.add(animation, forKey: "scale")
-        thumbShadowLayer.setValue(scale, forKeyPath: "transform.scale")
     }
 
     // MARK: - Accessibility

@@ -1,6 +1,6 @@
 //
 //  HomeKitManager.swift
-//  HomeBar
+//  Itsyhome
 //
 //  HomeKit manager that implements Mac2iOS protocol
 //
@@ -10,7 +10,7 @@ import HomeKit
 import os.log
 import UIKit
 
-private let logger = Logger(subsystem: "com.nickustinov.homebar", category: "HomeKitManager")
+private let logger = Logger(subsystem: "com.nickustinov.itsyhome", category: "HomeKitManager")
 
 class HomeKitManager: NSObject, Mac2iOS, HMHomeManagerDelegate {
 

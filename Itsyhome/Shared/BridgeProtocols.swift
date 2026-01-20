@@ -1,6 +1,6 @@
 //
 //  BridgeProtocols.swift
-//  HomeBar
+//  Itsyhome
 //
 //  Protocol bridge between iOS/Catalyst and macOS plugin
 //

@@ -1,6 +1,6 @@
 //
 //  AppDelegate.swift
-//  HomeBar
+//  Itsyhome
 //
 //  Main iOS app delegate - initializes HomeKit and loads macOS plugin
 //

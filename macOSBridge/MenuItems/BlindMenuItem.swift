@@ -70,6 +70,7 @@ class BlindMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
         positionSlider.frame = NSRect(x: sliderX, y: sliderY, width: sliderWidth, height: 12)
         positionSlider.doubleValue = 0
         positionSlider.isContinuous = false
+        positionSlider.progressTintColor = DS.Colors.sliderBlind
         containerView.addSubview(positionSlider)
 
         super.init(title: serviceData.name, action: nil, keyEquivalent: "")

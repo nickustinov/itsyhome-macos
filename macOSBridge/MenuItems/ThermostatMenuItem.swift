@@ -99,6 +99,7 @@ class ThermostatMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
         targetSlider.frame = NSRect(x: sliderX, y: DS.Spacing.sm, width: sliderWidth, height: DS.ControlSize.sliderThumbSize)
         targetSlider.doubleValue = 20
         targetSlider.isContinuous = false
+        targetSlider.progressTintColor = DS.Colors.sliderThermostat
         containerView.addSubview(targetSlider)
 
         super.init(title: serviceData.name, action: nil, keyEquivalent: "")

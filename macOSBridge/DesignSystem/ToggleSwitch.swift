@@ -37,7 +37,7 @@ class ToggleSwitch: NSControl {
         }
     }
 
-    var onTintColor: NSColor = DS.Colors.foreground {
+    var onTintColor: NSColor = DS.Colors.switchOn {
         didSet { updateColors() }
     }
 

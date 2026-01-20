@@ -72,17 +72,17 @@ xcodegen generate
 ### 5. Open and run
 
 ```bash
-open HomeBar.xcodeproj
+open Itsyhome.xcodeproj
 ```
 
-Select the **HomeBar** scheme and run on **My Mac (Mac Catalyst)**.
+Select the **Itsyhome** scheme and run on **My Mac (Mac Catalyst)**.
 
 ## Architecture
 
 This app uses Mac Catalyst with a native AppKit plugin for the menu bar:
 
 ```
-HomeBar/
+Itsyhome/
 ├── iOS/                    # Main Catalyst app (hidden, headless)
 │   ├── AppDelegate.swift   # App lifecycle
 │   ├── HomeKitManager.swift # HomeKit integration
@@ -121,7 +121,7 @@ This app requires the HomeKit entitlement. You'll need to:
 
 1. Enable HomeKit capability in your Apple Developer account
 2. Create an App ID with HomeKit enabled
-3. The entitlement is already configured in `HomeBar/HomeBar.entitlements`
+3. The entitlement is already configured in `Itsyhome/Itsyhome.entitlements`
 
 ## License
 

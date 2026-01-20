@@ -29,6 +29,21 @@ final class PreferencesManager {
         defaults.register(defaults: [
             Keys.launchAtLogin: true
         ])
+
+        // Sync launch at login state with system on init
+        syncLaunchAtLoginState()
+    }
+
+    private func syncLaunchAtLoginState() {
+        let shouldLaunch = defaults.bool(forKey: Keys.launchAtLogin)
+        let currentStatus = SMAppService.mainApp.status
+
+        // Only update if out of sync
+        if shouldLaunch && currentStatus != .enabled {
+            try? SMAppService.mainApp.register()
+        } else if !shouldLaunch && currentStatus == .enabled {
+            try? SMAppService.mainApp.unregister()
+        }
     }
 
     // MARK: - Launch at login

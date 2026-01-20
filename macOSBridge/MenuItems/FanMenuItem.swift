@@ -89,6 +89,7 @@ class FanMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshabl
         speedSlider.doubleValue = speedMax
         speedSlider.isContinuous = false
         speedSlider.isHidden = true
+        speedSlider.progressTintColor = DS.Colors.sliderFan
         if hasSpeed {
             containerView.addSubview(speedSlider)
         }

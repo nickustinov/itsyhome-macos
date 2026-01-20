@@ -54,7 +54,7 @@ enum DS {
 
         static var muted: NSColor {
             NSColor(name: nil) { appearance in
-                appearance.isDark ? NSColor(white: 0.269, alpha: 1) : NSColor(white: 0.97, alpha: 1)
+                appearance.isDark ? NSColor(white: 0.269, alpha: 1) : NSColor(white: 0.85, alpha: 1)
             }
         }
 
@@ -101,6 +101,15 @@ enum DS {
         static let thermostatCool = NSColor(red: 0.30, green: 0.60, blue: 0.95, alpha: 1) // Blue
         static let lockLocked = NSColor(red: 0.22, green: 0.78, blue: 0.45, alpha: 1) // Green
         static let lockUnlocked = NSColor(red: 0.95, green: 0.68, blue: 0.25, alpha: 1) // Orange
+
+        // Control colors
+        static let switchOn = NSColor(red: 0.22, green: 0.78, blue: 0.45, alpha: 1) // Green
+
+        // Slider colors by device type
+        static let sliderLight = NSColor(red: 0.95, green: 0.60, blue: 0.20, alpha: 1) // Orange
+        static let sliderThermostat = NSColor(red: 0.90, green: 0.45, blue: 0.15, alpha: 1) // Dark orange
+        static let sliderFan = NSColor(red: 0.30, green: 0.65, blue: 0.95, alpha: 1) // Blue
+        static let sliderBlind = NSColor(red: 0.20, green: 0.45, blue: 0.80, alpha: 1) // Dark blue
 
     }
 
