@@ -21,6 +21,7 @@
 		280C74C7265950C9756B365E /* MacOSController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29D500F71D0EA63DEF283D8B /* MacOSController.swift */; };
 		3B59DD36C2400864DCEE2CA3 /* BaseMenuItems.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CFE6ECEB559109472BA360A /* BaseMenuItems.swift */; };
 		4436CFEA7BA3F99DBA1BF890 /* LightMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73072FCFE16311A3C25C1C2C /* LightMenuItem.swift */; };
+		51296CE1AEA687F0449B01EA /* ModeButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7593F05E9EAB8871D43D8E8 /* ModeButton.swift */; };
 		52BED706E1E2183D364BA285 /* BridgeProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88919649EAF34363518DE9FF /* BridgeProtocols.swift */; };
 		54727DEB4A151CC024B9D31E /* ScenesGridMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = B33028C597EEA3DAE92520C3 /* ScenesGridMenuItem.swift */; };
 		646767AF7A71690332C474E0 /* ACMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F7082F795BA2C9AA55C64A0 /* ACMenuItem.swift */; };
@@ -85,6 +86,7 @@
 		AB0F3944EC8821BD1947AA8C /* GarageDoorMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GarageDoorMenuItem.swift; sourceTree = "<group>"; };
 		B10754E8AB01F87A12A293A7 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		B33028C597EEA3DAE92520C3 /* ScenesGridMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScenesGridMenuItem.swift; sourceTree = "<group>"; };
+		B7593F05E9EAB8871D43D8E8 /* ModeButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModeButton.swift; sourceTree = "<group>"; };
 		D0E47D2FA39B625CC3FA0E66 /* Itsyhome.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Itsyhome.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D8DAE0D0C65A8D06C17611F3 /* HotkeyManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotkeyManager.swift; sourceTree = "<group>"; };
 		DC234CA03045239CB9D178E6 /* PreferencesManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesManager.swift; sourceTree = "<group>"; };
@@ -121,6 +123,7 @@
 				D8DAE0D0C65A8D06C17611F3 /* HotkeyManager.swift */,
 				874AC367AE516CA50259C5B9 /* Info.plist */,
 				29D500F71D0EA63DEF283D8B /* MacOSController.swift */,
+				6D6AC7C83D2E3676E42DF659 /* Controls */,
 				D2258862CCE787F231C5D76E /* DesignSystem */,
 				F993AEE95F23CC68310DE85E /* MenuItems */,
 				9956D260C6400CA53D1F56A3 /* Settings */,
@@ -146,6 +149,14 @@
 			);
 			name = iOS;
 			path = Itsyhome/iOS;
+			sourceTree = "<group>";
+		};
+		6D6AC7C83D2E3676E42DF659 /* Controls */ = {
+			isa = PBXGroup;
+			children = (
+				B7593F05E9EAB8871D43D8E8 /* ModeButton.swift */,
+			);
+			path = Controls;
 			sourceTree = "<group>";
 		};
 		78B41F82784BDCAEC891225C /* Frameworks */ = {
@@ -355,6 +366,7 @@
 				4436CFEA7BA3F99DBA1BF890 /* LightMenuItem.swift in Sources */,
 				806CCEC2325035CD0F9D0690 /* LockMenuItem.swift in Sources */,
 				280C74C7265950C9756B365E /* MacOSController.swift in Sources */,
+				51296CE1AEA687F0449B01EA /* ModeButton.swift in Sources */,
 				98F783AA77C8DA2CF5D5A923 /* ModernSlider.swift in Sources */,
 				D2096D71A418CA85F0ECD074 /* PreferencesManager.swift in Sources */,
 				0189B807373567481D495882 /* SceneMenuItem.swift in Sources */,

@@ -72,7 +72,7 @@ class ThermostatMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
         let tempWidth: CGFloat = 42
         let tempX = sliderX - tempWidth - DS.Spacing.xs
         let labelY = (height - 17) / 2
-        currentTempLabel = NSTextField(labelWithString: "--°C")
+        currentTempLabel = NSTextField(labelWithString: "--°")
         currentTempLabel.frame = NSRect(x: tempX, y: labelY, width: tempWidth, height: 17)
         currentTempLabel.font = DS.Typography.labelSmall
         currentTempLabel.textColor = DS.Colors.mutedForeground
@@ -106,10 +106,10 @@ class ThermostatMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
         if characteristicId == currentTempCharacteristicId {
             if let temp = value as? Double {
                 currentTemp = temp
-                currentTempLabel.stringValue = String(format: "%.0f°C", temp)
+                currentTempLabel.stringValue = String(format: "%.0f°", temp)
             } else if let temp = value as? Int {
                 currentTemp = Double(temp)
-                currentTempLabel.stringValue = String(format: "%.0f°C", currentTemp)
+                currentTempLabel.stringValue = String(format: "%.0f°", currentTemp)
             }
         } else if characteristicId == targetTempCharacteristicId {
             if let temp = value as? Double {

@@ -102,9 +102,9 @@ class SensorMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresh
         switch serviceData.serviceType {
         case ServiceTypes.temperatureSensor:
             if let temp = value as? Double {
-                valueLabel.stringValue = String(format: "%.1f°C", temp)
+                valueLabel.stringValue = String(format: "%.1f°", temp)
             } else if let temp = value as? Int {
-                valueLabel.stringValue = String(format: "%.1f°C", Double(temp))
+                valueLabel.stringValue = String(format: "%.1f°", Double(temp))
             }
         case ServiceTypes.humiditySensor:
             if let humidity = value as? Double {

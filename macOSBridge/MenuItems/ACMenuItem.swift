@@ -34,7 +34,9 @@ class ACMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable
 
     // Controls row (shown when active)
     private let controlsRow: NSView
-    private let modeSegment: NSSegmentedControl
+    private let modeButtonAuto: ModeButton
+    private let modeButtonHeat: ModeButton
+    private let modeButtonCool: ModeButton
     private let minusButton: NSButton
     private let targetLabel: NSTextField
     private let plusButton: NSButton
@@ -97,7 +99,7 @@ class ACMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable
         containerView.addSubview(nameLabel)
 
         // Current temp
-        tempLabel = NSTextField(labelWithString: "--°C")
+        tempLabel = NSTextField(labelWithString: "--°")
         tempLabel.frame = NSRect(x: tempX, y: labelY, width: tempWidth, height: 17)
         tempLabel.font = DS.Typography.labelSmall
         tempLabel.textColor = DS.Colors.mutedForeground
@@ -117,42 +119,69 @@ class ACMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable
         controlsRow = NSView(frame: NSRect(x: 0, y: DS.Spacing.sm, width: DS.ControlSize.menuItemWidth, height: 26))
         controlsRow.isHidden = true
 
-        // Mode segment
-        modeSegment = NSSegmentedControl(labels: ["Auto", "Heat", "Cool"], trackingMode: .selectOne, target: nil, action: nil)
-        modeSegment.frame = NSRect(x: labelX, y: 4, width: 110, height: 20)
-        modeSegment.font = NSFont.systemFont(ofSize: 10)
-        modeSegment.selectedSegment = 0
-        modeSegment.segmentStyle = .capsule
-        modeSegment.selectedSegmentBezelColor = DS.Colors.success
-        // Force active appearance so it doesn't gray out when submenu opens
-        if let cell = modeSegment.cell as? NSSegmentedCell {
-            cell.controlView?.appearance = NSAppearance(named: .vibrantLight)
-        }
-        controlsRow.addSubview(modeSegment)
+        // Mode buttons container (pill-shaped dark background)
+        let buttonWidth: CGFloat = 36
+        let buttonHeight: CGFloat = 18
+        let containerPadding: CGFloat = 2
+        let modeContainerWidth = buttonWidth * 3 + containerPadding * 2
+        let modeContainerHeight = buttonHeight + containerPadding * 2
+
+        let modeContainer = NSView(frame: NSRect(x: labelX, y: 3, width: modeContainerWidth, height: modeContainerHeight))
+        modeContainer.wantsLayer = true
+        modeContainer.layer?.backgroundColor = NSColor.secondaryLabelColor.withAlphaComponent(0.08).cgColor
+        modeContainer.layer?.cornerRadius = modeContainerHeight / 2
+
+        modeButtonAuto = ModeButton(title: "Auto")
+        modeButtonAuto.frame = NSRect(x: containerPadding, y: containerPadding, width: buttonWidth, height: buttonHeight)
+        modeButtonAuto.tag = 0
+        modeContainer.addSubview(modeButtonAuto)
+
+        modeButtonHeat = ModeButton(title: "Heat")
+        modeButtonHeat.frame = NSRect(x: containerPadding + buttonWidth, y: containerPadding, width: buttonWidth, height: buttonHeight)
+        modeButtonHeat.tag = 1
+        modeContainer.addSubview(modeButtonHeat)
+
+        modeButtonCool = ModeButton(title: "Cool")
+        modeButtonCool.frame = NSRect(x: containerPadding + buttonWidth * 2, y: containerPadding, width: buttonWidth, height: buttonHeight)
+        modeButtonCool.tag = 2
+        modeContainer.addSubview(modeButtonCool)
+
+        controlsRow.addSubview(modeContainer)
+
+        // Set initial selection
+        modeButtonAuto.isSelected = true
 
         // Temperature controls: - | temp | +
-        let tempControlsX = DS.ControlSize.menuItemWidth - DS.Spacing.md - 90
+        let tempControlsX = DS.ControlSize.menuItemWidth - DS.Spacing.md - 78
 
-        // Minus button
-        minusButton = NSButton(frame: NSRect(x: tempControlsX, y: 4, width: 22, height: 20))
-        minusButton.bezelStyle = .inline
+        // Minus button (small rounded square)
+        minusButton = NSButton(frame: NSRect(x: tempControlsX, y: 4, width: 20, height: 20))
+        minusButton.isBordered = false
+        minusButton.wantsLayer = true
+        minusButton.layer?.backgroundColor = NSColor.secondaryLabelColor.withAlphaComponent(0.08).cgColor
+        minusButton.layer?.cornerRadius = 4
         minusButton.title = "−"
-        minusButton.font = NSFont.systemFont(ofSize: 14, weight: .medium)
+        minusButton.font = NSFont.systemFont(ofSize: 12, weight: .bold)
+        minusButton.contentTintColor = .secondaryLabelColor
         controlsRow.addSubview(minusButton)
 
         // Target temp label
-        targetLabel = NSTextField(labelWithString: "24°C")
-        targetLabel.frame = NSRect(x: tempControlsX + 24, y: 5, width: 42, height: 17)
-        targetLabel.font = DS.Typography.labelSmall
+        targetLabel = NSTextField(labelWithString: "24°")
+        targetLabel.frame = NSRect(x: tempControlsX + 22, y: 5, width: 32, height: 17)
+        targetLabel.font = NSFont.systemFont(ofSize: 11, weight: .medium)
         targetLabel.textColor = DS.Colors.foreground
         targetLabel.alignment = .center
         controlsRow.addSubview(targetLabel)
 
-        // Plus button
-        plusButton = NSButton(frame: NSRect(x: tempControlsX + 68, y: 4, width: 22, height: 20))
-        plusButton.bezelStyle = .inline
+        // Plus button (small rounded square)
+        plusButton = NSButton(frame: NSRect(x: tempControlsX + 56, y: 4, width: 20, height: 20))
+        plusButton.isBordered = false
+        plusButton.wantsLayer = true
+        plusButton.layer?.backgroundColor = NSColor.secondaryLabelColor.withAlphaComponent(0.08).cgColor
+        plusButton.layer?.cornerRadius = 4
         plusButton.title = "+"
-        plusButton.font = NSFont.systemFont(ofSize: 14, weight: .medium)
+        plusButton.font = NSFont.systemFont(ofSize: 12, weight: .bold)
+        plusButton.contentTintColor = .secondaryLabelColor
         controlsRow.addSubview(plusButton)
 
         containerView.addSubview(controlsRow)
@@ -165,8 +194,12 @@ class ACMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable
         powerToggle.target = self
         powerToggle.action = #selector(togglePower(_:))
 
-        modeSegment.target = self
-        modeSegment.action = #selector(modeChanged(_:))
+        modeButtonAuto.target = self
+        modeButtonAuto.action = #selector(modeChanged(_:))
+        modeButtonHeat.target = self
+        modeButtonHeat.action = #selector(modeChanged(_:))
+        modeButtonCool.target = self
+        modeButtonCool.action = #selector(modeChanged(_:))
 
         minusButton.target = self
         minusButton.action = #selector(decreaseTemp(_:))
@@ -191,10 +224,10 @@ class ACMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable
         } else if characteristicId == currentTempId {
             if let temp = value as? Double {
                 currentTemp = temp
-                tempLabel.stringValue = String(format: "%.1f°C", temp)
+                tempLabel.stringValue = String(format: "%.1f°", temp)
             } else if let temp = value as? Int {
                 currentTemp = Double(temp)
-                tempLabel.stringValue = String(format: "%.1f°C", currentTemp)
+                tempLabel.stringValue = String(format: "%.1f°", currentTemp)
             }
         } else if characteristicId == currentStateId {
             if let state = value as? Int {
@@ -204,7 +237,7 @@ class ACMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable
         } else if characteristicId == targetStateId {
             if let state = value as? Int {
                 targetState = state
-                modeSegment.selectedSegment = state
+                updateModeButtons()
                 updateTargetDisplay()
             }
         } else if characteristicId == coolingThresholdId {
@@ -262,6 +295,12 @@ class ACMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable
         iconView.contentTintColor = color
     }
 
+    private func updateModeButtons() {
+        modeButtonAuto.isSelected = (targetState == 0)
+        modeButtonHeat.isSelected = (targetState == 1)
+        modeButtonCool.isSelected = (targetState == 2)
+    }
+
     private func updateTargetDisplay() {
         let targetTemp: Double
         switch targetState {
@@ -269,7 +308,7 @@ class ACMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable
         case 2: targetTemp = coolingThreshold  // cool mode
         default: targetTemp = coolingThreshold // auto - show cooling threshold
         }
-        targetLabel.stringValue = String(format: "%.0f°C", targetTemp)
+        targetLabel.stringValue = String(format: "%.0f°", targetTemp)
     }
 
     private func currentTargetTemp() -> Double {
@@ -309,8 +348,9 @@ class ACMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable
         updateUI()
     }
 
-    @objc private func modeChanged(_ sender: NSSegmentedControl) {
-        targetState = sender.selectedSegment
+    @objc private func modeChanged(_ sender: ModeButton) {
+        targetState = sender.tag
+        updateModeButtons()
         if let id = targetStateId {
             bridge?.writeCharacteristic(identifier: id, value: targetState)
             notifyLocalChange(characteristicId: id, value: targetState)

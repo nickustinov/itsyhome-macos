@@ -154,10 +154,10 @@ class SensorSummaryMenuItem: NSMenuItem, CharacteristicUpdatable, Characteristic
 
         if values.count == 1 || minTemp == maxTemp {
             // Single value
-            tempValueLabel.stringValue = String(format: "%.1f°C", minTemp)
+            tempValueLabel.stringValue = String(format: "%.1f°", minTemp)
         } else {
             // Range (smallest – largest)
-            tempValueLabel.stringValue = String(format: "%.1f–%.1f°C", minTemp, maxTemp)
+            tempValueLabel.stringValue = String(format: "%.1f–%.1f°", minTemp, maxTemp)
         }
     }
 
