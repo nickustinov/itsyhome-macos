@@ -1,26 +1,29 @@
 //
-//  FavouritesWindowController.swift
+//  AccessoriesSettingsView.swift
 //  macOSBridge
 //
-//  Window controller for favourites configuration dialog
+//  Accessories settings tab with favourites and visibility toggles
 //
 
 import AppKit
 
-class FavouritesWindowController: NSWindowController {
+class AccessoriesSettingsView: NSView {
+
+    private static let contentWidth: CGFloat = 480
 
     private let instructionsView: NSView
     private let scrollView: NSScrollView
     private let contentView: NSView
     private var menuData: MenuData?
+    private var needsRebuild = false
 
-    init() {
+    override init(frame frameRect: NSRect) {
         // Create instructions view (fixed at top)
-        instructionsView = NSView(frame: NSRect(x: 0, y: 0, width: 400, height: 70))
+        instructionsView = NSView(frame: .zero)
         instructionsView.wantsLayer = true
 
         // Create scroll view
-        scrollView = NSScrollView(frame: NSRect(x: 0, y: 0, width: 400, height: 430))
+        scrollView = NSScrollView(frame: .zero)
         scrollView.hasVerticalScroller = true
         scrollView.autohidesScrollers = true
         scrollView.borderType = .noBorder
@@ -31,32 +34,11 @@ class FavouritesWindowController: NSWindowController {
         contentView.translatesAutoresizingMaskIntoConstraints = false
         scrollView.documentView = contentView
 
-        // Create container view
-        let containerView = NSView(frame: NSRect(x: 0, y: 0, width: 400, height: 500))
+        super.init(frame: frameRect)
 
-        // Create panel
-        let panel = NSPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 400, height: 500),
-            styleMask: [.titled, .closable, .utilityWindow],
-            backing: .buffered,
-            defer: false
-        )
-        panel.title = "Accessories"
-        panel.isFloatingPanel = true
-        panel.becomesKeyOnlyIfNeeded = false
-        panel.level = .floating
-        panel.contentView = containerView
+        addSubview(instructionsView)
+        addSubview(scrollView)
 
-        // Layout: instructions at top, scroll view below
-        instructionsView.frame = NSRect(x: 0, y: 430, width: 400, height: 70)
-        scrollView.frame = NSRect(x: 0, y: 0, width: 400, height: 430)
-
-        containerView.addSubview(instructionsView)
-        containerView.addSubview(scrollView)
-
-        super.init(window: panel)
-
-        // Setup instructions (after super.init)
         setupInstructions()
     }
 
@@ -66,46 +48,84 @@ class FavouritesWindowController: NSWindowController {
 
     private func setupInstructions() {
         // Background card
-        let cardView = NSView(frame: NSRect(x: 12, y: 8, width: 376, height: 54))
+        let cardView = NSView(frame: .zero)
         cardView.wantsLayer = true
         cardView.layer?.backgroundColor = DS.Colors.muted.withAlphaComponent(0.5).cgColor
         cardView.layer?.cornerRadius = DS.Radius.md
         instructionsView.addSubview(cardView)
 
         let iconWidth: CGFloat = 24
-        let textX: CGFloat = 12 + iconWidth + 8
-        let lineHeight: CGFloat = 22
 
         // Line 1: star icon + text
-        let star1 = NSImageView(frame: NSRect(x: 12, y: 28, width: iconWidth, height: 18))
+        let star1 = NSImageView(frame: .zero)
         star1.image = NSImage(systemSymbolName: "star.fill", accessibilityDescription: nil)
         star1.contentTintColor = DS.Colors.warning
         star1.imageScaling = .scaleProportionallyUpOrDown
         cardView.addSubview(star1)
 
         let label1 = NSTextField(labelWithString: "Add to favourites (shown at top of menu)")
-        label1.frame = NSRect(x: textX, y: 26, width: 320, height: lineHeight)
         label1.font = DS.Typography.label
         label1.textColor = DS.Colors.foreground
         cardView.addSubview(label1)
 
         // Line 2: eye icon + text
-        let eye2 = NSImageView(frame: NSRect(x: 12, y: 6, width: iconWidth, height: 18))
+        let eye2 = NSImageView(frame: .zero)
         eye2.image = NSImage(systemSymbolName: "eye", accessibilityDescription: nil)
         eye2.contentTintColor = DS.Colors.foreground
         eye2.imageScaling = .scaleProportionallyUpOrDown
         cardView.addSubview(eye2)
 
         let label2 = NSTextField(labelWithString: "Toggle visibility in menus")
-        label2.frame = NSRect(x: textX, y: 4, width: 320, height: lineHeight)
         label2.font = DS.Typography.label
         label2.textColor = DS.Colors.foreground
         cardView.addSubview(label2)
+
+        // Set frames directly (static layout)
+        let textX: CGFloat = 12 + iconWidth + 8
+        star1.frame = NSRect(x: 12, y: 28, width: iconWidth, height: 18)
+        label1.frame = NSRect(x: textX, y: 26, width: 320, height: 22)
+        eye2.frame = NSRect(x: 12, y: 6, width: iconWidth, height: 18)
+        label2.frame = NSRect(x: textX, y: 4, width: 320, height: 22)
+    }
+
+    override func layout() {
+        super.layout()
+
+        let instructionsHeight: CGFloat = 70
+        let padding: CGFloat = 12
+
+        // Instructions at top
+        instructionsView.frame = NSRect(
+            x: 0,
+            y: bounds.height - instructionsHeight,
+            width: bounds.width,
+            height: instructionsHeight
+        )
+
+        // Scroll view below instructions
+        scrollView.frame = NSRect(
+            x: 0,
+            y: 0,
+            width: bounds.width,
+            height: bounds.height - instructionsHeight
+        )
+
+        // Layout instructions card (first subview)
+        if let cardView = instructionsView.subviews.first {
+            cardView.frame = NSRect(x: padding, y: 8, width: bounds.width - padding * 2, height: 54)
+        }
+
+        // Rebuild content if needed (after layout so bounds are valid)
+        if needsRebuild {
+            needsRebuild = false
+            rebuildContent()
+        }
     }
 
     func configure(with data: MenuData) {
         self.menuData = data
-        rebuildContent()
+        needsRebuild = true
+        needsLayout = true
     }
 
     private func rebuildContent() {
@@ -271,8 +291,8 @@ class FavouritesWindowController: NSWindowController {
         // Calculate total height
         let totalHeight = views.reduce(0) { $0 + $1.height } + padding * 2
 
-        // Set content view size
-        let contentWidth = scrollView.bounds.width
+        // Set content view size (use fixed width, actual scroll view width from bounds)
+        let contentWidth = max(Self.contentWidth, scrollView.bounds.width)
         contentView.frame = NSRect(x: 0, y: 0, width: contentWidth, height: totalHeight)
 
         // Layout views from top to bottom
@@ -282,35 +302,11 @@ class FavouritesWindowController: NSWindowController {
             view.frame = NSRect(
                 x: padding,
                 y: currentY,
-                width: contentView.bounds.width - (padding * 2),
+                width: contentWidth - (padding * 2),
                 height: height
             )
             contentView.addSubview(view)
         }
-    }
-
-    func showWindow() {
-        guard let window = window else { return }
-
-        // Position at top of screen
-        if let screen = NSScreen.main {
-            let screenFrame = screen.visibleFrame
-            let windowSize = window.frame.size
-            let x = screenFrame.midX - windowSize.width / 2
-            let y = screenFrame.maxY - windowSize.height - 40  // 40pt from top
-            window.setFrameOrigin(NSPoint(x: x, y: y))
-        }
-
-        // Scroll to top
-        if let documentView = scrollView.documentView {
-            let topPoint = NSPoint(x: 0, y: documentView.bounds.height)
-            documentView.scroll(topPoint)
-        }
-
-        // Bring window to front
-        window.orderFrontRegardless()
-        window.makeKey()
-        NSApp.activate(ignoringOtherApps: true)
     }
 
     // MARK: - Icon helpers

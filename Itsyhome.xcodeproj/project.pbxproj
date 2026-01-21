@@ -22,7 +22,10 @@
 		52BED706E1E2183D364BA285 /* BridgeProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88919649EAF34363518DE9FF /* BridgeProtocols.swift */; };
 		54727DEB4A151CC024B9D31E /* ScenesGridMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = B33028C597EEA3DAE92520C3 /* ScenesGridMenuItem.swift */; };
 		646767AF7A71690332C474E0 /* ACMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F7082F795BA2C9AA55C64A0 /* ACMenuItem.swift */; };
-		72D644C7C4F59228F3E8FB56 /* FavouritesWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4455528F37160E3FA051F7B3 /* FavouritesWindowController.swift */; };
+		A1B2C3D4E5F6789012345678 /* SettingsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11111111111111111111111A /* SettingsWindowController.swift */; };
+		A1B2C3D4E5F6789012345679 /* GeneralSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11111111111111111111111B /* GeneralSettingsView.swift */; };
+		A1B2C3D4E5F678901234567A /* AboutSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11111111111111111111111C /* AboutSettingsView.swift */; };
+		A1B2C3D4E5F678901234567B /* AccessoriesSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11111111111111111111111D /* AccessoriesSettingsView.swift */; };
 		806CCEC2325035CD0F9D0690 /* LockMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4374C26148C6FEAAFD207413 /* LockMenuItem.swift */; };
 		80BA4CBB1ADDA67E5A9ABB5A /* FanMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE776817A51695FBA936B1 /* FanMenuItem.swift */; };
 		89A0591720D0B4F0527FA985 /* FavouritesSectionHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = F37D58E82DEF89116DBA8936 /* FavouritesSectionHeader.swift */; };
@@ -57,7 +60,10 @@
 		29D500F71D0EA63DEF283D8B /* MacOSController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacOSController.swift; sourceTree = "<group>"; };
 		3F7082F795BA2C9AA55C64A0 /* ACMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ACMenuItem.swift; sourceTree = "<group>"; };
 		4374C26148C6FEAAFD207413 /* LockMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockMenuItem.swift; sourceTree = "<group>"; };
-		4455528F37160E3FA051F7B3 /* FavouritesWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavouritesWindowController.swift; sourceTree = "<group>"; };
+		11111111111111111111111A /* SettingsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindowController.swift; sourceTree = "<group>"; };
+		11111111111111111111111B /* GeneralSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralSettingsView.swift; sourceTree = "<group>"; };
+		11111111111111111111111C /* AboutSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutSettingsView.swift; sourceTree = "<group>"; };
+		11111111111111111111111D /* AccessoriesSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessoriesSettingsView.swift; sourceTree = "<group>"; };
 		51B74BF9E1E02D2CF34C9F37 /* SwitchMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwitchMenuItem.swift; sourceTree = "<group>"; };
 		5735B31C003BD03DE4B28206 /* macOSBridge.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = macOSBridge.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
 		64DA790B8C69170774D51C97 /* SensorMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorMenuItem.swift; sourceTree = "<group>"; };
@@ -150,10 +156,13 @@
 		9956D260C6400CA53D1F56A3 /* Settings */ = {
 			isa = PBXGroup;
 			children = (
+				11111111111111111111111C /* AboutSettingsView.swift */,
+				11111111111111111111111D /* AccessoriesSettingsView.swift */,
 				05CB381453EB6F2A71F1382F /* FavouritesRowView.swift */,
 				F37D58E82DEF89116DBA8936 /* FavouritesSectionHeader.swift */,
-				4455528F37160E3FA051F7B3 /* FavouritesWindowController.swift */,
+				11111111111111111111111B /* GeneralSettingsView.swift */,
 				DC234CA03045239CB9D178E6 /* PreferencesManager.swift */,
+				11111111111111111111111A /* SettingsWindowController.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -335,7 +344,10 @@
 				80BA4CBB1ADDA67E5A9ABB5A /* FanMenuItem.swift in Sources */,
 				FC8D776A1F8F0E75A5D9222E /* FavouritesRowView.swift in Sources */,
 				89A0591720D0B4F0527FA985 /* FavouritesSectionHeader.swift in Sources */,
-				72D644C7C4F59228F3E8FB56 /* FavouritesWindowController.swift in Sources */,
+				A1B2C3D4E5F678901234567A /* AboutSettingsView.swift in Sources */,
+				A1B2C3D4E5F678901234567B /* AccessoriesSettingsView.swift in Sources */,
+				A1B2C3D4E5F6789012345679 /* GeneralSettingsView.swift in Sources */,
+				A1B2C3D4E5F6789012345678 /* SettingsWindowController.swift in Sources */,
 				259E77A4CA92FB96D11ECD4C /* GarageDoorMenuItem.swift in Sources */,
 				4436CFEA7BA3F99DBA1BF890 /* LightMenuItem.swift in Sources */,
 				806CCEC2325035CD0F9D0690 /* LockMenuItem.swift in Sources */,
