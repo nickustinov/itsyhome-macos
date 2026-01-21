@@ -123,6 +123,11 @@ class ACMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable
         modeSegment.font = NSFont.systemFont(ofSize: 10)
         modeSegment.selectedSegment = 0
         modeSegment.segmentStyle = .capsule
+        modeSegment.selectedSegmentBezelColor = DS.Colors.success
+        // Force active appearance so it doesn't gray out when submenu opens
+        if let cell = modeSegment.cell as? NSSegmentedCell {
+            cell.controlView?.appearance = NSAppearance(named: .vibrantLight)
+        }
         controlsRow.addSubview(modeSegment)
 
         // Temperature controls: - | temp | +
