@@ -146,6 +146,15 @@ class ThermostatMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
 
         if let id = targetTempCharacteristicId {
             bridge?.writeCharacteristic(identifier: id, value: Float(roundedValue))
+            notifyLocalChange(characteristicId: id, value: Float(roundedValue))
         }
+    }
+
+    private func notifyLocalChange(characteristicId: UUID, value: Any) {
+        NotificationCenter.default.post(
+            name: .characteristicDidChangeLocally,
+            object: self,
+            userInfo: ["characteristicId": characteristicId, "value": value]
+        )
     }
 }

@@ -288,11 +288,13 @@ class ACMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable
             heatingThreshold = clamped
             if let id = heatingThresholdId {
                 bridge?.writeCharacteristic(identifier: id, value: Float(clamped))
+                notifyLocalChange(characteristicId: id, value: Float(clamped))
             }
         default: // cool or auto
             coolingThreshold = clamped
             if let id = coolingThresholdId {
                 bridge?.writeCharacteristic(identifier: id, value: Float(clamped))
+                notifyLocalChange(characteristicId: id, value: Float(clamped))
             }
         }
         updateTargetDisplay()
@@ -302,6 +304,7 @@ class ACMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable
         isActive = sender.isOn
         if let id = activeId {
             bridge?.writeCharacteristic(identifier: id, value: isActive ? 1 : 0)
+            notifyLocalChange(characteristicId: id, value: isActive ? 1 : 0)
         }
         updateUI()
     }
@@ -310,6 +313,7 @@ class ACMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable
         targetState = sender.selectedSegment
         if let id = targetStateId {
             bridge?.writeCharacteristic(identifier: id, value: targetState)
+            notifyLocalChange(characteristicId: id, value: targetState)
         }
         updateTargetDisplay()
     }
@@ -320,5 +324,13 @@ class ACMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable
 
     @objc private func increaseTemp(_ sender: NSButton) {
         setTargetTemp(currentTargetTemp() + 1)
+    }
+
+    private func notifyLocalChange(characteristicId: UUID, value: Any) {
+        NotificationCenter.default.post(
+            name: .characteristicDidChangeLocally,
+            object: self,
+            userInfo: ["characteristicId": characteristicId, "value": value]
+        )
     }
 }

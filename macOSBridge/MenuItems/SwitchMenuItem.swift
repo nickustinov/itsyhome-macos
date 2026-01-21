@@ -100,7 +100,16 @@ class SwitchMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresh
         isOn = sender.isOn
         if let id = powerCharacteristicId {
             bridge?.writeCharacteristic(identifier: id, value: isOn)
+            notifyLocalChange(characteristicId: id, value: isOn)
         }
         updateUI()
+    }
+
+    private func notifyLocalChange(characteristicId: UUID, value: Any) {
+        NotificationCenter.default.post(
+            name: .characteristicDidChangeLocally,
+            object: self,
+            userInfo: ["characteristicId": characteristicId, "value": value]
+        )
     }
 }

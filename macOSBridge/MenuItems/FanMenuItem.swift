@@ -156,15 +156,18 @@ class FanMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshabl
         // Round to nearest integer step
         let roundedValue = round(sender.doubleValue)
         sender.doubleValue = roundedValue
+        speed = roundedValue
 
         let value = Float(roundedValue)
         if let id = rotationSpeedId {
             bridge?.writeCharacteristic(identifier: id, value: value)
+            notifyLocalChange(characteristicId: id, value: value)
         }
 
         // Also turn on if setting speed > 0 and fan is off
         if value > 0 && !isActive, let powerId = activeId {
             bridge?.writeCharacteristic(identifier: powerId, value: 1)
+            notifyLocalChange(characteristicId: powerId, value: 1)
             isActive = true
             updateUI()
         }
@@ -174,7 +177,16 @@ class FanMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshabl
         isActive = sender.isOn
         if let id = activeId {
             bridge?.writeCharacteristic(identifier: id, value: isActive ? 1 : 0)
+            notifyLocalChange(characteristicId: id, value: isActive ? 1 : 0)
         }
         updateUI()
+    }
+
+    private func notifyLocalChange(characteristicId: UUID, value: Any) {
+        NotificationCenter.default.post(
+            name: .characteristicDidChangeLocally,
+            object: self,
+            userInfo: ["characteristicId": characteristicId, "value": value]
+        )
     }
 }

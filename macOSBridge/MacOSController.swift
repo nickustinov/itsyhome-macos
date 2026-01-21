@@ -49,10 +49,28 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate {
             object: nil
         )
 
+        // Observe local characteristic changes to sync duplicate menu items
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleLocalCharacteristicChange(_:)),
+            name: .characteristicDidChangeLocally,
+            object: nil
+        )
+
         // Setup hotkey handler
         HotkeyManager.shared.onHotkeyTriggered = { [weak self] favouriteId in
             self?.handleHotkeyForFavourite(favouriteId)
         }
+    }
+
+    @objc private func handleLocalCharacteristicChange(_ notification: Notification) {
+        guard let userInfo = notification.userInfo,
+              let characteristicId = userInfo["characteristicId"] as? UUID,
+              let value = userInfo["value"] else {
+            return
+        }
+        // Broadcast to all menu items (syncs favourites with room submenus)
+        updateMenuItems(for: characteristicId, value: value)
     }
 
     @objc private func preferencesDidChange() {
@@ -719,4 +737,12 @@ protocol CharacteristicRefreshable {
 protocol ReachabilityUpdatable {
     var serviceIdentifier: UUID { get }
     func setReachable(_ isReachable: Bool)
+}
+
+// MARK: - Local UI Sync
+
+extension Notification.Name {
+    /// Posted when a menu item locally changes a characteristic value.
+    /// userInfo contains "characteristicId" (UUID) and "value" (Any).
+    static let characteristicDidChangeLocally = Notification.Name("characteristicDidChangeLocally")
 }

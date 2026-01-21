@@ -7,6 +7,14 @@
 
 import AppKit
 
+final class ClickableColorCircleView: NSView {
+    var onClick: (() -> Void)?
+
+    override func mouseDown(with event: NSEvent) {
+        onClick?()
+    }
+}
+
 class LightMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable, ReachabilityUpdatable {
 
     let serviceData: ServiceData
@@ -33,9 +41,14 @@ class LightMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
     private let containerView: NSView
     private let iconView: NSImageView
     private let nameLabel: NSTextField
-    private let colorCircle: NSView
+    private let colorCircle: ClickableColorCircleView
     private let brightnessSlider: ModernSlider
     private let toggleSwitch: ToggleSwitch
+    private let colorControlsRow: NSView
+    private var colorPickerView: NSView?
+    private let collapsedHeight: CGFloat = DS.ControlSize.menuItemHeight
+    private var expandedHeight: CGFloat = DS.ControlSize.menuItemHeight
+    private var isColorPickerExpanded: Bool = false
 
     private let hasBrightness: Bool
     private let hasRGB: Bool
@@ -70,7 +83,7 @@ class LightMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
         self.hasRGB = hueCharacteristicId != nil && saturationCharacteristicId != nil
         self.hasColorTemp = colorTempCharacteristicId != nil
 
-        let height: CGFloat = DS.ControlSize.menuItemHeight
+        let height: CGFloat = collapsedHeight
         containerView = NSView(frame: NSRect(x: 0, y: 0, width: DS.ControlSize.menuItemWidth, height: height))
 
         // Icon
@@ -117,12 +130,16 @@ class LightMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
         let colorCircleSize: CGFloat = 14
         let colorCircleX = sliderX - colorCircleSize - DS.Spacing.xs
         let colorCircleY = (height - colorCircleSize) / 2
-        colorCircle = NSView(frame: NSRect(x: colorCircleX, y: colorCircleY, width: colorCircleSize, height: colorCircleSize))
+        colorCircle = ClickableColorCircleView(frame: NSRect(x: colorCircleX, y: colorCircleY, width: colorCircleSize, height: colorCircleSize))
         colorCircle.wantsLayer = true
         colorCircle.layer?.cornerRadius = colorCircleSize / 2
         colorCircle.layer?.backgroundColor = NSColor.white.cgColor
         colorCircle.isHidden = true
         containerView.addSubview(colorCircle)
+
+        // Color controls row (expanded section)
+        colorControlsRow = NSView(frame: .zero)
+        colorControlsRow.isHidden = true
 
         super.init(title: serviceData.name, action: nil, keyEquivalent: "")
         self.view = containerView
@@ -132,9 +149,12 @@ class LightMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
         toggleSwitch.target = self
         toggleSwitch.action = #selector(togglePower(_:))
 
-        // Set up color picker submenu (opens on hover)
+        colorCircle.onClick = { [weak self] in
+            self?.toggleColorPicker()
+        }
+
         if hasColor {
-            setupColorSubmenu()
+            setupColorControlsRow()
         }
     }
 
@@ -142,20 +162,18 @@ class LightMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
         fatalError("init(coder:) has not been implemented")
     }
 
-    private func setupColorSubmenu() {
-        let submenu = NSMenu()
-        let pickerItem = NSMenuItem()
-
+    private func setupColorControlsRow() {
         if hasRGB {
-            pickerItem.view = ColorWheelPickerView(
+            let picker = ColorWheelPickerView(
                 hue: hue,
                 saturation: saturation,
                 onColorChanged: { [weak self] newHue, newSat, isFinal in
                     self?.handleRGBColorChange(hue: newHue, saturation: newSat, commit: isFinal)
                 }
             )
+            colorPickerView = picker
         } else if hasColorTemp {
-            pickerItem.view = ColorTempPickerView(
+            let picker = ColorTempPickerView(
                 currentMired: colorTemp,
                 minMired: colorTempMin,
                 maxMired: colorTempMax,
@@ -163,10 +181,22 @@ class LightMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
                     self?.setColorTemp(newMired)
                 }
             )
+            colorPickerView = picker
         }
-
-        submenu.addItem(pickerItem)
-        self.submenu = submenu
+        if let picker = colorPickerView {
+            let size = picker.intrinsicContentSize
+            let padding: CGFloat = 4
+            colorControlsRow.frame = NSRect(x: 0, y: padding, width: DS.ControlSize.menuItemWidth, height: size.height)
+            picker.frame = NSRect(
+                x: (DS.ControlSize.menuItemWidth - size.width) / 2,
+                y: 0,
+                width: size.width,
+                height: size.height
+            )
+            colorControlsRow.addSubview(picker)
+            containerView.addSubview(colorControlsRow)
+            expandedHeight = collapsedHeight + size.height + padding * 2
+        }
     }
 
     func updateValue(for characteristicId: UUID, value: Any) {
@@ -187,16 +217,19 @@ class LightMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
             else if let v = value as? Int { hue = Double(v) }
             else if let v = value as? Float { hue = Double(v) }
             updateColorCircle()
+            (colorPickerView as? ColorWheelPickerView)?.updateColor(hue: hue, saturation: saturation)
         } else if characteristicId == saturationCharacteristicId {
             if let v = value as? Double { saturation = v }
             else if let v = value as? Int { saturation = Double(v) }
             else if let v = value as? Float { saturation = Double(v) }
             updateColorCircle()
+            (colorPickerView as? ColorWheelPickerView)?.updateColor(hue: hue, saturation: saturation)
         } else if characteristicId == colorTempCharacteristicId {
             if let v = value as? Double { colorTemp = v }
             else if let v = value as? Int { colorTemp = Double(v) }
             else if let v = value as? Float { colorTemp = Double(v) }
             updateColorCircle()
+            (colorPickerView as? ColorTempPickerView)?.updateMired(colorTemp)
         }
     }
 
@@ -222,11 +255,30 @@ class LightMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
         brightnessSlider.isHidden = !showSlider
         brightnessSlider.isEnabled = isReachable
         colorCircle.isHidden = !showColorCircle
+        if !showColorCircle {
+            isColorPickerExpanded = false
+        }
 
         let switchX = DS.ControlSize.menuItemWidth - DS.ControlSize.switchWidth - DS.Spacing.md
         let labelX = DS.Spacing.md + DS.ControlSize.iconMedium + DS.Spacing.sm
         let sliderWidth = DS.ControlSize.sliderWidth
         let colorCircleSize: CGFloat = 14
+        let newHeight = (isColorPickerExpanded && showColorCircle) ? expandedHeight : collapsedHeight
+        containerView.frame.size.height = newHeight
+        colorControlsRow.isHidden = !(isColorPickerExpanded && showColorCircle)
+
+        let topAreaY = newHeight - collapsedHeight
+        let iconY = topAreaY + (collapsedHeight - DS.ControlSize.iconMedium) / 2
+        let labelY = topAreaY + (collapsedHeight - 17) / 2
+        let sliderY = topAreaY + (collapsedHeight - 12) / 2
+        let switchY = topAreaY + (collapsedHeight - DS.ControlSize.switchHeight) / 2
+        let colorCircleY = topAreaY + (collapsedHeight - colorCircleSize) / 2
+
+        iconView.frame.origin.y = iconY
+        nameLabel.frame.origin.y = labelY
+        brightnessSlider.frame.origin.y = sliderY
+        toggleSwitch.frame.origin.y = switchY
+        colorCircle.frame.origin.y = colorCircleY
 
         var rightEdge = switchX - DS.Spacing.sm
         if showSlider {
@@ -239,6 +291,15 @@ class LightMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
 
         if showColorCircle {
             updateColorCircle()
+        }
+    }
+
+    private func toggleColorPicker() {
+        guard hasColor, isOn, isReachable else { return }
+        isColorPickerExpanded.toggle()
+        updateUI()
+        if let menu = menu {
+            menu.itemChanged(self)
         }
     }
 
@@ -268,12 +329,15 @@ class LightMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
 
     @objc private func sliderChanged(_ sender: ModernSlider) {
         let value = sender.doubleValue
+        brightness = value
         if let id = brightnessCharacteristicId {
             bridge?.writeCharacteristic(identifier: id, value: Int(value))
+            notifyLocalChange(characteristicId: id, value: Int(value))
         }
         if value > 0 && !isOn, let powerId = powerCharacteristicId {
             bridge?.writeCharacteristic(identifier: powerId, value: true)
             isOn = true
+            notifyLocalChange(characteristicId: powerId, value: true)
             updateUI()
         }
     }
@@ -282,6 +346,7 @@ class LightMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
         isOn = sender.isOn
         if let id = powerCharacteristicId {
             bridge?.writeCharacteristic(identifier: id, value: isOn)
+            notifyLocalChange(characteristicId: id, value: isOn)
         }
         updateUI()
     }
@@ -293,9 +358,11 @@ class LightMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
         if commit {
             if let hueId = hueCharacteristicId {
                 bridge?.writeCharacteristic(identifier: hueId, value: Float(newHue))
+                notifyLocalChange(characteristicId: hueId, value: Float(newHue))
             }
             if let satId = saturationCharacteristicId {
                 bridge?.writeCharacteristic(identifier: satId, value: Float(newSat))
+                notifyLocalChange(characteristicId: satId, value: Float(newSat))
             }
         }
     }
@@ -304,8 +371,17 @@ class LightMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
         colorTemp = mired
         if let tempId = colorTempCharacteristicId {
             bridge?.writeCharacteristic(identifier: tempId, value: Int(mired))
+            notifyLocalChange(characteristicId: tempId, value: Int(mired))
         }
         updateColorCircle()
+    }
+
+    private func notifyLocalChange(characteristicId: UUID, value: Any) {
+        NotificationCenter.default.post(
+            name: .characteristicDidChangeLocally,
+            object: self,
+            userInfo: ["characteristicId": characteristicId, "value": value]
+        )
     }
 }
 
@@ -316,7 +392,7 @@ class ColorWheelPickerView: NSView {
     private var saturation: Double
     private let onColorChanged: (Double, Double, Bool) -> Void
     private let wheelSize: CGFloat = 120
-    private let padding: CGFloat = 15
+    private let padding: CGFloat = 8
 
     init(hue: Double, saturation: Double, onColorChanged: @escaping (Double, Double, Bool) -> Void) {
         self.hue = hue
@@ -398,7 +474,7 @@ class ColorTempPickerView: NSView {
     private let presets: [(name: String, mired: Double)]
     private let circleSize: CGFloat = 32
     private let spacing: CGFloat = 8
-    private let padding: CGFloat = 15
+    private let padding: CGFloat = 8
 
     init(currentMired: Double, minMired: Double, maxMired: Double, onTempChanged: @escaping (Double) -> Void) {
         self.currentMired = currentMired

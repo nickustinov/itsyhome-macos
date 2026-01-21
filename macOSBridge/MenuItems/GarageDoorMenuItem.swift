@@ -152,6 +152,19 @@ class GarageDoorMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
 
         if let id = targetDoorStateId {
             bridge?.writeCharacteristic(identifier: id, value: targetState)
+            // Notify with current state ID so other copies update
+            if let currentId = currentDoorStateId {
+                // Map target to approximate current state (1=closed, 0=open)
+                notifyLocalChange(characteristicId: currentId, value: targetState == 1 ? 1 : 0)
+            }
         }
+    }
+
+    private func notifyLocalChange(characteristicId: UUID, value: Any) {
+        NotificationCenter.default.post(
+            name: .characteristicDidChangeLocally,
+            object: self,
+            userInfo: ["characteristicId": characteristicId, "value": value]
+        )
     }
 }

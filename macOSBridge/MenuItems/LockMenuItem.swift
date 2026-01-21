@@ -121,6 +121,18 @@ class LockMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshab
             bridge?.writeCharacteristic(identifier: id, value: locked ? 1 : 0)
             isLocked = locked
             updateUI()
+            // Notify with current state ID so other copies update
+            if let currentId = lockStateCharacteristicId {
+                notifyLocalChange(characteristicId: currentId, value: locked ? 1 : 0)
+            }
         }
+    }
+
+    private func notifyLocalChange(characteristicId: UUID, value: Any) {
+        NotificationCenter.default.post(
+            name: .characteristicDidChangeLocally,
+            object: self,
+            userInfo: ["characteristicId": characteristicId, "value": value]
+        )
     }
 }

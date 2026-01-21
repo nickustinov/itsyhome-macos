@@ -114,6 +114,18 @@ class BlindMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
 
         if let id = targetPositionCharacteristicId {
             bridge?.writeCharacteristic(identifier: id, value: value)
+            // Notify with current position ID so other copies update their slider
+            if let currentId = currentPositionCharacteristicId {
+                notifyLocalChange(characteristicId: currentId, value: value)
+            }
         }
+    }
+
+    private func notifyLocalChange(characteristicId: UUID, value: Any) {
+        NotificationCenter.default.post(
+            name: .characteristicDidChangeLocally,
+            object: self,
+            userInfo: ["characteristicId": characteristicId, "value": value]
+        )
     }
 }
