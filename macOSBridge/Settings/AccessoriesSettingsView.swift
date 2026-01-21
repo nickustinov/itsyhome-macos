@@ -21,7 +21,7 @@ private struct FavouriteItem {
 
 // MARK: - Draggable favourite row
 
-private class DraggableFavouriteRowView: NSTableCellView {
+private class DraggableFavouriteRowView: NSView {
 
     private let starButton: NSButton
     private let dragHandle: NSImageView
@@ -31,46 +31,49 @@ private class DraggableFavouriteRowView: NSTableCellView {
     var onRemove: (() -> Void)?
 
     init(item: FavouriteItem) {
+        // Star button
         starButton = NSButton(frame: .zero)
-        dragHandle = NSImageView()
-        typeIcon = NSImageView()
-        nameLabel = NSTextField(labelWithString: item.name)
-
-        super.init(frame: NSRect(x: 0, y: 0, width: 360, height: 26))
-
-        // Star button (filled, to remove from favourites)
         starButton.bezelStyle = .inline
         starButton.isBordered = false
         starButton.imagePosition = .imageOnly
         starButton.imageScaling = .scaleProportionallyUpOrDown
         starButton.image = NSImage(systemSymbolName: "star.fill", accessibilityDescription: nil)
         starButton.contentTintColor = DS.Colors.warning
-        starButton.target = self
-        starButton.action = #selector(starClicked)
-        addSubview(starButton)
 
-        // Drag handle
+        // Drag handle (NSImageView so it doesn't intercept mouse events for drag)
+        dragHandle = NSImageView()
+        dragHandle.imageScaling = .scaleProportionallyUpOrDown
         dragHandle.image = NSImage(systemSymbolName: "line.3.horizontal", accessibilityDescription: nil)
         dragHandle.contentTintColor = DS.Colors.mutedForeground
-        dragHandle.imageScaling = .scaleProportionallyUpOrDown
-        addSubview(dragHandle)
 
         // Type icon
+        typeIcon = NSImageView()
         typeIcon.imageScaling = .scaleProportionallyUpOrDown
         typeIcon.contentTintColor = DS.Colors.mutedForeground
+
+        // Name label
+        nameLabel = NSTextField(labelWithString: item.name)
+        nameLabel.font = DS.Typography.label
+        nameLabel.textColor = DS.Colors.foreground
+        nameLabel.lineBreakMode = .byTruncatingTail
+
+        super.init(frame: NSRect(x: 0, y: 0, width: 360, height: FavouritesRowLayout.rowHeight))
+
+        addSubview(starButton)
+        addSubview(dragHandle)
+        addSubview(typeIcon)
+        addSubview(nameLabel)
+
+        starButton.target = self
+        starButton.action = #selector(starClicked)
+
+        // Set type icon based on item
         switch item.kind {
         case .scene(let scene):
             typeIcon.image = inferSceneIcon(for: scene)
         case .service(let service):
             typeIcon.image = iconForServiceType(service.serviceType)
         }
-        addSubview(typeIcon)
-
-        // Name
-        nameLabel.font = DS.Typography.label
-        nameLabel.textColor = DS.Colors.foreground
-        nameLabel.lineBreakMode = .byTruncatingTail
-        addSubview(nameLabel)
     }
 
     required init?(coder: NSCoder) {
@@ -84,14 +87,50 @@ private class DraggableFavouriteRowView: NSTableCellView {
     override func layout() {
         super.layout()
 
-        let buttonSize: CGFloat = 20
-        let iconSize: CGFloat = 14
-        let handleSize: CGFloat = 14
+        // Use exact same layout as FavouritesRowView
+        let buttonSize = FavouritesRowLayout.buttonSize
+        let iconSize = FavouritesRowLayout.iconSize
+        let spacing = FavouritesRowLayout.spacing
+        var x: CGFloat = 0
 
-        starButton.frame = NSRect(x: 0, y: (bounds.height - buttonSize) / 2, width: buttonSize, height: buttonSize)
-        dragHandle.frame = NSRect(x: 24, y: (bounds.height - handleSize) / 2, width: handleSize, height: handleSize)
-        typeIcon.frame = NSRect(x: 46, y: (bounds.height - iconSize) / 2, width: iconSize, height: iconSize)
-        nameLabel.frame = NSRect(x: 68, y: (bounds.height - 17) / 2, width: bounds.width - 76, height: 17)
+        // Star button
+        starButton.frame = NSRect(
+            x: x,
+            y: (bounds.height - buttonSize) / 2,
+            width: buttonSize,
+            height: buttonSize
+        )
+        x += buttonSize + spacing
+
+        // Drag handle (same position as eye button)
+        dragHandle.frame = NSRect(
+            x: x,
+            y: (bounds.height - buttonSize) / 2,
+            width: buttonSize,
+            height: buttonSize
+        )
+        x += buttonSize + spacing
+
+        // Type icon
+        typeIcon.frame = NSRect(
+            x: x,
+            y: (bounds.height - iconSize) / 2,
+            width: iconSize,
+            height: iconSize
+        )
+        x += iconSize + spacing
+
+        // Name label (fills remaining space)
+        nameLabel.frame = NSRect(
+            x: x,
+            y: (bounds.height - FavouritesRowLayout.labelHeight) / 2,
+            width: max(0, bounds.width - x),
+            height: FavouritesRowLayout.labelHeight
+        )
+    }
+
+    override var intrinsicContentSize: NSSize {
+        NSSize(width: NSView.noIntrinsicMetric, height: FavouritesRowLayout.rowHeight)
     }
 
     private func iconForServiceType(_ type: String) -> NSImage? {
@@ -222,18 +261,14 @@ class AccessoriesSettingsView: NSView {
         let sceneLookup = Dictionary(uniqueKeysWithValues: data.scenes.map { ($0.uniqueIdentifier, $0) })
         let serviceLookup = Dictionary(uniqueKeysWithValues: data.accessories.flatMap { $0.services }.map { ($0.uniqueIdentifier, $0) })
 
-        // Build ordered favourites list (scenes first, then services)
+        // Build ordered favourites list from unified list
         var items: [FavouriteItem] = []
 
-        for sceneId in preferences.orderedFavouriteSceneIds {
-            if let scene = sceneLookup[sceneId] {
-                items.append(FavouriteItem(kind: .scene(scene), id: sceneId, name: scene.name))
-            }
-        }
-
-        for serviceId in preferences.orderedFavouriteServiceIds {
-            if let service = serviceLookup[serviceId] {
-                items.append(FavouriteItem(kind: .service(service), id: serviceId, name: service.name))
+        for id in preferences.orderedFavouriteIds {
+            if let scene = sceneLookup[id] {
+                items.append(FavouriteItem(kind: .scene(scene), id: id, name: scene.name))
+            } else if let service = serviceLookup[id] {
+                items.append(FavouriteItem(kind: .service(service), id: id, name: service.name))
             }
         }
 
@@ -252,7 +287,7 @@ class AccessoriesSettingsView: NSView {
 
         let preferences = PreferencesManager.shared
         let padding: CGFloat = 12
-        let rowHeight: CGFloat = 28
+        let rowHeight = FavouritesRowLayout.rowHeight
         let headerHeight: CGFloat = 32
         let sectionSpacing: CGFloat = 12
 
@@ -309,13 +344,14 @@ class AccessoriesSettingsView: NSView {
                 icon: NSImage(systemSymbolName: "star.fill", accessibilityDescription: nil)
             )
             views.append((favouritesHeader, headerHeight))
+            views.append((NSView(), 12)) // Small gap after header
 
             // Create embedded table view for favourites (supports drag-drop)
             let tableHeight = CGFloat(favouriteItems.count) * rowHeight
             let tableContainer = createFavouritesTable(width: scrollView.bounds.width - padding * 2, height: tableHeight)
             views.append((tableContainer, tableHeight))
 
-            views.append((NSView(), sectionSpacing)) // Spacer
+            views.append((NSView(), sectionSpacing * 2)) // Extra spacer before next section
         }
 
         // Add scenes section if there are scenes (keep original order, not alphabetical)
@@ -323,26 +359,37 @@ class AccessoriesSettingsView: NSView {
             // Section header
             let scenesHeader = FavouritesSectionHeader(
                 title: "Scenes",
-                icon: NSImage(systemSymbolName: "sparkles", accessibilityDescription: nil)
+                icon: NSImage(systemSymbolName: "sparkles", accessibilityDescription: nil),
+                isHidden: preferences.hideScenesSection,
+                showEyeButton: true
             )
+            scenesHeader.onVisibilityToggled = { [weak self] in
+                preferences.hideScenesSection.toggle()
+                self?.needsRebuild = true
+                self?.needsLayout = true
+            }
             views.append((scenesHeader, headerHeight))
 
             // Scene rows (original order from data)
+            let isScenesHidden = preferences.hideScenesSection
             for scene in data.scenes {
                 let isFavourite = preferences.isFavourite(sceneId: scene.uniqueIdentifier)
                 let isSceneHidden = preferences.isHidden(sceneId: scene.uniqueIdentifier)
                 let row = FavouritesRowView(
                     itemType: .scene(scene),
                     isFavourite: isFavourite,
-                    isItemHidden: isSceneHidden
+                    isItemHidden: isSceneHidden,
+                    isSectionHidden: isScenesHidden
                 )
                 row.onFavouriteToggled = { [weak self] in
                     preferences.toggleFavourite(sceneId: scene.uniqueIdentifier)
                     self?.needsRebuild = true
                     self?.needsLayout = true
                 }
-                row.onVisibilityToggled = {
+                row.onVisibilityToggled = { [weak self] in
                     preferences.toggleHidden(sceneId: scene.uniqueIdentifier)
+                    self?.needsRebuild = true
+                    self?.needsLayout = true
                 }
                 views.append((row, rowHeight))
             }
@@ -355,9 +402,20 @@ class AccessoriesSettingsView: NSView {
             guard let services = servicesByRoom[room.uniqueIdentifier], !services.isEmpty else { continue }
 
             let roomIcon = iconForRoom(room.name)
+            let roomId = room.uniqueIdentifier
 
-            // Section header
-            let header = FavouritesSectionHeader(title: room.name, icon: roomIcon)
+            // Section header with eye button
+            let header = FavouritesSectionHeader(
+                title: room.name,
+                icon: roomIcon,
+                isHidden: preferences.isHidden(roomId: roomId),
+                showEyeButton: true
+            )
+            header.onVisibilityToggled = { [weak self] in
+                preferences.toggleHidden(roomId: roomId)
+                self?.needsRebuild = true
+                self?.needsLayout = true
+            }
             views.append((header, headerHeight))
 
             // Sort services by type order, then by name within type
@@ -371,21 +429,25 @@ class AccessoriesSettingsView: NSView {
             }
 
             // Service rows
+            let isRoomHidden = preferences.isHidden(roomId: roomId)
             for service in sortedServices {
                 let isFavourite = preferences.isFavourite(serviceId: service.uniqueIdentifier)
                 let isItemHidden = preferences.isHidden(serviceId: service.uniqueIdentifier)
                 let row = FavouritesRowView(
                     itemType: .service(service),
                     isFavourite: isFavourite,
-                    isItemHidden: isItemHidden
+                    isItemHidden: isItemHidden,
+                    isSectionHidden: isRoomHidden
                 )
                 row.onFavouriteToggled = { [weak self] in
                     preferences.toggleFavourite(serviceId: service.uniqueIdentifier)
                     self?.needsRebuild = true
                     self?.needsLayout = true
                 }
-                row.onVisibilityToggled = {
+                row.onVisibilityToggled = { [weak self] in
                     preferences.toggleHidden(serviceId: service.uniqueIdentifier)
+                    self?.needsRebuild = true
+                    self?.needsLayout = true
                 }
                 views.append((row, rowHeight))
             }
@@ -423,8 +485,10 @@ class AccessoriesSettingsView: NSView {
                     self?.needsRebuild = true
                     self?.needsLayout = true
                 }
-                row.onVisibilityToggled = {
+                row.onVisibilityToggled = { [weak self] in
                     preferences.toggleHidden(serviceId: service.uniqueIdentifier)
+                    self?.needsRebuild = true
+                    self?.needsLayout = true
                 }
                 views.append((row, rowHeight))
             }
@@ -509,13 +573,14 @@ class AccessoriesSettingsView: NSView {
         tableView.delegate = self
         tableView.dataSource = self
         tableView.headerView = nil
-        tableView.rowHeight = 28
+        tableView.rowHeight = FavouritesRowLayout.rowHeight
         tableView.intercellSpacing = NSSize(width: 0, height: 0)
         tableView.backgroundColor = .clear
         tableView.selectionHighlightStyle = .none
         tableView.registerForDraggedTypes([.favouriteItem])
         tableView.draggingDestinationFeedbackStyle = .gap
         tableView.allowsMultipleSelection = false
+        tableView.usesAutomaticRowHeights = false
 
         let column = NSTableColumn(identifier: NSUserInterfaceItemIdentifier("main"))
         column.width = width
@@ -589,7 +654,7 @@ extension AccessoriesSettingsView: NSTableViewDelegate, NSTableViewDataSource {
     }
 
     func tableView(_ tableView: NSTableView, heightOfRow row: Int) -> CGFloat {
-        return 28
+        return FavouritesRowLayout.rowHeight
     }
 
     // MARK: - Drag and Drop
@@ -628,37 +693,8 @@ extension AccessoriesSettingsView: NSTableViewDelegate, NSTableViewDataSource {
             return false
         }
 
-        let movedItem = favouriteItems[originalRow]
-        let preferences = PreferencesManager.shared
-
-        // Update the data model based on item type
-        // Scenes are displayed first, then services - they don't mix
-        switch movedItem.kind {
-        case .scene:
-            let sceneIds = preferences.orderedFavouriteSceneIds
-            guard let sourceIndex = sceneIds.firstIndex(of: movedItem.id) else { return false }
-
-            // For scenes, newRow directly maps to target index (scenes are first in list)
-            let targetIndex = min(max(0, newRow), sceneIds.count - 1)
-
-            if sourceIndex != targetIndex {
-                preferences.moveFavouriteScene(from: sourceIndex, to: targetIndex)
-            }
-
-        case .service:
-            let serviceIds = preferences.orderedFavouriteServiceIds
-            guard let sourceIndex = serviceIds.firstIndex(of: movedItem.id) else { return false }
-
-            // Count scenes to get the offset for services
-            let scenesCount = favouriteItems.filter { if case .scene = $0.kind { return true } else { return false } }.count
-
-            // Target index within services (subtract scenes offset)
-            let targetIndex = min(max(0, newRow - scenesCount), serviceIds.count - 1)
-
-            if sourceIndex != targetIndex {
-                preferences.moveFavouriteService(from: sourceIndex, to: targetIndex)
-            }
-        }
+        // Move in the unified list
+        PreferencesManager.shared.moveFavourite(from: originalRow, to: newRow)
 
         // Rebuild the favourites list and animate the table
         rebuildFavouritesList()

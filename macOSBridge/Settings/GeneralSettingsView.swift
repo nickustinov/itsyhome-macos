@@ -9,29 +9,56 @@ import AppKit
 
 class GeneralSettingsView: NSView {
 
-    private let sectionLabel: NSTextField
-    private let launchAtLoginCheckbox: NSButton
+    private let startupLabel: NSTextField
+    private let launchAtLoginLabel: NSTextField
+    private let launchAtLoginSwitch: ToggleSwitch
+
+    private let displayLabel: NSTextField
+    private let scenesGridLabel: NSTextField
+    private let scenesGridSwitch: ToggleSwitch
 
     override init(frame frameRect: NSRect) {
-        // Section header
-        sectionLabel = NSTextField(labelWithString: "Startup")
-        sectionLabel.font = DS.Typography.bodyMedium
-        sectionLabel.textColor = DS.Colors.foreground
+        // Startup section header
+        startupLabel = NSTextField(labelWithString: "Startup")
+        startupLabel.font = DS.Typography.bodyMedium
+        startupLabel.textColor = DS.Colors.foreground
 
-        // Launch at login checkbox
-        launchAtLoginCheckbox = NSButton(checkboxWithTitle: "Launch Itsyhome at login", target: nil, action: nil)
-        launchAtLoginCheckbox.font = DS.Typography.label
+        // Launch at login row
+        launchAtLoginLabel = NSTextField(labelWithString: "Launch Itsyhome at login")
+        launchAtLoginLabel.font = DS.Typography.label
+        launchAtLoginLabel.textColor = DS.Colors.foreground
+
+        launchAtLoginSwitch = ToggleSwitch()
+
+        // Display section header
+        displayLabel = NSTextField(labelWithString: "Display")
+        displayLabel.font = DS.Typography.bodyMedium
+        displayLabel.textColor = DS.Colors.foreground
+
+        // Scenes grid row
+        scenesGridLabel = NSTextField(labelWithString: "Show Scenes as grid")
+        scenesGridLabel.font = DS.Typography.label
+        scenesGridLabel.textColor = DS.Colors.foreground
+
+        scenesGridSwitch = ToggleSwitch()
 
         super.init(frame: frameRect)
 
-        addSubview(sectionLabel)
-        addSubview(launchAtLoginCheckbox)
+        addSubview(startupLabel)
+        addSubview(launchAtLoginLabel)
+        addSubview(launchAtLoginSwitch)
+        addSubview(displayLabel)
+        addSubview(scenesGridLabel)
+        addSubview(scenesGridSwitch)
 
-        launchAtLoginCheckbox.target = self
-        launchAtLoginCheckbox.action = #selector(toggleLaunchAtLogin(_:))
+        launchAtLoginSwitch.target = self
+        launchAtLoginSwitch.action = #selector(toggleLaunchAtLogin(_:))
+
+        scenesGridSwitch.target = self
+        scenesGridSwitch.action = #selector(toggleScenesGrid(_:))
 
         // Set initial state
-        launchAtLoginCheckbox.state = PreferencesManager.shared.launchAtLogin ? .on : .off
+        updateFromPreferences()
 
         // Listen for external preference changes
         NotificationCenter.default.addObserver(
@@ -55,31 +82,87 @@ class GeneralSettingsView: NSView {
 
         let padding: CGFloat = 20
         let topPadding: CGFloat = 20
+        let sectionSpacing: CGFloat = 28
+        let itemSpacing: CGFloat = 12
+        let switchWidth = DS.ControlSize.switchWidth
+        let switchHeight = DS.ControlSize.switchHeight
+        let switchLabelGap: CGFloat = 8
 
-        // Section label at top
-        sectionLabel.sizeToFit()
-        sectionLabel.frame = NSRect(
+        var y = bounds.height - topPadding
+
+        // Startup section
+        startupLabel.sizeToFit()
+        y -= startupLabel.frame.height
+        startupLabel.frame = NSRect(
             x: padding,
-            y: bounds.height - topPadding - sectionLabel.frame.height,
-            width: sectionLabel.frame.width,
-            height: sectionLabel.frame.height
+            y: y,
+            width: startupLabel.frame.width,
+            height: startupLabel.frame.height
         )
 
-        // Checkbox below section label
-        launchAtLoginCheckbox.sizeToFit()
-        launchAtLoginCheckbox.frame = NSRect(
+        // Launch at login row
+        launchAtLoginLabel.sizeToFit()
+        y -= itemSpacing + switchHeight
+        launchAtLoginSwitch.frame = NSRect(
             x: padding,
-            y: sectionLabel.frame.minY - 12 - launchAtLoginCheckbox.frame.height,
-            width: launchAtLoginCheckbox.frame.width,
-            height: launchAtLoginCheckbox.frame.height
+            y: y,
+            width: switchWidth,
+            height: switchHeight
+        )
+
+        launchAtLoginLabel.frame = NSRect(
+            x: padding + switchWidth + switchLabelGap,
+            y: y + (switchHeight - launchAtLoginLabel.frame.height) / 2,
+            width: launchAtLoginLabel.frame.width,
+            height: launchAtLoginLabel.frame.height
+        )
+
+        // Display section
+        y -= sectionSpacing
+
+        displayLabel.sizeToFit()
+        y -= displayLabel.frame.height
+        displayLabel.frame = NSRect(
+            x: padding,
+            y: y,
+            width: displayLabel.frame.width,
+            height: displayLabel.frame.height
+        )
+
+        // Scenes grid row
+        scenesGridLabel.sizeToFit()
+        y -= itemSpacing + switchHeight
+        scenesGridSwitch.frame = NSRect(
+            x: padding,
+            y: y,
+            width: switchWidth,
+            height: switchHeight
+        )
+
+        scenesGridLabel.frame = NSRect(
+            x: padding + switchWidth + switchLabelGap,
+            y: y + (switchHeight - scenesGridLabel.frame.height) / 2,
+            width: scenesGridLabel.frame.width,
+            height: scenesGridLabel.frame.height
         )
     }
 
-    @objc private func toggleLaunchAtLogin(_ sender: NSButton) {
-        PreferencesManager.shared.launchAtLogin = (sender.state == .on)
+    private func updateFromPreferences() {
+        let prefs = PreferencesManager.shared
+        launchAtLoginSwitch.setOn(prefs.launchAtLogin, animated: false)
+        scenesGridSwitch.setOn(prefs.scenesDisplayMode == .grid, animated: false)
+    }
+
+    @objc private func toggleLaunchAtLogin(_ sender: ToggleSwitch) {
+        PreferencesManager.shared.launchAtLogin = sender.isOn
+    }
+
+    @objc private func toggleScenesGrid(_ sender: ToggleSwitch) {
+        let mode: PreferencesManager.ScenesDisplayMode = sender.isOn ? .grid : .list
+        PreferencesManager.shared.scenesDisplayMode = mode
     }
 
     @objc private func preferencesDidChange() {
-        launchAtLoginCheckbox.state = PreferencesManager.shared.launchAtLogin ? .on : .off
+        updateFromPreferences()
     }
 }

@@ -120,7 +120,7 @@ class SettingsWindowController: NSWindowController, NSToolbarDelegate {
         let contentSize: NSSize
         switch pane {
         case .general:
-            contentSize = NSSize(width: 480, height: 120 + separatorHeight)
+            contentSize = NSSize(width: 480, height: 200 + separatorHeight)
         case .accessories:
             contentSize = NSSize(width: 480, height: 400 + separatorHeight)
         case .about:

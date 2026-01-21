@@ -7,6 +7,23 @@
 
 import AppKit
 
+struct FavouritesRowLayout {
+    static let rowHeight: CGFloat = 28
+    static let buttonSize: CGFloat = 20
+    static let iconSize: CGFloat = 14
+    static let spacing: CGFloat = 8
+    static let labelHeight: CGFloat = 17
+    static let leftPadding: CGFloat = 16  // Match table view internal padding
+
+    static var iconStartX: CGFloat {
+        leftPadding + buttonSize + spacing + buttonSize + spacing
+    }
+
+    static var labelStartX: CGFloat {
+        iconStartX + iconSize + spacing
+    }
+}
+
 class FavouritesRowView: NSView {
 
     enum ItemType {
@@ -22,16 +39,16 @@ class FavouritesRowView: NSView {
     private let itemType: ItemType
     private var isFavourite: Bool
     private var isItemHidden: Bool
+    private var isSectionHidden: Bool
 
     var onFavouriteToggled: (() -> Void)?
     var onVisibilityToggled: (() -> Void)?
 
-    private static let rowHeight: CGFloat = 28
-
-    init(itemType: ItemType, isFavourite: Bool, isItemHidden: Bool = false) {
+    init(itemType: ItemType, isFavourite: Bool, isItemHidden: Bool = false, isSectionHidden: Bool = false) {
         self.itemType = itemType
         self.isFavourite = isFavourite
         self.isItemHidden = isItemHidden
+        self.isSectionHidden = isSectionHidden
 
         // Star button
         starButton = NSButton(frame: .zero)
@@ -57,7 +74,7 @@ class FavouritesRowView: NSView {
         typeIcon = NSImageView()
         typeIcon.imageScaling = .scaleProportionallyUpOrDown
 
-        super.init(frame: NSRect(x: 0, y: 0, width: 360, height: Self.rowHeight))
+        super.init(frame: NSRect(x: 0, y: 0, width: 360, height: FavouritesRowLayout.rowHeight))
 
         addSubview(starButton)
         addSubview(eyeButton)
@@ -103,6 +120,11 @@ class FavouritesRowView: NSView {
         let symbolName = isItemHidden ? "eye.slash" : "eye"
         eyeButton.image = NSImage(systemSymbolName: symbolName, accessibilityDescription: nil)
         eyeButton.contentTintColor = isItemHidden ? DS.Colors.mutedForeground : DS.Colors.foreground
+
+        // Dim the whole row when hidden (either item or section)
+        let shouldDim = isItemHidden || isSectionHidden
+        nameLabel.alphaValue = shouldDim ? 0.5 : 1.0
+        typeIcon.alphaValue = shouldDim ? 0.5 : 1.0
     }
 
     @objc private func toggleFavourite() {
@@ -120,10 +142,10 @@ class FavouritesRowView: NSView {
     override func layout() {
         super.layout()
 
-        let buttonSize: CGFloat = 20
-        let iconSize: CGFloat = 16
-        let spacing: CGFloat = 8
-        var x: CGFloat = 0
+        let buttonSize = FavouritesRowLayout.buttonSize
+        let iconSize = FavouritesRowLayout.iconSize
+        let spacing = FavouritesRowLayout.spacing
+        var x: CGFloat = FavouritesRowLayout.leftPadding
 
         // Star button
         starButton.frame = NSRect(
@@ -134,7 +156,7 @@ class FavouritesRowView: NSView {
         )
         x += buttonSize + spacing
 
-        // Eye button (for both scenes and services)
+        // Eye button
         eyeButton.frame = NSRect(
             x: x,
             y: (bounds.height - buttonSize) / 2,
@@ -143,27 +165,26 @@ class FavouritesRowView: NSView {
         )
         x += buttonSize + spacing
 
-        // Type icon (at the end)
-        let iconX = bounds.width - iconSize
+        // Type icon (after buttons, before name)
         typeIcon.frame = NSRect(
-            x: iconX,
+            x: x,
             y: (bounds.height - iconSize) / 2,
             width: iconSize,
             height: iconSize
         )
+        x += iconSize + spacing
 
         // Name label (fills remaining space)
-        let labelWidth = iconX - x - spacing
         nameLabel.frame = NSRect(
             x: x,
-            y: (bounds.height - 17) / 2,
-            width: max(0, labelWidth),
-            height: 17
+            y: (bounds.height - FavouritesRowLayout.labelHeight) / 2,
+            width: max(0, bounds.width - x),
+            height: FavouritesRowLayout.labelHeight
         )
     }
 
     override var intrinsicContentSize: NSSize {
-        NSSize(width: NSView.noIntrinsicMetric, height: Self.rowHeight)
+        NSSize(width: NSView.noIntrinsicMetric, height: FavouritesRowLayout.rowHeight)
     }
 
     // MARK: - Icon helpers

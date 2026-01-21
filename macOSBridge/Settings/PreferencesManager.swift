@@ -18,8 +18,17 @@ final class PreferencesManager {
         static let launchAtLogin = "launchAtLogin"
         static let favouriteSceneIds = "favouriteSceneIds"
         static let favouriteServiceIds = "favouriteServiceIds"
+        static let orderedFavouriteIds = "orderedFavouriteIds"  // Unified ordered list
         static let hiddenSceneIds = "hiddenSceneIds"
         static let hiddenServiceIds = "hiddenServiceIds"
+        static let hideScenesSection = "hideScenesSection"
+        static let hiddenRoomIds = "hiddenRoomIds"
+        static let scenesDisplayMode = "scenesDisplayMode"  // "list" or "grid"
+    }
+
+    enum ScenesDisplayMode: String {
+        case list = "list"
+        case grid = "grid"
     }
 
     private let defaults = UserDefaults.standard
@@ -69,6 +78,42 @@ final class PreferencesManager {
         }
     }
 
+    // MARK: - Unified ordered favourites list
+
+    /// Single ordered list of all favourite IDs (scenes and services mixed)
+    var orderedFavouriteIds: [String] {
+        get { defaults.stringArray(forKey: Keys.orderedFavouriteIds) ?? [] }
+        set {
+            defaults.set(newValue, forKey: Keys.orderedFavouriteIds)
+            postNotification()
+        }
+    }
+
+    func moveFavourite(from sourceIndex: Int, to destinationIndex: Int) {
+        var ids = orderedFavouriteIds
+        guard sourceIndex >= 0, sourceIndex < ids.count,
+              destinationIndex >= 0, destinationIndex < ids.count else { return }
+        let item = ids.remove(at: sourceIndex)
+        ids.insert(item, at: destinationIndex)
+        orderedFavouriteIds = ids
+    }
+
+    func addFavourite(id: String) {
+        var ids = orderedFavouriteIds
+        if !ids.contains(id) {
+            ids.append(id)
+            orderedFavouriteIds = ids
+        }
+    }
+
+    func removeFavourite(id: String) {
+        var ids = orderedFavouriteIds
+        if let index = ids.firstIndex(of: id) {
+            ids.remove(at: index)
+            orderedFavouriteIds = ids
+        }
+    }
+
     // MARK: - Favourite scenes (ordered)
 
     var orderedFavouriteSceneIds: [String] {
@@ -93,8 +138,10 @@ final class PreferencesManager {
         var ids = orderedFavouriteSceneIds
         if let index = ids.firstIndex(of: sceneId) {
             ids.remove(at: index)
+            removeFavourite(id: sceneId)
         } else {
             ids.append(sceneId)
+            addFavourite(id: sceneId)
         }
         orderedFavouriteSceneIds = ids
     }
@@ -157,8 +204,10 @@ final class PreferencesManager {
         var ids = orderedFavouriteServiceIds
         if let index = ids.firstIndex(of: serviceId) {
             ids.remove(at: index)
+            removeFavourite(id: serviceId)
         } else {
             ids.append(serviceId)
+            addFavourite(id: serviceId)
         }
         orderedFavouriteServiceIds = ids
     }
@@ -195,6 +244,56 @@ final class PreferencesManager {
             ids.insert(serviceId)
         }
         hiddenServiceIds = ids
+    }
+
+    // MARK: - Hide scenes section
+
+    var hideScenesSection: Bool {
+        get { defaults.bool(forKey: Keys.hideScenesSection) }
+        set {
+            defaults.set(newValue, forKey: Keys.hideScenesSection)
+            postNotification()
+        }
+    }
+
+    // MARK: - Scenes display mode
+
+    var scenesDisplayMode: ScenesDisplayMode {
+        get {
+            let raw = defaults.string(forKey: Keys.scenesDisplayMode) ?? ScenesDisplayMode.list.rawValue
+            return ScenesDisplayMode(rawValue: raw) ?? .list
+        }
+        set {
+            defaults.set(newValue.rawValue, forKey: Keys.scenesDisplayMode)
+            postNotification()
+        }
+    }
+
+    // MARK: - Hidden rooms
+
+    var hiddenRoomIds: Set<String> {
+        get {
+            let array = defaults.stringArray(forKey: Keys.hiddenRoomIds) ?? []
+            return Set(array)
+        }
+        set {
+            defaults.set(Array(newValue), forKey: Keys.hiddenRoomIds)
+            postNotification()
+        }
+    }
+
+    func isHidden(roomId: String) -> Bool {
+        hiddenRoomIds.contains(roomId)
+    }
+
+    func toggleHidden(roomId: String) {
+        var ids = hiddenRoomIds
+        if ids.contains(roomId) {
+            ids.remove(roomId)
+        } else {
+            ids.insert(roomId)
+        }
+        hiddenRoomIds = ids
     }
 
     // MARK: - Notification

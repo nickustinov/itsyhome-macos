@@ -141,29 +141,29 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate {
             mainMenu.addItem(NSMenuItem.separator())
         }
 
-        // Favourites section (before Scenes)
-        let favouriteScenes = collectFavouriteScenes(from: data)
-        let favouriteServices = collectFavouriteServices(from: data)
-        if !favouriteScenes.isEmpty || !favouriteServices.isEmpty {
-            addFavouritesSection(scenes: favouriteScenes, services: favouriteServices)
+        // Favourites section (before Scenes) - unified order
+        let hasFavourites = addFavouritesSection(from: data)
+        if hasFavourites {
             mainMenu.addItem(NSMenuItem.separator())
         }
 
-        // Scenes
-        if data.scenes.count > 0 {
+        // Scenes (if not hidden)
+        let preferences = PreferencesManager.shared
+        if data.scenes.count > 0 && !preferences.hideScenesSection {
             addScenes(data.scenes)
             mainMenu.addItem(NSMenuItem.separator())
         }
 
-        // Filter hidden services from accessories
+        // Filter hidden services and rooms from accessories
         let filteredAccessories = filterHiddenServices(from: data.accessories)
+        let visibleRooms = data.rooms.filter { !preferences.isHidden(roomId: $0.uniqueIdentifier) }
 
-        if data.rooms.count == 0 && filteredAccessories.count == 0 {
+        if visibleRooms.count == 0 && filteredAccessories.count == 0 {
             let emptyItem = NSMenuItem(title: "No devices found", action: nil, keyEquivalent: "")
             emptyItem.isEnabled = false
             mainMenu.addItem(emptyItem)
         } else {
-            addRoomsAndAccessories(rooms: data.rooms, accessories: filteredAccessories)
+            addRoomsAndAccessories(rooms: visibleRooms, accessories: filteredAccessories)
         }
 
         mainMenu.addItem(NSMenuItem.separator())
@@ -172,17 +172,35 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate {
 
     // MARK: - Favourites
 
-    private func collectFavouriteScenes(from data: MenuData) -> [SceneData] {
+    /// Add favourites in unified order (scenes and services mixed)
+    /// Returns true if any favourites were added
+    @discardableResult
+    private func addFavouritesSection(from data: MenuData) -> Bool {
         let preferences = PreferencesManager.shared
-        let sceneLookup = Dictionary(uniqueKeysWithValues: data.scenes.map { ($0.uniqueIdentifier, $0) })
-        return preferences.orderedFavouriteSceneIds.compactMap { sceneLookup[$0] }
-    }
 
-    private func collectFavouriteServices(from data: MenuData) -> [ServiceData] {
-        let preferences = PreferencesManager.shared
+        // Build lookup maps
+        let sceneLookup = Dictionary(uniqueKeysWithValues: data.scenes.map { ($0.uniqueIdentifier, $0) })
         let allServices = data.accessories.flatMap { $0.services }
         let serviceLookup = Dictionary(uniqueKeysWithValues: allServices.map { ($0.uniqueIdentifier, $0) })
-        return preferences.orderedFavouriteServiceIds.compactMap { serviceLookup[$0] }
+
+        var addedAny = false
+
+        // Add items in unified order
+        for id in preferences.orderedFavouriteIds {
+            if let scene = sceneLookup[id] {
+                let item = SceneMenuItem(sceneData: scene, bridge: iOSBridge)
+                mainMenu.addItem(item)
+                sceneMenuItems.append(item)
+                addedAny = true
+            } else if let service = serviceLookup[id] {
+                if let item = createMenuItemForService(service) {
+                    mainMenu.addItem(item)
+                    addedAny = true
+                }
+            }
+        }
+
+        return addedAny
     }
 
     private func filterHiddenServices(from accessories: [AccessoryData]) -> [AccessoryData] {
@@ -198,22 +216,6 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate {
                 services: filteredServices,
                 isReachable: accessory.isReachable
             )
-        }
-    }
-
-    private func addFavouritesSection(scenes: [SceneData], services: [ServiceData]) {
-        // Add favourite scenes in user's preferred order
-        for scene in scenes {
-            let item = SceneMenuItem(sceneData: scene, bridge: iOSBridge)
-            mainMenu.addItem(item)
-            sceneMenuItems.append(item)
-        }
-
-        // Add favourite services in user's preferred order
-        for service in services {
-            if let item = createMenuItemForService(service) {
-                mainMenu.addItem(item)
-            }
         }
     }
     
@@ -242,18 +244,25 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate {
 
         guard !visibleScenes.isEmpty else { return }
 
-        let scenesItem = NSMenuItem(title: "Scenes", action: nil, keyEquivalent: "")
-        scenesItem.image = NSImage(systemSymbolName: "sparkles", accessibilityDescription: nil)
+        if preferences.scenesDisplayMode == .grid {
+            // Grid view - use ScenesGridMenuItem
+            let gridItem = ScenesGridMenuItem(scenes: visibleScenes, bridge: iOSBridge)
+            mainMenu.addItem(gridItem)
+        } else {
+            // List view - use submenu with SceneMenuItems
+            let scenesItem = NSMenuItem(title: "Scenes", action: nil, keyEquivalent: "")
+            scenesItem.image = NSImage(systemSymbolName: "sparkles", accessibilityDescription: nil)
 
-        let submenu = NSMenu()
-        for scene in visibleScenes {
-            let item = SceneMenuItem(sceneData: scene, bridge: iOSBridge)
-            submenu.addItem(item)
-            sceneMenuItems.append(item)
+            let submenu = NSMenu()
+            for scene in visibleScenes {
+                let item = SceneMenuItem(sceneData: scene, bridge: iOSBridge)
+                submenu.addItem(item)
+                sceneMenuItems.append(item)
+            }
+
+            scenesItem.submenu = submenu
+            mainMenu.addItem(scenesItem)
         }
-
-        scenesItem.submenu = submenu
-        mainMenu.addItem(scenesItem)
     }
     
     private func addRoomsAndAccessories(rooms: [RoomData], accessories: [AccessoryData]) {
