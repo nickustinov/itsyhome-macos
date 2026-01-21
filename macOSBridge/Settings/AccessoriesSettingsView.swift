@@ -19,6 +19,161 @@ private struct FavouriteItem {
     let name: String
 }
 
+// MARK: - Shortcut button
+
+private class ShortcutButton: NSButton {
+
+    var isRecording = false {
+        didSet { updateAppearance() }
+    }
+
+    var shortcut: PreferencesManager.ShortcutData? {
+        didSet { updateAppearance() }
+    }
+
+    var onShortcutRecorded: ((PreferencesManager.ShortcutData?) -> Void)?
+
+    private var localMonitor: Any?
+
+    override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        setup()
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        setup()
+    }
+
+    private func setup() {
+        bezelStyle = .inline
+        isBordered = false
+        focusRingType = .none
+        font = NSFont.systemFont(ofSize: 11)
+        alignment = .right
+        target = self
+        action = #selector(clicked)
+        updateAppearance()
+    }
+
+    override func rightMouseDown(with event: NSEvent) {
+        // Right-click clears the shortcut
+        if shortcut != nil {
+            shortcut = nil
+            onShortcutRecorded?(nil)
+        }
+    }
+
+    private func updateAppearance() {
+        if isRecording {
+            title = "Press shortcut..."
+            contentTintColor = DS.Colors.primary
+        } else if let shortcut = shortcut {
+            title = shortcut.displayString
+            contentTintColor = DS.Colors.foreground
+        } else {
+            title = "Add shortcut"
+            contentTintColor = DS.Colors.mutedForeground
+        }
+    }
+
+    @objc private func clicked() {
+        if isRecording {
+            stopRecording()
+        } else {
+            startRecording()
+        }
+    }
+
+    private func startRecording() {
+        isRecording = true
+        window?.makeFirstResponder(self)
+
+        localMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            self?.handleKeyEvent(event)
+            return nil  // Consume the event
+        }
+    }
+
+    private func stopRecording() {
+        isRecording = false
+        if let monitor = localMonitor {
+            NSEvent.removeMonitor(monitor)
+            localMonitor = nil
+        }
+    }
+
+    private func handleKeyEvent(_ event: NSEvent) {
+        // Escape cancels
+        if event.keyCode == 53 {
+            stopRecording()
+            return
+        }
+
+        // Delete/Backspace clears shortcut
+        if event.keyCode == 51 || event.keyCode == 117 {
+            stopRecording()
+            shortcut = nil
+            onShortcutRecorded?(nil)
+            return
+        }
+
+        // Require at least one modifier (Cmd, Ctrl, Option)
+        let modifiers = event.modifierFlags.intersection([.command, .control, .option, .shift])
+        if modifiers.isEmpty {
+            NSSound.beep()
+            return
+        }
+
+        let newShortcut = PreferencesManager.ShortcutData(keyCode: event.keyCode, modifiers: modifiers)
+        stopRecording()
+        shortcut = newShortcut
+        onShortcutRecorded?(newShortcut)
+    }
+
+    override func resignFirstResponder() -> Bool {
+        if isRecording {
+            stopRecording()
+        }
+        return super.resignFirstResponder()
+    }
+
+    override var acceptsFirstResponder: Bool { true }
+}
+
+// MARK: - ShortcutData display extension
+
+extension PreferencesManager.ShortcutData {
+    var displayString: String {
+        var result = ""
+
+        if modifierFlags.contains(.control) { result += "⌃" }
+        if modifierFlags.contains(.option) { result += "⌥" }
+        if modifierFlags.contains(.shift) { result += "⇧" }
+        if modifierFlags.contains(.command) { result += "⌘" }
+
+        result += keyCodeToString(keyCode)
+        return result
+    }
+
+    private func keyCodeToString(_ keyCode: UInt16) -> String {
+        let keyMap: [UInt16: String] = [
+            0: "A", 1: "S", 2: "D", 3: "F", 4: "H", 5: "G", 6: "Z", 7: "X",
+            8: "C", 9: "V", 11: "B", 12: "Q", 13: "W", 14: "E", 15: "R",
+            16: "Y", 17: "T", 18: "1", 19: "2", 20: "3", 21: "4", 22: "6",
+            23: "5", 24: "=", 25: "9", 26: "7", 27: "-", 28: "8", 29: "0",
+            30: "]", 31: "O", 32: "U", 33: "[", 34: "I", 35: "P", 37: "L",
+            38: "J", 39: "'", 40: "K", 41: ";", 42: "\\", 43: ",", 44: "/",
+            45: "N", 46: "M", 47: ".", 48: "Tab", 49: "Space", 50: "`",
+            51: "⌫", 53: "Esc", 96: "F5", 97: "F6", 98: "F7", 99: "F3",
+            100: "F8", 101: "F9", 103: "F11", 105: "F13", 107: "F14",
+            109: "F10", 111: "F12", 113: "F15", 118: "F4", 119: "F2",
+            120: "F1", 122: "F1", 123: "←", 124: "→", 125: "↓", 126: "↑"
+        ]
+        return keyMap[keyCode] ?? "?"
+    }
+}
+
 // MARK: - Draggable favourite row
 
 private class DraggableFavouriteRowView: NSView {
@@ -27,10 +182,14 @@ private class DraggableFavouriteRowView: NSView {
     private let dragHandle: NSImageView
     private let typeIcon: NSImageView
     private let nameLabel: NSTextField
+    private let shortcutButton: ShortcutButton
 
+    private let itemId: String
     var onRemove: (() -> Void)?
+    var onShortcutChanged: ((PreferencesManager.ShortcutData?) -> Void)?
 
     init(item: FavouriteItem) {
+        self.itemId = item.id
         // Star button
         starButton = NSButton(frame: .zero)
         starButton.bezelStyle = .inline
@@ -57,15 +216,26 @@ private class DraggableFavouriteRowView: NSView {
         nameLabel.textColor = DS.Colors.foreground
         nameLabel.lineBreakMode = .byTruncatingTail
 
+        // Shortcut button
+        shortcutButton = ShortcutButton(frame: .zero)
+        shortcutButton.shortcut = PreferencesManager.shared.shortcut(for: item.id)
+
         super.init(frame: NSRect(x: 0, y: 0, width: 360, height: FavouritesRowLayout.rowHeight))
 
         addSubview(starButton)
         addSubview(dragHandle)
         addSubview(typeIcon)
         addSubview(nameLabel)
+        addSubview(shortcutButton)
 
         starButton.target = self
         starButton.action = #selector(starClicked)
+
+        shortcutButton.onShortcutRecorded = { [weak self] shortcut in
+            guard let self = self else { return }
+            PreferencesManager.shared.setShortcut(shortcut, for: self.itemId)
+            self.onShortcutChanged?(shortcut)
+        }
 
         // Set type icon based on item
         switch item.kind {
@@ -87,10 +257,10 @@ private class DraggableFavouriteRowView: NSView {
     override func layout() {
         super.layout()
 
-        // Use exact same layout as FavouritesRowView
         let buttonSize = FavouritesRowLayout.buttonSize
         let iconSize = FavouritesRowLayout.iconSize
         let spacing = FavouritesRowLayout.spacing
+        let rightPadding: CGFloat = 0
         var x: CGFloat = 0
 
         // Star button
@@ -102,7 +272,7 @@ private class DraggableFavouriteRowView: NSView {
         )
         x += buttonSize + spacing
 
-        // Drag handle (same position as eye button)
+        // Drag handle
         dragHandle.frame = NSRect(
             x: x,
             y: (bounds.height - buttonSize) / 2,
@@ -111,20 +281,29 @@ private class DraggableFavouriteRowView: NSView {
         )
         x += buttonSize + spacing
 
-        // Type icon
+        // Type icon on far right
         typeIcon.frame = NSRect(
-            x: x,
+            x: bounds.width - iconSize - rightPadding,
             y: (bounds.height - iconSize) / 2,
             width: iconSize,
             height: iconSize
         )
-        x += iconSize + spacing
 
-        // Name label (fills remaining space)
+        // Shortcut button to the left of type icon
+        let shortcutWidth: CGFloat = 110
+        let shortcutHeight: CGFloat = 20
+        shortcutButton.frame = NSRect(
+            x: bounds.width - iconSize - rightPadding - 16 - shortcutWidth,
+            y: (bounds.height - shortcutHeight) / 2,
+            width: shortcutWidth,
+            height: shortcutHeight
+        )
+
+        // Name label (fills space between drag handle and shortcut button)
         nameLabel.frame = NSRect(
             x: x,
             y: (bounds.height - FavouritesRowLayout.labelHeight) / 2,
-            width: max(0, bounds.width - x),
+            width: max(0, bounds.width - x - shortcutWidth - iconSize - rightPadding - 24),
             height: FavouritesRowLayout.labelHeight
         )
     }
@@ -244,6 +423,8 @@ class AccessoriesSettingsView: NSView {
 
     func configure(with data: MenuData) {
         self.menuData = data
+        // Set current home context for per-home preferences
+        PreferencesManager.shared.currentHomeId = data.selectedHomeId
         needsRebuild = true
         shouldScrollToTop = true
         needsLayout = true
@@ -560,9 +741,9 @@ class AccessoriesSettingsView: NSView {
 
         // Set frames directly (static layout)
         let textX: CGFloat = 12 + iconWidth + 8
-        star1.frame = NSRect(x: 12, y: 32, width: iconWidth, height: 18)
+        star1.frame = NSRect(x: 12, y: 34, width: iconWidth, height: 18)
         label1.frame = NSRect(x: textX, y: 30, width: 320, height: 22)
-        eye2.frame = NSRect(x: 12, y: 8, width: iconWidth, height: 18)
+        eye2.frame = NSRect(x: 12, y: 10, width: iconWidth, height: 18)
         label2.frame = NSRect(x: textX, y: 6, width: 320, height: 22)
 
         return cardView

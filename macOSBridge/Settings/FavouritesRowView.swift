@@ -20,7 +20,7 @@ struct FavouritesRowLayout {
     }
 
     static var labelStartX: CGFloat {
-        iconStartX + iconSize + spacing
+        iconStartX + iconSize
     }
 }
 
@@ -145,6 +145,7 @@ class FavouritesRowView: NSView {
         let buttonSize = FavouritesRowLayout.buttonSize
         let iconSize = FavouritesRowLayout.iconSize
         let spacing = FavouritesRowLayout.spacing
+        let rightPadding: CGFloat = 16
         var x: CGFloat = FavouritesRowLayout.leftPadding
 
         // Star button
@@ -165,20 +166,19 @@ class FavouritesRowView: NSView {
         )
         x += buttonSize + spacing
 
-        // Type icon (after buttons, before name)
+        // Type icon on far right
         typeIcon.frame = NSRect(
-            x: x,
+            x: bounds.width - iconSize - rightPadding,
             y: (bounds.height - iconSize) / 2,
             width: iconSize,
             height: iconSize
         )
-        x += iconSize + spacing
 
-        // Name label (fills remaining space)
+        // Name label (fills space between buttons and icon)
         nameLabel.frame = NSRect(
             x: x,
             y: (bounds.height - FavouritesRowLayout.labelHeight) / 2,
-            width: max(0, bounds.width - x),
+            width: max(0, bounds.width - x - iconSize - rightPadding - 8),
             height: FavouritesRowLayout.labelHeight
         )
     }

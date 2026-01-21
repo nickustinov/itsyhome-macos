@@ -36,11 +36,90 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate {
             name: PreferencesManager.preferencesChangedNotification,
             object: nil
         )
+
+        // Setup hotkey handler
+        HotkeyManager.shared.onHotkeyTriggered = { [weak self] favouriteId in
+            self?.handleHotkeyForFavourite(favouriteId)
+        }
     }
 
     @objc private func preferencesDidChange() {
         if let data = currentMenuData {
             rebuildMenu(with: data)
+        }
+        // Re-register hotkeys when preferences change
+        HotkeyManager.shared.registerShortcuts()
+    }
+
+    private func handleHotkeyForFavourite(_ favouriteId: String) {
+        guard let data = currentMenuData else { return }
+
+        // Check if it's a scene
+        if let scene = data.scenes.first(where: { $0.uniqueIdentifier == favouriteId }),
+           let sceneUUID = UUID(uuidString: scene.uniqueIdentifier) {
+            iOSBridge?.executeScene(identifier: sceneUUID)
+            return
+        }
+
+        // Check if it's a service - find and toggle it
+        for accessory in data.accessories {
+            for service in accessory.services {
+                if service.uniqueIdentifier == favouriteId {
+                    toggleService(service)
+                    return
+                }
+            }
+        }
+    }
+
+    private func toggleService(_ service: ServiceData) {
+        // Lights, switches, outlets - use powerStateId (Bool)
+        if let idString = service.powerStateId, let id = UUID(uuidString: idString) {
+            let current = iOSBridge?.getCharacteristicValue(identifier: id) as? Bool ?? false
+            iOSBridge?.writeCharacteristic(identifier: id, value: !current)
+            return
+        }
+
+        // AC/HeaterCooler, Fan - use activeId (Int: 0=inactive, 1=active)
+        if let idString = service.activeId, let id = UUID(uuidString: idString) {
+            let current = iOSBridge?.getCharacteristicValue(identifier: id) as? Int ?? 0
+            iOSBridge?.writeCharacteristic(identifier: id, value: current == 0 ? 1 : 0)
+            return
+        }
+
+        // Locks - use lockTargetStateId (Int: 0=unsecured, 1=secured)
+        if let idString = service.lockTargetStateId, let id = UUID(uuidString: idString) {
+            let current = iOSBridge?.getCharacteristicValue(identifier: id) as? Int ?? 1
+            iOSBridge?.writeCharacteristic(identifier: id, value: current == 0 ? 1 : 0)
+            return
+        }
+
+        // Window coverings/blinds - use targetPositionId (Int: 0=closed, 100=open)
+        if let idString = service.targetPositionId, let id = UUID(uuidString: idString) {
+            let current = iOSBridge?.getCharacteristicValue(identifier: id) as? Int ?? 0
+            iOSBridge?.writeCharacteristic(identifier: id, value: current > 50 ? 0 : 100)
+            return
+        }
+
+        // Garage doors - use targetDoorStateId (Int: 0=open, 1=closed)
+        if let idString = service.targetDoorStateId, let id = UUID(uuidString: idString) {
+            let current = iOSBridge?.getCharacteristicValue(identifier: id) as? Int ?? 1
+            iOSBridge?.writeCharacteristic(identifier: id, value: current == 0 ? 1 : 0)
+            return
+        }
+
+        // Thermostats - use targetHeatingCoolingStateId (0=off, 1=heat, 2=cool, 3=auto)
+        if let idString = service.targetHeatingCoolingStateId, let id = UUID(uuidString: idString) {
+            let current = iOSBridge?.getCharacteristicValue(identifier: id) as? Int ?? 0
+            iOSBridge?.writeCharacteristic(identifier: id, value: current == 0 ? 3 : 0)
+            return
+        }
+
+        // Dimmable lights without power state - toggle brightness
+        if let idString = service.brightnessId, let id = UUID(uuidString: idString) {
+            let current = iOSBridge?.getCharacteristicValue(identifier: id) as? Int ?? 0
+            iOSBridge?.writeCharacteristic(identifier: id, value: current > 0 ? 0 : 100)
+            return
         }
     }
     
@@ -135,11 +214,11 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate {
         mainMenu.removeAllItems()
         sceneMenuItems = []
 
-        // Home selector (if multiple homes)
-        if data.homes.count > 1 {
-            addHomeSelector(homes: data.homes, selectedId: data.selectedHomeId)
-            mainMenu.addItem(NSMenuItem.separator())
-        }
+        // Set current home context for per-home preferences
+        PreferencesManager.shared.currentHomeId = data.selectedHomeId
+
+        // Register global hotkeys for this home's shortcuts
+        HotkeyManager.shared.registerShortcuts()
 
         // Favourites section (before Scenes) - unified order
         let hasFavourites = addFavouritesSection(from: data)
@@ -452,11 +531,16 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate {
     }
     
     private func addFooterItems() {
+        // Home selector (if multiple homes)
+        if let data = currentMenuData, data.homes.count > 1 {
+            addHomeSelector(homes: data.homes, selectedId: data.selectedHomeId)
+        }
+
         // Settings menu item
         let settingsItem = NSMenuItem(
             title: "Settings...",
             action: #selector(openSettings(_:)),
-            keyEquivalent: ","
+            keyEquivalent: ""
         )
         settingsItem.target = self
         settingsItem.image = NSImage(systemSymbolName: "gear", accessibilityDescription: nil)
@@ -464,7 +548,17 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate {
 
         mainMenu.addItem(NSMenuItem.separator())
 
-        let quitItem = NSMenuItem(title: "Quit Itsyhome", action: #selector(quit(_:)), keyEquivalent: "q")
+        // Refresh menu item
+        let refreshItem = NSMenuItem(
+            title: "Refresh",
+            action: #selector(refreshHomeKit(_:)),
+            keyEquivalent: ""
+        )
+        refreshItem.target = self
+        refreshItem.image = NSImage(systemSymbolName: "arrow.clockwise", accessibilityDescription: nil)
+        mainMenu.addItem(refreshItem)
+
+        let quitItem = NSMenuItem(title: "Quit", action: #selector(quit(_:)), keyEquivalent: "")
         quitItem.target = self
         mainMenu.addItem(quitItem)
     }
@@ -499,6 +593,8 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate {
     
     @objc private func selectHome(_ sender: NSMenuItem) {
         if let uuidString = sender.representedObject as? String, let uuid = UUID(uuidString: uuidString) {
+            // Close Settings window to avoid stale home context
+            SettingsWindowController.shared.close()
             iOSBridge?.selectedHomeIdentifier = uuid
         }
     }
@@ -508,6 +604,10 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate {
             SettingsWindowController.shared.configure(with: data)
         }
         SettingsWindowController.shared.showWindow(nil)
+    }
+
+    @objc private func refreshHomeKit(_ sender: Any?) {
+        iOSBridge?.reloadHomeKit()
     }
 
     @objc private func quit(_ sender: Any?) {

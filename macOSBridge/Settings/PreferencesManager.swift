@@ -3,8 +3,10 @@
 //  macOSBridge
 //
 //  Manages user preferences for favourites and settings
+//  Per-home settings are keyed by home ID
 //
 
+import AppKit
 import Foundation
 import ServiceManagement
 
@@ -14,16 +16,22 @@ final class PreferencesManager {
 
     static let preferencesChangedNotification = Notification.Name("PreferencesManagerDidChange")
 
+    // Current home context - must be set before accessing per-home preferences
+    var currentHomeId: String?
+
     private enum Keys {
+        // Global settings
         static let launchAtLogin = "launchAtLogin"
+        static let scenesDisplayMode = "scenesDisplayMode"
+
+        // Per-home settings (use with homeKey helper)
+        static let orderedFavouriteIds = "orderedFavouriteIds"
         static let favouriteSceneIds = "favouriteSceneIds"
         static let favouriteServiceIds = "favouriteServiceIds"
-        static let orderedFavouriteIds = "orderedFavouriteIds"  // Unified ordered list
         static let hiddenSceneIds = "hiddenSceneIds"
         static let hiddenServiceIds = "hiddenServiceIds"
         static let hideScenesSection = "hideScenesSection"
         static let hiddenRoomIds = "hiddenRoomIds"
-        static let scenesDisplayMode = "scenesDisplayMode"  // "list" or "grid"
     }
 
     enum ScenesDisplayMode: String {
@@ -43,6 +51,18 @@ final class PreferencesManager {
         syncLaunchAtLoginState()
     }
 
+    // MARK: - Per-home key helper
+
+    private func homeKey(_ base: String) -> String {
+        guard let homeId = currentHomeId else {
+            // Fallback to global key if no home set (shouldn't happen in normal use)
+            return base
+        }
+        return "\(base)_\(homeId)"
+    }
+
+    // MARK: - Launch at login state
+
     private func syncLaunchAtLoginState() {
         let shouldLaunch = defaults.bool(forKey: Keys.launchAtLogin)
         let currentStatus = SMAppService.mainApp.status
@@ -55,7 +75,7 @@ final class PreferencesManager {
         }
     }
 
-    // MARK: - Launch at login
+    // MARK: - Launch at login (global)
 
     var launchAtLogin: Bool {
         get { defaults.bool(forKey: Keys.launchAtLogin) }
@@ -78,13 +98,26 @@ final class PreferencesManager {
         }
     }
 
-    // MARK: - Unified ordered favourites list
+    // MARK: - Scenes display mode (global)
+
+    var scenesDisplayMode: ScenesDisplayMode {
+        get {
+            let raw = defaults.string(forKey: Keys.scenesDisplayMode) ?? ScenesDisplayMode.list.rawValue
+            return ScenesDisplayMode(rawValue: raw) ?? .list
+        }
+        set {
+            defaults.set(newValue.rawValue, forKey: Keys.scenesDisplayMode)
+            postNotification()
+        }
+    }
+
+    // MARK: - Unified ordered favourites list (per-home)
 
     /// Single ordered list of all favourite IDs (scenes and services mixed)
     var orderedFavouriteIds: [String] {
-        get { defaults.stringArray(forKey: Keys.orderedFavouriteIds) ?? [] }
+        get { defaults.stringArray(forKey: homeKey(Keys.orderedFavouriteIds)) ?? [] }
         set {
-            defaults.set(newValue, forKey: Keys.orderedFavouriteIds)
+            defaults.set(newValue, forKey: homeKey(Keys.orderedFavouriteIds))
             postNotification()
         }
     }
@@ -114,12 +147,12 @@ final class PreferencesManager {
         }
     }
 
-    // MARK: - Favourite scenes (ordered)
+    // MARK: - Favourite scenes (per-home)
 
     var orderedFavouriteSceneIds: [String] {
-        get { defaults.stringArray(forKey: Keys.favouriteSceneIds) ?? [] }
+        get { defaults.stringArray(forKey: homeKey(Keys.favouriteSceneIds)) ?? [] }
         set {
-            defaults.set(newValue, forKey: Keys.favouriteSceneIds)
+            defaults.set(newValue, forKey: homeKey(Keys.favouriteSceneIds))
             postNotification()
         }
     }
@@ -153,15 +186,15 @@ final class PreferencesManager {
         orderedFavouriteSceneIds = ids
     }
 
-    // MARK: - Hidden scenes
+    // MARK: - Hidden scenes (per-home)
 
     var hiddenSceneIds: Set<String> {
         get {
-            let array = defaults.stringArray(forKey: Keys.hiddenSceneIds) ?? []
+            let array = defaults.stringArray(forKey: homeKey(Keys.hiddenSceneIds)) ?? []
             return Set(array)
         }
         set {
-            defaults.set(Array(newValue), forKey: Keys.hiddenSceneIds)
+            defaults.set(Array(newValue), forKey: homeKey(Keys.hiddenSceneIds))
             postNotification()
         }
     }
@@ -180,12 +213,12 @@ final class PreferencesManager {
         hiddenSceneIds = ids
     }
 
-    // MARK: - Favourite services (ordered)
+    // MARK: - Favourite services (per-home)
 
     var orderedFavouriteServiceIds: [String] {
-        get { defaults.stringArray(forKey: Keys.favouriteServiceIds) ?? [] }
+        get { defaults.stringArray(forKey: homeKey(Keys.favouriteServiceIds)) ?? [] }
         set {
-            defaults.set(newValue, forKey: Keys.favouriteServiceIds)
+            defaults.set(newValue, forKey: homeKey(Keys.favouriteServiceIds))
             postNotification()
         }
     }
@@ -219,15 +252,15 @@ final class PreferencesManager {
         orderedFavouriteServiceIds = ids
     }
 
-    // MARK: - Hidden services
+    // MARK: - Hidden services (per-home)
 
     var hiddenServiceIds: Set<String> {
         get {
-            let array = defaults.stringArray(forKey: Keys.hiddenServiceIds) ?? []
+            let array = defaults.stringArray(forKey: homeKey(Keys.hiddenServiceIds)) ?? []
             return Set(array)
         }
         set {
-            defaults.set(Array(newValue), forKey: Keys.hiddenServiceIds)
+            defaults.set(Array(newValue), forKey: homeKey(Keys.hiddenServiceIds))
             postNotification()
         }
     }
@@ -246,38 +279,25 @@ final class PreferencesManager {
         hiddenServiceIds = ids
     }
 
-    // MARK: - Hide scenes section
+    // MARK: - Hide scenes section (per-home)
 
     var hideScenesSection: Bool {
-        get { defaults.bool(forKey: Keys.hideScenesSection) }
+        get { defaults.bool(forKey: homeKey(Keys.hideScenesSection)) }
         set {
-            defaults.set(newValue, forKey: Keys.hideScenesSection)
+            defaults.set(newValue, forKey: homeKey(Keys.hideScenesSection))
             postNotification()
         }
     }
 
-    // MARK: - Scenes display mode
-
-    var scenesDisplayMode: ScenesDisplayMode {
-        get {
-            let raw = defaults.string(forKey: Keys.scenesDisplayMode) ?? ScenesDisplayMode.list.rawValue
-            return ScenesDisplayMode(rawValue: raw) ?? .list
-        }
-        set {
-            defaults.set(newValue.rawValue, forKey: Keys.scenesDisplayMode)
-            postNotification()
-        }
-    }
-
-    // MARK: - Hidden rooms
+    // MARK: - Hidden rooms (per-home)
 
     var hiddenRoomIds: Set<String> {
         get {
-            let array = defaults.stringArray(forKey: Keys.hiddenRoomIds) ?? []
+            let array = defaults.stringArray(forKey: homeKey(Keys.hiddenRoomIds)) ?? []
             return Set(array)
         }
         set {
-            defaults.set(Array(newValue), forKey: Keys.hiddenRoomIds)
+            defaults.set(Array(newValue), forKey: homeKey(Keys.hiddenRoomIds))
             postNotification()
         }
     }
@@ -294,6 +314,63 @@ final class PreferencesManager {
             ids.insert(roomId)
         }
         hiddenRoomIds = ids
+    }
+
+    // MARK: - Shortcuts (per-home)
+
+    /// Shortcut data: keyCode (UInt16) and modifiers (UInt)
+    struct ShortcutData: Codable, Equatable {
+        let keyCode: UInt16
+        let modifiers: UInt  // NSEvent.ModifierFlags.rawValue
+
+        var modifierFlags: NSEvent.ModifierFlags {
+            NSEvent.ModifierFlags(rawValue: modifiers)
+        }
+
+        init(keyCode: UInt16, modifiers: NSEvent.ModifierFlags) {
+            self.keyCode = keyCode
+            self.modifiers = modifiers.rawValue
+        }
+    }
+
+    private var shortcutsKey: String {
+        homeKey("shortcuts")
+    }
+
+    /// Get all shortcuts for current home
+    var shortcuts: [String: ShortcutData] {
+        get {
+            guard let data = defaults.data(forKey: shortcutsKey),
+                  let dict = try? JSONDecoder().decode([String: ShortcutData].self, from: data) else {
+                return [:]
+            }
+            return dict
+        }
+        set {
+            if let data = try? JSONEncoder().encode(newValue) {
+                defaults.set(data, forKey: shortcutsKey)
+                postNotification()
+            }
+        }
+    }
+
+    func shortcut(for favouriteId: String) -> ShortcutData? {
+        shortcuts[favouriteId]
+    }
+
+    func setShortcut(_ shortcut: ShortcutData?, for favouriteId: String) {
+        var current = shortcuts
+        current[favouriteId] = shortcut
+        shortcuts = current
+    }
+
+    func removeShortcut(for favouriteId: String) {
+        setShortcut(nil, for: favouriteId)
+    }
+
+    /// Find favourite ID by shortcut (for lookup when hotkey triggered)
+    func favouriteId(for shortcut: ShortcutData) -> String? {
+        shortcuts.first { $0.value == shortcut }?.key
     }
 
     // MARK: - Notification
