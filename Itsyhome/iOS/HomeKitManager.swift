@@ -154,6 +154,11 @@ class HomeKitManager: NSObject, Mac2iOS, HMHomeManagerDelegate {
         home.executeActionSet(actionSet) { error in
             if let error = error {
                 logger.error("Failed to execute scene: \(error.localizedDescription)")
+                // Suppress partial success errors (unreachable devices) - similar to how we handle unreachable devices elsewhere
+                let hmError = error as NSError
+                if hmError.domain == HMErrorDomain && hmError.code == HMError.actionSetExecutionPartialSuccess.rawValue {
+                    return
+                }
                 self.macOSDelegate?.showError(message: "Failed to execute scene: \(error.localizedDescription)")
             }
         }
