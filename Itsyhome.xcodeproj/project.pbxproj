@@ -105,13 +105,6 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		032973C776B620D45F7D0A0E /* Views */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = Views;
-			sourceTree = "<group>";
-		};
 		07C8C6811E7C4B5835285794 /* Shared */ = {
 			isa = PBXGroup;
 			children = (
@@ -131,7 +124,6 @@
 				D2258862CCE787F231C5D76E /* DesignSystem */,
 				F993AEE95F23CC68310DE85E /* MenuItems */,
 				9956D260C6400CA53D1F56A3 /* Settings */,
-				032973C776B620D45F7D0A0E /* Views */,
 			);
 			path = macOSBridge;
 			sourceTree = "<group>";
