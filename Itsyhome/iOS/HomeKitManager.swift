@@ -76,30 +76,68 @@ class HomeKitManager: NSObject, Mac2iOS, HMHomeManagerDelegate {
         }
         
         logger.info("Fetching data for home: \(home.name, privacy: .public)")
-        
+
         // Populate rooms
         rooms = home.rooms.map { room in
             RoomInfo(uniqueIdentifier: room.uniqueIdentifier, name: room.name)
         }.sorted { $0.name < $1.name }
-        
+
+        // === DEBUG: Dump all raw HomeKit data ===
+        logger.info("=== RAW HOMEKIT DATA DUMP ===")
+        logger.info("Total accessories from HomeKit: \(home.accessories.count)")
+
+        // Collect all service types to see what we're missing
+        var serviceTypeCounts: [String: Int] = [:]
+        var unsupportedServices: [(accessoryName: String, serviceName: String, serviceType: String)] = []
+
+        let supportedTypes: Set<String> = [
+            HMServiceTypeLightbulb,
+            HMServiceTypeSwitch,
+            HMServiceTypeOutlet,
+            HMServiceTypeThermostat,
+            HMServiceTypeHeaterCooler,
+            HMServiceTypeLockMechanism,
+            HMServiceTypeWindowCovering,
+            HMServiceTypeTemperatureSensor,
+            HMServiceTypeHumiditySensor,
+            HMServiceTypeMotionSensor,
+            HMServiceTypeFan,
+            HMServiceTypeGarageDoorOpener,
+            HMServiceTypeContactSensor
+        ]
+
+        for accessory in home.accessories {
+            logger.info("Accessory: \(accessory.name, privacy: .public) (reachable: \(accessory.isReachable), room: \(accessory.room?.name ?? "none", privacy: .public))")
+            for service in accessory.services {
+                let typeName = serviceTypeToName(service.serviceType)
+                serviceTypeCounts[typeName, default: 0] += 1
+                logger.info("  - Service: \(service.name ?? "unnamed", privacy: .public) type=\(typeName, privacy: .public) (\(service.serviceType, privacy: .public))")
+
+                if !supportedTypes.contains(service.serviceType) {
+                    unsupportedServices.append((accessory.name, service.name ?? "unnamed", typeName))
+                }
+            }
+        }
+
+        logger.info("=== SERVICE TYPE SUMMARY ===")
+        for (typeName, count) in serviceTypeCounts.sorted(by: { $0.key < $1.key }) {
+            logger.info("  \(typeName, privacy: .public): \(count)")
+        }
+
+        logger.info("=== UNSUPPORTED SERVICES (\(unsupportedServices.count) total) ===")
+        for svc in unsupportedServices {
+            logger.info("  \(svc.accessoryName, privacy: .public) -> \(svc.serviceName, privacy: .public) (\(svc.serviceType, privacy: .public))")
+        }
+
+        logger.info("=== ALL SCENES ===")
+        for actionSet in home.actionSets {
+            logger.info("  Scene: \(actionSet.name, privacy: .public) type=\(actionSet.actionSetType, privacy: .public) actions=\(actionSet.actions.count)")
+        }
+        logger.info("=== END RAW DATA DUMP ===")
+
         // Populate accessories
         accessories = home.accessories.map { accessory in
             let services = accessory.services.compactMap { service -> ServiceInfo? in
-                let supportedTypes = [
-                    HMServiceTypeLightbulb,
-                    HMServiceTypeSwitch,
-                    HMServiceTypeOutlet,
-                    HMServiceTypeThermostat,
-                    HMServiceTypeHeaterCooler,
-                    HMServiceTypeLockMechanism,
-                    HMServiceTypeWindowCovering,
-                    HMServiceTypeTemperatureSensor,
-                    HMServiceTypeHumiditySensor,
-                    HMServiceTypeMotionSensor,
-                    HMServiceTypeFan,
-                    HMServiceTypeGarageDoorOpener,
-                    HMServiceTypeContactSensor
-                ]
                 guard supportedTypes.contains(service.serviceType) else { return nil }
 
                 return ServiceInfo(
@@ -120,20 +158,15 @@ class HomeKitManager: NSObject, Mac2iOS, HMHomeManagerDelegate {
             )
         }
 
-        // Populate scenes (exclude built-in automation types)
-        let builtInTypes = [
-            HMActionSetTypeSleep,
-            HMActionSetTypeWakeUp,
-            HMActionSetTypeHomeDeparture,
-            HMActionSetTypeHomeArrival,
-            HMActionSetTypeTriggerOwned
-        ]
+        // Populate scenes - include all types but filter out empty scenes (0 actions)
+        // and automation-owned scenes (TriggerOwned)
         scenes = home.actionSets
-            .filter { !builtInTypes.contains($0.actionSetType) }
+            .filter { $0.actionSetType != HMActionSetTypeTriggerOwned && $0.actions.count > 0 }
             .map { SceneInfo(uniqueIdentifier: $0.uniqueIdentifier, name: $0.name) }
             .sorted { $0.name < $1.name }
-        
-        logger.info("Data fetched - rooms: \(self.rooms.count), accessories: \(self.accessories.count), scenes: \(self.scenes.count)")
+
+        let totalServices = accessories.reduce(0) { $0 + $1.services.count }
+        logger.info("Data fetched - rooms: \(self.rooms.count), accessories: \(self.accessories.count), supported services: \(totalServices), scenes: \(self.scenes.count)")
 
         // Set up delegates
         home.delegate = self
@@ -318,7 +351,6 @@ class HomeKitManager: NSObject, Mac2iOS, HMHomeManagerDelegate {
         }
 
         let isReachable = hmService.accessory?.isReachable ?? false
-        logger.info("Building service \(svc.name, privacy: .public): accessory isReachable=\(isReachable)")
 
         // Helper to find characteristic UUID by type (using our constants for unavailable HMCharacteristicType*)
         func charId(_ type: String) -> UUID? {
@@ -439,7 +471,7 @@ class HomeKitManager: NSObject, Mac2iOS, HMHomeManagerDelegate {
     
     private func findCharacteristic(identifier: UUID) -> HMCharacteristic? {
         guard let home = currentHome else { return nil }
-        
+
         for accessory in home.accessories {
             for service in accessory.services {
                 if let characteristic = service.characteristics.first(where: { $0.uniqueIdentifier == identifier }) {
@@ -448,6 +480,51 @@ class HomeKitManager: NSObject, Mac2iOS, HMHomeManagerDelegate {
             }
         }
         return nil
+    }
+
+    private func serviceTypeToName(_ type: String) -> String {
+        // Map HomeKit service type UUIDs to human-readable names
+        let knownTypes: [String: String] = [
+            HMServiceTypeLightbulb: "Lightbulb",
+            HMServiceTypeSwitch: "Switch",
+            HMServiceTypeOutlet: "Outlet",
+            HMServiceTypeThermostat: "Thermostat",
+            HMServiceTypeHeaterCooler: "HeaterCooler",
+            HMServiceTypeLockMechanism: "Lock",
+            HMServiceTypeWindowCovering: "WindowCovering",
+            HMServiceTypeTemperatureSensor: "TemperatureSensor",
+            HMServiceTypeHumiditySensor: "HumiditySensor",
+            HMServiceTypeMotionSensor: "MotionSensor",
+            HMServiceTypeFan: "Fan",
+            HMServiceTypeGarageDoorOpener: "GarageDoor",
+            HMServiceTypeContactSensor: "ContactSensor",
+            HMServiceTypeAccessoryInformation: "AccessoryInfo",
+            HMServiceTypeBattery: "Battery",
+            HMServiceTypeCarbonDioxideSensor: "CO2Sensor",
+            HMServiceTypeCarbonMonoxideSensor: "COSensor",
+            HMServiceTypeDoor: "Door",
+            HMServiceTypeDoorbell: "Doorbell",
+            HMServiceTypeLeakSensor: "LeakSensor",
+            HMServiceTypeLightSensor: "LightSensor",
+            HMServiceTypeOccupancySensor: "OccupancySensor",
+            HMServiceTypeSecuritySystem: "SecuritySystem",
+            HMServiceTypeSmokeSensor: "SmokeSensor",
+            HMServiceTypeSpeaker: "Speaker",
+            HMServiceTypeStatefulProgrammableSwitch: "StatefulSwitch",
+            HMServiceTypeStatelessProgrammableSwitch: "StatelessSwitch",
+            HMServiceTypeWindow: "Window",
+            HMServiceTypeAirPurifier: "AirPurifier",
+            HMServiceTypeAirQualitySensor: "AirQualitySensor",
+            HMServiceTypeCameraControl: "CameraControl",
+            HMServiceTypeCameraRTPStreamManagement: "CameraStream",
+            HMServiceTypeMicrophone: "Microphone",
+            HMServiceTypeFilterMaintenance: "FilterMaintenance",
+            HMServiceTypeSlats: "Slats",
+            HMServiceTypeIrrigationSystem: "Irrigation",
+            HMServiceTypeValve: "Valve",
+            HMServiceTypeFaucet: "Faucet"
+        ]
+        return knownTypes[type] ?? "Unknown(\(type))"
     }
     
     // MARK: - HMHomeManagerDelegate
