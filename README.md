@@ -1,5 +1,7 @@
 # Itsyhome
 
+![Itsyhome app screenshot](https://itsyhome.app/itsyhome-app-screenshot.png)
+
 A native macOS menu bar app for controlling your HomeKit smart home devices.
 
 **[itsyhome.app](https://itsyhome.app)** · Free forever
