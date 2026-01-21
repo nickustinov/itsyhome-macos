@@ -69,31 +69,41 @@ final class PreferencesManager {
         }
     }
 
-    // MARK: - Favourite scenes
+    // MARK: - Favourite scenes (ordered)
 
-    var favouriteSceneIds: Set<String> {
-        get {
-            let array = defaults.stringArray(forKey: Keys.favouriteSceneIds) ?? []
-            return Set(array)
-        }
+    var orderedFavouriteSceneIds: [String] {
+        get { defaults.stringArray(forKey: Keys.favouriteSceneIds) ?? [] }
         set {
-            defaults.set(Array(newValue), forKey: Keys.favouriteSceneIds)
+            defaults.set(newValue, forKey: Keys.favouriteSceneIds)
             postNotification()
         }
     }
 
+    // Set-based access for backward compatibility
+    var favouriteSceneIds: Set<String> {
+        get { Set(orderedFavouriteSceneIds) }
+        set { orderedFavouriteSceneIds = Array(newValue) }
+    }
+
     func isFavourite(sceneId: String) -> Bool {
-        favouriteSceneIds.contains(sceneId)
+        orderedFavouriteSceneIds.contains(sceneId)
     }
 
     func toggleFavourite(sceneId: String) {
-        var ids = favouriteSceneIds
-        if ids.contains(sceneId) {
-            ids.remove(sceneId)
+        var ids = orderedFavouriteSceneIds
+        if let index = ids.firstIndex(of: sceneId) {
+            ids.remove(at: index)
         } else {
-            ids.insert(sceneId)
+            ids.append(sceneId)
         }
-        favouriteSceneIds = ids
+        orderedFavouriteSceneIds = ids
+    }
+
+    func moveFavouriteScene(from sourceIndex: Int, to destinationIndex: Int) {
+        var ids = orderedFavouriteSceneIds
+        let item = ids.remove(at: sourceIndex)
+        ids.insert(item, at: destinationIndex)
+        orderedFavouriteSceneIds = ids
     }
 
     // MARK: - Hidden scenes
@@ -123,31 +133,41 @@ final class PreferencesManager {
         hiddenSceneIds = ids
     }
 
-    // MARK: - Favourite services
+    // MARK: - Favourite services (ordered)
 
-    var favouriteServiceIds: Set<String> {
-        get {
-            let array = defaults.stringArray(forKey: Keys.favouriteServiceIds) ?? []
-            return Set(array)
-        }
+    var orderedFavouriteServiceIds: [String] {
+        get { defaults.stringArray(forKey: Keys.favouriteServiceIds) ?? [] }
         set {
-            defaults.set(Array(newValue), forKey: Keys.favouriteServiceIds)
+            defaults.set(newValue, forKey: Keys.favouriteServiceIds)
             postNotification()
         }
     }
 
+    // Set-based access for backward compatibility
+    var favouriteServiceIds: Set<String> {
+        get { Set(orderedFavouriteServiceIds) }
+        set { orderedFavouriteServiceIds = Array(newValue) }
+    }
+
     func isFavourite(serviceId: String) -> Bool {
-        favouriteServiceIds.contains(serviceId)
+        orderedFavouriteServiceIds.contains(serviceId)
     }
 
     func toggleFavourite(serviceId: String) {
-        var ids = favouriteServiceIds
-        if ids.contains(serviceId) {
-            ids.remove(serviceId)
+        var ids = orderedFavouriteServiceIds
+        if let index = ids.firstIndex(of: serviceId) {
+            ids.remove(at: index)
         } else {
-            ids.insert(serviceId)
+            ids.append(serviceId)
         }
-        favouriteServiceIds = ids
+        orderedFavouriteServiceIds = ids
+    }
+
+    func moveFavouriteService(from sourceIndex: Int, to destinationIndex: Int) {
+        var ids = orderedFavouriteServiceIds
+        let item = ids.remove(at: sourceIndex)
+        ids.insert(item, at: destinationIndex)
+        orderedFavouriteServiceIds = ids
     }
 
     // MARK: - Hidden services

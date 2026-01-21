@@ -174,20 +174,15 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate {
 
     private func collectFavouriteScenes(from data: MenuData) -> [SceneData] {
         let preferences = PreferencesManager.shared
-        return data.scenes.filter { preferences.isFavourite(sceneId: $0.uniqueIdentifier) }
+        let sceneLookup = Dictionary(uniqueKeysWithValues: data.scenes.map { ($0.uniqueIdentifier, $0) })
+        return preferences.orderedFavouriteSceneIds.compactMap { sceneLookup[$0] }
     }
 
     private func collectFavouriteServices(from data: MenuData) -> [ServiceData] {
         let preferences = PreferencesManager.shared
-        var services: [ServiceData] = []
-        for accessory in data.accessories {
-            for service in accessory.services {
-                if preferences.isFavourite(serviceId: service.uniqueIdentifier) {
-                    services.append(service)
-                }
-            }
-        }
-        return services
+        let allServices = data.accessories.flatMap { $0.services }
+        let serviceLookup = Dictionary(uniqueKeysWithValues: allServices.map { ($0.uniqueIdentifier, $0) })
+        return preferences.orderedFavouriteServiceIds.compactMap { serviceLookup[$0] }
     }
 
     private func filterHiddenServices(from accessories: [AccessoryData]) -> [AccessoryData] {
@@ -207,15 +202,15 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate {
     }
 
     private func addFavouritesSection(scenes: [SceneData], services: [ServiceData]) {
-        // Add favourite scenes directly to main menu
-        for scene in scenes.sorted(by: { $0.name < $1.name }) {
+        // Add favourite scenes in user's preferred order
+        for scene in scenes {
             let item = SceneMenuItem(sceneData: scene, bridge: iOSBridge)
             mainMenu.addItem(item)
             sceneMenuItems.append(item)
         }
 
-        // Add favourite services directly to main menu (no separator between types)
-        for service in services.sorted(by: { $0.name < $1.name }) {
+        // Add favourite services in user's preferred order
+        for service in services {
             if let item = createMenuItemForService(service) {
                 mainMenu.addItem(item)
             }
