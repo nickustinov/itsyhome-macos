@@ -13,7 +13,6 @@ class WebhooksSection: SettingsCard {
     private var statusLabel: NSTextField!
     private var addressLabel: NSTextField!
     private var portField: NSTextField!
-    private var proBadge: NSView!
 
     private let actions: [(action: String, format: String, example: String)] = [
         ("Toggle", "toggle/<Room>/<Device>", "toggle/Office/Spotlights"),
@@ -149,28 +148,6 @@ class WebhooksSection: SettingsCard {
 
         let labelField = createLabel("Enable server", style: .body)
         labelStack.addArrangedSubview(labelField)
-
-        // Pro badge (hidden when Pro)
-        proBadge = NSView()
-        proBadge.wantsLayer = true
-        proBadge.layer?.backgroundColor = NSColor.systemPurple.cgColor
-        proBadge.layer?.cornerRadius = 3
-        proBadge.translatesAutoresizingMaskIntoConstraints = false
-
-        let badgeLabel = NSTextField(labelWithString: "PRO")
-        badgeLabel.font = .systemFont(ofSize: 8, weight: .bold)
-        badgeLabel.textColor = .white
-        badgeLabel.translatesAutoresizingMaskIntoConstraints = false
-        proBadge.addSubview(badgeLabel)
-
-        NSLayoutConstraint.activate([
-            proBadge.widthAnchor.constraint(equalToConstant: 28),
-            proBadge.heightAnchor.constraint(equalToConstant: 14),
-            badgeLabel.centerXAnchor.constraint(equalTo: proBadge.centerXAnchor),
-            badgeLabel.centerYAnchor.constraint(equalTo: proBadge.centerYAnchor)
-        ])
-
-        labelStack.addArrangedSubview(proBadge)
 
         enableSwitch.controlSize = .mini
         enableSwitch.target = self
@@ -379,7 +356,6 @@ class WebhooksSection: SettingsCard {
 
         enableSwitch.isEnabled = isPro
         enableSwitch.state = isEnabled ? .on : .off
-        proBadge.isHidden = isPro
 
         // Ensure server is running if enabled
         if isPro && isEnabled && WebhookServer.shared.state == .stopped {
