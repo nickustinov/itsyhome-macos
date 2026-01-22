@@ -157,6 +157,137 @@ final class WebhookServerTests: XCTestCase {
         XCTAssertEqual(mockBridge.writtenCharacteristics[livingRoomPowerStateId] as? Bool, true)
     }
 
+    // MARK: - Read endpoint tests
+
+    func testStatusEndpoint() {
+        server.start()
+
+        let response = sendRequest(path: "/status")
+
+        XCTAssertEqual(response?.statusCode, 200)
+        let body = response?.body ?? ""
+        XCTAssertTrue(body.contains("\"rooms\":2"))
+        XCTAssertTrue(body.contains("\"devices\":2"))
+        XCTAssertTrue(body.contains("\"accessories\":2"))
+        XCTAssertTrue(body.contains("\"reachable\":2"))
+        XCTAssertTrue(body.contains("\"scenes\":1"))
+    }
+
+    func testListRoomsEndpoint() {
+        server.start()
+
+        let response = sendRequest(path: "/list/rooms")
+
+        XCTAssertEqual(response?.statusCode, 200)
+        let body = response?.body ?? ""
+        XCTAssertTrue(body.contains("\"name\":\"Office\""))
+        XCTAssertTrue(body.contains("\"name\":\"Living Room\""))
+    }
+
+    func testListDevicesEndpoint() {
+        server.start()
+
+        let response = sendRequest(path: "/list/devices")
+
+        XCTAssertEqual(response?.statusCode, 200)
+        let body = response?.body ?? ""
+        XCTAssertTrue(body.contains("\"name\":\"Light\""))
+        XCTAssertTrue(body.contains("\"name\":\"Lamp\""))
+        XCTAssertTrue(body.contains("\"reachable\":true"))
+    }
+
+    func testListDevicesByRoomEndpoint() {
+        server.start()
+
+        let response = sendRequest(path: "/list/devices/Office")
+
+        XCTAssertEqual(response?.statusCode, 200)
+        let body = response?.body ?? ""
+        XCTAssertTrue(body.contains("\"name\":\"Light\""))
+        XCTAssertFalse(body.contains("\"name\":\"Lamp\""))
+    }
+
+    func testListScenesEndpoint() {
+        server.start()
+
+        let response = sendRequest(path: "/list/scenes")
+
+        XCTAssertEqual(response?.statusCode, 200)
+        let body = response?.body ?? ""
+        XCTAssertTrue(body.contains("\"name\":\"Goodnight\""))
+    }
+
+    func testListGroupsEndpoint() {
+        server.start()
+
+        let response = sendRequest(path: "/list/groups")
+
+        XCTAssertEqual(response?.statusCode, 200)
+        let body = response?.body ?? ""
+        XCTAssertTrue(body.hasPrefix("["))
+        XCTAssertTrue(body.hasSuffix("]"))
+    }
+
+    func testInfoEndpoint() {
+        mockBridge.characteristicValues[powerStateId] = true
+        mockBridge.characteristicValues[brightnessId] = 80
+        server.start()
+
+        let response = sendRequest(path: "/info/Light")
+
+        XCTAssertEqual(response?.statusCode, 200)
+        let body = response?.body ?? ""
+        XCTAssertTrue(body.contains("\"name\":\"Light\""))
+        XCTAssertTrue(body.contains("\"reachable\":true"))
+        XCTAssertTrue(body.contains("\"on\":true"))
+        XCTAssertTrue(body.contains("\"brightness\":80"))
+    }
+
+    func testInfoRoomEndpoint() {
+        server.start()
+
+        let response = sendRequest(path: "/info/Office")
+
+        XCTAssertEqual(response?.statusCode, 200)
+        let body = response?.body ?? ""
+        XCTAssertTrue(body.contains("["))
+        XCTAssertTrue(body.contains("\"name\":\"Light\""))
+    }
+
+    func testInfoNotFound() {
+        server.start()
+
+        let response = sendRequest(path: "/info/NonexistentDevice")
+
+        XCTAssertEqual(response?.statusCode, 404)
+    }
+
+    func testListInvalidResource() {
+        server.start()
+
+        let response = sendRequest(path: "/list/invalid")
+
+        XCTAssertEqual(response?.statusCode, 400)
+    }
+
+    // MARK: - Port configuration test
+
+    func testConfiguredPort() {
+        let original = UserDefaults.standard.integer(forKey: WebhookServer.portKey)
+        UserDefaults.standard.set(9999, forKey: WebhookServer.portKey)
+        XCTAssertEqual(WebhookServer.configuredPort, 9999)
+        if original > 0 {
+            UserDefaults.standard.set(original, forKey: WebhookServer.portKey)
+        } else {
+            UserDefaults.standard.removeObject(forKey: WebhookServer.portKey)
+        }
+    }
+
+    func testConfiguredPortDefault() {
+        UserDefaults.standard.removeObject(forKey: WebhookServer.portKey)
+        XCTAssertEqual(WebhookServer.configuredPort, 8423)
+    }
+
     // MARK: - IP address test
 
     func testLocalIPAddressReturnsNonNil() {

@@ -75,7 +75,7 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
             case .accessories: return "Accessories"
             case .groups: return "Groups"
             case .deeplinks: return "Deeplinks"
-            case .webhooks: return "Webhooks"
+            case .webhooks: return "Webhooks/CLI"
             case .about: return "About"
             }
         }

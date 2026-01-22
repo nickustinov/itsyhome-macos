@@ -65,7 +65,7 @@ enum ActionError: Error, Equatable {
 class ActionEngine {
 
     weak var bridge: Mac2iOS?
-    private var menuData: MenuData?
+    private(set) var menuData: MenuData?
 
     init(bridge: Mac2iOS? = nil) {
         self.bridge = bridge

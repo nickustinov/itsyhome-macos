@@ -78,6 +78,58 @@ open "itsyhome://brightness/50/Bedroom/Lamp"
 
 **Note:** Spaces in room or device names must be URL-encoded as `%20`.
 
+### Webhooks/CLI
+
+A built-in HTTP server that lets you control and query your HomeKit devices from any tool on your network — terminal, scripts, other apps, or the dedicated [itsyhome CLI](https://github.com/nickustinov/itsyhome-cli).
+
+Enable the server in Settings → Webhooks/CLI. Default port: `8423`.
+
+**Control endpoints:**
+
+```bash
+curl http://localhost:8423/toggle/Office/Spotlights
+curl http://localhost:8423/on/Kitchen/Light
+curl http://localhost:8423/off/Bedroom/Lamp
+curl http://localhost:8423/brightness/50/Office/Lamp
+curl http://localhost:8423/position/75/Living%20Room/Blinds
+curl http://localhost:8423/temp/22/Hallway/Thermostat
+curl http://localhost:8423/color/120/100/Bedroom/Light
+curl http://localhost:8423/scene/Goodnight
+curl http://localhost:8423/lock/Front%20Door
+curl http://localhost:8423/unlock/Front%20Door
+curl http://localhost:8423/open/Garage/Door
+curl http://localhost:8423/close/Bedroom/Blinds
+```
+
+**Query endpoints:**
+
+| Endpoint | Description |
+|----------|-------------|
+| `/status` | Home summary (rooms, devices, reachable/unreachable counts) |
+| `/list/rooms` | List all rooms |
+| `/list/devices` | List all devices with type and reachability |
+| `/list/devices/<room>` | List devices in a specific room |
+| `/list/scenes` | List all scenes |
+| `/list/groups` | List all device groups |
+| `/info/<target>` | Detailed device/room info with current state |
+
+**Response format:**
+
+```json
+{"status": "success"}
+{"status": "error", "message": "device not found"}
+```
+
+**CLI tool:**
+
+Install the dedicated CLI for a better terminal experience:
+
+```bash
+brew install nickustinov/tap/itsyhome
+```
+
+See [itsyhome-cli](https://github.com/nickustinov/itsyhome-cli) for full documentation.
+
 ## Requirements
 
 - macOS 14.0 or later

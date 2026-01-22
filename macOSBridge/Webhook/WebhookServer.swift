@@ -2,7 +2,7 @@
 //  WebhookServer.swift
 //  macOSBridge
 //
-//  Lightweight HTTP server for webhook-based HomeKit control
+//  Lightweight HTTP server for webhook-based HomeKit control and status queries
 //
 
 import Foundation
@@ -10,11 +10,17 @@ import Network
 
 final class WebhookServer {
 
-    static let shared = WebhookServer(port: defaultPort)
+    static let shared = WebhookServer(port: configuredPort)
 
     static let defaultPort: UInt16 = 8423
+    static let portKey = "webhookServerPort"
     static let statusChangedNotification = Notification.Name("webhookStatusChangedNotification")
     static let enabledKey = "webhookServerEnabled"
+
+    static var configuredPort: UInt16 {
+        let stored = UserDefaults.standard.integer(forKey: portKey)
+        return stored > 0 ? UInt16(stored) : defaultPort
+    }
 
     let port: UInt16
 
@@ -139,7 +145,6 @@ final class WebhookServer {
             return
         }
 
-        // Path is already percent-encoded from HTTP (e.g. /toggle/Living%20Room/Lamp)
         let trimmedPath = path.hasPrefix("/") ? String(path.dropFirst()) : path
 
         guard !trimmedPath.isEmpty else {
@@ -147,7 +152,12 @@ final class WebhookServer {
             return
         }
 
-        // Build URL for URLSchemeHandler — path is already percent-encoded
+        // Handle read endpoints first
+        if handleReadRequest(path: trimmedPath, connection: connection, engine: actionEngine) {
+            return
+        }
+
+        // Control action via URLSchemeHandler
         guard let url = URL(string: "itsyhome://\(trimmedPath)") else {
             sendResponse(connection: connection, status: 400, body: errorJSON("Invalid path"))
             return
@@ -173,6 +183,264 @@ final class WebhookServer {
             }
         case .failure(let parseError):
             sendResponse(connection: connection, status: 400, body: errorJSON(parseError.localizedDescription))
+        }
+    }
+
+    // MARK: - Read endpoints
+
+    private func handleReadRequest(path: String, connection: NWConnection, engine: ActionEngine) -> Bool {
+        let components = path.split(separator: "/", maxSplits: 3).map { String($0) }
+
+        switch components.first {
+        case "status":
+            handleStatus(connection: connection, engine: engine)
+            return true
+        case "list":
+            guard components.count >= 2 else {
+                sendResponse(connection: connection, status: 400, body: errorJSON("Usage: /list/rooms|devices|scenes|groups"))
+                return true
+            }
+            handleList(type: components[1], room: components.count > 2 ? components[2] : nil, connection: connection, engine: engine)
+            return true
+        case "info":
+            let rest = path.dropFirst(5) // drop "info/"
+            let decoded = String(rest).removingPercentEncoding ?? String(rest)
+            handleInfo(target: decoded, connection: connection, engine: engine)
+            return true
+        default:
+            return false
+        }
+    }
+
+    private func handleStatus(connection: NWConnection, engine: ActionEngine) {
+        guard let data = engine.menuData else {
+            sendResponse(connection: connection, status: 500, body: errorJSON("No data available"))
+            return
+        }
+
+        let rooms = data.rooms
+        let allServices = data.accessories.flatMap { $0.services }
+        let reachable = data.accessories.filter { $0.isReachable }.count
+        let unreachable = data.accessories.count - reachable
+        let groups = PreferencesManager.shared.deviceGroups
+
+        let json = "{\"rooms\":\(rooms.count),\"devices\":\(allServices.count),\"accessories\":\(data.accessories.count),\"reachable\":\(reachable),\"unreachable\":\(unreachable),\"scenes\":\(data.scenes.count),\"groups\":\(groups.count)}"
+        sendResponse(connection: connection, status: 200, body: json)
+    }
+
+    private func handleList(type: String, room: String?, connection: NWConnection, engine: ActionEngine) {
+        guard let data = engine.menuData else {
+            sendResponse(connection: connection, status: 500, body: errorJSON("No data available"))
+            return
+        }
+
+        switch type {
+        case "rooms":
+            let items = data.rooms.map { "{\"name\":\"\(escapeJSON($0.name))\"}" }
+            sendResponse(connection: connection, status: 200, body: "[\(items.joined(separator: ","))]")
+
+        case "devices":
+            let roomLookup = Dictionary(uniqueKeysWithValues: data.rooms.map { ($0.uniqueIdentifier, $0.name) })
+            var services: [(ServiceData, String?, Bool)] = []
+
+            for accessory in data.accessories {
+                let roomName = accessory.roomIdentifier.flatMap { roomLookup[String(describing: $0)] }
+                for service in accessory.services {
+                    if let filterRoom = room?.removingPercentEncoding {
+                        guard roomName?.lowercased() == filterRoom.lowercased() else { continue }
+                    }
+                    services.append((service, roomName, accessory.isReachable))
+                }
+            }
+
+            let items = services.map { service, roomName, reachable in
+                var fields = [
+                    "\"name\":\"\(escapeJSON(service.name))\"",
+                    "\"type\":\"\(escapeJSON(serviceTypeLabel(service.serviceType)))\"",
+                    "\"reachable\":\(reachable)"
+                ]
+                if let room = roomName {
+                    fields.append("\"room\":\"\(escapeJSON(room))\"")
+                }
+                return "{\(fields.joined(separator: ","))}"
+            }
+            sendResponse(connection: connection, status: 200, body: "[\(items.joined(separator: ","))]")
+
+        case "scenes":
+            let items = data.scenes.map { "{\"name\":\"\(escapeJSON($0.name))\"}" }
+            sendResponse(connection: connection, status: 200, body: "[\(items.joined(separator: ","))]")
+
+        case "groups":
+            let groups = PreferencesManager.shared.deviceGroups
+            let items = groups.map { group in
+                let deviceCount = group.deviceIds.count
+                return "{\"name\":\"\(escapeJSON(group.name))\",\"icon\":\"\(escapeJSON(group.icon))\",\"devices\":\(deviceCount)}"
+            }
+            sendResponse(connection: connection, status: 200, body: "[\(items.joined(separator: ","))]")
+
+        default:
+            sendResponse(connection: connection, status: 400, body: errorJSON("Unknown list type: \(type). Use rooms, devices, scenes, or groups."))
+        }
+    }
+
+    private func handleInfo(target: String, connection: NWConnection, engine: ActionEngine) {
+        guard let data = engine.menuData else {
+            sendResponse(connection: connection, status: 500, body: errorJSON("No data available"))
+            return
+        }
+
+        let resolved = DeviceResolver.resolve(target, in: data, groups: PreferencesManager.shared.deviceGroups)
+
+        switch resolved {
+        case .services(let services):
+            sendServiceInfoResponse(services, data: data, engine: engine, connection: connection)
+
+        case .scene(let scene):
+            let json = "{\"name\":\"\(escapeJSON(scene.name))\",\"type\":\"scene\"}"
+            sendResponse(connection: connection, status: 200, body: json)
+
+        case .notFound:
+            // Fallback: try matching by room name (always returns array)
+            let lowered = target.lowercased()
+            let matchingRoom = data.rooms.first { $0.name.lowercased() == lowered }
+            if let room = matchingRoom {
+                let roomServices = data.accessories.filter { $0.roomIdentifier == room.uniqueIdentifier }
+                    .flatMap { $0.services }
+                if !roomServices.isEmpty {
+                    let items = roomServices.map { buildServiceInfoJSON($0, in: data, engine: engine) }
+                    sendResponse(connection: connection, status: 200, body: "[\(items.joined(separator: ","))]")
+                    return
+                }
+            }
+
+            // Fallback: try matching by bare device name
+            let matchingServices = data.accessories.flatMap { $0.services }
+                .filter { $0.name.lowercased() == lowered }
+            if !matchingServices.isEmpty {
+                sendServiceInfoResponse(matchingServices, data: data, engine: engine, connection: connection)
+                return
+            }
+
+            sendResponse(connection: connection, status: 404, body: errorJSON("Not found: \(target)"))
+
+        case .ambiguous(let options):
+            let names = options.map { "\"\(escapeJSON($0.name))\"" }
+            sendResponse(connection: connection, status: 400, body: "{\"status\":\"error\",\"message\":\"Ambiguous target\",\"options\":[\(names.joined(separator: ","))]}")
+        }
+    }
+
+    private func sendServiceInfoResponse(_ services: [ServiceData], data: MenuData, engine: ActionEngine, connection: NWConnection) {
+        let items = services.map { buildServiceInfoJSON($0, in: data, engine: engine) }
+        if items.count == 1 {
+            sendResponse(connection: connection, status: 200, body: items[0])
+        } else {
+            sendResponse(connection: connection, status: 200, body: "[\(items.joined(separator: ","))]")
+        }
+    }
+
+    private func buildServiceInfoJSON(_ service: ServiceData, in data: MenuData, engine: ActionEngine) -> String {
+        let roomLookup = Dictionary(uniqueKeysWithValues: data.rooms.map { ($0.uniqueIdentifier, $0.name) })
+        let accessory = data.accessories.first { $0.services.contains(where: { $0.uniqueIdentifier == service.uniqueIdentifier }) }
+        let roomName = accessory?.roomIdentifier.flatMap { roomLookup[String(describing: $0)] }
+
+        var fields: [String] = [
+            "\"name\":\"\(escapeJSON(service.name))\"",
+            "\"type\":\"\(escapeJSON(serviceTypeLabel(service.serviceType)))\"",
+            "\"reachable\":\(accessory?.isReachable ?? false)"
+        ]
+
+        if let room = roomName {
+            fields.append("\"room\":\"\(escapeJSON(room))\"")
+        }
+
+        // Add current state values
+        var state: [String] = []
+
+        if let idStr = service.powerStateId, let uuid = UUID(uuidString: idStr),
+           let value = engine.bridge?.getCharacteristicValue(identifier: uuid) {
+            state.append("\"on\":\(boolValue(value))")
+        }
+        if let idStr = service.brightnessId, let uuid = UUID(uuidString: idStr),
+           let value = engine.bridge?.getCharacteristicValue(identifier: uuid) {
+            state.append("\"brightness\":\(intValue(value))")
+        }
+        if let idStr = service.currentPositionId, let uuid = UUID(uuidString: idStr),
+           let value = engine.bridge?.getCharacteristicValue(identifier: uuid) {
+            state.append("\"position\":\(intValue(value))")
+        }
+        if let idStr = service.currentTemperatureId, let uuid = UUID(uuidString: idStr),
+           let value = engine.bridge?.getCharacteristicValue(identifier: uuid) {
+            state.append("\"temperature\":\(doubleValue(value))")
+        }
+        if let idStr = service.targetTemperatureId, let uuid = UUID(uuidString: idStr),
+           let value = engine.bridge?.getCharacteristicValue(identifier: uuid) {
+            state.append("\"targetTemperature\":\(doubleValue(value))")
+        }
+        if let idStr = service.humidityId, let uuid = UUID(uuidString: idStr),
+           let value = engine.bridge?.getCharacteristicValue(identifier: uuid) {
+            state.append("\"humidity\":\(doubleValue(value))")
+        }
+        if let idStr = service.hueId, let uuid = UUID(uuidString: idStr),
+           let value = engine.bridge?.getCharacteristicValue(identifier: uuid) {
+            state.append("\"hue\":\(doubleValue(value))")
+        }
+        if let idStr = service.saturationId, let uuid = UUID(uuidString: idStr),
+           let value = engine.bridge?.getCharacteristicValue(identifier: uuid) {
+            state.append("\"saturation\":\(doubleValue(value))")
+        }
+        if let idStr = service.lockCurrentStateId, let uuid = UUID(uuidString: idStr),
+           let value = engine.bridge?.getCharacteristicValue(identifier: uuid) {
+            let locked = intValue(value) == 1
+            state.append("\"locked\":\(locked)")
+        }
+        if let idStr = service.rotationSpeedId, let uuid = UUID(uuidString: idStr),
+           let value = engine.bridge?.getCharacteristicValue(identifier: uuid) {
+            state.append("\"speed\":\(doubleValue(value))")
+        }
+
+        if !state.isEmpty {
+            fields.append("\"state\":{\(state.joined(separator: ","))}")
+        }
+
+        return "{\(fields.joined(separator: ","))}"
+    }
+
+    // MARK: - Value conversion helpers
+
+    private func boolValue(_ value: Any) -> Bool {
+        if let b = value as? Bool { return b }
+        if let n = value as? NSNumber { return n.boolValue }
+        if let i = value as? Int { return i != 0 }
+        return false
+    }
+
+    private func intValue(_ value: Any) -> Int {
+        if let i = value as? Int { return i }
+        if let n = value as? NSNumber { return n.intValue }
+        return 0
+    }
+
+    private func doubleValue(_ value: Any) -> Double {
+        if let d = value as? Double { return d }
+        if let n = value as? NSNumber { return n.doubleValue }
+        return 0
+    }
+
+    private func serviceTypeLabel(_ type: String) -> String {
+        switch type {
+        case ServiceTypes.lightbulb: return "light"
+        case ServiceTypes.switch: return "switch"
+        case ServiceTypes.outlet: return "outlet"
+        case ServiceTypes.fan: return "fan"
+        case ServiceTypes.thermostat: return "thermostat"
+        case ServiceTypes.heaterCooler: return "heater-cooler"
+        case ServiceTypes.windowCovering: return "blinds"
+        case ServiceTypes.lock: return "lock"
+        case ServiceTypes.garageDoorOpener: return "garage-door"
+        case ServiceTypes.temperatureSensor: return "temperature-sensor"
+        case ServiceTypes.humiditySensor: return "humidity-sensor"
+        case ServiceTypes.securitySystem: return "security-system"
+        default: return type
         }
     }
 
@@ -216,8 +484,16 @@ final class WebhookServer {
     }
 
     private func errorJSON(_ message: String) -> String {
-        let escaped = message.replacingOccurrences(of: "\"", with: "\\\"")
+        let escaped = escapeJSON(message)
         return "{\"status\":\"error\",\"message\":\"\(escaped)\"}"
+    }
+
+    private func escapeJSON(_ string: String) -> String {
+        string.replacingOccurrences(of: "\\", with: "\\\\")
+              .replacingOccurrences(of: "\"", with: "\\\"")
+              .replacingOccurrences(of: "\n", with: "\\n")
+              .replacingOccurrences(of: "\r", with: "\\r")
+              .replacingOccurrences(of: "\t", with: "\\t")
     }
 
     // MARK: - Network info

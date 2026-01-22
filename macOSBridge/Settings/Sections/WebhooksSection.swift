@@ -2,7 +2,7 @@
 //  WebhooksSection.swift
 //  macOSBridge
 //
-//  Webhooks settings section for configuring the built-in HTTP server
+//  Webhooks/CLI settings section for configuring the built-in HTTP server
 //
 
 import AppKit
@@ -12,6 +12,7 @@ class WebhooksSection: SettingsCard {
     private let enableSwitch = NSSwitch()
     private var statusLabel: NSTextField!
     private var addressLabel: NSTextField!
+    private var portField: NSTextField!
     private var proBadge: NSView!
 
     private let actions: [(action: String, format: String, example: String)] = [
@@ -27,6 +28,15 @@ class WebhooksSection: SettingsCard {
         ("Unlock", "unlock/<Room>/<Device>", "unlock/Front%20Door")
     ]
 
+    private let readEndpoints: [(name: String, path: String)] = [
+        ("Home status", "status"),
+        ("List rooms", "list/rooms"),
+        ("List devices", "list/devices"),
+        ("List scenes", "list/scenes"),
+        ("List groups", "list/groups"),
+        ("Device info", "info/<Room>/<Device>")
+    ]
+
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         setupContent()
@@ -40,7 +50,7 @@ class WebhooksSection: SettingsCard {
 
     private func setupContent() {
         // Description
-        let descLabel = NSTextField(wrappingLabelWithString: "Run a local HTTP server to control your HomeKit devices via simple GET requests from any device on your network.")
+        let descLabel = NSTextField(wrappingLabelWithString: "Run a local HTTP server to control and query your HomeKit devices via GET requests. Use from any device on your network, or install the itsyhome CLI tool (brew install itsyhome).")
         descLabel.font = .systemFont(ofSize: 13)
         descLabel.textColor = .secondaryLabelColor
         stackView.addArrangedSubview(descLabel)
@@ -73,15 +83,15 @@ class WebhooksSection: SettingsCard {
         formatHeader.heightAnchor.constraint(equalToConstant: 32).isActive = true
 
         let formatBox = createCardBox()
-        let formatLabel = createLabel("http://<ip>:\(WebhookServer.defaultPort)/<action>/<target>", style: .code)
+        let formatLabel = createLabel("http://<ip>:<port>/<action>/<target>", style: .code)
         addContentToBox(formatBox, content: formatLabel)
         stackView.addArrangedSubview(formatBox)
         formatBox.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
 
         stackView.addArrangedSubview(createSpacer(height: 12))
 
-        // Actions section
-        let actionsHeader = AccessorySectionHeader(title: "Actions (examples)")
+        // Control actions section
+        let actionsHeader = AccessorySectionHeader(title: "Control actions (examples)")
         stackView.addArrangedSubview(actionsHeader)
         actionsHeader.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
         actionsHeader.heightAnchor.constraint(equalToConstant: 32).isActive = true
@@ -92,10 +102,24 @@ class WebhooksSection: SettingsCard {
         stackView.addArrangedSubview(actionsBox)
         actionsBox.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
 
+        stackView.addArrangedSubview(createSpacer(height: 12))
+
+        // Read endpoints section
+        let readHeader = AccessorySectionHeader(title: "Query endpoints")
+        stackView.addArrangedSubview(readHeader)
+        readHeader.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
+        readHeader.heightAnchor.constraint(equalToConstant: 32).isActive = true
+
+        let readBox = createCardBox()
+        let readContent = createReadEndpointsContent()
+        addContentToBox(readBox, content: readContent)
+        stackView.addArrangedSubview(readBox)
+        readBox.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
+
         stackView.addArrangedSubview(createSpacer(height: 8))
 
-        // Tip
-        let tipLabel = createLabel("Accessible from any device on your local network. No authentication required.", style: .caption)
+        // CLI tip
+        let tipLabel = createLabel("Install CLI: brew install itsyhome — then run itsyhome config to connect.", style: .caption)
         tipLabel.textColor = .tertiaryLabelColor
         stackView.addArrangedSubview(tipLabel)
 
@@ -114,7 +138,7 @@ class WebhooksSection: SettingsCard {
         labelStack.alignment = .centerY
         labelStack.translatesAutoresizingMaskIntoConstraints = false
 
-        let labelField = createLabel("Enable webhook server", style: .body)
+        let labelField = createLabel("Enable server", style: .body)
         labelStack.addArrangedSubview(labelField)
 
         // Pro badge (hidden when Pro)
@@ -201,6 +225,26 @@ class WebhooksSection: SettingsCard {
 
         stack.addArrangedSubview(addressRow)
 
+        // Port row
+        let portRow = NSStackView()
+        portRow.orientation = .horizontal
+        portRow.spacing = 6
+        portRow.alignment = .centerY
+
+        let portTitle = createLabel("Port:", style: .body)
+        portField = NSTextField()
+        portField.font = NSFont.monospacedSystemFont(ofSize: 11, weight: .regular)
+        portField.placeholderString = "\(WebhookServer.defaultPort)"
+        portField.stringValue = "\(WebhookServer.configuredPort)"
+        portField.translatesAutoresizingMaskIntoConstraints = false
+        portField.widthAnchor.constraint(equalToConstant: 60).isActive = true
+        portField.target = self
+        portField.action = #selector(portChanged)
+
+        portRow.addArrangedSubview(portTitle)
+        portRow.addArrangedSubview(portField)
+        stack.addArrangedSubview(portRow)
+
         return stack
     }
 
@@ -229,6 +273,42 @@ class WebhooksSection: SettingsCard {
             copyButton.toolTip = "\(baseURL)/\(example)"
 
             rows.append([actionLabel, exampleLabel, copyButton])
+        }
+
+        let grid = NSGridView(views: rows)
+        grid.rowSpacing = 8
+        grid.columnSpacing = 12
+        grid.column(at: 0).xPlacement = .leading
+        grid.column(at: 1).xPlacement = .fill
+        grid.column(at: 2).xPlacement = .trailing
+        return grid
+    }
+
+    // MARK: - Read endpoints content
+
+    private func createReadEndpointsContent() -> NSView {
+        let baseURL = addressString()
+        var rows: [[NSView]] = []
+
+        for (name, path) in readEndpoints {
+            let nameLabel = NSTextField(labelWithString: name)
+            nameLabel.font = .systemFont(ofSize: 11)
+            nameLabel.textColor = .labelColor
+            nameLabel.alignment = .left
+
+            let pathLabel = NSTextField(labelWithString: "\(baseURL)/\(path)")
+            pathLabel.font = NSFont.monospacedSystemFont(ofSize: 10, weight: .regular)
+            pathLabel.textColor = .secondaryLabelColor
+            pathLabel.isSelectable = true
+            pathLabel.lineBreakMode = .byTruncatingTail
+
+            let copyButton = NSButton(title: "Copy", target: self, action: #selector(copyURL(_:)))
+            copyButton.bezelStyle = .inline
+            copyButton.controlSize = .mini
+            copyButton.font = .systemFont(ofSize: 9)
+            copyButton.toolTip = "\(baseURL)/\(path)"
+
+            rows.append([nameLabel, pathLabel, copyButton])
         }
 
         let grid = NSGridView(views: rows)
@@ -271,7 +351,7 @@ class WebhooksSection: SettingsCard {
 
     private func addressString() -> String {
         let ip = WebhookServer.localIPAddress() ?? "localhost"
-        return "http://\(ip):\(WebhookServer.defaultPort)"
+        return "http://\(ip):\(WebhookServer.configuredPort)"
     }
 
     // MARK: - State management
@@ -330,6 +410,23 @@ class WebhooksSection: SettingsCard {
             WebhookServer.shared.start()
         } else {
             WebhookServer.shared.stop()
+        }
+    }
+
+    @objc private func portChanged(_ sender: NSTextField) {
+        guard let port = UInt16(sender.stringValue), port > 0 else {
+            sender.stringValue = "\(WebhookServer.configuredPort)"
+            return
+        }
+        UserDefaults.standard.set(Int(port), forKey: WebhookServer.portKey)
+
+        // Restart server with new port if running
+        if WebhookServer.shared.state == .running {
+            WebhookServer.shared.stop()
+            // Recreate shared instance with new port (requires app restart for full effect)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                WebhookServer.shared.start()
+            }
         }
     }
 
