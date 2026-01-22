@@ -222,7 +222,7 @@ class AccessoryRowView: NSView {
         // Eye button
         if let eye = eyeButton {
             eye.frame = NSRect(x: x, y: cardY + (L.cardHeight - L.buttonSize) / 2, width: L.buttonSize, height: L.buttonSize)
-            x += L.buttonSize
+            x += L.buttonSize + L.spacing
         }
 
         // Type icon (with 8pt gap from control icons)
