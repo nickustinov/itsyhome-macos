@@ -131,17 +131,17 @@ class ACMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable
         modeContainer.layer?.backgroundColor = NSColor.secondaryLabelColor.withAlphaComponent(0.08).cgColor
         modeContainer.layer?.cornerRadius = modeContainerHeight / 2
 
-        modeButtonAuto = ModeButton(title: "Auto")
+        modeButtonAuto = ModeButton(title: "Auto", color: DS.Colors.success)  // Green
         modeButtonAuto.frame = NSRect(x: containerPadding, y: containerPadding, width: buttonWidth, height: buttonHeight)
         modeButtonAuto.tag = 0
         modeContainer.addSubview(modeButtonAuto)
 
-        modeButtonHeat = ModeButton(title: "Heat")
+        modeButtonHeat = ModeButton(title: "Heat", color: DS.Colors.thermostatHeat)  // Orange
         modeButtonHeat.frame = NSRect(x: containerPadding + buttonWidth, y: containerPadding, width: buttonWidth, height: buttonHeight)
         modeButtonHeat.tag = 1
         modeContainer.addSubview(modeButtonHeat)
 
-        modeButtonCool = ModeButton(title: "Cool")
+        modeButtonCool = ModeButton(title: "Cool", color: DS.Colors.thermostatCool)  // Blue
         modeButtonCool.frame = NSRect(x: containerPadding + buttonWidth * 2, y: containerPadding, width: buttonWidth, height: buttonHeight)
         modeButtonCool.tag = 2
         modeContainer.addSubview(modeButtonCool)

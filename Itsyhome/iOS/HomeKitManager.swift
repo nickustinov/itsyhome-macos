@@ -95,7 +95,11 @@ class HomeKitManager: NSObject, Mac2iOS, HMHomeManagerDelegate {
             HMServiceTypeMotionSensor,
             HMServiceTypeFan,
             HMServiceTypeGarageDoorOpener,
-            HMServiceTypeContactSensor
+            HMServiceTypeContactSensor,
+            ServiceTypes.humidifierDehumidifier,
+            ServiceTypes.airPurifier,
+            ServiceTypes.valve,
+            ServiceTypes.securitySystem
         ]
 
         // Populate accessories
@@ -340,6 +344,10 @@ class HomeKitManager: NSObject, Mac2iOS, HMHomeManagerDelegate {
         let colorTempMin = colorTempChar?.metadata?.minimumValue?.doubleValue
         let colorTempMax = colorTempChar?.metadata?.maximumValue?.doubleValue
 
+        // Get valve type value (stored directly, not as characteristic ID)
+        let valveTypeChar = findChar(CharacteristicTypes.valveType)
+        let valveTypeValue = valveTypeChar?.value as? Int
+
         return ServiceData(
             uniqueIdentifier: svc.uniqueIdentifier,
             name: svc.name,
@@ -379,7 +387,23 @@ class HomeKitManager: NSObject, Mac2iOS, HMHomeManagerDelegate {
             targetDoorStateId: charId(CharacteristicTypes.targetDoorState),
             obstructionDetectedId: charId(CharacteristicTypes.obstructionDetected),
             // Contact sensor characteristics
-            contactSensorStateId: charId(CharacteristicTypes.contactSensorState)
+            contactSensorStateId: charId(CharacteristicTypes.contactSensorState),
+            // Humidifier/Dehumidifier characteristics
+            currentHumidifierDehumidifierStateId: charId(CharacteristicTypes.currentHumidifierDehumidifierState),
+            targetHumidifierDehumidifierStateId: charId(CharacteristicTypes.targetHumidifierDehumidifierState),
+            humidifierThresholdId: charId(CharacteristicTypes.humidifierThreshold),
+            dehumidifierThresholdId: charId(CharacteristicTypes.dehumidifierThreshold),
+            // Air Purifier characteristics
+            currentAirPurifierStateId: charId(CharacteristicTypes.currentAirPurifierState),
+            targetAirPurifierStateId: charId(CharacteristicTypes.targetAirPurifierState),
+            // Valve characteristics
+            inUseId: charId(CharacteristicTypes.inUse),
+            valveTypeValue: valveTypeValue,
+            setDurationId: charId(CharacteristicTypes.setDuration),
+            remainingDurationId: charId(CharacteristicTypes.remainingDuration),
+            // Security System characteristics
+            securitySystemCurrentStateId: charId(CharacteristicTypes.securitySystemCurrentState),
+            securitySystemTargetStateId: charId(CharacteristicTypes.securitySystemTargetState)
         )
     }
 

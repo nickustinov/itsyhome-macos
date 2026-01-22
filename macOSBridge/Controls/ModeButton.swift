@@ -2,7 +2,7 @@
 //  ModeButton.swift
 //  macOSBridge
 //
-//  A pill-shaped button for AC mode selection (Auto/Heat/Cool)
+//  A pill-shaped button for mode selection with customizable color
 //
 
 import AppKit
@@ -15,7 +15,15 @@ class ModeButton: NSButton {
         }
     }
 
-    init(title: String) {
+    /// Color when selected (defaults to green)
+    var selectedColor: NSColor = DS.Colors.success {
+        didSet {
+            needsDisplay = true
+        }
+    }
+
+    init(title: String, color: NSColor = DS.Colors.success) {
+        self.selectedColor = color
         super.init(frame: .zero)
 
         self.title = title
@@ -37,7 +45,7 @@ class ModeButton: NSButton {
 
         // Fill background
         if isSelected {
-            DS.Colors.success.setFill()  // Green like toggle switches
+            selectedColor.setFill()
         } else {
             NSColor.clear.setFill()
         }
