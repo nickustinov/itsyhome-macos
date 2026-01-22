@@ -27,8 +27,12 @@ class GroupMenuItem: NSMenuItem, CharacteristicUpdatable, LocalChangeNotifiable 
     private var deviceStates: [UUID: Bool] = [:]
     private var characteristicToService: [UUID: String] = [:]  // characteristicId -> serviceId
 
+    // For blinds: track positions separately
+    private var positionStates: [UUID: Int] = [:]  // currentPositionId -> position
+    private var targetPositionIds: [UUID] = []  // targetPositionIds for writing
+
     var characteristicIdentifiers: [UUID] {
-        return Array(deviceStates.keys)
+        return Array(deviceStates.keys) + Array(positionStates.keys)
     }
 
     init(group: DeviceGroup, menuData: MenuData, bridge: Mac2iOS?) {
@@ -84,14 +88,23 @@ class GroupMenuItem: NSMenuItem, CharacteristicUpdatable, LocalChangeNotifiable 
     private func initializeDeviceStates() {
         let services = group.resolveServices(in: menuData)
         for service in services {
-            // For power-based devices (lights, switches, etc.)
-            if let idString = service.powerStateId, let id = UUID(uuidString: idString) {
-                let isOn = bridge?.getCharacteristicValue(identifier: id) as? Bool ?? false
-                deviceStates[id] = isOn
+            // For blinds: track position (start at 0, will update from characteristic updates)
+            if service.serviceType == ServiceTypes.windowCovering {
+                if let currentIdString = service.currentPositionId,
+                   let currentId = UUID(uuidString: currentIdString) {
+                    positionStates[currentId] = 0
+                }
+                if let targetIdString = service.targetPositionId,
+                   let targetId = UUID(uuidString: targetIdString) {
+                    targetPositionIds.append(targetId)
+                }
+            }
+            // For power-based devices (lights, switches, etc.) - start OFF, will update from characteristic updates
+            else if let idString = service.powerStateId, let id = UUID(uuidString: idString) {
+                deviceStates[id] = false
                 characteristicToService[id] = service.uniqueIdentifier
             } else if let idString = service.activeId, let id = UUID(uuidString: idString) {
-                let value = bridge?.getCharacteristicValue(identifier: id) as? Int ?? 0
-                deviceStates[id] = value != 0
+                deviceStates[id] = false
                 characteristicToService[id] = service.uniqueIdentifier
             }
         }
@@ -107,7 +120,8 @@ class GroupMenuItem: NSMenuItem, CharacteristicUpdatable, LocalChangeNotifiable 
 
             let slider = ModernSlider(minValue: 0, maxValue: 100)
             slider.frame = NSRect(x: sliderX, y: sliderY, width: sliderWidth, height: 12)
-            slider.doubleValue = 0
+            slider.doubleValue = 0  // Start at 0, will update from characteristic updates
+            slider.progressTintColor = DS.Colors.sliderBlind
             slider.isContinuous = false
             slider.target = self
             slider.action = #selector(sliderChanged(_:))
@@ -125,6 +139,7 @@ class GroupMenuItem: NSMenuItem, CharacteristicUpdatable, LocalChangeNotifiable 
 
             let toggle = ToggleSwitch()
             toggle.frame = NSRect(x: switchX, y: switchY, width: DS.ControlSize.switchWidth, height: DS.ControlSize.switchHeight)
+            toggle.setOn(false, animated: false)  // Start OFF, will update from bridge values
             toggle.target = self
             toggle.action = #selector(toggleChanged(_:))
             containerView.addSubview(toggle)
@@ -138,7 +153,19 @@ class GroupMenuItem: NSMenuItem, CharacteristicUpdatable, LocalChangeNotifiable 
 
     // Called when characteristic values change
     func updateValue(for characteristicId: UUID, value: Any, isLocalChange: Bool) {
-        // Update our local state if this characteristic belongs to us
+        // Update position state for blinds
+        if positionStates.keys.contains(characteristicId) {
+            if let pos = ValueConversion.toInt(value) {
+                positionStates[characteristicId] = pos
+                // Update slider with average position
+                let avgPosition = positionStates.values.reduce(0, +) / positionStates.count
+                positionSlider?.doubleValue = Double(avgPosition)
+                updateBlindsIcon(position: avgPosition)
+            }
+            return
+        }
+
+        // Update power state for other devices
         if deviceStates.keys.contains(characteristicId) {
             if let boolValue = ValueConversion.toBool(value) {
                 deviceStates[characteristicId] = boolValue
@@ -208,16 +235,25 @@ class GroupMenuItem: NSMenuItem, CharacteristicUpdatable, LocalChangeNotifiable 
         let services = group.resolveServices(in: menuData)
         guard let bridge = bridge else { return }
 
+        // Update local position states and notify
+        for (currentId, _) in positionStates {
+            positionStates[currentId] = position
+            notifyLocalChange(characteristicId: currentId, value: position)
+        }
+
+        // Write to all target positions
         for service in services {
             if let idString = service.targetPositionId, let id = UUID(uuidString: idString) {
                 bridge.writeCharacteristic(identifier: id, value: position)
-                notifyLocalChange(characteristicId: id, value: position)
             }
         }
 
-        // Update icon
-        let isOpen = position > 50
+        updateBlindsIcon(position: position)
+    }
+
+    private func updateBlindsIcon(position: Int) {
+        let isOpen = position > 0
         iconView.image = NSImage(systemSymbolName: isOpen ? "blinds.horizontal.open" : "blinds.horizontal.closed", accessibilityDescription: nil)
-        iconView.contentTintColor = isOpen ? DS.Colors.success : DS.Colors.mutedForeground
+        iconView.contentTintColor = isOpen ? DS.Colors.info : DS.Colors.mutedForeground
     }
 }
