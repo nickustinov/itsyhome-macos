@@ -82,6 +82,13 @@ enum DS {
             }
         }
 
+        /// Shared color for slider tracks and toggle off state
+        static var controlTrack: NSColor {
+            NSColor(name: nil) { appearance in
+                appearance.isDark ? NSColor(white: 0.35, alpha: 1) : NSColor(white: 0.65, alpha: 1)
+            }
+        }
+
         static var ring: NSColor {
             NSColor(name: nil) { appearance in
                 appearance.isDark ? NSColor(white: 0.556, alpha: 1) : NSColor(white: 0.708, alpha: 1)
@@ -187,7 +194,7 @@ enum DS {
 
         // Slider
         static let sliderTrackHeight: CGFloat = 6
-        static let sliderThumbSize: CGFloat = 16
+        static let sliderThumbSize: CGFloat = 12
         static let sliderWidth: CGFloat = 60
 
         // Icon

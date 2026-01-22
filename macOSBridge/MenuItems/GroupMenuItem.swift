@@ -21,7 +21,22 @@ class GroupMenuItem: NSMenuItem, CharacteristicUpdatable, LocalChangeNotifiable 
     private var toggleSwitch: ToggleSwitch?
     private var positionSlider: ModernSlider?
 
+    // Light group controls
+    private var brightnessSlider: ModernSlider?
+    private var colorCircle: ClickableColorCircleView?
+    private var colorControlsRow: NSView?
+    private var colorPickerView: NSView?
+    private var isColorPickerExpanded: Bool = false
+    private let collapsedHeight: CGFloat = DS.ControlSize.menuItemHeight
+    private var expandedHeight: CGFloat = DS.ControlSize.menuItemHeight
+
     private let commonType: String?
+
+    // Light group capabilities (all lights must have these for group to support)
+    private let hasBrightness: Bool
+    private let hasRGB: Bool
+    private let hasColorTemp: Bool
+    private var hasColor: Bool { hasRGB || hasColorTemp }
 
     // Track state of each device: characteristicId -> isOn
     private var deviceStates: [UUID: Bool] = [:]
@@ -30,9 +45,30 @@ class GroupMenuItem: NSMenuItem, CharacteristicUpdatable, LocalChangeNotifiable 
     // For blinds: track positions separately
     private var positionStates: [UUID: Int] = [:]  // currentPositionId -> position
     private var targetPositionIds: [UUID] = []  // targetPositionIds for writing
+    private var ignorePositionUpdatesUntil: Date?  // Ignore HomeKit updates while blinds are moving
+
+    // For lights: track brightness, hue, saturation, color temp
+    private var brightnessStates: [UUID: Double] = [:]  // brightnessId -> brightness
+    private var brightnessIds: [UUID] = []  // for writing
+    private var hueStates: [UUID: Double] = [:]  // hueId -> hue
+    private var hueIds: [UUID] = []
+    private var saturationStates: [UUID: Double] = [:]  // satId -> saturation
+    private var saturationIds: [UUID] = []
+    private var colorTempStates: [UUID: Double] = [:]  // colorTempId -> mired
+    private var colorTempIds: [UUID] = []
+    private var colorTempMin: Double = 153
+    private var colorTempMax: Double = 500
+
+    // Current averaged values for UI
+    private var currentBrightness: Double = 100
+    private var currentHue: Double = 0
+    private var currentSaturation: Double = 100
+    private var currentColorTemp: Double = 300
 
     var characteristicIdentifiers: [UUID] {
-        return Array(deviceStates.keys) + Array(positionStates.keys)
+        return Array(deviceStates.keys) + Array(positionStates.keys) +
+               Array(brightnessStates.keys) + Array(hueStates.keys) +
+               Array(saturationStates.keys) + Array(colorTempStates.keys)
     }
 
     init(group: DeviceGroup, menuData: MenuData, bridge: Mac2iOS?) {
@@ -40,6 +76,19 @@ class GroupMenuItem: NSMenuItem, CharacteristicUpdatable, LocalChangeNotifiable 
         self.menuData = menuData
         self.bridge = bridge
         self.commonType = group.commonServiceType(in: menuData)
+
+        // Determine light group capabilities (all lights must support for group to show control)
+        let services = group.resolveServices(in: menuData)
+        let isLightGroup = self.commonType == ServiceTypes.lightbulb
+        if isLightGroup && !services.isEmpty {
+            self.hasBrightness = services.allSatisfy { $0.brightnessId != nil }
+            self.hasRGB = services.allSatisfy { $0.hueId != nil && $0.saturationId != nil }
+            self.hasColorTemp = !self.hasRGB && services.allSatisfy { $0.colorTemperatureId != nil }
+        } else {
+            self.hasBrightness = false
+            self.hasRGB = false
+            self.hasColorTemp = false
+        }
 
         let height = DS.ControlSize.menuItemHeight
         containerView = NSView(frame: NSRect(x: 0, y: 0, width: DS.ControlSize.menuItemWidth, height: height))
@@ -107,7 +156,35 @@ class GroupMenuItem: NSMenuItem, CharacteristicUpdatable, LocalChangeNotifiable 
                 deviceStates[id] = false
                 characteristicToService[id] = service.uniqueIdentifier
             }
+
+            // For lights: track brightness and color characteristics
+            if service.serviceType == ServiceTypes.lightbulb {
+                if let idString = service.brightnessId, let id = UUID(uuidString: idString) {
+                    brightnessStates[id] = 100
+                    brightnessIds.append(id)
+                }
+                if let idString = service.hueId, let id = UUID(uuidString: idString) {
+                    hueStates[id] = 0
+                    hueIds.append(id)
+                }
+                if let idString = service.saturationId, let id = UUID(uuidString: idString) {
+                    saturationStates[id] = 100
+                    saturationIds.append(id)
+                }
+                if let idString = service.colorTemperatureId, let id = UUID(uuidString: idString) {
+                    colorTempStates[id] = 300
+                    colorTempIds.append(id)
+                    // Track color temp range from first light that has it
+                    if let min = service.colorTemperatureMin {
+                        colorTempMin = min
+                    }
+                    if let max = service.colorTemperatureMax {
+                        colorTempMax = max
+                    }
+                }
+            }
         }
+        currentColorTemp = (colorTempMin + colorTempMax) / 2
     }
 
     private func setupControl(height: CGFloat, labelX: CGFloat) {
@@ -124,13 +201,69 @@ class GroupMenuItem: NSMenuItem, CharacteristicUpdatable, LocalChangeNotifiable 
             slider.progressTintColor = DS.Colors.sliderBlind
             slider.isContinuous = false
             slider.target = self
-            slider.action = #selector(sliderChanged(_:))
+            slider.action = #selector(positionSliderChanged(_:))
             containerView.addSubview(slider)
             positionSlider = slider
 
             // Status label position
             statusLabel.frame = NSRect(x: sliderX - 40, y: (height - 17) / 2, width: 35, height: 17)
             nameLabel.frame.size.width = sliderX - 45 - labelX - DS.Spacing.sm
+
+        case ServiceTypes.lightbulb:
+            // Toggle switch (rightmost)
+            let switchX = DS.ControlSize.menuItemWidth - DS.ControlSize.switchWidth - DS.Spacing.md
+            let switchY = (height - DS.ControlSize.switchHeight) / 2
+
+            let toggle = ToggleSwitch()
+            toggle.frame = NSRect(x: switchX, y: switchY, width: DS.ControlSize.switchWidth, height: DS.ControlSize.switchHeight)
+            toggle.setOn(false, animated: false)
+            toggle.target = self
+            toggle.action = #selector(toggleChanged(_:))
+            containerView.addSubview(toggle)
+            toggleSwitch = toggle
+
+            // Brightness slider (if all lights support it)
+            let sliderWidth = DS.ControlSize.sliderWidth
+            let sliderX = switchX - sliderWidth - DS.Spacing.sm
+            let sliderY = (height - 12) / 2
+
+            let slider = ModernSlider(minValue: 0, maxValue: 100)
+            slider.frame = NSRect(x: sliderX, y: sliderY, width: sliderWidth, height: 12)
+            slider.doubleValue = 100
+            slider.progressTintColor = DS.Colors.sliderLight
+            slider.isContinuous = false
+            slider.isHidden = true  // Show only when lights are on
+            slider.target = self
+            slider.action = #selector(brightnessSliderChanged(_:))
+            if hasBrightness {
+                containerView.addSubview(slider)
+            }
+            brightnessSlider = slider
+
+            // Color circle (if all lights support color)
+            if hasColor {
+                let colorCircleSize: CGFloat = 14
+                let colorCircleX = sliderX - colorCircleSize - DS.Spacing.xs
+                let colorCircleY = (height - colorCircleSize) / 2
+
+                let circle = ClickableColorCircleView(frame: NSRect(x: colorCircleX, y: colorCircleY, width: colorCircleSize, height: colorCircleSize))
+                circle.wantsLayer = true
+                circle.layer?.cornerRadius = colorCircleSize / 2
+                circle.layer?.backgroundColor = NSColor.white.cgColor
+                circle.isHidden = true  // Show only when lights are on
+                circle.onClick = { [weak self] in
+                    self?.toggleColorPicker()
+                }
+                containerView.addSubview(circle)
+                colorCircle = circle
+
+                setupColorControlsRow()
+            }
+
+            // Status label position (before controls)
+            let controlsStartX = hasColor ? (sliderX - 14 - DS.Spacing.xs) : sliderX
+            statusLabel.frame = NSRect(x: controlsStartX - 40, y: (height - 17) / 2, width: 35, height: 17)
+            nameLabel.frame.size.width = controlsStartX - 45 - labelX - DS.Spacing.sm
 
         default:
             // Toggle switch
@@ -151,11 +284,63 @@ class GroupMenuItem: NSMenuItem, CharacteristicUpdatable, LocalChangeNotifiable 
         }
     }
 
+    private func setupColorControlsRow() {
+        let row = NSView(frame: .zero)
+        row.isHidden = true
+        colorControlsRow = row
+
+        if hasRGB {
+            let picker = ColorWheelPickerView(
+                hue: currentHue,
+                saturation: currentSaturation,
+                onColorChanged: { [weak self] newHue, newSat, isFinal in
+                    self?.handleRGBColorChange(hue: newHue, saturation: newSat, commit: isFinal)
+                }
+            )
+            colorPickerView = picker
+        } else if hasColorTemp {
+            let picker = ColorTempPickerView(
+                currentMired: currentColorTemp,
+                minMired: colorTempMin,
+                maxMired: colorTempMax,
+                onTempChanged: { [weak self] newMired in
+                    self?.setColorTemp(newMired)
+                }
+            )
+            colorPickerView = picker
+        }
+
+        if let picker = colorPickerView {
+            let size = picker.intrinsicContentSize
+            let padding: CGFloat = 4
+            row.frame = NSRect(x: 0, y: padding, width: DS.ControlSize.menuItemWidth, height: size.height)
+            picker.frame = NSRect(
+                x: (DS.ControlSize.menuItemWidth - size.width) / 2,
+                y: 0,
+                width: size.width,
+                height: size.height
+            )
+            row.addSubview(picker)
+            containerView.addSubview(row)
+            expandedHeight = collapsedHeight + size.height + padding * 2
+        }
+    }
+
     // Called when characteristic values change
     func updateValue(for characteristicId: UUID, value: Any, isLocalChange: Bool) {
         // Update position state for blinds
         if positionStates.keys.contains(characteristicId) {
             if let pos = ValueConversion.toInt(value) {
+                // For local changes, set the ignore window
+                if isLocalChange {
+                    ignorePositionUpdatesUntil = Date().addingTimeInterval(60)
+                }
+
+                // Ignore HomeKit updates while waiting for blinds to reach target
+                if !isLocalChange, let ignoreUntil = ignorePositionUpdatesUntil, Date() < ignoreUntil {
+                    return
+                }
+
                 positionStates[characteristicId] = pos
                 // Update slider with average position
                 let avgPosition = positionStates.values.reduce(0, +) / positionStates.count
@@ -173,6 +358,50 @@ class GroupMenuItem: NSMenuItem, CharacteristicUpdatable, LocalChangeNotifiable 
                 deviceStates[characteristicId] = intValue != 0
             }
             updateUI()
+            return
+        }
+
+        // Update brightness
+        if brightnessStates.keys.contains(characteristicId) {
+            if let newBrightness = ValueConversion.toDouble(value) {
+                brightnessStates[characteristicId] = newBrightness
+                currentBrightness = brightnessStates.values.reduce(0, +) / Double(brightnessStates.count)
+                brightnessSlider?.doubleValue = currentBrightness
+            }
+            return
+        }
+
+        // Update hue
+        if hueStates.keys.contains(characteristicId) {
+            if let newHue = ValueConversion.toDouble(value) {
+                hueStates[characteristicId] = newHue
+                currentHue = hueStates.values.reduce(0, +) / Double(hueStates.count)
+                updateColorCircle()
+                (colorPickerView as? ColorWheelPickerView)?.updateColor(hue: currentHue, saturation: currentSaturation)
+            }
+            return
+        }
+
+        // Update saturation
+        if saturationStates.keys.contains(characteristicId) {
+            if let newSat = ValueConversion.toDouble(value) {
+                saturationStates[characteristicId] = newSat
+                currentSaturation = saturationStates.values.reduce(0, +) / Double(saturationStates.count)
+                updateColorCircle()
+                (colorPickerView as? ColorWheelPickerView)?.updateColor(hue: currentHue, saturation: currentSaturation)
+            }
+            return
+        }
+
+        // Update color temperature
+        if colorTempStates.keys.contains(characteristicId) {
+            if let newTemp = ValueConversion.toDouble(value) {
+                colorTempStates[characteristicId] = newTemp
+                currentColorTemp = colorTempStates.values.reduce(0, +) / Double(colorTempStates.count)
+                updateColorCircle()
+                (colorPickerView as? ColorTempPickerView)?.updateMired(currentColorTemp)
+            }
+            return
         }
     }
 
@@ -181,24 +410,25 @@ class GroupMenuItem: NSMenuItem, CharacteristicUpdatable, LocalChangeNotifiable 
         let onCount = deviceStates.values.filter { $0 }.count
         let allOn = onCount == total
         let allOff = onCount == 0
+        let isOn = onCount > 0
 
         // Update toggle
-        toggleSwitch?.setOn(onCount > 0, animated: false)
+        toggleSwitch?.setOn(isOn, animated: false)
 
         // Update icon
         switch commonType {
         case ServiceTypes.lightbulb:
-            iconView.image = NSImage(systemSymbolName: onCount > 0 ? "lightbulb.fill" : "lightbulb", accessibilityDescription: nil)
-            iconView.contentTintColor = onCount > 0 ? DS.Colors.lightOn : DS.Colors.mutedForeground
+            iconView.image = NSImage(systemSymbolName: isOn ? "lightbulb.fill" : "lightbulb", accessibilityDescription: nil)
+            iconView.contentTintColor = isOn ? DS.Colors.lightOn : DS.Colors.mutedForeground
         case ServiceTypes.fan:
             iconView.image = NSImage(systemSymbolName: "fan", accessibilityDescription: nil)
-            iconView.contentTintColor = onCount > 0 ? DS.Colors.success : DS.Colors.mutedForeground
+            iconView.contentTintColor = isOn ? DS.Colors.success : DS.Colors.mutedForeground
         case ServiceTypes.lock:
-            iconView.image = NSImage(systemSymbolName: onCount > 0 ? "lock" : "lock.open", accessibilityDescription: nil)
-            iconView.contentTintColor = onCount > 0 ? DS.Colors.success : DS.Colors.mutedForeground
+            iconView.image = NSImage(systemSymbolName: isOn ? "lock" : "lock.open", accessibilityDescription: nil)
+            iconView.contentTintColor = isOn ? DS.Colors.success : DS.Colors.mutedForeground
         default:
             iconView.image = NSImage(systemSymbolName: group.icon, accessibilityDescription: nil)
-            iconView.contentTintColor = onCount > 0 ? DS.Colors.success : DS.Colors.mutedForeground
+            iconView.contentTintColor = isOn ? DS.Colors.success : DS.Colors.mutedForeground
         }
 
         // Show "2/3" if partial
@@ -207,6 +437,59 @@ class GroupMenuItem: NSMenuItem, CharacteristicUpdatable, LocalChangeNotifiable 
             statusLabel.isHidden = false
         } else {
             statusLabel.isHidden = true
+        }
+
+        // Light group specific: show/hide brightness slider and color circle
+        if commonType == ServiceTypes.lightbulb {
+            let showSlider = isOn && hasBrightness
+            let showColorCircle = isOn && hasColor
+
+            brightnessSlider?.isHidden = !showSlider
+            colorCircle?.isHidden = !showColorCircle
+
+            // Collapse color picker if lights turned off
+            if !showColorCircle {
+                isColorPickerExpanded = false
+            }
+
+            // Update layout for expanded/collapsed state
+            let newHeight = (isColorPickerExpanded && showColorCircle) ? expandedHeight : collapsedHeight
+            containerView.frame.size.height = newHeight
+            colorControlsRow?.isHidden = !(isColorPickerExpanded && showColorCircle)
+
+            // Update vertical positions for controls
+            let topAreaY = newHeight - collapsedHeight
+            let iconY = topAreaY + (collapsedHeight - DS.ControlSize.iconMedium) / 2
+            let labelY = topAreaY + (collapsedHeight - 17) / 2
+            let sliderY = topAreaY + (collapsedHeight - 12) / 2
+            let switchY = topAreaY + (collapsedHeight - DS.ControlSize.switchHeight) / 2
+            let colorCircleSize: CGFloat = 14
+            let colorCircleY = topAreaY + (collapsedHeight - colorCircleSize) / 2
+
+            iconView.frame.origin.y = iconY
+            nameLabel.frame.origin.y = labelY
+            brightnessSlider?.frame.origin.y = sliderY
+            toggleSwitch?.frame.origin.y = switchY
+            colorCircle?.frame.origin.y = colorCircleY
+            statusLabel.frame.origin.y = labelY
+
+            // Update name label width based on visible controls
+            let switchX = DS.ControlSize.menuItemWidth - DS.ControlSize.switchWidth - DS.Spacing.md
+            let sliderWidth = DS.ControlSize.sliderWidth
+            let labelX = DS.Spacing.md + DS.ControlSize.iconMedium + DS.Spacing.sm
+
+            var rightEdge = switchX - DS.Spacing.sm
+            if showSlider {
+                rightEdge = switchX - sliderWidth - DS.Spacing.sm - DS.Spacing.xs
+            }
+            if showColorCircle {
+                rightEdge = rightEdge - colorCircleSize - DS.Spacing.xs
+            }
+            nameLabel.frame.size.width = rightEdge - labelX
+
+            if showColorCircle {
+                updateColorCircle()
+            }
         }
     }
 
@@ -230,7 +513,7 @@ class GroupMenuItem: NSMenuItem, CharacteristicUpdatable, LocalChangeNotifiable 
         updateUI()
     }
 
-    @objc private func sliderChanged(_ sender: ModernSlider) {
+    @objc private func positionSliderChanged(_ sender: ModernSlider) {
         let position = Int(sender.doubleValue)
         let services = group.resolveServices(in: menuData)
         guard let bridge = bridge else { return }
@@ -249,6 +532,101 @@ class GroupMenuItem: NSMenuItem, CharacteristicUpdatable, LocalChangeNotifiable 
         }
 
         updateBlindsIcon(position: position)
+    }
+
+    @objc private func brightnessSliderChanged(_ sender: ModernSlider) {
+        let value = sender.doubleValue
+        currentBrightness = value
+        guard let bridge = bridge else { return }
+
+        // Update local brightness states and notify
+        for id in brightnessIds {
+            brightnessStates[id] = value
+            notifyLocalChange(characteristicId: id, value: Int(value))
+        }
+
+        // Write to all brightness characteristics
+        for id in brightnessIds {
+            bridge.writeCharacteristic(identifier: id, value: Int(value))
+        }
+
+        // Turn on lights if slider moved and lights are off
+        if value > 0 && deviceStates.values.allSatisfy({ !$0 }) {
+            let services = group.resolveServices(in: menuData)
+            for service in services {
+                if let idString = service.powerStateId, let id = UUID(uuidString: idString) {
+                    deviceStates[id] = true
+                    bridge.writeCharacteristic(identifier: id, value: true)
+                    notifyLocalChange(characteristicId: id, value: true)
+                }
+            }
+            updateUI()
+        }
+    }
+
+    private func toggleColorPicker() {
+        guard hasColor, deviceStates.values.contains(true) else { return }
+        isColorPickerExpanded.toggle()
+        updateUI()
+        if let menu = menu {
+            menu.itemChanged(self)
+        }
+    }
+
+    private func updateColorCircle() {
+        let color: NSColor
+        if hasRGB {
+            color = NSColor(hue: currentHue / 360.0, saturation: currentSaturation / 100.0, brightness: 1.0, alpha: 1.0)
+        } else if hasColorTemp {
+            color = ColorConversion.miredToColor(currentColorTemp)
+        } else {
+            color = .white
+        }
+        colorCircle?.layer?.backgroundColor = color.cgColor
+    }
+
+    private func handleRGBColorChange(hue newHue: Double, saturation newSat: Double, commit: Bool) {
+        currentHue = newHue
+        currentSaturation = newSat
+        updateColorCircle()
+
+        guard commit, let bridge = bridge else { return }
+
+        // Update local states and notify
+        for id in hueIds {
+            hueStates[id] = newHue
+            notifyLocalChange(characteristicId: id, value: Float(newHue))
+        }
+        for id in saturationIds {
+            saturationStates[id] = newSat
+            notifyLocalChange(characteristicId: id, value: Float(newSat))
+        }
+
+        // Write to all hue/saturation characteristics
+        for id in hueIds {
+            bridge.writeCharacteristic(identifier: id, value: Float(newHue))
+        }
+        for id in saturationIds {
+            bridge.writeCharacteristic(identifier: id, value: Float(newSat))
+        }
+    }
+
+    private func setColorTemp(_ mired: Double) {
+        currentColorTemp = mired
+        updateColorCircle()
+
+        guard let bridge = bridge else { return }
+
+        // Update local states and notify
+        for id in colorTempIds {
+            colorTempStates[id] = mired
+            notifyLocalChange(characteristicId: id, value: Int(mired))
+        }
+
+        // Write to all color temperature characteristics
+        for id in colorTempIds {
+            bridge.writeCharacteristic(identifier: id, value: Int(mired))
+        }
     }
 
     private func updateBlindsIcon(position: Int) {

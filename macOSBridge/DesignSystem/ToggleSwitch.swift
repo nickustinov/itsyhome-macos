@@ -41,7 +41,7 @@ class ToggleSwitch: NSControl {
         didSet { updateColors() }
     }
 
-    var offTintColor: NSColor = DS.Colors.input {
+    var offTintColor: NSColor = DS.Colors.controlTrack {
         didSet { updateColors() }
     }
 

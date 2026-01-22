@@ -36,7 +36,7 @@ class ModernSlider: NSControl {
 
     // isContinuous is inherited from NSControl
 
-    var trackTintColor: NSColor = DS.Colors.muted {
+    var trackTintColor: NSColor = DS.Colors.controlTrack {
         didSet { updateColors() }
     }
 
@@ -50,6 +50,7 @@ class ModernSlider: NSControl {
 
     private let trackLayer = CALayer()
     private let progressLayer = CALayer()
+    private let thumbShadowLayer = CALayer()
     private let thumbLayer = CALayer()
 
     private var trackingArea: NSTrackingArea?
@@ -88,9 +89,16 @@ class ModernSlider: NSControl {
         progressLayer.masksToBounds = true
         layer?.addSublayer(progressLayer)
 
+        // Thumb shadow layer
+        thumbShadowLayer.cornerRadius = DS.ControlSize.sliderThumbSize / 2
+        thumbShadowLayer.shadowColor = NSColor.black.cgColor
+        thumbShadowLayer.shadowOffset = CGSize(width: 0, height: 1)
+        thumbShadowLayer.shadowRadius = 2
+        thumbShadowLayer.shadowOpacity = 0.2
+        layer?.addSublayer(thumbShadowLayer)
+
         // Thumb layer
         thumbLayer.cornerRadius = DS.ControlSize.sliderThumbSize / 2
-        thumbLayer.borderWidth = 1.5
         thumbLayer.masksToBounds = true
         layer?.addSublayer(thumbLayer)
 
@@ -128,6 +136,8 @@ class ModernSlider: NSControl {
         let thumbY = (bounds.height - thumbSize) / 2
         let thumbFrame = CGRect(x: thumbX, y: thumbY, width: thumbSize, height: thumbSize)
 
+        thumbShadowLayer.frame = thumbFrame
+        thumbShadowLayer.backgroundColor = NSColor.white.cgColor
         thumbLayer.frame = thumbFrame
 
         // Progress frame
@@ -152,7 +162,6 @@ class ModernSlider: NSControl {
             trackLayer.backgroundColor = trackTintColor.cgColor
             progressLayer.backgroundColor = progressTintColor.cgColor
             thumbLayer.backgroundColor = thumbColor.cgColor
-            thumbLayer.borderColor = progressTintColor.cgColor
         }
 
         CATransaction.commit()
