@@ -128,7 +128,9 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
         guard window != nil, sidebarTableView.selectedRow < 0 else { return }
-        sidebarTableView.selectRowIndexes(IndexSet(integer: 0), byExtendingSelection: false)
+        DispatchQueue.main.async { [weak self] in
+            self?.sidebarTableView.selectRowIndexes(IndexSet(integer: 0), byExtendingSelection: false)
+        }
     }
 
     private func setupView() {
@@ -216,7 +218,11 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
         webhooksSection = nil
 
         // Reload sidebar to update PRO badges
+        let selectedRow = sidebarTableView.selectedRow
         sidebarTableView.reloadData()
+        if selectedRow >= 0 {
+            sidebarTableView.selectRowIndexes(IndexSet(integer: selectedRow), byExtendingSelection: false)
+        }
 
         // Re-show current section if it's a Pro section
         let row = sidebarTableView.selectedRow
