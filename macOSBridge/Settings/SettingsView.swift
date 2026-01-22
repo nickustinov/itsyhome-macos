@@ -35,8 +35,8 @@ class SidebarRowView: NSTableRowView {
     }
 
     private func updateColors(in view: NSView) {
-        // Skip badge container (has gray background layer)
-        if view.layer?.backgroundColor == NSColor.systemGray.cgColor {
+        // Skip badge container (has purple background layer)
+        if view.layer?.backgroundColor == NSColor.systemPurple.cgColor {
             return
         }
 
@@ -285,7 +285,7 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
             let badgeContainer = NSView()
             badgeContainer.translatesAutoresizingMaskIntoConstraints = false
             badgeContainer.wantsLayer = true
-            badgeContainer.layer?.backgroundColor = NSColor.systemGray.cgColor
+            badgeContainer.layer?.backgroundColor = NSColor.systemPurple.cgColor
             badgeContainer.layer?.cornerRadius = 3
             cell.addSubview(badgeContainer)
 

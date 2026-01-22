@@ -51,11 +51,7 @@ class GroupsSettingsView: NSView {
     }
 
     private func setupContent() {
-        // Pro badge (only show if user doesn't have PRO)
-        if !ProStatusCache.shared.isPro {
-            let proBadge = createProBadge()
-            addView(proBadge, height: 32)
-        }
+        let isPro = ProStatusCache.shared.isPro
 
         // Description
         let descLabel = NSTextField(wrappingLabelWithString: "Create custom groups of devices to control multiple devices at once. Groups appear in your menu and can be controlled via deeplinks.")
@@ -66,10 +62,11 @@ class GroupsSettingsView: NSView {
         descLabel.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
         addSpacer(height: 16)
 
-        // Create group button
+        // Create group button (disabled for non-pro)
         let createButton = NSButton(title: "Create group", target: self, action: #selector(createGroupTapped))
         createButton.bezelStyle = .rounded
         createButton.controlSize = .regular
+        createButton.isEnabled = isPro
         createButton.translatesAutoresizingMaskIntoConstraints = false
         stackView.addArrangedSubview(createButton)
         addSpacer(height: 16)
@@ -127,44 +124,6 @@ class GroupsSettingsView: NSView {
             tableView.leadingAnchor.constraint(equalTo: container.leadingAnchor),
             tableView.trailingAnchor.constraint(equalTo: container.trailingAnchor),
             tableView.bottomAnchor.constraint(equalTo: container.bottomAnchor)
-        ])
-
-        return container
-    }
-
-    private func createProBadge() -> NSView {
-        let container = NSView()
-        container.wantsLayer = true
-        container.layer?.backgroundColor = NSColor(red: 0.95, green: 0.92, blue: 1.0, alpha: 1.0).cgColor
-        container.layer?.cornerRadius = 10
-        container.translatesAutoresizingMaskIntoConstraints = false
-
-        let content = NSStackView()
-        content.orientation = .horizontal
-        content.spacing = 8
-        content.alignment = .centerY
-        content.translatesAutoresizingMaskIntoConstraints = false
-
-        let iconView = NSImageView()
-        iconView.image = NSImage(systemSymbolName: "star.fill", accessibilityDescription: "Pro")
-        iconView.contentTintColor = .systemPurple
-        iconView.translatesAutoresizingMaskIntoConstraints = false
-        iconView.widthAnchor.constraint(equalToConstant: 16).isActive = true
-        iconView.heightAnchor.constraint(equalToConstant: 16).isActive = true
-
-        let label = NSTextField(labelWithString: "Itsyhome Pro feature")
-        label.font = .systemFont(ofSize: 12, weight: .medium)
-        label.textColor = .labelColor
-
-        content.addArrangedSubview(iconView)
-        content.addArrangedSubview(label)
-
-        container.addSubview(content)
-        NSLayoutConstraint.activate([
-            content.topAnchor.constraint(equalTo: container.topAnchor, constant: 8),
-            content.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 12),
-            content.trailingAnchor.constraint(lessThanOrEqualTo: container.trailingAnchor, constant: -12),
-            content.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -8)
         ])
 
         return container
@@ -264,14 +223,16 @@ extension GroupsSettingsView: NSTableViewDelegate, NSTableViewDataSource {
     }
 
     private func createGroupRowView(group: DeviceGroup, row: Int) -> NSView {
+        let isPro = ProStatusCache.shared.isPro
         let container = NSView()
         container.wantsLayer = true
         container.layer?.backgroundColor = NSColor(white: 0.97, alpha: 1.0).cgColor
         container.layer?.cornerRadius = 10
 
-        // Drag handle
+        // Drag handle (hidden for non-pro)
         let dragHandle = DragHandleView()
         dragHandle.translatesAutoresizingMaskIntoConstraints = false
+        dragHandle.isHidden = !isPro
         container.addSubview(dragHandle)
 
         // Icon
@@ -294,20 +255,22 @@ extension GroupsSettingsView: NSTableViewDelegate, NSTableViewDataSource {
         countLabel.translatesAutoresizingMaskIntoConstraints = false
         container.addSubview(countLabel)
 
-        // Edit button
+        // Edit button (disabled for non-pro)
         let editButton = NSButton(title: "Edit", target: self, action: #selector(editGroupTapped(_:)))
-        editButton.bezelStyle = .inline
-        editButton.controlSize = .small
+        editButton.bezelStyle = .rounded
+        editButton.controlSize = .regular
         editButton.tag = row
+        editButton.isEnabled = isPro
         editButton.translatesAutoresizingMaskIntoConstraints = false
         container.addSubview(editButton)
 
-        // Delete button
+        // Delete button (disabled for non-pro)
         let deleteButton = NSButton(image: NSImage(systemSymbolName: "trash", accessibilityDescription: "Delete")!, target: self, action: #selector(deleteGroupTapped(_:)))
         deleteButton.bezelStyle = .inline
         deleteButton.isBordered = false
-        deleteButton.contentTintColor = .systemRed
+        deleteButton.contentTintColor = isPro ? .systemRed : .tertiaryLabelColor
         deleteButton.tag = row
+        deleteButton.isEnabled = isPro
         deleteButton.translatesAutoresizingMaskIntoConstraints = false
         container.addSubview(deleteButton)
 
@@ -342,6 +305,9 @@ extension GroupsSettingsView: NSTableViewDelegate, NSTableViewDataSource {
     // MARK: - Drag and drop
 
     func tableView(_ tableView: NSTableView, pasteboardWriterForRow row: Int) -> NSPasteboardWriting? {
+        // Disable drag for non-pro users
+        guard ProStatusCache.shared.isPro else { return nil }
+
         let group = groups[row]
         let pb = NSPasteboardItem()
         pb.setString(group.id, forType: .groupItem)

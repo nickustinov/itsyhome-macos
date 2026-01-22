@@ -34,6 +34,7 @@ class AccessoriesSettingsView: NSView {
 
     private var favouritesTableView: NSTableView?
     private var favouriteItems: [FavouriteItem] = []
+    private var expandedSections: Set<String> = []
 
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -144,37 +145,50 @@ class AccessoriesSettingsView: NSView {
 
         // Scenes section
         if !data.scenes.isEmpty {
+            let scenesKey = "scenes"
             let isHidden = preferences.hideScenesSection
-            let header = AccessorySectionHeader(title: "Scenes", isItemHidden: isHidden, showEyeButton: true)
+            let isScenesCollapsed = !expandedSections.contains(scenesKey)
+            let header = AccessorySectionHeader(title: "Scenes", isItemHidden: isHidden, showEyeButton: true, isCollapsed: isScenesCollapsed, showChevron: true)
             header.onVisibilityToggled = { [weak self] in
                 preferences.hideScenesSection.toggle()
                 self?.rebuild()
             }
+            header.onCollapseToggled = { [weak self] in
+                guard let self else { return }
+                if self.expandedSections.contains(scenesKey) {
+                    self.expandedSections.remove(scenesKey)
+                } else {
+                    self.expandedSections.insert(scenesKey)
+                }
+                self.rebuild()
+            }
             addView(header, height: 32)
 
-            for scene in data.scenes {
-                let isFav = preferences.isFavourite(sceneId: scene.uniqueIdentifier)
-                let isSceneHidden = preferences.isHidden(sceneId: scene.uniqueIdentifier)
-                let config = AccessoryRowConfig(
-                    name: scene.name,
-                    icon: SceneIconInference.icon(for: scene.name),
-                    isFavourite: isFav,
-                    isItemHidden: isSceneHidden,
-                    isSectionHidden: isHidden,
-                    showDragHandle: false,
-                    showEyeButton: true,
-                    itemId: nil
-                )
-                let row = AccessoryRowView(config: config)
-                row.onStarToggled = { [weak self] in
-                    preferences.toggleFavourite(sceneId: scene.uniqueIdentifier)
-                    self?.rebuild()
+            if !isScenesCollapsed {
+                for scene in data.scenes {
+                    let isFav = preferences.isFavourite(sceneId: scene.uniqueIdentifier)
+                    let isSceneHidden = preferences.isHidden(sceneId: scene.uniqueIdentifier)
+                    let config = AccessoryRowConfig(
+                        name: scene.name,
+                        icon: SceneIconInference.icon(for: scene.name),
+                        isFavourite: isFav,
+                        isItemHidden: isSceneHidden,
+                        isSectionHidden: isHidden,
+                        showDragHandle: false,
+                        showEyeButton: true,
+                        itemId: nil
+                    )
+                    let row = AccessoryRowView(config: config)
+                    row.onStarToggled = { [weak self] in
+                        preferences.toggleFavourite(sceneId: scene.uniqueIdentifier)
+                        self?.rebuild()
+                    }
+                    row.onEyeToggled = { [weak self] in
+                        preferences.toggleHidden(sceneId: scene.uniqueIdentifier)
+                        self?.rebuild()
+                    }
+                    addView(row, height: L.rowHeight)
                 }
-                row.onEyeToggled = { [weak self] in
-                    preferences.toggleHidden(sceneId: scene.uniqueIdentifier)
-                    self?.rebuild()
-                }
-                addView(row, height: L.rowHeight)
             }
             addSpacer(height: 12)
         }
@@ -185,80 +199,106 @@ class AccessoriesSettingsView: NSView {
 
             let roomId = room.uniqueIdentifier
             let isRoomHidden = preferences.isHidden(roomId: roomId)
+            let isRoomCollapsed = !expandedSections.contains(roomId)
 
-            let header = AccessorySectionHeader(title: room.name, isItemHidden: isRoomHidden, showEyeButton: true)
+            let header = AccessorySectionHeader(title: room.name, isItemHidden: isRoomHidden, showEyeButton: true, isCollapsed: isRoomCollapsed, showChevron: true)
             header.onVisibilityToggled = { [weak self] in
                 preferences.toggleHidden(roomId: roomId)
                 self?.rebuild()
             }
+            header.onCollapseToggled = { [weak self] in
+                guard let self else { return }
+                if self.expandedSections.contains(roomId) {
+                    self.expandedSections.remove(roomId)
+                } else {
+                    self.expandedSections.insert(roomId)
+                }
+                self.rebuild()
+            }
             addView(header, height: 32)
 
-            let sorted = services.sorted { s1, s2 in
-                let i1 = typeOrder.firstIndex(of: s1.serviceType) ?? Int.max
-                let i2 = typeOrder.firstIndex(of: s2.serviceType) ?? Int.max
-                return i1 != i2 ? i1 < i2 : s1.name < s2.name
-            }
+            if !isRoomCollapsed {
+                let sorted = services.sorted { s1, s2 in
+                    let i1 = typeOrder.firstIndex(of: s1.serviceType) ?? Int.max
+                    let i2 = typeOrder.firstIndex(of: s2.serviceType) ?? Int.max
+                    return i1 != i2 ? i1 < i2 : s1.name < s2.name
+                }
 
-            for service in sorted {
-                let isFav = preferences.isFavourite(serviceId: service.uniqueIdentifier)
-                let isServiceHidden = preferences.isHidden(serviceId: service.uniqueIdentifier)
-                let config = AccessoryRowConfig(
-                    name: service.name,
-                    icon: IconMapping.iconForServiceType(service.serviceType),
-                    isFavourite: isFav,
-                    isItemHidden: isServiceHidden,
-                    isSectionHidden: isRoomHidden,
-                    showDragHandle: false,
-                    showEyeButton: true,
-                    itemId: nil
-                )
-                let row = AccessoryRowView(config: config)
-                row.onStarToggled = { [weak self] in
-                    preferences.toggleFavourite(serviceId: service.uniqueIdentifier)
-                    self?.rebuild()
+                for service in sorted {
+                    let isFav = preferences.isFavourite(serviceId: service.uniqueIdentifier)
+                    let isServiceHidden = preferences.isHidden(serviceId: service.uniqueIdentifier)
+                    let config = AccessoryRowConfig(
+                        name: service.name,
+                        icon: IconMapping.iconForServiceType(service.serviceType),
+                        isFavourite: isFav,
+                        isItemHidden: isServiceHidden,
+                        isSectionHidden: isRoomHidden,
+                        showDragHandle: false,
+                        showEyeButton: true,
+                        itemId: nil
+                    )
+                    let row = AccessoryRowView(config: config)
+                    row.onStarToggled = { [weak self] in
+                        preferences.toggleFavourite(serviceId: service.uniqueIdentifier)
+                        self?.rebuild()
+                    }
+                    row.onEyeToggled = { [weak self] in
+                        preferences.toggleHidden(serviceId: service.uniqueIdentifier)
+                        self?.rebuild()
+                    }
+                    addView(row, height: L.rowHeight)
                 }
-                row.onEyeToggled = { [weak self] in
-                    preferences.toggleHidden(serviceId: service.uniqueIdentifier)
-                    self?.rebuild()
-                }
-                addView(row, height: L.rowHeight)
             }
             addSpacer(height: 12)
         }
 
         // Other section
         if !noRoomServices.isEmpty {
-            addHeader(title: "Other")
-
-            let sorted = noRoomServices.sorted { s1, s2 in
-                let i1 = typeOrder.firstIndex(of: s1.serviceType) ?? Int.max
-                let i2 = typeOrder.firstIndex(of: s2.serviceType) ?? Int.max
-                return i1 != i2 ? i1 < i2 : s1.name < s2.name
+            let otherKey = "other"
+            let isOtherCollapsed = !expandedSections.contains(otherKey)
+            let header = AccessorySectionHeader(title: "Other", isCollapsed: isOtherCollapsed, showChevron: true)
+            header.onCollapseToggled = { [weak self] in
+                guard let self else { return }
+                if self.expandedSections.contains(otherKey) {
+                    self.expandedSections.remove(otherKey)
+                } else {
+                    self.expandedSections.insert(otherKey)
+                }
+                self.rebuild()
             }
+            addView(header, height: 32)
 
-            for service in sorted {
-                let isFav = preferences.isFavourite(serviceId: service.uniqueIdentifier)
-                let isServiceHidden = preferences.isHidden(serviceId: service.uniqueIdentifier)
-                let config = AccessoryRowConfig(
-                    name: service.name,
-                    icon: IconMapping.iconForServiceType(service.serviceType),
-                    isFavourite: isFav,
-                    isItemHidden: isServiceHidden,
-                    isSectionHidden: false,
-                    showDragHandle: false,
-                    showEyeButton: true,
-                    itemId: nil
-                )
-                let row = AccessoryRowView(config: config)
-                row.onStarToggled = { [weak self] in
-                    preferences.toggleFavourite(serviceId: service.uniqueIdentifier)
-                    self?.rebuild()
+            if !isOtherCollapsed {
+                let sorted = noRoomServices.sorted { s1, s2 in
+                    let i1 = typeOrder.firstIndex(of: s1.serviceType) ?? Int.max
+                    let i2 = typeOrder.firstIndex(of: s2.serviceType) ?? Int.max
+                    return i1 != i2 ? i1 < i2 : s1.name < s2.name
                 }
-                row.onEyeToggled = { [weak self] in
-                    preferences.toggleHidden(serviceId: service.uniqueIdentifier)
-                    self?.rebuild()
+
+                for service in sorted {
+                    let isFav = preferences.isFavourite(serviceId: service.uniqueIdentifier)
+                    let isServiceHidden = preferences.isHidden(serviceId: service.uniqueIdentifier)
+                    let config = AccessoryRowConfig(
+                        name: service.name,
+                        icon: IconMapping.iconForServiceType(service.serviceType),
+                        isFavourite: isFav,
+                        isItemHidden: isServiceHidden,
+                        isSectionHidden: false,
+                        showDragHandle: false,
+                        showEyeButton: true,
+                        itemId: nil
+                    )
+                    let row = AccessoryRowView(config: config)
+                    row.onStarToggled = { [weak self] in
+                        preferences.toggleFavourite(serviceId: service.uniqueIdentifier)
+                        self?.rebuild()
+                    }
+                    row.onEyeToggled = { [weak self] in
+                        preferences.toggleHidden(serviceId: service.uniqueIdentifier)
+                        self?.rebuild()
+                    }
+                    addView(row, height: L.rowHeight)
                 }
-                addView(row, height: L.rowHeight)
             }
             addSpacer(height: 12)
         }

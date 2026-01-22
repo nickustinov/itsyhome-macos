@@ -22,11 +22,11 @@ class AboutSection: SettingsCard {
         stackView.alignment = .centerX
         stackView.spacing = 12
 
-        // Spacer
-        let spacer = NSView()
-        spacer.translatesAutoresizingMaskIntoConstraints = false
-        spacer.heightAnchor.constraint(equalToConstant: 20).isActive = true
-        stackView.addArrangedSubview(spacer)
+        // Flexible spacer to push content to center
+        let topSpacer = NSView()
+        topSpacer.translatesAutoresizingMaskIntoConstraints = false
+        topSpacer.setContentHuggingPriority(.defaultLow, for: .vertical)
+        stackView.addArrangedSubview(topSpacer)
 
         // App icon
         let iconView = NSImageView()
@@ -72,6 +72,14 @@ class AboutSection: SettingsCard {
 
         stackView.addArrangedSubview(linksStack)
 
+        // Flexible spacer to push content to center
+        let bottomSpacer = NSView()
+        bottomSpacer.translatesAutoresizingMaskIntoConstraints = false
+        bottomSpacer.setContentHuggingPriority(.defaultLow, for: .vertical)
+        stackView.addArrangedSubview(bottomSpacer)
+
+        // Make spacers equal height
+        topSpacer.heightAnchor.constraint(equalTo: bottomSpacer.heightAnchor).isActive = true
     }
 
     private func createLinkButton(title: String, url: String) -> NSButton {

@@ -104,6 +104,13 @@ final class ProManager: ObservableObject {
         }
 
         isPro = hasProEntitlement
+
+        // Start or stop iCloud sync based on Pro status
+        if hasProEntitlement {
+            CloudSyncManager.shared.startListening()
+        } else {
+            CloudSyncManager.shared.stopListening()
+        }
     }
 
     // MARK: - Transaction listener

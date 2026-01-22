@@ -12,6 +12,9 @@ class GeneralSection: SettingsCard {
 
     private let launchSwitch = NSSwitch()
     private let gridSwitch = NSSwitch()
+    private let syncSwitch = NSSwitch()
+    private var syncStatusLabel: NSTextField!
+    private var syncProBadge: NSView!
 
     // Pro section
     private var cancellables = Set<AnyCancellable>()
@@ -63,6 +66,80 @@ class GeneralSection: SettingsCard {
         addContentToBox(gridBox, content: gridRow)
         stackView.addArrangedSubview(gridBox)
         gridBox.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
+
+        // iCloud sync box
+        let syncBox = createCardBox()
+        syncSwitch.controlSize = .mini
+        syncSwitch.target = self
+        syncSwitch.action = #selector(syncSwitchChanged)
+        let syncRow = createSyncSettingRow()
+        addContentToBox(syncBox, content: syncRow)
+        stackView.addArrangedSubview(syncBox)
+        syncBox.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
+    }
+
+    private func createSyncSettingRow() -> NSView {
+        let container = NSView()
+        container.translatesAutoresizingMaskIntoConstraints = false
+
+        let labelStack = NSStackView()
+        labelStack.orientation = .vertical
+        labelStack.spacing = 2
+        labelStack.alignment = .leading
+        labelStack.translatesAutoresizingMaskIntoConstraints = false
+
+        // Header row with label and Pro badge
+        let headerRow = NSStackView()
+        headerRow.orientation = .horizontal
+        headerRow.spacing = 6
+        headerRow.alignment = .centerY
+
+        let labelField = createLabel("iCloud sync", style: .body)
+        headerRow.addArrangedSubview(labelField)
+
+        // Pro badge (only shown for non-Pro users)
+        syncProBadge = NSView()
+        syncProBadge.wantsLayer = true
+        syncProBadge.layer?.backgroundColor = NSColor.systemPurple.cgColor
+        syncProBadge.layer?.cornerRadius = 3
+        syncProBadge.translatesAutoresizingMaskIntoConstraints = false
+        syncProBadge.widthAnchor.constraint(equalToConstant: 26).isActive = true
+        syncProBadge.heightAnchor.constraint(equalToConstant: 14).isActive = true
+
+        let badgeLabel = NSTextField(labelWithString: "PRO")
+        badgeLabel.font = .systemFont(ofSize: 8, weight: .bold)
+        badgeLabel.textColor = .white
+        badgeLabel.translatesAutoresizingMaskIntoConstraints = false
+        syncProBadge.addSubview(badgeLabel)
+        NSLayoutConstraint.activate([
+            badgeLabel.centerXAnchor.constraint(equalTo: syncProBadge.centerXAnchor),
+            badgeLabel.centerYAnchor.constraint(equalTo: syncProBadge.centerYAnchor)
+        ])
+        headerRow.addArrangedSubview(syncProBadge)
+
+        labelStack.addArrangedSubview(headerRow)
+
+        // Status label
+        syncStatusLabel = createLabel("Sync favourites across your devices.", style: .caption)
+        syncStatusLabel.lineBreakMode = .byWordWrapping
+        syncStatusLabel.maximumNumberOfLines = 2
+        labelStack.addArrangedSubview(syncStatusLabel)
+
+        syncSwitch.translatesAutoresizingMaskIntoConstraints = false
+
+        container.addSubview(labelStack)
+        container.addSubview(syncSwitch)
+
+        NSLayoutConstraint.activate([
+            container.heightAnchor.constraint(equalToConstant: 56),
+            labelStack.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            labelStack.centerYAnchor.constraint(equalTo: container.centerYAnchor),
+            labelStack.trailingAnchor.constraint(lessThanOrEqualTo: syncSwitch.leadingAnchor, constant: -16),
+            syncSwitch.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+            syncSwitch.centerYAnchor.constraint(equalTo: container.centerYAnchor)
+        ])
+
+        return container
     }
 
     private func setupProSection() {
@@ -247,6 +324,29 @@ class GeneralSection: SettingsCard {
     private func loadPreferences() {
         launchSwitch.state = PreferencesManager.shared.launchAtLogin ? .on : .off
         gridSwitch.state = PreferencesManager.shared.scenesDisplayMode == .grid ? .on : .off
+        syncSwitch.state = CloudSyncManager.shared.isSyncEnabled ? .on : .off
+        updateSyncUI()
+    }
+
+    private func updateSyncUI() {
+        let isPro = ProStatusCache.shared.isPro
+        syncSwitch.isEnabled = isPro
+        syncProBadge.isHidden = isPro
+
+        if !isPro {
+            syncStatusLabel.stringValue = "Requires Pro to sync across devices."
+        } else if CloudSyncManager.shared.isSyncEnabled {
+            if let lastSync = CloudSyncManager.shared.lastSyncTimestamp {
+                let formatter = RelativeDateTimeFormatter()
+                formatter.unitsStyle = .abbreviated
+                let relative = formatter.localizedString(for: lastSync, relativeTo: Date())
+                syncStatusLabel.stringValue = "Last synced \(relative)."
+            } else {
+                syncStatusLabel.stringValue = "Sync enabled."
+            }
+        } else {
+            syncStatusLabel.stringValue = "Sync favourites, hidden items, groups, and shortcuts."
+        }
     }
 
     private func updateProVisibility() {
@@ -273,12 +373,20 @@ class GeneralSection: SettingsCard {
     private func setupBindings() {
         ProManager.shared.$isPro
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in self?.updateProVisibility() }
+            .sink { [weak self] _ in
+                self?.updateProVisibility()
+                self?.updateSyncUI()
+            }
             .store(in: &cancellables)
 
         ProManager.shared.$products
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in self?.updateButtonTitles() }
+            .store(in: &cancellables)
+
+        NotificationCenter.default.publisher(for: CloudSyncManager.syncStatusChangedNotification)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in self?.updateSyncUI() }
             .store(in: &cancellables)
     }
 
@@ -288,6 +396,10 @@ class GeneralSection: SettingsCard {
 
     @objc private func gridSwitchChanged(_ sender: NSSwitch) {
         PreferencesManager.shared.scenesDisplayMode = sender.state == .on ? .grid : .list
+    }
+
+    @objc private func syncSwitchChanged(_ sender: NSSwitch) {
+        CloudSyncManager.shared.isSyncEnabled = sender.state == .on
     }
 
     @objc private func yearlyTapped() {

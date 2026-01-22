@@ -46,6 +46,7 @@ targets:
       properties:
         com.apple.security.app-sandbox: true
         com.apple.developer.homekit: true
+        com.apple.developer.ubiquity-kvstore-identifier: "$(TeamIdentifierPrefix)$(CFBundleIdentifier)"
     dependencies:
       - target: macOSBridge
         platformFilter: maccatalyst

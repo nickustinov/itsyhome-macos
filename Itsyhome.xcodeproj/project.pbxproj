@@ -48,6 +48,7 @@
 		52BED706E1E2183D364BA285 /* BridgeProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88919649EAF34363518DE9FF /* BridgeProtocols.swift */; };
 		530B7958DAC64B1723E66A79 /* GarageDoorMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0F3944EC8821BD1947AA8C /* GarageDoorMenuItem.swift */; };
 		538121CA4DBF8EEB27C242A1 /* ScenesGridMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = B33028C597EEA3DAE92520C3 /* ScenesGridMenuItem.swift */; };
+		53ECA3675440CD9BAC4279B3 /* CloudSyncManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D91667CA03C981ACF4D8EDA /* CloudSyncManager.swift */; };
 		5400908F7EA3B99BACF94081 /* GroupMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0737BC4060CFA7950A61F8 /* GroupMenuItem.swift */; };
 		54727DEB4A151CC024B9D31E /* ScenesGridMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = B33028C597EEA3DAE92520C3 /* ScenesGridMenuItem.swift */; };
 		550336C45D91454C7E897346 /* HumidifierMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2203CC92AE39248AE04E2480 /* HumidifierMenuItem.swift */; };
@@ -99,6 +100,7 @@
 		E003741ECCB38525B6A202D9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A554C4D26C15417928E429D4 /* Assets.xcassets */; };
 		E19EB0697A29FB223575BEFA /* macOSBridge.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 5735B31C003BD03DE4B28206 /* macOSBridge.bundle */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		E3926443EE62FD43B0C618E8 /* AboutSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB02A6E6A0F93A3A51FBACC1 /* AboutSection.swift */; };
+		E53F247D68A3464066E31310 /* CloudSyncManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D91667CA03C981ACF4D8EDA /* CloudSyncManager.swift */; };
 		EBD10F700CEFAA9D8C99229F /* ShortcutButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1359B98719D1D9D23782463E /* ShortcutButton.swift */; };
 		ED027DAB764D6BD656E4F586 /* GroupEditorPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45ADAE5712E4621056FF217C /* GroupEditorPanel.swift */; };
 		EF5B75FFA100C7A2957EBEBC /* GroupsSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EE496DB240231CDFFDA2018 /* GroupsSettingsView.swift */; };
@@ -170,6 +172,7 @@
 		99DC1291FE6F040A1673F599 /* URLSchemeHandlerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLSchemeHandlerTests.swift; sourceTree = "<group>"; };
 		9CD9AB0F2E79886D06C197E2 /* ToggleSwitch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToggleSwitch.swift; sourceTree = "<group>"; };
 		9CDA7864F1CCF19AD70E1F96 /* BlindMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlindMenuItem.swift; sourceTree = "<group>"; };
+		9D91667CA03C981ACF4D8EDA /* CloudSyncManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSyncManager.swift; sourceTree = "<group>"; };
 		A3A3EB6D0DE7E9C0DE57ABAF /* Protocols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Protocols.swift; sourceTree = "<group>"; };
 		A3AD56C9EA919B09E7896B55 /* SceneMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneMenuItem.swift; sourceTree = "<group>"; };
 		A554C4D26C15417928E429D4 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -206,6 +209,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		0272ECDF6EEDE9BCD6BD3A6B /* Sync */ = {
+			isa = PBXGroup;
+			children = (
+				9D91667CA03C981ACF4D8EDA /* CloudSyncManager.swift */,
+			);
+			path = Sync;
+			sourceTree = "<group>";
+		};
 		071374446E1620A9E92A6C4C /* Utilities */ = {
 			isa = PBXGroup;
 			children = (
@@ -242,6 +253,7 @@
 				244BE2D237242FEC7E6B15A5 /* Models */,
 				2BE0077BC968DC12164CC138 /* Pro */,
 				9956D260C6400CA53D1F56A3 /* Settings */,
+				0272ECDF6EEDE9BCD6BD3A6B /* Sync */,
 				071374446E1620A9E92A6C4C /* Utilities */,
 			);
 			path = macOSBridge;
@@ -576,6 +588,7 @@
 				3B59DD36C2400864DCEE2CA3 /* BaseMenuItems.swift in Sources */,
 				CA8E1F973147B8CE2E58FA52 /* BlindMenuItem.swift in Sources */,
 				0C50A9F7E4B39D3073FCB0C2 /* BridgeProtocols.swift in Sources */,
+				E53F247D68A3464066E31310 /* CloudSyncManager.swift in Sources */,
 				CE60FBDD7DA3242E781072D4 /* ColorConversion.swift in Sources */,
 				F019042FCFF1C339C065CD64 /* DeeplinksSection.swift in Sources */,
 				DB962F06C77A87E8D2AAA55E /* DesignSystem.swift in Sources */,
@@ -630,6 +643,7 @@
 				16A327E2FD58F4B48606729C /* BaseMenuItems.swift in Sources */,
 				851260AF14FDF357AD88C04F /* BlindMenuItem.swift in Sources */,
 				67926ADF4BFE82DCEF6BB9D1 /* BridgeProtocols.swift in Sources */,
+				53ECA3675440CD9BAC4279B3 /* CloudSyncManager.swift in Sources */,
 				786699F2C5038B043DDACCDB /* ColorConversion.swift in Sources */,
 				C8A37E1284E27AADA3A6906B /* DesignSystem.swift in Sources */,
 				63AA00C163B17C7DF80BE19C /* DeviceGroup.swift in Sources */,

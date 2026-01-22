@@ -253,12 +253,31 @@ class AccessoryRowView: NSView {
 class AccessorySectionHeader: NSView {
 
     private let titleLabel = NSTextField()
+    private let chevronButton = NSButton()
     private var eyeButton: NSButton?
 
-    var onVisibilityToggled: (() -> Void)?
+    private(set) var isCollapsed: Bool
 
-    init(title: String, isItemHidden: Bool = false, showEyeButton: Bool = false) {
+    var onVisibilityToggled: (() -> Void)?
+    var onCollapseToggled: (() -> Void)?
+
+    private let showChevron: Bool
+
+    init(title: String, isItemHidden: Bool = false, showEyeButton: Bool = false, isCollapsed: Bool = false, showChevron: Bool = false) {
+        self.isCollapsed = isCollapsed
+        self.showChevron = showChevron
         super.init(frame: NSRect(x: 0, y: 0, width: 360, height: 32))
+
+        if showChevron {
+            chevronButton.bezelStyle = .inline
+            chevronButton.isBordered = false
+            chevronButton.imagePosition = .imageOnly
+            chevronButton.imageScaling = .scaleNone
+            chevronButton.target = self
+            chevronButton.action = #selector(chevronTapped)
+            updateChevron()
+            addSubview(chevronButton)
+        }
 
         titleLabel.stringValue = title
         titleLabel.font = .systemFont(ofSize: 14, weight: .medium)
@@ -289,6 +308,19 @@ class AccessorySectionHeader: NSView {
         fatalError("init(coder:) has not been implemented")
     }
 
+    private func updateChevron() {
+        let symbol = isCollapsed ? "chevron.right" : "chevron.down"
+        let config = NSImage.SymbolConfiguration(pointSize: 12, weight: .medium)
+        chevronButton.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)?.withSymbolConfiguration(config)
+        chevronButton.contentTintColor = .secondaryLabelColor
+    }
+
+    @objc private func chevronTapped() {
+        isCollapsed.toggle()
+        updateChevron()
+        onCollapseToggled?()
+    }
+
     @objc private func eyeTapped() {
         onVisibilityToggled?()
     }
@@ -297,7 +329,14 @@ class AccessorySectionHeader: NSView {
         super.layout()
 
         let L = AccessoryRowLayout.self
-        var x = L.leftPadding
+        var x: CGFloat = 0
+
+        // Chevron before title
+        if showChevron {
+            let chevronSize: CGFloat = 14
+            chevronButton.frame = NSRect(x: x, y: (bounds.height - chevronSize) / 2, width: chevronSize, height: chevronSize)
+            x += chevronSize + 2
+        }
 
         if let eye = eyeButton {
             eye.frame = NSRect(x: x, y: (bounds.height - L.buttonSize) / 2, width: L.buttonSize, height: L.buttonSize)
