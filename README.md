@@ -66,13 +66,12 @@ itsyhome://<action>/<target>
 **Target formats:**
 
 - `Room/Device` - Device in specific room (e.g., `Office/Spotlights`)
-- `Device` - Device by name (e.g., `Kitchen Light`)
-- `light.room` - All lights in room (e.g., `light.bedroom`)
-- `all lights` - All lights in home
+- `group.Name` - All devices in a group (e.g., `group.Office%20Lights`)
 
 **Testing from terminal:**
 ```bash
 open "itsyhome://toggle/Office/Spotlights"
+open "itsyhome://toggle/group.Office%20Lights"
 open "itsyhome://scene/Goodnight"
 open "itsyhome://brightness/50/Bedroom/Lamp"
 ```

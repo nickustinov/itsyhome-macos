@@ -16,7 +16,7 @@ class GeneralSection: SettingsCard {
     // Pro section
     private var cancellables = Set<AnyCancellable>()
     private var proBox: NSView!
-    private let proBadge = NSTextField()
+    private let proBadge = NSView()
     private let thankYouLabel = NSTextField()
     private var proTitleLabel: NSTextField!
     private var proSubtitleLabel: NSTextField!
@@ -101,19 +101,23 @@ class GeneralSection: SettingsCard {
         headerRow.addArrangedSubview(proTitleLabel)
 
         // Pro badge (shown when subscribed)
-        proBadge.stringValue = "ACTIVE"
-        proBadge.font = .systemFont(ofSize: 9, weight: .bold)
-        proBadge.textColor = .white
-        proBadge.backgroundColor = .systemGreen
-        proBadge.drawsBackground = true
-        proBadge.alignment = .center
-        proBadge.isBezeled = false
-        proBadge.isEditable = false
         proBadge.wantsLayer = true
+        proBadge.layer?.backgroundColor = NSColor.systemGreen.cgColor
         proBadge.layer?.cornerRadius = 3
         proBadge.translatesAutoresizingMaskIntoConstraints = false
         proBadge.widthAnchor.constraint(equalToConstant: 44).isActive = true
         proBadge.heightAnchor.constraint(equalToConstant: 16).isActive = true
+
+        let proBadgeLabel = NSTextField(labelWithString: "ACTIVE")
+        proBadgeLabel.font = .systemFont(ofSize: 9, weight: .bold)
+        proBadgeLabel.textColor = .white
+        proBadgeLabel.translatesAutoresizingMaskIntoConstraints = false
+        proBadge.addSubview(proBadgeLabel)
+        NSLayoutConstraint.activate([
+            proBadgeLabel.centerXAnchor.constraint(equalTo: proBadge.centerXAnchor),
+            proBadgeLabel.centerYAnchor.constraint(equalTo: proBadge.centerYAnchor)
+        ])
+
         headerRow.addArrangedSubview(proBadge)
 
         content.addArrangedSubview(headerRow)

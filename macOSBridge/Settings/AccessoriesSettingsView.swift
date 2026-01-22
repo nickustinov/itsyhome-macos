@@ -104,6 +104,15 @@ class AccessoriesSettingsView: NSView {
         let preferences = PreferencesManager.shared
         let L = AccessoryRowLayout.self
 
+        // Description
+        let descLabel = NSTextField(wrappingLabelWithString: "Add accessories to Favourites to pin them at the top of your menu. Use the eye icon to hide sections or devices you don't need.")
+        descLabel.font = .systemFont(ofSize: 13)
+        descLabel.textColor = .secondaryLabelColor
+        descLabel.translatesAutoresizingMaskIntoConstraints = false
+        stackView.addArrangedSubview(descLabel)
+        descLabel.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
+        addSpacer(height: 16)
+
         let excludedTypes: Set<String> = [ServiceTypes.temperatureSensor, ServiceTypes.humiditySensor]
         let typeOrder = [ServiceTypes.lightbulb, ServiceTypes.switch, ServiceTypes.outlet, ServiceTypes.fan,
                          ServiceTypes.heaterCooler, ServiceTypes.thermostat, ServiceTypes.windowCovering,

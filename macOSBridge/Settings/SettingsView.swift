@@ -280,8 +280,8 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
             textField.centerYAnchor.constraint(equalTo: cell.centerYAnchor)
         ])
 
-        // Add PRO badge for pro features
-        if section.isProFeature {
+        // Add PRO badge for pro features (only if user doesn't have PRO)
+        if section.isProFeature && !ProStatusCache.shared.isPro {
             let badgeContainer = NSView()
             badgeContainer.translatesAutoresizingMaskIntoConstraints = false
             badgeContainer.wantsLayer = true

@@ -33,45 +33,14 @@ enum DeviceResolver {
         }
     }
 
-    // MARK: - Service type mappings
-
-    private static let typeAliases: [String: String] = [
-        "light": ServiceTypes.lightbulb,
-        "lightbulb": ServiceTypes.lightbulb,
-        "switch": ServiceTypes.switch,
-        "outlet": ServiceTypes.outlet,
-        "thermostat": ServiceTypes.thermostat,
-        "ac": ServiceTypes.heaterCooler,
-        "aircon": ServiceTypes.heaterCooler,
-        "heater": ServiceTypes.heaterCooler,
-        "cooler": ServiceTypes.heaterCooler,
-        "lock": ServiceTypes.lock,
-        "blind": ServiceTypes.windowCovering,
-        "blinds": ServiceTypes.windowCovering,
-        "shade": ServiceTypes.windowCovering,
-        "shades": ServiceTypes.windowCovering,
-        "window": ServiceTypes.windowCovering,
-        "fan": ServiceTypes.fan,
-        "garage": ServiceTypes.garageDoorOpener,
-        "humidifier": ServiceTypes.humidifierDehumidifier,
-        "dehumidifier": ServiceTypes.humidifierDehumidifier,
-        "purifier": ServiceTypes.airPurifier,
-        "valve": ServiceTypes.valve,
-        "sprinkler": ServiceTypes.valve,
-        "security": ServiceTypes.securitySystem,
-        "alarm": ServiceTypes.securitySystem,
-    ]
-
     // MARK: - Public API
 
     /// Resolve a target string to HomeKit entities
     /// Supported formats:
+    /// - Room/Device: "Office/Spotlights", "Bedroom/Lamp"
+    /// - Scene: "scene.Goodnight", "Goodnight"
+    /// - Group: "group.Office Lights"
     /// - UUID: "ABC123-DEF456-..."
-    /// - Type.Room: "light.bedroom", "switch.kitchen"
-    /// - Name: "Bedroom Light", "Kitchen Switch"
-    /// - Scene: "scene.goodnight", "Goodnight"
-    /// - Room wildcard: "bedroom.*", "all bedroom"
-    /// - Type wildcard: "*.light", "all lights"
     static func resolve(_ query: String, in data: MenuData) -> ResolveResult {
         let trimmed = query.trimmingCharacters(in: .whitespaces)
         guard !trimmed.isEmpty else {
@@ -83,34 +52,19 @@ enum DeviceResolver {
             return uuidResult
         }
 
-        // 2. Check for scene prefix
+        // 2. Check for scene prefix or scene name match
         if let sceneResult = resolveScene(trimmed, in: data) {
             return sceneResult
         }
 
-        // 3. Check for type.room format
-        if let dotResult = resolveTypeDotRoom(trimmed, in: data) {
-            return dotResult
+        // 3. Check for group prefix or group name match
+        if let groupResult = resolveGroup(trimmed, in: data) {
+            return groupResult
         }
 
-        // 4. Check for wildcards
-        if let wildcardResult = resolveWildcard(trimmed, in: data) {
-            return wildcardResult
-        }
-
-        // 5. Exact name match (case-insensitive) - before room/device to prioritize exact matches
-        if let exactMatch = resolveExactName(trimmed, in: data) {
-            return exactMatch
-        }
-
-        // 6. Room + device name format: "Office/Spotlights" or "Office Spotlights"
+        // 4. Room/Device format: "Office/Spotlights"
         if let roomDeviceMatch = resolveRoomAndDeviceName(trimmed, in: data) {
             return roomDeviceMatch
-        }
-
-        // 7. Fuzzy match on service name
-        if let fuzzyMatch = resolveFuzzyName(trimmed, in: data) {
-            return fuzzyMatch
         }
 
         return .notFound(query)
@@ -187,145 +141,58 @@ enum DeviceResolver {
         return .notFound("scene.\(name)")
     }
 
-    private static func resolveTypeDotRoom(_ query: String, in data: MenuData) -> ResolveResult? {
-        let parts = query.split(separator: ".", maxSplits: 1)
-        guard parts.count == 2 else { return nil }
-
-        let typePart = String(parts[0]).lowercased()
-        let roomPart = String(parts[1]).lowercased()
-
-        // Handle wildcards in type.room format
-        if typePart == "*" {
-            return resolveByRoom(roomPart, in: data)
-        }
-        if roomPart == "*" {
-            return resolveByType(typePart, in: data)
-        }
-
-        // Get service type UUID
-        guard let serviceTypeUUID = typeAliases[typePart] else {
-            return nil
-        }
-
-        // Find room
-        let roomMatches = data.rooms.filter { room in
-            room.name.lowercased().contains(roomPart)
-        }
-
-        guard !roomMatches.isEmpty else {
-            return .notFound(query)
-        }
-
-        // Find services matching type and room
-        let roomIds = Set(roomMatches.map(\.uniqueIdentifier))
-        var matchingServices: [ServiceData] = []
-
-        for accessory in data.accessories {
-            for service in accessory.services {
-                if service.serviceType == serviceTypeUUID,
-                   let roomId = service.roomIdentifier,
-                   roomIds.contains(roomId) {
-                    matchingServices.append(service)
-                }
-            }
-        }
-
-        if matchingServices.isEmpty {
-            return .notFound(query)
-        }
-
-        return .services(matchingServices)
-    }
-
-    private static func resolveWildcard(_ query: String, in data: MenuData) -> ResolveResult? {
+    private static func resolveGroup(_ query: String, in data: MenuData) -> ResolveResult? {
         let lowered = query.lowercased()
+        let groups = PreferencesManager.shared.deviceGroups
 
-        // "all lights", "all switches", etc.
-        if lowered.hasPrefix("all ") {
-            let typeName = String(lowered.dropFirst(4)).trimmingCharacters(in: .whitespaces)
-            return resolveByType(typeName, in: data)
+        // Check for group. prefix
+        if lowered.hasPrefix("group.") {
+            let groupName = String(query.dropFirst(6))
+            return findGroupByName(groupName, groups: groups, data: data)
         }
 
-        // "bedroom.*" or "bedroom.all"
-        if lowered.hasSuffix(".*") || lowered.hasSuffix(".all") {
-            let roomName = lowered.hasSuffix(".*")
-                ? String(lowered.dropLast(2))
-                : String(lowered.dropLast(4))
-            return resolveByRoom(roomName, in: data)
-        }
-
-        // "*.light" or "all.light"
-        if lowered.hasPrefix("*.") || lowered.hasPrefix("all.") {
-            let typeName = lowered.hasPrefix("*.")
-                ? String(lowered.dropFirst(2))
-                : String(lowered.dropFirst(4))
-            return resolveByType(typeName, in: data)
+        // Also check direct group name match (exact only to avoid conflicts with devices)
+        for group in groups {
+            if group.name.lowercased() == lowered {
+                let services = group.resolveServices(in: data)
+                if services.isEmpty {
+                    return .notFound(query)
+                }
+                return .services(services)
+            }
         }
 
         return nil
     }
 
-    private static func resolveByType(_ typeName: String, in data: MenuData) -> ResolveResult? {
-        // Handle plural forms
-        var normalized = typeName
+    private static func findGroupByName(_ name: String, groups: [DeviceGroup], data: MenuData) -> ResolveResult {
+        let loweredName = name.lowercased()
 
-        // Try exact match first
-        if typeAliases[normalized] == nil {
-            // Try removing "es" suffix (switches -> switch)
-            if normalized.hasSuffix("es") && typeAliases[String(normalized.dropLast(2))] != nil {
-                normalized = String(normalized.dropLast(2))
-            }
-            // Try removing "s" suffix (lights -> light)
-            else if normalized.hasSuffix("s") && typeAliases[String(normalized.dropLast())] != nil {
-                normalized = String(normalized.dropLast())
-            }
-        }
-
-        guard let serviceTypeUUID = typeAliases[normalized] else {
-            return nil
-        }
-
-        var matchingServices: [ServiceData] = []
-        for accessory in data.accessories {
-            for service in accessory.services {
-                if service.serviceType == serviceTypeUUID {
-                    matchingServices.append(service)
+        // Exact match first
+        for group in groups {
+            if group.name.lowercased() == loweredName {
+                let services = group.resolveServices(in: data)
+                if services.isEmpty {
+                    return .notFound("group.\(name)")
                 }
+                return .services(services)
             }
         }
 
-        if matchingServices.isEmpty {
-            return .notFound("all \(typeName)")
+        // Partial match
+        let matches = groups.filter { group in
+            group.name.lowercased().contains(loweredName)
         }
 
-        return .services(matchingServices)
-    }
-
-    private static func resolveByRoom(_ roomName: String, in data: MenuData) -> ResolveResult? {
-        let roomMatches = data.rooms.filter { room in
-            room.name.lowercased().contains(roomName.lowercased())
-        }
-
-        guard !roomMatches.isEmpty else {
-            return nil
-        }
-
-        let roomIds = Set(roomMatches.map(\.uniqueIdentifier))
-        var matchingServices: [ServiceData] = []
-
-        for accessory in data.accessories {
-            for service in accessory.services {
-                if let roomId = service.roomIdentifier, roomIds.contains(roomId) {
-                    matchingServices.append(service)
-                }
+        if matches.count == 1 {
+            let services = matches[0].resolveServices(in: data)
+            if services.isEmpty {
+                return .notFound("group.\(name)")
             }
+            return .services(services)
         }
 
-        if matchingServices.isEmpty {
-            return .notFound("\(roomName).*")
-        }
-
-        return .services(matchingServices)
+        return .notFound("group.\(name)")
     }
 
     private static func resolveRoomAndDeviceName(_ query: String, in data: MenuData) -> ResolveResult? {
@@ -371,57 +238,6 @@ enum DeviceResolver {
                 }
                 return .ambiguous(matchingServices)
             }
-        }
-
-        return nil
-    }
-
-    private static func resolveExactName(_ query: String, in data: MenuData) -> ResolveResult? {
-        let loweredQuery = query.lowercased()
-
-        // Check services first
-        var exactMatches: [ServiceData] = []
-        for accessory in data.accessories {
-            for service in accessory.services {
-                if service.name.lowercased() == loweredQuery {
-                    exactMatches.append(service)
-                }
-            }
-        }
-
-        if exactMatches.count == 1 {
-            return .services(exactMatches)
-        } else if exactMatches.count > 1 {
-            return .ambiguous(exactMatches)
-        }
-
-        return nil
-    }
-
-    private static func resolveFuzzyName(_ query: String, in data: MenuData) -> ResolveResult? {
-        let loweredQuery = query.lowercased()
-
-        // Find services with names containing the query
-        var fuzzyMatches: [ServiceData] = []
-        for accessory in data.accessories {
-            for service in accessory.services {
-                if service.name.lowercased().contains(loweredQuery) {
-                    fuzzyMatches.append(service)
-                }
-            }
-        }
-
-        if fuzzyMatches.count == 1 {
-            return .services(fuzzyMatches)
-        } else if fuzzyMatches.count > 1 {
-            // Try to find a more specific match
-            let startsWithMatches = fuzzyMatches.filter {
-                $0.name.lowercased().hasPrefix(loweredQuery)
-            }
-            if startsWithMatches.count == 1 {
-                return .services(startsWithMatches)
-            }
-            return .ambiguous(fuzzyMatches)
         }
 
         return nil

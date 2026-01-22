@@ -51,10 +51,11 @@ class GroupsSettingsView: NSView {
     }
 
     private func setupContent() {
-        // Pro badge
-        let proBadge = createProBadge()
-        addView(proBadge, height: 32)
-        addSpacer(height: 8)
+        // Pro badge (only show if user doesn't have PRO)
+        if !ProStatusCache.shared.isPro {
+            let proBadge = createProBadge()
+            addView(proBadge, height: 32)
+        }
 
         // Description
         let descLabel = NSTextField(wrappingLabelWithString: "Create custom groups of devices to control multiple devices at once. Groups appear in your menu and can be controlled via deeplinks.")

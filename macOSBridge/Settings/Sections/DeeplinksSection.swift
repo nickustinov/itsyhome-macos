@@ -26,9 +26,7 @@ class DeeplinksSection: SettingsCard {
 
     private let targetFormats: [(format: String, description: String)] = [
         ("Room/Device", "Device in specific room"),
-        ("Device", "Device by name only"),
-        ("light.room", "All lights in room"),
-        ("all lights", "All lights in home")
+        ("group.Name", "All devices in a group")
     ]
 
     override init(frame frameRect: NSRect) {
@@ -41,12 +39,12 @@ class DeeplinksSection: SettingsCard {
     }
 
     private func setupContent() {
-        // Pro badge
-        let proBadge = createProBadge()
-        stackView.addArrangedSubview(proBadge)
-        proBadge.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
-
-        stackView.addArrangedSubview(createSpacer(height: 8))
+        // Pro badge (only show if user doesn't have PRO)
+        if !ProStatusCache.shared.isPro {
+            let proBadge = createProBadge()
+            stackView.addArrangedSubview(proBadge)
+            proBadge.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
+        }
 
         // Description
         let descLabel = NSTextField(wrappingLabelWithString: "Control your HomeKit devices from Shortcuts, Alfred, Raycast, Stream Deck, and other automation tools using URL schemes.")
@@ -55,11 +53,13 @@ class DeeplinksSection: SettingsCard {
         stackView.addArrangedSubview(descLabel)
         descLabel.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
 
-        stackView.addArrangedSubview(createSpacer(height: 12))
+        stackView.addArrangedSubview(createSpacer(height: 16))
 
         // URL Format section
-        let formatHeader = createSectionHeader("URL format")
+        let formatHeader = AccessorySectionHeader(title: "URL format")
         stackView.addArrangedSubview(formatHeader)
+        formatHeader.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
+        formatHeader.heightAnchor.constraint(equalToConstant: 32).isActive = true
 
         let formatBox = createCardBox()
         let formatLabel = createLabel("itsyhome://<action>/<target>", style: .code)
@@ -70,8 +70,10 @@ class DeeplinksSection: SettingsCard {
         stackView.addArrangedSubview(createSpacer(height: 12))
 
         // Actions section
-        let actionsHeader = createSectionHeader("Actions")
+        let actionsHeader = AccessorySectionHeader(title: "Actions")
         stackView.addArrangedSubview(actionsHeader)
+        actionsHeader.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
+        actionsHeader.heightAnchor.constraint(equalToConstant: 32).isActive = true
 
         let actionsBox = createCardBox()
         let actionsContent = createActionsContent()
@@ -82,8 +84,10 @@ class DeeplinksSection: SettingsCard {
         stackView.addArrangedSubview(createSpacer(height: 12))
 
         // Target formats section
-        let targetHeader = createSectionHeader("Target formats")
+        let targetHeader = AccessorySectionHeader(title: "Target formats")
         stackView.addArrangedSubview(targetHeader)
+        targetHeader.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
+        targetHeader.heightAnchor.constraint(equalToConstant: 32).isActive = true
 
         let targetBox = createCardBox()
         let targetContent = createTargetFormatsContent()
@@ -228,13 +232,6 @@ class DeeplinksSection: SettingsCard {
             content.trailingAnchor.constraint(equalTo: box.trailingAnchor, constant: -12),
             content.bottomAnchor.constraint(equalTo: box.bottomAnchor, constant: -10)
         ])
-    }
-
-    private func createSectionHeader(_ title: String) -> NSTextField {
-        let label = NSTextField(labelWithString: title)
-        label.font = .systemFont(ofSize: 12, weight: .medium)
-        label.textColor = .secondaryLabelColor
-        return label
     }
 
     private func createSpacer(height: CGFloat) -> NSView {
