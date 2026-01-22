@@ -38,6 +38,9 @@ targets:
         CURRENT_PROJECT_VERSION: "110"
         INFOPLIST_KEY_CFBundleDisplayName: Itsyhome
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.utilities
+    scheme:
+      gatherCoverageData: false
+      storeKitConfiguration: Itsyhome/ItsyhomeProducts.storekit
     entitlements:
       path: Itsyhome/Itsyhome.entitlements
       properties:
