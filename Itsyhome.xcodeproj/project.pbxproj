@@ -37,6 +37,7 @@
 		2FA906D09DF2D10CD127C5EB /* HumidifierMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2203CC92AE39248AE04E2480 /* HumidifierMenuItem.swift */; };
 		3468ABB31915D39AF41D2621 /* ProProducts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EF08A602DCF69DA079C553B /* ProProducts.swift */; };
 		3719FEBA07D012C6D4D5B663 /* MenuBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FBAFF70B90E3449AD09EFEE /* MenuBuilder.swift */; };
+		38F444AACFBC37487F3A5204 /* GroupMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0737BC4060CFA7950A61F8 /* GroupMenuItem.swift */; };
 		3B59DD36C2400864DCEE2CA3 /* BaseMenuItems.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CFE6ECEB559109472BA360A /* BaseMenuItems.swift */; };
 		4436CFEA7BA3F99DBA1BF890 /* LightMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73072FCFE16311A3C25C1C2C /* LightMenuItem.swift */; };
 		462B3D16738CD046AA4DA9CF /* URLSchemeHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05A1A234EF733DB7475895AD /* URLSchemeHandler.swift */; };
@@ -46,9 +47,11 @@
 		52BED706E1E2183D364BA285 /* BridgeProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88919649EAF34363518DE9FF /* BridgeProtocols.swift */; };
 		530B7958DAC64B1723E66A79 /* GarageDoorMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0F3944EC8821BD1947AA8C /* GarageDoorMenuItem.swift */; };
 		538121CA4DBF8EEB27C242A1 /* ScenesGridMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = B33028C597EEA3DAE92520C3 /* ScenesGridMenuItem.swift */; };
+		5400908F7EA3B99BACF94081 /* GroupMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0737BC4060CFA7950A61F8 /* GroupMenuItem.swift */; };
 		54727DEB4A151CC024B9D31E /* ScenesGridMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = B33028C597EEA3DAE92520C3 /* ScenesGridMenuItem.swift */; };
 		550336C45D91454C7E897346 /* HumidifierMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2203CC92AE39248AE04E2480 /* HumidifierMenuItem.swift */; };
 		5E2CF28F91004D72D8819802 /* AirPurifierMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72F1F563C08E919FE1477C44 /* AirPurifierMenuItem.swift */; };
+		63AA00C163B17C7DF80BE19C /* DeviceGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1078ED585A5ECE7DF0A569F6 /* DeviceGroup.swift */; };
 		646767AF7A71690332C474E0 /* ACMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F7082F795BA2C9AA55C64A0 /* ACMenuItem.swift */; };
 		64A2F6EC52618A2CA486EA00 /* ProManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E663466EEEB0E7EAA36C4C8 /* ProManager.swift */; };
 		67926ADF4BFE82DCEF6BB9D1 /* BridgeProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88919649EAF34363518DE9FF /* BridgeProtocols.swift */; };
@@ -96,9 +99,12 @@
 		E19EB0697A29FB223575BEFA /* macOSBridge.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 5735B31C003BD03DE4B28206 /* macOSBridge.bundle */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		E3926443EE62FD43B0C618E8 /* AboutSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB02A6E6A0F93A3A51FBACC1 /* AboutSection.swift */; };
 		EBD10F700CEFAA9D8C99229F /* ShortcutButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1359B98719D1D9D23782463E /* ShortcutButton.swift */; };
+		ED027DAB764D6BD656E4F586 /* GroupEditorPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45ADAE5712E4621056FF217C /* GroupEditorPanel.swift */; };
+		EF5B75FFA100C7A2957EBEBC /* GroupsSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EE496DB240231CDFFDA2018 /* GroupsSettingsView.swift */; };
 		F019042FCFF1C339C065CD64 /* DeeplinksSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2015876131A8AE52D26618FC /* DeeplinksSection.swift */; };
 		F0D475122112E46686ADF3C1 /* SensorSummaryMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 117549B5BED7ADDFB473C53C /* SensorSummaryMenuItem.swift */; };
 		F2A340D41E3B57E9F7FEE940 /* HomeKitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81F296FBD051BAC5B51F5322 /* HomeKitManager.swift */; };
+		F6E1CB4E74F98A6A40307F4F /* DeviceGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1078ED585A5ECE7DF0A569F6 /* DeviceGroup.swift */; };
 		FB77F2B3B67AF9C30D7A3108 /* LocalChangeNotifiableTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 074390035F5E079496B2A9FD /* LocalChangeNotifiableTests.swift */; };
 /* End PBXBuildFile section */
 
@@ -122,6 +128,7 @@
 /* Begin PBXFileReference section */
 		05A1A234EF733DB7475895AD /* URLSchemeHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLSchemeHandler.swift; sourceTree = "<group>"; };
 		074390035F5E079496B2A9FD /* LocalChangeNotifiableTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalChangeNotifiableTests.swift; sourceTree = "<group>"; };
+		1078ED585A5ECE7DF0A569F6 /* DeviceGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceGroup.swift; sourceTree = "<group>"; };
 		117549B5BED7ADDFB473C53C /* SensorSummaryMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorSummaryMenuItem.swift; sourceTree = "<group>"; };
 		1359B98719D1D9D23782463E /* ShortcutButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutButton.swift; sourceTree = "<group>"; };
 		181D73D7B6680B4F8CD37D4E /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
@@ -136,11 +143,13 @@
 		39978B305FBE0EDCA33CCAFB /* SettingsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindowController.swift; sourceTree = "<group>"; };
 		3F7082F795BA2C9AA55C64A0 /* ACMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ACMenuItem.swift; sourceTree = "<group>"; };
 		4374C26148C6FEAAFD207413 /* LockMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockMenuItem.swift; sourceTree = "<group>"; };
+		45ADAE5712E4621056FF217C /* GroupEditorPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupEditorPanel.swift; sourceTree = "<group>"; };
 		46EB6A2D48574EFA0940AA54 /* ValueConversion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ValueConversion.swift; sourceTree = "<group>"; };
 		4C1BB4554FA59FCE166E2B86 /* ValueConversionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ValueConversionTests.swift; sourceTree = "<group>"; };
 		4CBA4F5B869DA1C032B0B3EB /* ColorConversion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorConversion.swift; sourceTree = "<group>"; };
 		4E64829BF9C061EB52A28437 /* ValveMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ValveMenuItem.swift; sourceTree = "<group>"; };
 		4E7FF79A158B9BA2B399F2EF /* ActionParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionParser.swift; sourceTree = "<group>"; };
+		4EE496DB240231CDFFDA2018 /* GroupsSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupsSettingsView.swift; sourceTree = "<group>"; };
 		51B74BF9E1E02D2CF34C9F37 /* SwitchMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwitchMenuItem.swift; sourceTree = "<group>"; };
 		5735B31C003BD03DE4B28206 /* macOSBridge.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = macOSBridge.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
 		62AD62C3749331FE2DA3CA6B /* GeneralSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralSection.swift; sourceTree = "<group>"; };
@@ -169,6 +178,7 @@
 		B33028C597EEA3DAE92520C3 /* ScenesGridMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScenesGridMenuItem.swift; sourceTree = "<group>"; };
 		B7593F05E9EAB8871D43D8E8 /* ModeButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModeButton.swift; sourceTree = "<group>"; };
 		BB02A6E6A0F93A3A51FBACC1 /* AboutSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutSection.swift; sourceTree = "<group>"; };
+		CC0737BC4060CFA7950A61F8 /* GroupMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupMenuItem.swift; sourceTree = "<group>"; };
 		D0E47D2FA39B625CC3FA0E66 /* Itsyhome.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Itsyhome.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D7001522F49F44848A26EC3E /* IconMapping.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IconMapping.swift; sourceTree = "<group>"; };
 		D8DAE0D0C65A8D06C17611F3 /* HotkeyManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotkeyManager.swift; sourceTree = "<group>"; };
@@ -228,11 +238,20 @@
 				6D6AC7C83D2E3676E42DF659 /* Controls */,
 				D2258862CCE787F231C5D76E /* DesignSystem */,
 				F993AEE95F23CC68310DE85E /* MenuItems */,
+				244BE2D237242FEC7E6B15A5 /* Models */,
 				2BE0077BC968DC12164CC138 /* Pro */,
 				9956D260C6400CA53D1F56A3 /* Settings */,
 				071374446E1620A9E92A6C4C /* Utilities */,
 			);
 			path = macOSBridge;
+			sourceTree = "<group>";
+		};
+		244BE2D237242FEC7E6B15A5 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				1078ED585A5ECE7DF0A569F6 /* DeviceGroup.swift */,
+			);
+			path = Models;
 			sourceTree = "<group>";
 		};
 		27FD524F8A95299839DDB84A /* Sections */ = {
@@ -241,6 +260,8 @@
 				BB02A6E6A0F93A3A51FBACC1 /* AboutSection.swift */,
 				2015876131A8AE52D26618FC /* DeeplinksSection.swift */,
 				62AD62C3749331FE2DA3CA6B /* GeneralSection.swift */,
+				45ADAE5712E4621056FF217C /* GroupEditorPanel.swift */,
+				4EE496DB240231CDFFDA2018 /* GroupsSettingsView.swift */,
 			);
 			path = Sections;
 			sourceTree = "<group>";
@@ -379,6 +400,7 @@
 				9CDA7864F1CCF19AD70E1F96 /* BlindMenuItem.swift */,
 				F3AE776817A51695FBA936B1 /* FanMenuItem.swift */,
 				AB0F3944EC8821BD1947AA8C /* GarageDoorMenuItem.swift */,
+				CC0737BC4060CFA7950A61F8 /* GroupMenuItem.swift */,
 				2203CC92AE39248AE04E2480 /* HumidifierMenuItem.swift */,
 				73072FCFE16311A3C25C1C2C /* LightMenuItem.swift */,
 				4374C26148C6FEAAFD207413 /* LockMenuItem.swift */,
@@ -556,10 +578,14 @@
 				CE60FBDD7DA3242E781072D4 /* ColorConversion.swift in Sources */,
 				F019042FCFF1C339C065CD64 /* DeeplinksSection.swift in Sources */,
 				DB962F06C77A87E8D2AAA55E /* DesignSystem.swift in Sources */,
+				F6E1CB4E74F98A6A40307F4F /* DeviceGroup.swift in Sources */,
 				7BB119B671B3D114D30396B0 /* DeviceResolver.swift in Sources */,
 				80BA4CBB1ADDA67E5A9ABB5A /* FanMenuItem.swift in Sources */,
 				259E77A4CA92FB96D11ECD4C /* GarageDoorMenuItem.swift in Sources */,
 				13CAC53E00A58CDF49407098 /* GeneralSection.swift in Sources */,
+				ED027DAB764D6BD656E4F586 /* GroupEditorPanel.swift in Sources */,
+				5400908F7EA3B99BACF94081 /* GroupMenuItem.swift in Sources */,
+				EF5B75FFA100C7A2957EBEBC /* GroupsSettingsView.swift in Sources */,
 				B6E0BA859343F2AC750C12D5 /* HotkeyManager.swift in Sources */,
 				2FA906D09DF2D10CD127C5EB /* HumidifierMenuItem.swift in Sources */,
 				243C3F0D744EDDE9D9608B3C /* IconMapping.swift in Sources */,
@@ -605,10 +631,12 @@
 				67926ADF4BFE82DCEF6BB9D1 /* BridgeProtocols.swift in Sources */,
 				786699F2C5038B043DDACCDB /* ColorConversion.swift in Sources */,
 				C8A37E1284E27AADA3A6906B /* DesignSystem.swift in Sources */,
+				63AA00C163B17C7DF80BE19C /* DeviceGroup.swift in Sources */,
 				BDB2AF940BB608A11A976278 /* DeviceResolver.swift in Sources */,
 				0A005DFA734D5F67E70BA99A /* DeviceResolverTests.swift in Sources */,
 				73574BD61159AC8923B414F8 /* FanMenuItem.swift in Sources */,
 				530B7958DAC64B1723E66A79 /* GarageDoorMenuItem.swift in Sources */,
+				38F444AACFBC37487F3A5204 /* GroupMenuItem.swift in Sources */,
 				550336C45D91454C7E897346 /* HumidifierMenuItem.swift in Sources */,
 				6C54534AB061917B6EB6D307 /* IconMapping.swift in Sources */,
 				160978BDC19974A59FB1A4BB /* LightMenuItem.swift in Sources */,

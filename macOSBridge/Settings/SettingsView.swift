@@ -30,10 +30,26 @@ class SidebarRowView: NSTableRowView {
 
     private func updateCellColors() {
         for subview in subviews {
-            if let cell = subview as? NSTableCellView {
-                cell.imageView?.contentTintColor = isSelected ? .white : .secondaryLabelColor
-                cell.textField?.textColor = isSelected ? .white : .labelColor
+            updateColors(in: subview)
+        }
+    }
+
+    private func updateColors(in view: NSView) {
+        // Skip badge container (has gray background layer)
+        if view.layer?.backgroundColor == NSColor.systemGray.cgColor {
+            return
+        }
+
+        for subview in view.subviews {
+            if let imageView = subview as? NSImageView {
+                imageView.contentTintColor = isSelected ? .white : .secondaryLabelColor
+            } else if let textField = subview as? NSTextField {
+                // Don't change PRO badge label colors
+                if textField.stringValue != "PRO" {
+                    textField.textColor = isSelected ? .white : .labelColor
+                }
             }
+            updateColors(in: subview)
         }
     }
 }
@@ -48,6 +64,7 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
     private enum Section: Int, CaseIterable {
         case general
         case accessories
+        case groups
         case deeplinks
         case about
 
@@ -55,6 +72,7 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
             switch self {
             case .general: return "General"
             case .accessories: return "Accessories"
+            case .groups: return "Groups"
             case .deeplinks: return "Deeplinks"
             case .about: return "About"
             }
@@ -64,8 +82,16 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
             switch self {
             case .general: return "gearshape"
             case .accessories: return "lightbulb"
+            case .groups: return "folder"
             case .deeplinks: return "link"
             case .about: return "info.circle"
+            }
+        }
+
+        var isProFeature: Bool {
+            switch self {
+            case .groups, .deeplinks: return true
+            default: return false
             }
         }
     }
@@ -73,6 +99,7 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
     // Content views (lazily created)
     private var generalSection: GeneralSection?
     private var accessoriesSection: AccessoriesSettingsView?
+    private var groupsSection: GroupsSettingsView?
     private var deeplinksSection: DeeplinksSection?
     private var aboutSection: AboutSection?
 
@@ -170,6 +197,15 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
             }
             contentView = accessoriesSection!
 
+        case .groups:
+            if groupsSection == nil {
+                groupsSection = GroupsSettingsView()
+                if let data = menuData {
+                    groupsSection?.configure(with: data)
+                }
+            }
+            contentView = groupsSection!
+
         case .deeplinks:
             if deeplinksSection == nil {
                 deeplinksSection = DeeplinksSection()
@@ -216,40 +252,66 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
     func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
         let section = Section.allCases[row]
 
-        let cellIdentifier = NSUserInterfaceItemIdentifier("SidebarCell")
-        var cell = tableView.makeView(withIdentifier: cellIdentifier, owner: nil) as? NSTableCellView
+        // Create cell container
+        let cell = NSView()
 
-        if cell == nil {
-            cell = NSTableCellView()
-            cell?.identifier = cellIdentifier
+        let imageView = NSImageView()
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        imageView.image = NSImage(systemSymbolName: section.icon, accessibilityDescription: section.title)
+        imageView.contentTintColor = .secondaryLabelColor
+        cell.addSubview(imageView)
 
-            let imageView = NSImageView()
-            imageView.translatesAutoresizingMaskIntoConstraints = false
-            cell?.addSubview(imageView)
-            cell?.imageView = imageView
+        let textField = NSTextField(labelWithString: section.title)
+        textField.translatesAutoresizingMaskIntoConstraints = false
+        textField.lineBreakMode = .byTruncatingTail
+        textField.font = .systemFont(ofSize: 13)
+        textField.textColor = .labelColor
+        textField.isBezeled = false
+        textField.isEditable = false
+        textField.drawsBackground = false
+        cell.addSubview(textField)
 
-            let textField = NSTextField(labelWithString: "")
-            textField.translatesAutoresizingMaskIntoConstraints = false
-            textField.lineBreakMode = .byTruncatingTail
-            cell?.addSubview(textField)
-            cell?.textField = textField
+        NSLayoutConstraint.activate([
+            imageView.leadingAnchor.constraint(equalTo: cell.leadingAnchor, constant: 4),
+            imageView.centerYAnchor.constraint(equalTo: cell.centerYAnchor),
+            imageView.widthAnchor.constraint(equalToConstant: 18),
+            imageView.heightAnchor.constraint(equalToConstant: 18),
+            textField.leadingAnchor.constraint(equalTo: imageView.trailingAnchor, constant: 6),
+            textField.centerYAnchor.constraint(equalTo: cell.centerYAnchor)
+        ])
+
+        // Add PRO badge for pro features
+        if section.isProFeature {
+            let badgeContainer = NSView()
+            badgeContainer.translatesAutoresizingMaskIntoConstraints = false
+            badgeContainer.wantsLayer = true
+            badgeContainer.layer?.backgroundColor = NSColor.systemGray.cgColor
+            badgeContainer.layer?.cornerRadius = 3
+            cell.addSubview(badgeContainer)
+
+            let badgeLabel = NSTextField(labelWithString: "PRO")
+            badgeLabel.translatesAutoresizingMaskIntoConstraints = false
+            badgeLabel.font = .systemFont(ofSize: 8, weight: .bold)
+            badgeLabel.textColor = .white
+            badgeLabel.alignment = .center
+            badgeLabel.isBezeled = false
+            badgeLabel.isEditable = false
+            badgeLabel.drawsBackground = false
+            badgeContainer.addSubview(badgeLabel)
 
             NSLayoutConstraint.activate([
-                imageView.leadingAnchor.constraint(equalTo: cell!.leadingAnchor, constant: 4),
-                imageView.centerYAnchor.constraint(equalTo: cell!.centerYAnchor),
-                imageView.widthAnchor.constraint(equalToConstant: 18),
-                imageView.heightAnchor.constraint(equalToConstant: 18),
-                textField.leadingAnchor.constraint(equalTo: imageView.trailingAnchor, constant: 6),
-                textField.trailingAnchor.constraint(equalTo: cell!.trailingAnchor, constant: -4),
-                textField.centerYAnchor.constraint(equalTo: cell!.centerYAnchor)
-            ])
-        }
+                badgeContainer.leadingAnchor.constraint(equalTo: textField.trailingAnchor, constant: 6),
+                badgeContainer.centerYAnchor.constraint(equalTo: cell.centerYAnchor),
+                badgeContainer.widthAnchor.constraint(equalToConstant: 28),
+                badgeContainer.heightAnchor.constraint(equalToConstant: 14),
+                badgeContainer.trailingAnchor.constraint(lessThanOrEqualTo: cell.trailingAnchor, constant: -4),
 
-        cell?.imageView?.image = NSImage(systemSymbolName: section.icon, accessibilityDescription: section.title)
-        cell?.imageView?.contentTintColor = .secondaryLabelColor
-        cell?.textField?.stringValue = section.title
-        cell?.textField?.font = .systemFont(ofSize: 13)
-        cell?.textField?.textColor = .labelColor
+                badgeLabel.centerXAnchor.constraint(equalTo: badgeContainer.centerXAnchor),
+                badgeLabel.centerYAnchor.constraint(equalTo: badgeContainer.centerYAnchor)
+            ])
+        } else {
+            textField.trailingAnchor.constraint(equalTo: cell.trailingAnchor, constant: -4).isActive = true
+        }
 
         return cell
     }

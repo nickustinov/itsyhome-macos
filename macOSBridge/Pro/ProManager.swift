@@ -139,11 +139,15 @@ enum StoreError: Error {
 final class ProStatusCache: @unchecked Sendable {
     static let shared = ProStatusCache()
 
+    // Set to true for testing Pro features during development
+    static let debugOverride: Bool = true
+
     private let lock = NSLock()
     private var _isPro: Bool = false
 
     var isPro: Bool {
         get {
+            if Self.debugOverride { return true }
             lock.lock()
             defer { lock.unlock() }
             return _isPro

@@ -11,6 +11,7 @@ class MenuBuilder {
 
     weak var bridge: Mac2iOS?
     private(set) var sceneMenuItems: [SceneMenuItem] = []
+    private var currentMenuData: MenuData?
 
     init(bridge: Mac2iOS?) {
         self.bridge = bridge
@@ -20,10 +21,17 @@ class MenuBuilder {
 
     func buildMenu(into menu: NSMenu, with data: MenuData) {
         sceneMenuItems = []
+        currentMenuData = data
 
         // Favourites section
         let hasFavourites = addFavouritesSection(to: menu, from: data)
         if hasFavourites {
+            menu.addItem(NSMenuItem.separator())
+        }
+
+        // Groups section (Pro feature)
+        let hasGroups = addGroupsSection(to: menu, from: data)
+        if hasGroups {
             menu.addItem(NSMenuItem.separator())
         }
 
@@ -74,6 +82,26 @@ class MenuBuilder {
         }
 
         return addedAny
+    }
+
+    // MARK: - Groups
+
+    @discardableResult
+    func addGroupsSection(to menu: NSMenu, from data: MenuData) -> Bool {
+        // Only show groups for Pro users
+        guard ProStatusCache.shared.isPro else { return false }
+
+        let preferences = PreferencesManager.shared
+        let groups = preferences.deviceGroups
+
+        guard !groups.isEmpty else { return false }
+
+        for group in groups {
+            let item = GroupMenuItem(group: group, menuData: data, bridge: bridge)
+            menu.addItem(item)
+        }
+
+        return true
     }
 
     // MARK: - Scenes
