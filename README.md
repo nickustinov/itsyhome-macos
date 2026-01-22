@@ -11,7 +11,7 @@ A native macOS menu bar app for controlling your HomeKit smart home devices.
 ## Features
 
 - **Menu bar access** - Control your smart home from the macOS menu bar
-- **Full HomeKit support** - Lights, switches, outlets, fans, thermostats, AC units, blinds, locks, garage doors, and contact sensors
+- **Full HomeKit support** - Lights, switches, outlets, fans, thermostats, AC units, blinds, locks, garage doors, humidifiers, air purifiers, valves, and security systems
 - **Scenes** - Execute and toggle HomeKit scenes with state tracking
 - **Favourites** - Pin frequently used devices and scenes to the top of the menu
 - **Multi-home support** - Switch between multiple HomeKit homes
@@ -29,7 +29,10 @@ A native macOS menu bar app for controlling your HomeKit smart home devices.
 | Blinds / Window coverings | Position slider |
 | Locks | Lock/unlock toggle |
 | Garage doors | Open/close with status |
-| Contact sensors | Open/closed state display |
+| Humidifiers & Dehumidifiers | Power, mode, target humidity |
+| Air purifiers | Power, mode, speed control |
+| Valves | Open/close toggle |
+| Security systems | Arm home/away/night, disarm |
 | Temperature & Humidity sensors | Summary display per room |
 
 ## Requirements
