@@ -50,11 +50,20 @@ class WebhooksSection: SettingsCard {
 
     private func setupContent() {
         // Description
-        let descLabel = NSTextField(wrappingLabelWithString: "Run a local HTTP server to control and query your HomeKit devices via GET requests. Use from any device on your network, or install the itsyhome CLI tool (brew install itsyhome).")
+        let descLabel = NSTextField(wrappingLabelWithString: "Run a local HTTP server to control and query your HomeKit devices via GET requests. Use from any device on your network, or install the itsyhome CLI tool (brew install nickustinov/tap/itsyhome).")
         descLabel.font = .systemFont(ofSize: 13)
         descLabel.textColor = .secondaryLabelColor
         stackView.addArrangedSubview(descLabel)
         descLabel.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
+
+        // CLI repo link
+        let linkButton = NSButton(title: "CLI documentation & source", target: self, action: #selector(openCLIRepo))
+        linkButton.bezelStyle = .inline
+        linkButton.isBordered = false
+        linkButton.contentTintColor = .controlAccentColor
+        linkButton.font = .systemFont(ofSize: 12)
+        linkButton.alignment = .left
+        stackView.addArrangedSubview(linkButton)
 
         stackView.addArrangedSubview(createSpacer(height: 4))
 
@@ -440,6 +449,10 @@ class WebhooksSection: SettingsCard {
         let address = addressString()
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(address, forType: .string)
+    }
+
+    @objc private func openCLIRepo() {
+        NSWorkspace.shared.open(URL(string: "https://github.com/nickustinov/itsyhome-cli")!)
     }
 
     @objc private func copyURL(_ sender: NSButton) {
