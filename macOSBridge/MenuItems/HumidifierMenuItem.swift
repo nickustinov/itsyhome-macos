@@ -7,7 +7,7 @@
 
 import AppKit
 
-class HumidifierMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable {
+class HumidifierMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable, LocalChangeNotifiable {
 
     let serviceData: ServiceData
     weak var bridge: Mac2iOS?
@@ -270,13 +270,5 @@ class HumidifierMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
             bridge?.writeCharacteristic(identifier: id, value: targetState)
             notifyLocalChange(characteristicId: id, value: targetState)
         }
-    }
-
-    private func notifyLocalChange(characteristicId: UUID, value: Any) {
-        NotificationCenter.default.post(
-            name: .characteristicDidChangeLocally,
-            object: self,
-            userInfo: ["characteristicId": characteristicId, "value": value]
-        )
     }
 }

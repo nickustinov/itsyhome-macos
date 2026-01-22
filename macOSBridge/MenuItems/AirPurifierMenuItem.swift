@@ -7,7 +7,7 @@
 
 import AppKit
 
-class AirPurifierMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable {
+class AirPurifierMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable, LocalChangeNotifiable {
 
     let serviceData: ServiceData
     weak var bridge: Mac2iOS?
@@ -271,13 +271,5 @@ class AirPurifierMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRe
             bridge?.writeCharacteristic(identifier: id, value: value)
             notifyLocalChange(characteristicId: id, value: value)
         }
-    }
-
-    private func notifyLocalChange(characteristicId: UUID, value: Any) {
-        NotificationCenter.default.post(
-            name: .characteristicDidChangeLocally,
-            object: self,
-            userInfo: ["characteristicId": characteristicId, "value": value]
-        )
     }
 }

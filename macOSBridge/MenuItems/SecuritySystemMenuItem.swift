@@ -7,7 +7,7 @@
 
 import AppKit
 
-class SecuritySystemMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable {
+class SecuritySystemMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable, LocalChangeNotifiable {
 
     let serviceData: ServiceData
     weak var bridge: Mac2iOS?
@@ -196,13 +196,5 @@ class SecuritySystemMenuItem: NSMenuItem, CharacteristicUpdatable, Characteristi
         // Update icon based on target state (optimistic update)
         currentState = targetState
         updateStateIcon()
-    }
-
-    private func notifyLocalChange(characteristicId: UUID, value: Any) {
-        NotificationCenter.default.post(
-            name: .characteristicDidChangeLocally,
-            object: self,
-            userInfo: ["characteristicId": characteristicId, "value": value]
-        )
     }
 }

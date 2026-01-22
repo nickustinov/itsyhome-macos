@@ -7,7 +7,7 @@
 
 import AppKit
 
-class LockMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable {
+class LockMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable, LocalChangeNotifiable {
 
     let serviceData: ServiceData
     weak var bridge: Mac2iOS?
@@ -126,13 +126,5 @@ class LockMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshab
                 notifyLocalChange(characteristicId: currentId, value: locked ? 1 : 0)
             }
         }
-    }
-
-    private func notifyLocalChange(characteristicId: UUID, value: Any) {
-        NotificationCenter.default.post(
-            name: .characteristicDidChangeLocally,
-            object: self,
-            userInfo: ["characteristicId": characteristicId, "value": value]
-        )
     }
 }

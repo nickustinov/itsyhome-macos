@@ -7,7 +7,7 @@
 
 import AppKit
 
-class ThermostatMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable {
+class ThermostatMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable, LocalChangeNotifiable {
 
     let serviceData: ServiceData
     weak var bridge: Mac2iOS?
@@ -148,13 +148,5 @@ class ThermostatMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
             bridge?.writeCharacteristic(identifier: id, value: Float(roundedValue))
             notifyLocalChange(characteristicId: id, value: Float(roundedValue))
         }
-    }
-
-    private func notifyLocalChange(characteristicId: UUID, value: Any) {
-        NotificationCenter.default.post(
-            name: .characteristicDidChangeLocally,
-            object: self,
-            userInfo: ["characteristicId": characteristicId, "value": value]
-        )
     }
 }

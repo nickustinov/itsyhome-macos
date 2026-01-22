@@ -69,3 +69,21 @@ targets:
       - path: macOSBridge
       - path: Itsyhome/Shared
         buildPhase: sources
+
+  # Unit tests for macOSBridge
+  macOSBridgeTests:
+    type: bundle.unit-test
+    platform: macOS
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.nickustinov.itsyhome.macOSBridgeTests
+        PRODUCT_NAME: macOSBridgeTests
+        MACOSX_DEPLOYMENT_TARGET: "14.0"
+        GENERATE_INFOPLIST_FILE: YES
+    sources:
+      - path: macOSBridgeTests
+      - path: macOSBridge
+      - path: Itsyhome/Shared
+        buildPhase: sources
+    dependencies:
+      - target: macOSBridge

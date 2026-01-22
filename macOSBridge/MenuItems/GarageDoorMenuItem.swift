@@ -7,7 +7,7 @@
 
 import AppKit
 
-class GarageDoorMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable {
+class GarageDoorMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable, LocalChangeNotifiable {
 
     let serviceData: ServiceData
     weak var bridge: Mac2iOS?
@@ -158,13 +158,5 @@ class GarageDoorMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
                 notifyLocalChange(characteristicId: currentId, value: targetState == 1 ? 1 : 0)
             }
         }
-    }
-
-    private func notifyLocalChange(characteristicId: UUID, value: Any) {
-        NotificationCenter.default.post(
-            name: .characteristicDidChangeLocally,
-            object: self,
-            userInfo: ["characteristicId": characteristicId, "value": value]
-        )
     }
 }

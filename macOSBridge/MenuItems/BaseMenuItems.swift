@@ -7,6 +7,20 @@
 
 import AppKit
 
+// MARK: - Local change notification
+
+protocol LocalChangeNotifiable: NSMenuItem {}
+
+extension LocalChangeNotifiable {
+    func notifyLocalChange(characteristicId: UUID, value: Any) {
+        NotificationCenter.default.post(
+            name: .characteristicDidChangeLocally,
+            object: self,
+            userInfo: ["characteristicId": characteristicId, "value": value]
+        )
+    }
+}
+
 // MARK: - Home Menu Item
 
 class HomeMenuItem: NSMenuItem {

@@ -7,7 +7,7 @@
 
 import AppKit
 
-class BlindMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable {
+class BlindMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable, LocalChangeNotifiable {
 
     let serviceData: ServiceData
     weak var bridge: Mac2iOS?
@@ -131,13 +131,5 @@ class BlindMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
                 notifyLocalChange(characteristicId: currentId, value: value)
             }
         }
-    }
-
-    private func notifyLocalChange(characteristicId: UUID, value: Any) {
-        NotificationCenter.default.post(
-            name: .characteristicDidChangeLocally,
-            object: self,
-            userInfo: ["characteristicId": characteristicId, "value": value]
-        )
     }
 }

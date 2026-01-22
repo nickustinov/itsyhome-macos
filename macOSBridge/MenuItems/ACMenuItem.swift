@@ -7,7 +7,7 @@
 
 import AppKit
 
-class ACMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable {
+class ACMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable, LocalChangeNotifiable {
 
     let serviceData: ServiceData
     weak var bridge: Mac2iOS?
@@ -364,13 +364,5 @@ class ACMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable
 
     @objc private func increaseTemp(_ sender: NSButton) {
         setTargetTemp(currentTargetTemp() + 1)
-    }
-
-    private func notifyLocalChange(characteristicId: UUID, value: Any) {
-        NotificationCenter.default.post(
-            name: .characteristicDidChangeLocally,
-            object: self,
-            userInfo: ["characteristicId": characteristicId, "value": value]
-        )
     }
 }

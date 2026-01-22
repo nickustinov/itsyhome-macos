@@ -7,7 +7,7 @@
 
 import AppKit
 
-class ValveMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable {
+class ValveMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable, LocalChangeNotifiable {
 
     let serviceData: ServiceData
     weak var bridge: Mac2iOS?
@@ -145,13 +145,5 @@ class ValveMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
             notifyLocalChange(characteristicId: id, value: isActive ? 1 : 0)
         }
         updateUI()
-    }
-
-    private func notifyLocalChange(characteristicId: UUID, value: Any) {
-        NotificationCenter.default.post(
-            name: .characteristicDidChangeLocally,
-            object: self,
-            userInfo: ["characteristicId": characteristicId, "value": value]
-        )
     }
 }

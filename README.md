@@ -1,5 +1,7 @@
 # Itsyhome
 
+[![Tests](https://github.com/nickustinov/itsyhome-macos/actions/workflows/test.yml/badge.svg)](https://github.com/nickustinov/itsyhome-macos/actions/workflows/test.yml)
+
 ![Itsyhome app screenshot](https://itsyhome.app/itsyhome-app-screenshot.png)
 
 A native macOS menu bar app for controlling your HomeKit smart home devices.
@@ -116,6 +118,19 @@ The project uses XcodeGen to generate the Xcode project from `project.yml`. Afte
 ```bash
 xcodegen generate
 ```
+
+## Testing
+
+The project includes unit tests for the macOSBridge plugin. Run tests with:
+
+```bash
+xcodebuild test -scheme macOSBridgeTests -destination "platform=macOS"
+```
+
+Test coverage includes:
+- `LocalChangeNotifiableTests` - Notification protocol for syncing menu items
+- `ValueConversionTests` - Type conversion utilities for HomeKit values
+- `SwitchMenuItemTests` - Menu item behaviour and protocol conformance
 
 ## HomeKit entitlement
 

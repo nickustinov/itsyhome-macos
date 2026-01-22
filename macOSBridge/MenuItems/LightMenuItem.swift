@@ -15,7 +15,7 @@ final class ClickableColorCircleView: NSView {
     }
 }
 
-class LightMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable, ReachabilityUpdatable {
+class LightMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable, ReachabilityUpdatable, LocalChangeNotifiable {
 
     let serviceData: ServiceData
     weak var bridge: Mac2iOS?
@@ -374,14 +374,6 @@ class LightMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
             notifyLocalChange(characteristicId: tempId, value: Int(mired))
         }
         updateColorCircle()
-    }
-
-    private func notifyLocalChange(characteristicId: UUID, value: Any) {
-        NotificationCenter.default.post(
-            name: .characteristicDidChangeLocally,
-            object: self,
-            userInfo: ["characteristicId": characteristicId, "value": value]
-        )
     }
 }
 
