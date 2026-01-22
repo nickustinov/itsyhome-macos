@@ -26,7 +26,7 @@ jobs:
       - name: Run tests
         run: |
           xcodebuild test \
-            -scheme macOSBridgeTests \
+            -scheme Itsyhome \
             -destination "platform=macOS" \
             -resultBundlePath TestResults.xcresult \
             CODE_SIGN_IDENTITY="" \
