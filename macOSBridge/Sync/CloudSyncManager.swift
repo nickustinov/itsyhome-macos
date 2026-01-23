@@ -99,10 +99,10 @@ final class CloudSyncManager {
             object: nil
         )
 
-        // Upload local data, then pull any cloud changes
-        uploadAllSyncableKeys()
+        // Pull cloud changes first, then upload local data
         cloudStore.synchronize()
         pullFromCloudStore()
+        uploadAllSyncableKeys()
 
         // Pull again after a short delay to allow synchronize() to fetch
         DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
