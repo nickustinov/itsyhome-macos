@@ -15,6 +15,12 @@ class ModeButton: NSButton {
         }
     }
 
+    var isMenuHighlighted: Bool = false {
+        didSet {
+            needsDisplay = true
+        }
+    }
+
     /// Color when selected (defaults to green)
     var selectedColor: NSColor = DS.Colors.success {
         didSet {
@@ -52,7 +58,14 @@ class ModeButton: NSButton {
         path.fill()
 
         // Draw title
-        let textColor: NSColor = isSelected ? .white : .tertiaryLabelColor
+        let textColor: NSColor
+        if isSelected {
+            textColor = .white
+        } else if isMenuHighlighted {
+            textColor = .white.withAlphaComponent(0.9)
+        } else {
+            textColor = .tertiaryLabelColor
+        }
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.alignment = .center
 

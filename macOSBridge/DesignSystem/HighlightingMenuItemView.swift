@@ -46,8 +46,19 @@ class HighlightingMenuItemView: NSView {
     }
 
     private func updateTextColors(highlighted: Bool) {
-        for subview in subviews {
-            if let textField = subview as? NSTextField {
+        updateSubviewColors(in: self, highlighted: highlighted)
+    }
+
+    private func updateSubviewColors(in view: NSView, highlighted: Bool) {
+        for subview in view.subviews {
+            // Skip controls that manage their own appearance
+            if subview is ToggleSwitch || subview is ModernSlider {
+                continue
+            }
+
+            if let modeButton = subview as? ModeButton {
+                modeButton.isMenuHighlighted = highlighted
+            } else if let textField = subview as? NSTextField {
                 let key = ObjectIdentifier(textField)
                 if highlighted {
                     if originalTextColors[key] == nil {
@@ -67,6 +78,21 @@ class HighlightingMenuItemView: NSView {
                 } else if let original = originalTintColors[key] {
                     imageView.contentTintColor = original
                 }
+            } else if let button = subview as? NSButton {
+                let key = ObjectIdentifier(button)
+                if highlighted {
+                    if originalTintColors[key] == nil {
+                        originalTintColors[key] = button.contentTintColor
+                    }
+                    button.contentTintColor = .selectedMenuItemTextColor
+                } else if let original = originalTintColors[key] {
+                    button.contentTintColor = original
+                }
+            }
+
+            // Recurse into child views
+            if !(subview is NSControl) || subview is ModeButton {
+                updateSubviewColors(in: subview, highlighted: highlighted)
             }
         }
     }
