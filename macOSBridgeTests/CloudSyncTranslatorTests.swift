@@ -788,4 +788,110 @@ final class CloudSyncTranslatorTests: XCTestCase {
         let decoded = try JSONDecoder().decode([DeviceGroup].self, from: roundTripped!)
         XCTAssertTrue(decoded.isEmpty)
     }
+
+    // MARK: - Group shortcuts translation tests
+
+    func testTranslateGroupShortcutToCloud() throws {
+        translator.updateMenuData(makeMenuData())
+        translator.updateGroupIds(["g1", "g2"])
+
+        let shortcuts: [String: PreferencesManager.ShortcutData] = [
+            "g1": PreferencesManager.ShortcutData(keyCode: 0, modifiers: .command)
+        ]
+        let localData = try JSONEncoder().encode(shortcuts)
+
+        let cloudData = translator.translateShortcutsToCloud(localData)!
+        let decoded = try JSONDecoder().decode([String: PreferencesManager.ShortcutData].self, from: cloudData)
+
+        XCTAssertEqual(decoded.count, 1)
+        XCTAssertNotNil(decoded["group::g1"])
+        XCTAssertEqual(decoded["group::g1"]?.keyCode, 0)
+    }
+
+    func testTranslateGroupShortcutFromCloud() throws {
+        translator.updateMenuData(makeMenuData())
+
+        let cloudShortcuts: [String: PreferencesManager.ShortcutData] = [
+            "group::g1": PreferencesManager.ShortcutData(keyCode: 12, modifiers: .option)
+        ]
+        let cloudData = try JSONEncoder().encode(cloudShortcuts)
+
+        let localData = translator.translateShortcutsFromCloud(cloudData)!
+        let decoded = try JSONDecoder().decode([String: PreferencesManager.ShortcutData].self, from: localData)
+
+        XCTAssertEqual(decoded.count, 1)
+        XCTAssertNotNil(decoded["g1"])
+        XCTAssertEqual(decoded["g1"]?.keyCode, 12)
+    }
+
+    func testGroupShortcutRoundTrip() throws {
+        translator.updateMenuData(makeMenuData())
+        translator.updateGroupIds(["g1"])
+
+        let original: [String: PreferencesManager.ShortcutData] = [
+            "g1": PreferencesManager.ShortcutData(keyCode: 5, modifiers: [.command, .shift])
+        ]
+        let localData = try JSONEncoder().encode(original)
+
+        let cloudData = translator.translateShortcutsToCloud(localData)!
+        let roundTripped = translator.translateShortcutsFromCloud(cloudData)!
+        let decoded = try JSONDecoder().decode([String: PreferencesManager.ShortcutData].self, from: roundTripped)
+
+        XCTAssertEqual(decoded["g1"]?.keyCode, 5)
+        XCTAssertEqual(decoded["g1"]?.modifiers, original["g1"]?.modifiers)
+    }
+
+    func testMixedServiceAndGroupShortcutsRoundTrip() throws {
+        let roomId = UUID()
+        let serviceId = UUID()
+        let sceneId = UUID()
+        let service = makeService(id: serviceId, name: "Light", accessoryName: "Lamp", roomId: roomId)
+        let accessory = makeAccessory(name: "Lamp", roomId: roomId, services: [service])
+        let data = makeMenuData(
+            rooms: [RoomData(uniqueIdentifier: roomId, name: "Bedroom")],
+            accessories: [accessory],
+            scenes: [SceneData(uniqueIdentifier: sceneId, name: "Relax")]
+        )
+        translator.updateMenuData(data)
+        translator.updateGroupIds(["g1"])
+
+        let original: [String: PreferencesManager.ShortcutData] = [
+            serviceId.uuidString: PreferencesManager.ShortcutData(keyCode: 0, modifiers: .command),
+            sceneId.uuidString: PreferencesManager.ShortcutData(keyCode: 1, modifiers: .option),
+            "g1": PreferencesManager.ShortcutData(keyCode: 2, modifiers: .control)
+        ]
+        let localData = try JSONEncoder().encode(original)
+
+        let cloudData = translator.translateShortcutsToCloud(localData)!
+        let cloudDecoded = try JSONDecoder().decode([String: PreferencesManager.ShortcutData].self, from: cloudData)
+
+        // Verify cloud format
+        XCTAssertNotNil(cloudDecoded["Bedroom::Lamp::Light"])
+        XCTAssertNotNil(cloudDecoded["Relax"])
+        XCTAssertNotNil(cloudDecoded["group::g1"])
+
+        let roundTripped = translator.translateShortcutsFromCloud(cloudData)!
+        let decoded = try JSONDecoder().decode([String: PreferencesManager.ShortcutData].self, from: roundTripped)
+
+        XCTAssertEqual(decoded.count, 3)
+        XCTAssertEqual(decoded[serviceId.uuidString]?.keyCode, 0)
+        XCTAssertEqual(decoded[sceneId.uuidString]?.keyCode, 1)
+        XCTAssertEqual(decoded["g1"]?.keyCode, 2)
+    }
+
+    func testGroupShortcutNotTranslatedWithoutGroupId() throws {
+        translator.updateMenuData(makeMenuData())
+        // Don't register "g1" as a known group ID
+
+        let shortcuts: [String: PreferencesManager.ShortcutData] = [
+            "g1": PreferencesManager.ShortcutData(keyCode: 0, modifiers: .command)
+        ]
+        let localData = try JSONEncoder().encode(shortcuts)
+
+        let cloudData = translator.translateShortcutsToCloud(localData)!
+        let decoded = try JSONDecoder().decode([String: PreferencesManager.ShortcutData].self, from: cloudData)
+
+        // Unknown IDs are dropped
+        XCTAssertTrue(decoded.isEmpty)
+    }
 }

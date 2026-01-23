@@ -266,6 +266,16 @@ extension GroupsSettingsView: NSTableViewDelegate, NSTableViewDataSource {
         countLabel.translatesAutoresizingMaskIntoConstraints = false
         container.addSubview(countLabel)
 
+        // Shortcut button (disabled for non-pro)
+        let shortcutButton = ShortcutButton(frame: .zero)
+        shortcutButton.shortcut = PreferencesManager.shared.shortcut(for: group.id)
+        shortcutButton.isEnabled = isPro
+        shortcutButton.onShortcutRecorded = { shortcut in
+            PreferencesManager.shared.setShortcut(shortcut, for: group.id)
+        }
+        shortcutButton.translatesAutoresizingMaskIntoConstraints = false
+        container.addSubview(shortcutButton)
+
         // Edit button (disabled for non-pro)
         let editButton = NSButton(title: "Edit", target: self, action: #selector(editGroupTapped(_:)))
         editButton.bezelStyle = .rounded
@@ -307,7 +317,10 @@ extension GroupsSettingsView: NSTableViewDelegate, NSTableViewDataSource {
             deleteButton.widthAnchor.constraint(equalToConstant: 24),
 
             editButton.trailingAnchor.constraint(equalTo: deleteButton.leadingAnchor, constant: -8),
-            editButton.centerYAnchor.constraint(equalTo: container.centerYAnchor)
+            editButton.centerYAnchor.constraint(equalTo: container.centerYAnchor),
+
+            shortcutButton.trailingAnchor.constraint(equalTo: editButton.leadingAnchor, constant: -8),
+            shortcutButton.centerYAnchor.constraint(equalTo: container.centerYAnchor)
         ])
 
         return container

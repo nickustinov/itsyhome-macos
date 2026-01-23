@@ -96,6 +96,13 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate {
             return
         }
 
+        if let group = PreferencesManager.shared.deviceGroups.first(where: { $0.id == favouriteId }) {
+            for service in group.resolveServices(in: data) {
+                toggleService(service)
+            }
+            return
+        }
+
         for accessory in data.accessories {
             for service in accessory.services {
                 if service.uniqueIdentifier == favouriteId {

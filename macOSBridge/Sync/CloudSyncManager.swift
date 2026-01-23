@@ -37,6 +37,7 @@ final class CloudSyncManager {
 
     func updateMenuData(_ data: MenuData) {
         translator.updateMenuData(data)
+        translator.updateGroupIds(Set(PreferencesManager.shared.deviceGroups.map { $0.id }))
     }
 
     // MARK: - Public API

@@ -22,10 +22,17 @@ struct CloudSyncTranslator {
     private(set) var sceneNameToId: [String: String] = [:]
     private(set) var roomIdToName: [String: String] = [:]
     private(set) var roomNameToId: [String: String] = [:]
+    private(set) var groupIds: Set<String> = []
+
+    private static let groupPrefix = "group::"
 
     var hasData: Bool { !serviceIdToStable.isEmpty }
 
     // MARK: - Build lookups
+
+    mutating func updateGroupIds(_ ids: Set<String>) {
+        groupIds = ids
+    }
 
     mutating func updateMenuData(_ data: MenuData) {
         let roomLookup = Dictionary(uniqueKeysWithValues: data.rooms.map { ($0.uniqueIdentifier, $0.name) })
@@ -112,6 +119,8 @@ struct CloudSyncTranslator {
         for (id, shortcut) in dict {
             if let stable = serviceIdToStable[id] ?? sceneIdToName[id] {
                 translated[stable] = shortcut
+            } else if groupIds.contains(id) {
+                translated[Self.groupPrefix + id] = shortcut
             }
         }
         return try? JSONEncoder().encode(translated)
@@ -121,7 +130,10 @@ struct CloudSyncTranslator {
         guard let dict = try? JSONDecoder().decode([String: PreferencesManager.ShortcutData].self, from: data) else { return nil }
         var translated: [String: PreferencesManager.ShortcutData] = [:]
         for (stable, shortcut) in dict {
-            if let id = stableToServiceId[stable] ?? sceneNameToId[stable] {
+            if stable.hasPrefix(Self.groupPrefix) {
+                let groupId = String(stable.dropFirst(Self.groupPrefix.count))
+                translated[groupId] = shortcut
+            } else if let id = stableToServiceId[stable] ?? sceneNameToId[stable] {
                 translated[id] = shortcut
             }
         }

@@ -415,6 +415,7 @@ final class PreferencesManager {
         var groups = deviceGroups
         groups.removeAll { $0.id == id }
         deviceGroups = groups
+        removeShortcut(for: id)
     }
 
     func moveDeviceGroup(from sourceIndex: Int, to destinationIndex: Int) {
