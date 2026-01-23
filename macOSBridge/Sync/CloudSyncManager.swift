@@ -99,7 +99,8 @@ final class CloudSyncManager {
             object: nil
         )
 
-        // Synchronize to get any pending changes, then pull
+        // Upload local data, then pull any cloud changes
+        uploadAllSyncableKeys()
         cloudStore.synchronize()
         pullFromCloudStore()
 
