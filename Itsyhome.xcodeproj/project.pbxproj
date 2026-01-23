@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 54;
+	objectVersion = 77;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -14,11 +14,13 @@
 		0554ECE0D0F5808206BF4215 /* WebhookServerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E5CD57B9AFE976E31909CE2 /* WebhookServerTests.swift */; };
 		069D686EF497B4BE291ED8F9 /* ValueConversionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C1BB4554FA59FCE166E2B86 /* ValueConversionTests.swift */; };
 		08D8F3C60170681EF3187BCE /* ThermostatMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86C440D0DF207C3DF9F3A5AD /* ThermostatMenuItem.swift */; };
+		099D30F6620813668F633D46 /* CloudSyncTranslator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5578B4AD774F2D31C1C4EE6C /* CloudSyncTranslator.swift */; };
 		0A005DFA734D5F67E70BA99A /* DeviceResolverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E76F58466E9E704D579F526 /* DeviceResolverTests.swift */; };
 		0AE9FFB43AE2BAEE112BEE83 /* HomeKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 748347D84F0BDF92DA4DE1E4 /* HomeKit.framework */; };
 		0C50A9F7E4B39D3073FCB0C2 /* BridgeProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88919649EAF34363518DE9FF /* BridgeProtocols.swift */; };
 		0D1340AA633BF40EC7B797C4 /* SecuritySystemMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBD57CCBF703A5861D8AEFB0 /* SecuritySystemMenuItem.swift */; };
 		0E3C04C26FCF48722D26C6CE /* ToggleSwitch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CD9AB0F2E79886D06C197E2 /* ToggleSwitch.swift */; };
+		111E21896B8031FB1B180CDD /* CloudSyncTranslator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5578B4AD774F2D31C1C4EE6C /* CloudSyncTranslator.swift */; };
 		12B4142969F3A501717A290A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 71AB516B350323CC9A1DAEE4 /* Assets.xcassets */; };
 		13236318334A338D80E0C741 /* WebhooksSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C1443A561323B39B108F71E /* WebhooksSection.swift */; };
 		13CAC53E00A58CDF49407098 /* GeneralSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62AD62C3749331FE2DA3CA6B /* GeneralSection.swift */; };
@@ -28,6 +30,7 @@
 		160978BDC19974A59FB1A4BB /* LightMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73072FCFE16311A3C25C1C2C /* LightMenuItem.swift */; };
 		16A327E2FD58F4B48606729C /* BaseMenuItems.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CFE6ECEB559109472BA360A /* BaseMenuItems.swift */; };
 		19DBF4D900CC57B5CA26166C /* ActionEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE6B3519AD69969925F8F105 /* ActionEngine.swift */; };
+		1C6AB0890960150B4D251149 /* CloudSyncTranslatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5DADAA257C2278B651DA7C1 /* CloudSyncTranslatorTests.swift */; };
 		1F40AE6DB3424BCC0EC82C42 /* URLSchemeHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05A1A234EF733DB7475895AD /* URLSchemeHandler.swift */; };
 		20065FF911389BDD959B2D6B /* ProManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E663466EEEB0E7EAA36C4C8 /* ProManager.swift */; };
 		21F39E80DC3F5C5543037DD6 /* SettingsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39978B305FBE0EDCA33CCAFB /* SettingsWindowController.swift */; };
@@ -162,6 +165,7 @@
 		4E7FF79A158B9BA2B399F2EF /* ActionParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionParser.swift; sourceTree = "<group>"; };
 		4EE496DB240231CDFFDA2018 /* GroupsSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupsSettingsView.swift; sourceTree = "<group>"; };
 		51B74BF9E1E02D2CF34C9F37 /* SwitchMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwitchMenuItem.swift; sourceTree = "<group>"; };
+		5578B4AD774F2D31C1C4EE6C /* CloudSyncTranslator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSyncTranslator.swift; sourceTree = "<group>"; };
 		5735B31C003BD03DE4B28206 /* macOSBridge.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = macOSBridge.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
 		5E5CD57B9AFE976E31909CE2 /* WebhookServerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebhookServerTests.swift; sourceTree = "<group>"; };
 		62AD62C3749331FE2DA3CA6B /* GeneralSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralSection.swift; sourceTree = "<group>"; };
@@ -203,6 +207,7 @@
 		DDB13572FA0DD4098A9721D2 /* SettingsCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsCard.swift; sourceTree = "<group>"; };
 		E2D7D48C5DF8A0F64F6CD9B2 /* ActionParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionParserTests.swift; sourceTree = "<group>"; };
 		E53529DEB10403CBB276F9AD /* ActionEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionEngineTests.swift; sourceTree = "<group>"; };
+		E5DADAA257C2278B651DA7C1 /* CloudSyncTranslatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSyncTranslatorTests.swift; sourceTree = "<group>"; };
 		EA517D9CAF4A470166D8C402 /* ModernSlider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModernSlider.swift; sourceTree = "<group>"; };
 		F2C2BA989A5E5FBD918CAD29 /* DeviceResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceResolver.swift; sourceTree = "<group>"; };
 		F3AE776817A51695FBA936B1 /* FanMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FanMenuItem.swift; sourceTree = "<group>"; };
@@ -226,6 +231,7 @@
 			isa = PBXGroup;
 			children = (
 				9D91667CA03C981ACF4D8EDA /* CloudSyncManager.swift */,
+				5578B4AD774F2D31C1C4EE6C /* CloudSyncTranslator.swift */,
 			);
 			path = Sync;
 			sourceTree = "<group>";
@@ -388,6 +394,7 @@
 			isa = PBXGroup;
 			children = (
 				B9EBA01EDDE859ED8AC024C5 /* CloudSyncManagerTests.swift */,
+				E5DADAA257C2278B651DA7C1 /* CloudSyncTranslatorTests.swift */,
 				4ACE5B888DD591449DAA1BBB /* DeviceGroupTests.swift */,
 				074390035F5E079496B2A9FD /* LocalChangeNotifiableTests.swift */,
 				8D6209D5D4AF8B8C8228A9CB /* ProStatusCacheTests.swift */,
@@ -556,7 +563,7 @@
 			);
 			mainGroup = E4D0AC95AB41872138D6349D;
 			minimizedProjectReferenceProxies = 1;
-			preferredProjectObjectVersion = 54;
+			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -624,6 +631,7 @@
 				CA8E1F973147B8CE2E58FA52 /* BlindMenuItem.swift in Sources */,
 				0C50A9F7E4B39D3073FCB0C2 /* BridgeProtocols.swift in Sources */,
 				E53F247D68A3464066E31310 /* CloudSyncManager.swift in Sources */,
+				099D30F6620813668F633D46 /* CloudSyncTranslator.swift in Sources */,
 				CE60FBDD7DA3242E781072D4 /* ColorConversion.swift in Sources */,
 				F019042FCFF1C339C065CD64 /* DeeplinksSection.swift in Sources */,
 				DB962F06C77A87E8D2AAA55E /* DesignSystem.swift in Sources */,
@@ -682,6 +690,8 @@
 				67926ADF4BFE82DCEF6BB9D1 /* BridgeProtocols.swift in Sources */,
 				53ECA3675440CD9BAC4279B3 /* CloudSyncManager.swift in Sources */,
 				985B67023A87C83880C511BE /* CloudSyncManagerTests.swift in Sources */,
+				111E21896B8031FB1B180CDD /* CloudSyncTranslator.swift in Sources */,
+				1C6AB0890960150B4D251149 /* CloudSyncTranslatorTests.swift in Sources */,
 				786699F2C5038B043DDACCDB /* ColorConversion.swift in Sources */,
 				C8A37E1284E27AADA3A6906B /* DesignSystem.swift in Sources */,
 				63AA00C163B17C7DF80BE19C /* DeviceGroup.swift in Sources */,
