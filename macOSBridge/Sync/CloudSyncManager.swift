@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import AppKit
 
 final class CloudSyncManager {
 
@@ -111,14 +110,6 @@ final class CloudSyncManager {
             self?.pullFromCloudStore()
         }
 
-        // Pull when app becomes active (after sleep/switch)
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(handleAppBecameActive),
-            name: NSApplication.didBecomeActiveNotification,
-            object: nil
-        )
-
         // Start periodic sync
         periodicSyncTimer?.invalidate()
         periodicSyncTimer = Timer.scheduledTimer(withTimeInterval: syncInterval, repeats: true) { [weak self] _ in
@@ -141,11 +132,6 @@ final class CloudSyncManager {
         NotificationCenter.default.removeObserver(
             self,
             name: PreferencesManager.preferencesChangedNotification,
-            object: nil
-        )
-        NotificationCenter.default.removeObserver(
-            self,
-            name: NSApplication.didBecomeActiveNotification,
             object: nil
         )
     }
@@ -188,13 +174,6 @@ final class CloudSyncManager {
 
         print("[CloudSync] handleLocalChange — uploading")
         uploadAllSyncableKeys()
-    }
-
-    @objc private func handleAppBecameActive() {
-        guard ProStatusCache.shared.isPro && isSyncEnabled else { return }
-        print("[CloudSync] app became active — syncing")
-        cloudStore.synchronize()
-        pullFromCloudStore()
     }
 
     private func periodicSync() {
