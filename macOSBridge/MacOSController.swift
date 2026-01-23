@@ -270,7 +270,7 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate {
 
         PreferencesManager.shared.currentHomeId = data.selectedHomeId
         PreferencesManager.shared.currentHomeName = data.homes.first(where: { $0.uniqueIdentifier == data.selectedHomeId })?.name
-        CloudSyncManager.shared.syncNow()
+        CloudSyncManager.shared.updateMenuData(data)
         HotkeyManager.shared.registerShortcuts()
 
         menuBuilder.bridge = iOSBridge
