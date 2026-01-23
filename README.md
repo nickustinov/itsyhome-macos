@@ -142,6 +142,27 @@ brew install nickustinov/tap/itsyhome
 
 See [itsyhome-cli](https://github.com/nickustinov/itsyhome-cli) for full documentation.
 
+### Stream Deck
+
+Control your HomeKit devices directly from an Elgato Stream Deck using the [Itsyhome Stream Deck plugin](https://github.com/nickustinov/itsyhome-streamdeck). Requires the webhook server to be enabled.
+
+**Actions:**
+
+| Action | Description |
+|--------|-------------|
+| Toggle device | Toggle any device on/off with device-type-aware icons |
+| Execute scene | Trigger a HomeKit scene |
+| Set brightness | Set a light to a specific brightness level |
+| Lock | Lock/unlock with optimistic feedback |
+| AC | Toggle thermostat/AC with mode-aware icons (heat/cool/auto) |
+| Status | Display temperature or humidity readings |
+| Blinds | Open/close blinds with position display |
+| Garage door | Open/close garage door with state feedback |
+
+Features include color-coded icons per device type, live state polling, optimistic updates for slow devices (locks, garage doors), and optional labels for multi-button setups.
+
+See [itsyhome-streamdeck](https://github.com/nickustinov/itsyhome-streamdeck) for setup and development.
+
 ## Requirements
 
 - macOS 14.0 or later

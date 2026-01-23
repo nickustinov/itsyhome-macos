@@ -356,6 +356,12 @@ final class WebhookServer {
         if let idStr = service.powerStateId, let uuid = UUID(uuidString: idStr),
            let value = engine.bridge?.getCharacteristicValue(identifier: uuid) {
             state.append("\"on\":\(boolValue(value))")
+        } else if let idStr = service.activeId, let uuid = UUID(uuidString: idStr),
+                  let value = engine.bridge?.getCharacteristicValue(identifier: uuid) {
+            state.append("\"on\":\(intValue(value) != 0)")
+        } else if let idStr = service.targetHeatingCoolingStateId, let uuid = UUID(uuidString: idStr),
+                  let value = engine.bridge?.getCharacteristicValue(identifier: uuid) {
+            state.append("\"on\":\(intValue(value) != 0)")
         }
         if let idStr = service.brightnessId, let uuid = UUID(uuidString: idStr),
            let value = engine.bridge?.getCharacteristicValue(identifier: uuid) {
@@ -372,6 +378,36 @@ final class WebhookServer {
         if let idStr = service.targetTemperatureId, let uuid = UUID(uuidString: idStr),
            let value = engine.bridge?.getCharacteristicValue(identifier: uuid) {
             state.append("\"targetTemperature\":\(doubleValue(value))")
+        } else {
+            // AC uses cooling/heating threshold temperatures
+            let targetMode = service.targetHeaterCoolerStateId.flatMap { UUID(uuidString: $0) }
+                .flatMap { engine.bridge?.getCharacteristicValue(identifier: $0) }
+                .map { intValue($0) }
+            if targetMode == 1, let idStr = service.heatingThresholdTemperatureId,
+               let uuid = UUID(uuidString: idStr),
+               let value = engine.bridge?.getCharacteristicValue(identifier: uuid) {
+                state.append("\"targetTemperature\":\(doubleValue(value))")
+            } else if let idStr = service.coolingThresholdTemperatureId,
+                      let uuid = UUID(uuidString: idStr),
+                      let value = engine.bridge?.getCharacteristicValue(identifier: uuid) {
+                state.append("\"targetTemperature\":\(doubleValue(value))")
+            }
+        }
+        if let idStr = service.heatingCoolingStateId, let uuid = UUID(uuidString: idStr),
+           let value = engine.bridge?.getCharacteristicValue(identifier: uuid) {
+            let mode = intValue(value)
+            let modeStr = mode == 1 ? "heat" : mode == 2 ? "cool" : "off"
+            state.append("\"mode\":\"\(modeStr)\"")
+        } else if let idStr = service.targetHeaterCoolerStateId, let uuid = UUID(uuidString: idStr),
+                  let value = engine.bridge?.getCharacteristicValue(identifier: uuid) {
+            let mode = intValue(value)
+            let modeStr = mode == 0 ? "auto" : mode == 1 ? "heat" : mode == 2 ? "cool" : "off"
+            state.append("\"mode\":\"\(modeStr)\"")
+        } else if let idStr = service.targetHeatingCoolingStateId, let uuid = UUID(uuidString: idStr),
+                  let value = engine.bridge?.getCharacteristicValue(identifier: uuid) {
+            let mode = intValue(value)
+            let modeStr = mode == 1 ? "heat" : mode == 2 ? "cool" : mode == 3 ? "auto" : "off"
+            state.append("\"mode\":\"\(modeStr)\"")
         }
         if let idStr = service.humidityId, let uuid = UUID(uuidString: idStr),
            let value = engine.bridge?.getCharacteristicValue(identifier: uuid) {
@@ -389,6 +425,13 @@ final class WebhookServer {
            let value = engine.bridge?.getCharacteristicValue(identifier: uuid) {
             let locked = intValue(value) == 1
             state.append("\"locked\":\(locked)")
+        }
+        if let idStr = service.currentDoorStateId, let uuid = UUID(uuidString: idStr),
+           let value = engine.bridge?.getCharacteristicValue(identifier: uuid) {
+            let doorState = intValue(value)
+            // 0=open, 1=closed, 2=opening, 3=closing, 4=stopped
+            let stateStr = doorState == 0 ? "open" : doorState == 1 ? "closed" : doorState == 2 ? "opening" : doorState == 3 ? "closing" : "stopped"
+            state.append("\"doorState\":\"\(stateStr)\"")
         }
         if let idStr = service.rotationSpeedId, let uuid = UUID(uuidString: idStr),
            let value = engine.bridge?.getCharacteristicValue(identifier: uuid) {
