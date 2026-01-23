@@ -13,6 +13,7 @@ class FanMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshabl
     weak var bridge: Mac2iOS?
 
     private var activeId: UUID?
+    private var powerStateId: UUID?
     private var rotationSpeedId: UUID?
     private var isActive: Bool = false
     private var speed: Double = 1
@@ -30,9 +31,13 @@ class FanMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshabl
     var characteristicIdentifiers: [UUID] {
         var ids: [UUID] = []
         if let id = activeId { ids.append(id) }
+        if let id = powerStateId { ids.append(id) }
         if let id = rotationSpeedId { ids.append(id) }
         return ids
     }
+
+    private var powerId: UUID? { activeId ?? powerStateId }
+    private var usesActiveCharacteristic: Bool { activeId != nil }
 
     init(serviceData: ServiceData, bridge: Mac2iOS?) {
         self.serviceData = serviceData
@@ -40,6 +45,7 @@ class FanMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshabl
 
         // Extract characteristic UUIDs from ServiceData
         self.activeId = serviceData.activeId.flatMap { UUID(uuidString: $0) }
+        self.powerStateId = serviceData.powerStateId.flatMap { UUID(uuidString: $0) }
         self.rotationSpeedId = serviceData.rotationSpeedId.flatMap { UUID(uuidString: $0) }
 
         self.hasSpeed = rotationSpeedId != nil
@@ -103,10 +109,7 @@ class FanMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshabl
             guard let self else { return }
             self.isActive.toggle()
             self.toggleSwitch.setOn(self.isActive, animated: true)
-            if let id = self.activeId {
-                self.bridge?.writeCharacteristic(identifier: id, value: self.isActive ? 1 : 0)
-                self.notifyLocalChange(characteristicId: id, value: self.isActive ? 1 : 0)
-            }
+            self.writePower()
             self.updateUI()
         }
 
@@ -123,7 +126,7 @@ class FanMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshabl
     }
 
     func updateValue(for characteristicId: UUID, value: Any, isLocalChange: Bool = false) {
-        if characteristicId == activeId {
+        if characteristicId == activeId || characteristicId == powerStateId {
             if let active = ValueConversion.toBool(value) {
                 isActive = active
                 updateUI()
@@ -168,20 +171,23 @@ class FanMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshabl
         }
 
         // Also turn on if setting speed > 0 and fan is off
-        if value > 0 && !isActive, let powerId = activeId {
-            bridge?.writeCharacteristic(identifier: powerId, value: 1)
-            notifyLocalChange(characteristicId: powerId, value: 1)
+        if value > 0 && !isActive {
             isActive = true
+            writePower()
             updateUI()
         }
     }
 
     @objc private func togglePower(_ sender: ToggleSwitch) {
         isActive = sender.isOn
-        if let id = activeId {
-            bridge?.writeCharacteristic(identifier: id, value: isActive ? 1 : 0)
-            notifyLocalChange(characteristicId: id, value: isActive ? 1 : 0)
-        }
+        writePower()
         updateUI()
+    }
+
+    private func writePower() {
+        guard let id = powerId else { return }
+        let value: Any = usesActiveCharacteristic ? (isActive ? 1 : 0) : isActive
+        bridge?.writeCharacteristic(identifier: id, value: value)
+        notifyLocalChange(characteristicId: id, value: value)
     }
 }

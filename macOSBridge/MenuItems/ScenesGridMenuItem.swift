@@ -36,7 +36,7 @@ class ScenesGridMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
         let rows = (scenes.count + buttonsPerRow - 1) / buttonsPerRow
         let totalHeight = CGFloat(rows) * buttonHeight + CGFloat(max(0, rows - 1)) * verticalSpacing + (padding * 2)
 
-        containerView = HighlightingMenuItemView(frame: NSRect(x: 0, y: 0, width: DS.ControlSize.menuItemWidth, height: totalHeight))
+        containerView = NSView(frame: NSRect(x: 0, y: 0, width: DS.ControlSize.menuItemWidth, height: totalHeight))
 
         // Create scene buttons
         for (index, scene) in scenes.enumerated() {
@@ -236,6 +236,7 @@ class SceneButton: NSView {
                     if let doubleValue = ValueConversion.toDouble(oppositeValue) {
                         currentValues[charId] = doubleValue
                     }
+                    notifyLocalChange(characteristicId: charId, value: oppositeValue)
                 }
             }
             isActive = false
@@ -245,6 +246,7 @@ class SceneButton: NSView {
             for action in sceneData.actions {
                 if let charId = UUID(uuidString: action.characteristicId) {
                     currentValues[charId] = action.targetValue
+                    notifyLocalChange(characteristicId: charId, value: action.targetValue)
                 }
             }
             isActive = true
@@ -295,6 +297,14 @@ class SceneButton: NSView {
         default:
             return targetValue > 0.5 ? 0 : 1
         }
+    }
+
+    private func notifyLocalChange(characteristicId: UUID, value: Any) {
+        NotificationCenter.default.post(
+            name: .characteristicDidChangeLocally,
+            object: self,
+            userInfo: ["characteristicId": characteristicId, "value": value]
+        )
     }
 
     private func inferIcon(for scene: SceneData) -> NSImage? {
