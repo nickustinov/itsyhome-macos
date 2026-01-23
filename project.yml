@@ -93,6 +93,7 @@ targets:
         excludes:
           - "MacOSController.swift"
           - "MenuBuilder.swift"
+          - "DebugMockAccessories.swift"
           - "HotkeyManager.swift"
           - "Settings/**"
           - "Controls/ShortcutButton.swift"

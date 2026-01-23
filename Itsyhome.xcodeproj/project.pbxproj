@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -89,6 +89,7 @@
 		985B67023A87C83880C511BE /* CloudSyncManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9EBA01EDDE859ED8AC024C5 /* CloudSyncManagerTests.swift */; };
 		98F783AA77C8DA2CF5D5A923 /* ModernSlider.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA517D9CAF4A470166D8C402 /* ModernSlider.swift */; };
 		9FBEDE4F029FFD689286563C /* SwitchMenuItemTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F34BC0FC06EE9C93C6BC637 /* SwitchMenuItemTests.swift */; };
+		A39C19839A70844424127BF4 /* DebugMockAccessories.swift in Sources */ = {isa = PBXBuildFile; fileRef = FED3835F8603DA9756A2B79B /* DebugMockAccessories.swift */; };
 		A453BEC6F07575A955C9EF4E /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10754E8AB01F87A12A293A7 /* SceneDelegate.swift */; };
 		A59EA0092ED0DD63857F5043 /* ActionEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E53529DEB10403CBB276F9AD /* ActionEngineTests.swift */; };
 		A5BA2A1B45F8FAAEB59ABB6C /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A88562EA2E11D2E4E9370E8 /* AppDelegate.swift */; };
@@ -216,6 +217,7 @@
 		F3AE776817A51695FBA936B1 /* FanMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FanMenuItem.swift; sourceTree = "<group>"; };
 		FBD57CCBF703A5861D8AEFB0 /* SecuritySystemMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecuritySystemMenuItem.swift; sourceTree = "<group>"; };
 		FE6B3519AD69969925F8F105 /* ActionEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionEngine.swift; sourceTree = "<group>"; };
+		FED3835F8603DA9756A2B79B /* DebugMockAccessories.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugMockAccessories.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -262,6 +264,7 @@
 			isa = PBXGroup;
 			children = (
 				A554C4D26C15417928E429D4 /* Assets.xcassets */,
+				FED3835F8603DA9756A2B79B /* DebugMockAccessories.swift */,
 				D8DAE0D0C65A8D06C17611F3 /* HotkeyManager.swift */,
 				874AC367AE516CA50259C5B9 /* Info.plist */,
 				29D500F71D0EA63DEF283D8B /* MacOSController.swift */,
@@ -567,7 +570,7 @@
 			);
 			mainGroup = E4D0AC95AB41872138D6349D;
 			minimizedProjectReferenceProxies = 1;
-			preferredProjectObjectVersion = 77;
+			preferredProjectObjectVersion = 54;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -637,6 +640,7 @@
 				E53F247D68A3464066E31310 /* CloudSyncManager.swift in Sources */,
 				099D30F6620813668F633D46 /* CloudSyncTranslator.swift in Sources */,
 				CE60FBDD7DA3242E781072D4 /* ColorConversion.swift in Sources */,
+				A39C19839A70844424127BF4 /* DebugMockAccessories.swift in Sources */,
 				F019042FCFF1C339C065CD64 /* DeeplinksSection.swift in Sources */,
 				DB962F06C77A87E8D2AAA55E /* DesignSystem.swift in Sources */,
 				F6E1CB4E74F98A6A40307F4F /* DeviceGroup.swift in Sources */,
