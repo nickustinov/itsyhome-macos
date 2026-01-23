@@ -23,6 +23,9 @@ class MenuBuilder {
         sceneMenuItems = []
         currentMenuData = data
 
+        // Debug mock accessories (toggle DebugShowMockAccessories to enable)
+        DebugMockups.addMockItems(to: menu, builder: self)
+
         // Favourites section
         let hasFavourites = addFavouritesSection(to: menu, from: data)
         if hasFavourites {
