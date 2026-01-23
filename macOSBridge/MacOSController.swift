@@ -269,6 +269,8 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate {
         mainMenu.removeAllItems()
 
         PreferencesManager.shared.currentHomeId = data.selectedHomeId
+        PreferencesManager.shared.currentHomeName = data.homes.first(where: { $0.uniqueIdentifier == data.selectedHomeId })?.name
+        CloudSyncManager.shared.syncNow()
         HotkeyManager.shared.registerShortcuts()
 
         menuBuilder.bridge = iOSBridge

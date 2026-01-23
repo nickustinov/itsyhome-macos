@@ -18,6 +18,7 @@ final class PreferencesManager {
 
     // Current home context - must be set before accessing per-home preferences
     var currentHomeId: String?
+    var currentHomeName: String?
 
     private enum Keys {
         // Global settings

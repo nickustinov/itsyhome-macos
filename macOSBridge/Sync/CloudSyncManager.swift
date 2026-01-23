@@ -207,31 +207,33 @@ final class CloudSyncManager {
     // MARK: - Pull
 
     private func pullFromCloudStore() {
-        guard let homeId = PreferencesManager.shared.currentHomeId else {
-            print("[CloudSync] pullFromCloudStore — no currentHomeId, aborting")
+        guard let homeId = PreferencesManager.shared.currentHomeId,
+              let homeName = PreferencesManager.shared.currentHomeName else {
+            print("[CloudSync] pullFromCloudStore — no currentHomeId/homeName, aborting")
             return
         }
 
-        print("[CloudSync] pullFromCloudStore — homeId: \(homeId)")
+        print("[CloudSync] pullFromCloudStore — homeName: \(homeName)")
         isApplyingCloudChanges = true
         defer { isApplyingCloudChanges = false }
 
         var appliedCount = 0
         for prefix in syncableKeyPrefixes {
-            let key = "\(prefix)_\(homeId)"
-            if let cloudValue = cloudStore.object(forKey: key) {
-                let localValue = defaults.object(forKey: key)
+            let cloudKey = "\(prefix)_\(homeName)"
+            let localKey = "\(prefix)_\(homeId)"
+            if let cloudValue = cloudStore.object(forKey: cloudKey) {
+                let localValue = defaults.object(forKey: localKey)
                 let cloudDesc = "\(cloudValue)"
                 let localDesc = localValue.map { "\($0)" } ?? ""
                 if cloudDesc != localDesc {
-                    defaults.set(cloudValue, forKey: key)
-                    print("[CloudSync]   pulled \(key) = \(cloudValue)")
+                    defaults.set(cloudValue, forKey: localKey)
+                    print("[CloudSync]   pulled \(cloudKey) → \(localKey) = \(cloudValue)")
                     appliedCount += 1
                 } else {
-                    print("[CloudSync]   unchanged \(key)")
+                    print("[CloudSync]   unchanged \(cloudKey)")
                 }
             } else {
-                print("[CloudSync]   no cloud data for \(key)")
+                print("[CloudSync]   no cloud data for \(cloudKey)")
             }
         }
 
@@ -250,20 +252,22 @@ final class CloudSyncManager {
     // MARK: - Upload
 
     private func uploadAllSyncableKeys() {
-        guard let homeId = PreferencesManager.shared.currentHomeId else {
-            print("[CloudSync] uploadAllSyncableKeys — no currentHomeId, aborting")
+        guard let homeId = PreferencesManager.shared.currentHomeId,
+              let homeName = PreferencesManager.shared.currentHomeName else {
+            print("[CloudSync] uploadAllSyncableKeys — no currentHomeId/homeName, aborting")
             return
         }
 
-        print("[CloudSync] uploadAllSyncableKeys — homeId: \(homeId)")
+        print("[CloudSync] uploadAllSyncableKeys — homeName: \(homeName)")
         for prefix in syncableKeyPrefixes {
-            let key = "\(prefix)_\(homeId)"
-            let value = defaults.object(forKey: key)
+            let localKey = "\(prefix)_\(homeId)"
+            let cloudKey = "\(prefix)_\(homeName)"
+            let value = defaults.object(forKey: localKey)
             if let value = value {
-                cloudStore.set(value, forKey: key)
-                print("[CloudSync]   upload \(key) = \(value)")
+                cloudStore.set(value, forKey: cloudKey)
+                print("[CloudSync]   upload \(localKey) → \(cloudKey) = \(value)")
             } else {
-                print("[CloudSync]   skip \(key) (nil in UserDefaults)")
+                print("[CloudSync]   skip \(localKey) (nil in UserDefaults)")
             }
         }
 
@@ -275,25 +279,39 @@ final class CloudSyncManager {
     // MARK: - Download
 
     private func applyCloudChanges(for changedKeys: [String]) {
+        guard let homeId = PreferencesManager.shared.currentHomeId,
+              let homeName = PreferencesManager.shared.currentHomeName else {
+            print("[CloudSync] applyCloudChanges — no currentHomeId/homeName, aborting")
+            return
+        }
+
         print("[CloudSync] applyCloudChanges — keys: \(changedKeys)")
         isApplyingCloudChanges = true
         defer { isApplyingCloudChanges = false }
 
         var appliedCount = 0
-        for key in changedKeys {
-            // Only sync keys that match our syncable prefixes
-            guard syncableKeyPrefixes.contains(where: { key.hasPrefix($0) }) else {
-                print("[CloudSync]   skip \(key) (not syncable)")
+        for cloudKey in changedKeys {
+            // Only sync keys that match our syncable prefixes and current home
+            guard let prefix = syncableKeyPrefixes.first(where: { cloudKey.hasPrefix($0) }) else {
+                print("[CloudSync]   skip \(cloudKey) (not syncable)")
                 continue
             }
 
-            if let value = cloudStore.object(forKey: key) {
-                defaults.set(value, forKey: key)
-                print("[CloudSync]   applied \(key) = \(value)")
+            // Verify the key is for our home
+            let expectedCloudKey = "\(prefix)_\(homeName)"
+            guard cloudKey == expectedCloudKey else {
+                print("[CloudSync]   skip \(cloudKey) (not current home)")
+                continue
+            }
+
+            let localKey = "\(prefix)_\(homeId)"
+            if let value = cloudStore.object(forKey: cloudKey) {
+                defaults.set(value, forKey: localKey)
+                print("[CloudSync]   applied \(cloudKey) → \(localKey) = \(value)")
                 appliedCount += 1
             } else {
-                defaults.removeObject(forKey: key)
-                print("[CloudSync]   removed \(key)")
+                defaults.removeObject(forKey: localKey)
+                print("[CloudSync]   removed \(localKey)")
                 appliedCount += 1
             }
         }
