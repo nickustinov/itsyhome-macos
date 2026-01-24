@@ -424,4 +424,6 @@ private class MockWebhookBridge: NSObject, Mac2iOS {
     func getCharacteristicValue(identifier: UUID) -> Any? {
         return characteristicValues[identifier]
     }
+
+    func openCameraWindow() {}
 }

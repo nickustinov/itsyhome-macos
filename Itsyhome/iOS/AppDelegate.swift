@@ -77,6 +77,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     // MARK: - UISceneSession Lifecycle
     
     func application(_ application: UIApplication, configurationForConnecting connectingSceneSession: UISceneSession, options: UIScene.ConnectionOptions) -> UISceneConfiguration {
+        let cameraActivityType = "com.nickustinov.itsyhome.camera"
+        let isCamera = options.userActivities.contains { $0.activityType == cameraActivityType }
+
+        if isCamera {
+            return UISceneConfiguration(name: "Camera Configuration", sessionRole: connectingSceneSession.role)
+        }
         return UISceneConfiguration(name: "Default Configuration", sessionRole: connectingSceneSession.role)
     }
 }

@@ -266,4 +266,6 @@ private class MockMac2iOS: NSObject, Mac2iOS {
     func getCharacteristicValue(identifier: UUID) -> Any? {
         return characteristicValues[identifier]
     }
+
+    func openCameraWindow() {}
 }

@@ -305,6 +305,14 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate {
             addHomeSelector(homes: data.homes, selectedId: data.selectedHomeId)
         }
 
+        if currentMenuData?.hasCameras == true {
+            let cameraIcon = NSImage(systemSymbolName: "video.fill", accessibilityDescription: nil)
+            let cameraItem = menuBuilder.createActionItem(title: "Cameras", icon: cameraIcon) { [weak self] in
+                self?.iOSBridge?.openCameraWindow()
+            }
+            mainMenu.addItem(cameraItem)
+        }
+
         let settingsIcon = NSImage(systemSymbolName: "gear", accessibilityDescription: nil)
         let settingsItem = menuBuilder.createActionItem(title: "Settings...", icon: settingsIcon) { [weak self] in
             self?.openSettings(nil)

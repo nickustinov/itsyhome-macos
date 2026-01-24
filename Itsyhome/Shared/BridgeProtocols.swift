@@ -243,13 +243,15 @@ public struct MenuData: Codable {
     public let accessories: [AccessoryData]
     public let scenes: [SceneData]
     public let selectedHomeId: String?
+    public let hasCameras: Bool
 
-    public init(homes: [HomeData], rooms: [RoomData], accessories: [AccessoryData], scenes: [SceneData], selectedHomeId: UUID?) {
+    public init(homes: [HomeData], rooms: [RoomData], accessories: [AccessoryData], scenes: [SceneData], selectedHomeId: UUID?, hasCameras: Bool = false) {
         self.homes = homes
         self.rooms = rooms
         self.accessories = accessories
         self.scenes = scenes
         self.selectedHomeId = selectedHomeId?.uuidString
+        self.hasCameras = hasCameras
     }
 }
 
@@ -335,6 +337,7 @@ public protocol Mac2iOS: NSObjectProtocol {
     func readCharacteristic(identifier: UUID)
     func writeCharacteristic(identifier: UUID, value: Any)
     func getCharacteristicValue(identifier: UUID) -> Any?
+    func openCameraWindow()
 }
 
 /// Protocol for iOS code to call macOS plugin

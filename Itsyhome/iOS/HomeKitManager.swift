@@ -26,6 +26,11 @@ class HomeKitManager: NSObject, Mac2iOS, HMHomeManagerDelegate {
     private(set) var accessories: [AccessoryInfo] = []
     private(set) var scenes: [SceneInfo] = []
 
+    var cameraAccessories: [HMAccessory] {
+        guard let home = currentHome else { return [] }
+        return home.accessories.filter { !($0.cameraProfiles ?? []).isEmpty }
+    }
+
     var selectedHomeIdentifier: UUID? {
         get { currentHome?.uniqueIdentifier }
         set {
@@ -271,8 +276,31 @@ class HomeKitManager: NSObject, Mac2iOS, HMHomeManagerDelegate {
         return findCharacteristic(identifier: identifier)?.value
     }
 
+    func openCameraWindow() {
+        #if targetEnvironment(macCatalyst)
+        let activityType = "com.nickustinov.itsyhome.camera"
+
+        // Reuse existing camera session if available
+        let existingSession = UIApplication.shared.openSessions.first { session in
+            session.configuration.name == "Camera Configuration"
+        }
+
+        let activity = NSUserActivity(activityType: activityType)
+        activity.title = "Cameras"
+
+        UIApplication.shared.requestSceneSessionActivation(
+            existingSession,
+            userActivity: activity,
+            options: nil,
+            errorHandler: { error in
+                logger.error("Failed to open camera window: \(error.localizedDescription)")
+            }
+        )
+        #endif
+    }
+
     // MARK: - Helper Methods
-    
+
     private func sendMenuDataAsJSON() {
         // Convert to Codable structs
         let homeData = homes.map { HomeData(uniqueIdentifier: $0.uniqueIdentifier, name: $0.name, isPrimary: $0.isPrimary) }
@@ -292,7 +320,7 @@ class HomeKitManager: NSObject, Mac2iOS, HMHomeManagerDelegate {
             buildSceneData(from: scene)
         }
 
-        let menuData = MenuData(homes: homeData, rooms: roomData, accessories: accessoryData, scenes: sceneData, selectedHomeId: selectedHomeIdentifier)
+        let menuData = MenuData(homes: homeData, rooms: roomData, accessories: accessoryData, scenes: sceneData, selectedHomeId: selectedHomeIdentifier, hasCameras: !cameraAccessories.isEmpty)
 
         do {
             let jsonData = try JSONEncoder().encode(menuData)
