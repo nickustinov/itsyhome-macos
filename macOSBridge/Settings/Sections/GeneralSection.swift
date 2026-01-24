@@ -22,8 +22,9 @@ class GeneralSection: SettingsCard {
     private var proBox: NSView!
     private let proBadge = NSView()
     private let thankYouLabel = NSTextField()
-    private var proTitleLabel: NSTextField!
     private var proSubtitleLabel: NSTextField!
+    private var noSubscriptionsLabel: NSTextField!
+    private var featuresGrid: NSView!
     private var buttonStack: NSStackView!
     private let buyButton = NSButton()
     private let restoreButton = NSButton()
@@ -154,38 +155,42 @@ class GeneralSection: SettingsCard {
     }
 
     private func setupProSection() {
-        // Pro subscription box with gradient-like appearance
         proBox = ProTintBoxView()
         proBox.translatesAutoresizingMaskIntoConstraints = false
 
-        let content = NSStackView()
-        content.orientation = .vertical
-        content.spacing = 12
-        content.alignment = .leading
-        content.translatesAutoresizingMaskIntoConstraints = false
-        proBox.addSubview(content)
+        // Main horizontal layout: icon | text content | buttons
+        let mainRow = NSStackView()
+        mainRow.orientation = .horizontal
+        mainRow.spacing = 14
+        mainRow.alignment = .top
+        mainRow.translatesAutoresizingMaskIntoConstraints = false
+        proBox.addSubview(mainRow)
 
-        // Header row with icon and title
-        let headerRow = NSStackView()
-        headerRow.orientation = .horizontal
-        headerRow.spacing = 10
-        headerRow.alignment = .centerY
-
-        // Star icon
+        // App icon (top-aligned)
         let iconView = NSImageView()
-        iconView.image = NSImage(systemSymbolName: "star.fill", accessibilityDescription: "Pro")
-        iconView.contentTintColor = NSColor.systemBlue
-        iconView.symbolConfiguration = NSImage.SymbolConfiguration(pointSize: 20, weight: .medium)
+        iconView.image = NSApp.applicationIconImage
         iconView.translatesAutoresizingMaskIntoConstraints = false
-        iconView.widthAnchor.constraint(equalToConstant: 24).isActive = true
-        iconView.heightAnchor.constraint(equalToConstant: 24).isActive = true
-        headerRow.addArrangedSubview(iconView)
+        iconView.widthAnchor.constraint(equalToConstant: 48).isActive = true
+        iconView.heightAnchor.constraint(equalToConstant: 48).isActive = true
+        mainRow.addArrangedSubview(iconView)
 
-        proTitleLabel = createLabel("Itsyhome Pro", style: .body)
-        proTitleLabel.font = .systemFont(ofSize: 15, weight: .semibold)
-        headerRow.addArrangedSubview(proTitleLabel)
+        // Center text content
+        let textContent = NSStackView()
+        textContent.orientation = .vertical
+        textContent.spacing = 4
+        textContent.alignment = .leading
 
-        // Pro badge (shown when subscribed)
+        // Title row with badge
+        let titleRow = NSStackView()
+        titleRow.orientation = .horizontal
+        titleRow.spacing = 8
+        titleRow.alignment = .centerY
+
+        let titleLabel = NSTextField(labelWithString: "Itsyhome Pro")
+        titleLabel.font = .systemFont(ofSize: 15, weight: .semibold)
+        titleRow.addArrangedSubview(titleLabel)
+
+        // Pro badge (shown when active)
         proBadge.wantsLayer = true
         proBadge.layer?.backgroundColor = NSColor.systemGreen.cgColor
         proBadge.layer?.cornerRadius = 3
@@ -202,48 +207,52 @@ class GeneralSection: SettingsCard {
             proBadgeLabel.centerXAnchor.constraint(equalTo: proBadge.centerXAnchor),
             proBadgeLabel.centerYAnchor.constraint(equalTo: proBadge.centerYAnchor)
         ])
+        titleRow.addArrangedSubview(proBadge)
 
-        headerRow.addArrangedSubview(proBadge)
-
-        content.addArrangedSubview(headerRow)
+        textContent.addArrangedSubview(titleRow)
 
         // Thank you label (shown when subscribed)
         thankYouLabel.stringValue = "Thank you for your support!"
-        thankYouLabel.font = .systemFont(ofSize: 11)
+        thankYouLabel.font = .systemFont(ofSize: 12)
         thankYouLabel.textColor = .secondaryLabelColor
         thankYouLabel.isBezeled = false
         thankYouLabel.isEditable = false
         thankYouLabel.drawsBackground = false
-        content.addArrangedSubview(thankYouLabel)
+        textContent.addArrangedSubview(thankYouLabel)
 
         // Subtitle (shown when not subscribed)
-        proSubtitleLabel = createLabel("Unlock iCloud sync, device groups, deeplinks, webhooks/CLI, and more.", style: .caption)
-        content.addArrangedSubview(proSubtitleLabel)
+        proSubtitleLabel = NSTextField(labelWithString: "Unlock the full power of your smart home.")
+        proSubtitleLabel.font = .systemFont(ofSize: 12)
+        proSubtitleLabel.textColor = .secondaryLabelColor
+        textContent.addArrangedSubview(proSubtitleLabel)
 
-        // Buttons stack
+        // No subscriptions label
+        noSubscriptionsLabel = NSTextField(labelWithString: "No subscriptions \u{00B7} Purchase once, keep forever")
+        noSubscriptionsLabel.font = .boldSystemFont(ofSize: 12)
+        noSubscriptionsLabel.textColor = .labelColor
+        textContent.addArrangedSubview(noSubscriptionsLabel)
+
+        // Features grid (3x2)
+        textContent.setCustomSpacing(10, after: noSubscriptionsLabel)
+        featuresGrid = createFeaturesGrid()
+        textContent.addArrangedSubview(featuresGrid)
+
+        textContent.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        mainRow.addArrangedSubview(textContent)
+
+        // Right side: button + restore
         buttonStack = NSStackView()
         buttonStack.orientation = .vertical
-        buttonStack.spacing = 8
-        buttonStack.alignment = .leading
+        buttonStack.spacing = 6
+        buttonStack.alignment = .centerX
 
-        buyButton.title = "Unlock"
         buyButton.bezelStyle = .rounded
         buyButton.controlSize = .large
         buyButton.bezelColor = .systemBlue
         buyButton.isEnabled = false
         buyButton.target = self
         buyButton.action = #selector(buyTapped)
-
-        let noRecurringLabel = NSTextField(labelWithString: "No recurring charges.")
-        noRecurringLabel.font = .boldSystemFont(ofSize: 11)
-        noRecurringLabel.textColor = .secondaryLabelColor
-
-        let purchaseRow = NSStackView()
-        purchaseRow.orientation = .horizontal
-        purchaseRow.spacing = 10
-        purchaseRow.alignment = .centerY
-        purchaseRow.addArrangedSubview(buyButton)
-        purchaseRow.addArrangedSubview(noRecurringLabel)
+        buttonStack.addArrangedSubview(buyButton)
 
         restoreButton.title = "Restore purchases"
         restoreButton.bezelStyle = .inline
@@ -252,20 +261,59 @@ class GeneralSection: SettingsCard {
         restoreButton.contentTintColor = .secondaryLabelColor
         restoreButton.target = self
         restoreButton.action = #selector(restoreTapped)
-
-        buttonStack.addArrangedSubview(purchaseRow)
         buttonStack.addArrangedSubview(restoreButton)
-        content.addArrangedSubview(buttonStack)
+
+        mainRow.addArrangedSubview(buttonStack)
 
         NSLayoutConstraint.activate([
-            content.topAnchor.constraint(equalTo: proBox.topAnchor, constant: 12),
-            content.leadingAnchor.constraint(equalTo: proBox.leadingAnchor, constant: 12),
-            content.trailingAnchor.constraint(equalTo: proBox.trailingAnchor, constant: -12),
-            content.bottomAnchor.constraint(equalTo: proBox.bottomAnchor, constant: -12)
+            mainRow.topAnchor.constraint(equalTo: proBox.topAnchor, constant: 14),
+            mainRow.leadingAnchor.constraint(equalTo: proBox.leadingAnchor, constant: 14),
+            mainRow.trailingAnchor.constraint(equalTo: proBox.trailingAnchor, constant: -14),
+            mainRow.bottomAnchor.constraint(equalTo: proBox.bottomAnchor, constant: -14)
         ])
 
         stackView.addArrangedSubview(proBox)
         proBox.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
+    }
+
+    private func createFeaturesGrid() -> NSView {
+        let features = [
+            "Cameras", "Device groups", "Deeplinks",
+            "iCloud sync", "Stream Deck", "Webhooks/CLI"
+        ]
+
+        let grid = NSGridView(numberOfColumns: 3, rows: 0)
+        grid.rowSpacing = 4
+        grid.columnSpacing = 16
+
+        for row in stride(from: 0, to: features.count, by: 3) {
+            let cells: [NSView] = (0..<3).map { col in
+                let feature = features[row + col]
+                let cell = NSStackView()
+                cell.orientation = .horizontal
+                cell.spacing = 4
+                cell.alignment = .centerY
+
+                let check = NSImageView()
+                check.image = NSImage(systemSymbolName: "checkmark.circle.fill", accessibilityDescription: nil)
+                check.contentTintColor = .systemGreen
+                check.symbolConfiguration = NSImage.SymbolConfiguration(pointSize: 12, weight: .medium)
+                check.translatesAutoresizingMaskIntoConstraints = false
+                check.widthAnchor.constraint(equalToConstant: 14).isActive = true
+                check.heightAnchor.constraint(equalToConstant: 14).isActive = true
+                cell.addArrangedSubview(check)
+
+                let label = NSTextField(labelWithString: feature)
+                label.font = .systemFont(ofSize: 11)
+                label.textColor = .secondaryLabelColor
+                cell.addArrangedSubview(label)
+
+                return cell
+            }
+            grid.addRow(with: cells)
+        }
+
+        return grid
     }
 
     private func createCardBox() -> NSView {
@@ -361,6 +409,8 @@ class GeneralSection: SettingsCard {
         thankYouLabel.isHidden = !isPro
 
         proSubtitleLabel.isHidden = isPro
+        noSubscriptionsLabel.isHidden = isPro
+        featuresGrid.isHidden = isPro
         buttonStack.isHidden = isPro
     }
 
@@ -370,7 +420,7 @@ class GeneralSection: SettingsCard {
             .font: NSFont.systemFont(ofSize: 14, weight: .medium)
         ]
         if let product = ProManager.shared.lifetimeProduct {
-            buyButton.attributedTitle = NSAttributedString(string: "Unlock for \(product.displayPrice)", attributes: attrs)
+            buyButton.attributedTitle = NSAttributedString(string: "Get Pro \u{2013} \(product.displayPrice)", attributes: attrs)
             buyButton.isEnabled = true
         }
     }
