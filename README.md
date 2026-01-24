@@ -2,7 +2,7 @@
 
 [![Tests](https://github.com/nickustinov/itsyhome-macos/actions/workflows/test.yml/badge.svg)](https://github.com/nickustinov/itsyhome-macos/actions/workflows/test.yml)
 
-![Itsyhome app screenshot](https://itsyhome.app/itsyhome-app-screenshot.png)
+![Itsyhome app demo](https://itsyhome.app/itsyhome-demo.gif)
 
 A native macOS menu bar app for controlling your HomeKit smart home devices.
 
