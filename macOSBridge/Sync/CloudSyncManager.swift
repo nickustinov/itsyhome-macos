@@ -30,6 +30,7 @@ final class CloudSyncManager {
     private let serviceIdKeys = ["orderedFavouriteIds", "favouriteServiceIds", "hiddenServiceIds"]
     private let sceneIdKeys = ["favouriteSceneIds", "hiddenSceneIds"]
     private let roomIdKeys = ["hiddenRoomIds"]
+    private let cameraIdKeys = ["hiddenCameraIds", "cameraOrder"]
 
     private init() {}
 
@@ -170,7 +171,15 @@ final class CloudSyncManager {
                 appliedCount += 1
             }
         }
+        for prefix in cameraIdKeys {
+            if pullIdKey(prefix: prefix, type: .camera, homeName: homeName, homeId: homeId) {
+                appliedCount += 1
+            }
+        }
 
+        if pullEncodedKey(prefix: "cameraOverlayAccessories", homeName: homeName, homeId: homeId) {
+            appliedCount += 1
+        }
         if pullEncodedKey(prefix: "deviceGroups", homeName: homeName, homeId: homeId) {
             appliedCount += 1
         }
@@ -216,6 +225,8 @@ final class CloudSyncManager {
         let translatedData: Data?
         if prefix == "deviceGroups" {
             translatedData = translator.translateDeviceGroupsFromCloud(cloudData)
+        } else if prefix == "cameraOverlayAccessories" {
+            translatedData = translator.translateCameraOverlaysFromCloud(cloudData)
         } else {
             translatedData = translator.translateShortcutsFromCloud(cloudData)
         }
@@ -248,7 +259,11 @@ final class CloudSyncManager {
         for prefix in roomIdKeys {
             uploadIdKey(prefix: prefix, type: .room, homeName: homeName, homeId: homeId)
         }
+        for prefix in cameraIdKeys {
+            uploadIdKey(prefix: prefix, type: .camera, homeName: homeName, homeId: homeId)
+        }
 
+        uploadEncodedKey(prefix: "cameraOverlayAccessories", homeName: homeName, homeId: homeId)
         uploadEncodedKey(prefix: "deviceGroups", homeName: homeName, homeId: homeId)
         uploadEncodedKey(prefix: "shortcuts", homeName: homeName, homeId: homeId)
 
@@ -278,6 +293,8 @@ final class CloudSyncManager {
         let translatedData: Data?
         if prefix == "deviceGroups" {
             translatedData = translator.translateDeviceGroupsToCloud(data)
+        } else if prefix == "cameraOverlayAccessories" {
+            translatedData = translator.translateCameraOverlaysToCloud(data)
         } else {
             translatedData = translator.translateShortcutsToCloud(data)
         }

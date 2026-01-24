@@ -13,6 +13,7 @@ struct CloudSyncTranslator {
         case service  // orderedFavouriteIds can contain both service and scene IDs
         case scene
         case room
+        case camera
     }
 
     // Bidirectional lookups built from MenuData
@@ -22,6 +23,8 @@ struct CloudSyncTranslator {
     private(set) var sceneNameToId: [String: String] = [:]
     private(set) var roomIdToName: [String: String] = [:]
     private(set) var roomNameToId: [String: String] = [:]
+    private(set) var cameraIdToName: [String: String] = [:]
+    private(set) var cameraNameToId: [String: String] = [:]
     private(set) var groupIds: Set<String> = []
 
     private static let groupPrefix = "group::"
@@ -57,6 +60,13 @@ struct CloudSyncTranslator {
             sceneIdToName[scene.uniqueIdentifier] = scene.name
             sceneNameToId[scene.name] = scene.uniqueIdentifier
         }
+
+        cameraIdToName.removeAll()
+        cameraNameToId.removeAll()
+        for camera in data.cameras {
+            cameraIdToName[camera.uniqueIdentifier] = camera.name
+            cameraNameToId[camera.name] = camera.uniqueIdentifier
+        }
     }
 
     // MARK: - ID translation
@@ -70,6 +80,8 @@ struct CloudSyncTranslator {
                 return sceneIdToName[id]
             case .room:
                 return roomIdToName[id]
+            case .camera:
+                return cameraIdToName[id]
             }
         }
     }
@@ -83,6 +95,8 @@ struct CloudSyncTranslator {
                 return sceneNameToId[name]
             case .room:
                 return roomNameToId[name]
+            case .camera:
+                return cameraNameToId[name]
             }
         }
     }
@@ -135,6 +149,34 @@ struct CloudSyncTranslator {
                 translated[groupId] = shortcut
             } else if let id = stableToServiceId[stable] ?? sceneNameToId[stable] {
                 translated[id] = shortcut
+            }
+        }
+        return try? JSONEncoder().encode(translated)
+    }
+
+    // MARK: - Camera overlay accessories
+
+    func translateCameraOverlaysToCloud(_ data: Data) -> Data? {
+        guard let dict = try? JSONDecoder().decode([String: [String]].self, from: data) else { return nil }
+        var translated: [String: [String]] = [:]
+        for (cameraId, serviceIds) in dict {
+            guard let cameraName = cameraIdToName[cameraId] else { continue }
+            let stableServiceIds = serviceIds.compactMap { serviceIdToStable[$0] }
+            if !stableServiceIds.isEmpty {
+                translated[cameraName] = stableServiceIds
+            }
+        }
+        return try? JSONEncoder().encode(translated)
+    }
+
+    func translateCameraOverlaysFromCloud(_ data: Data) -> Data? {
+        guard let dict = try? JSONDecoder().decode([String: [String]].self, from: data) else { return nil }
+        var translated: [String: [String]] = [:]
+        for (cameraName, stableServiceIds) in dict {
+            guard let cameraId = cameraNameToId[cameraName] else { continue }
+            let localIds = stableServiceIds.compactMap { stableToServiceId[$0] }
+            if !localIds.isEmpty {
+                translated[cameraId] = localIds
             }
         }
         return try? JSONEncoder().encode(translated)
