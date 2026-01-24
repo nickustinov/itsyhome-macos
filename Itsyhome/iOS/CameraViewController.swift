@@ -8,6 +8,10 @@
 import UIKit
 import HomeKit
 
+extension Notification.Name {
+    static let cameraPanelDidShow = Notification.Name("cameraPanelDidShow")
+}
+
 class CameraViewController: UIViewController {
 
     private var collectionView: UICollectionView!
@@ -26,13 +30,15 @@ class CameraViewController: UIViewController {
     private static let sectionBottom: CGFloat = 15
     private static let sectionSide: CGFloat = 12
     private static let lineSpacing: CGFloat = 8
-    private static let labelHeight: CGFloat = 28 // 2pt gap + 16pt label + 6pt bottom + 4pt
+    private static let labelHeight: CGFloat = 0
 
     private var cameraAccessories: [HMAccessory] = []
     private var snapshotControls: [UUID: HMCameraSnapshotControl] = [:]
     private var activeStreamControl: HMCameraStreamControl?
     private var activeStreamAccessory: HMAccessory?
     private var snapshotTimer: Timer?
+    private var timestampTimer: Timer?
+    private var snapshotTimestamps: [UUID: Date] = [:]
     private var hasLoadedInitialData = false
 
     /// Resolved overlay data per camera: [cameraUUID: [(characteristic, service name, service type)]]
@@ -62,6 +68,12 @@ class CameraViewController: UIViewController {
             name: Notification.Name("PreferencesManagerDidChange"),
             object: nil
         )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(panelDidShow),
+            name: .cameraPanelDidShow,
+            object: nil
+        )
     }
 
     @objc private func preferencesDidChange() {
@@ -72,6 +84,13 @@ class CameraViewController: UIViewController {
         collectionView.isHidden = cameraAccessories.isEmpty
         collectionView.reloadData()
 
+        let height = computeGridHeight()
+        updatePanelSize(width: Self.gridWidth, height: height, animated: false)
+    }
+
+    @objc private func panelDidShow() {
+        takeAllSnapshots()
+        // Ensure correct size when panel re-appears
         let height = computeGridHeight()
         updatePanelSize(width: Self.gridWidth, height: height, animated: false)
     }
@@ -87,13 +106,19 @@ class CameraViewController: UIViewController {
             takeAllSnapshots()
         }
 
+        // Ensure correct window size now that view.window exists
+        let height = computeGridHeight()
+        updatePanelSize(width: Self.gridWidth, height: height, animated: false)
+
         collectionView.setContentOffset(.zero, animated: false)
         startSnapshotTimer()
+        startTimestampTimer()
     }
 
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
         stopSnapshotTimer()
+        stopTimestampTimer()
     }
 
     // MARK: - Setup
@@ -350,6 +375,27 @@ class CameraViewController: UIViewController {
         snapshotTimer = nil
     }
 
+    private func startTimestampTimer() {
+        timestampTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+            self?.updateTimestampLabels()
+        }
+    }
+
+    private func stopTimestampTimer() {
+        timestampTimer?.invalidate()
+        timestampTimer = nil
+    }
+
+    private func updateTimestampLabels() {
+        for cell in collectionView.visibleCells {
+            guard let snapshotCell = cell as? CameraSnapshotCell,
+                  let indexPath = collectionView.indexPath(for: cell),
+                  indexPath.item < cameraAccessories.count else { continue }
+            let uuid = cameraAccessories[indexPath.item].uniqueIdentifier
+            snapshotCell.updateTimestamp(since: snapshotTimestamps[uuid])
+        }
+    }
+
     // MARK: - Streaming
 
     private func startStream(for accessory: HMAccessory) {
@@ -542,9 +588,9 @@ class CameraViewController: UIViewController {
         let name: String
         switch type {
         case HMServiceTypeLightbulb: name = "lightbulb.fill"
-        case HMServiceTypeSwitch: name = "switch.2"
+        case HMServiceTypeSwitch: name = "power"
         case HMServiceTypeOutlet: name = "poweroutlet.type.b.fill"
-        case HMServiceTypeGarageDoorOpener: name = "door.garage.open"
+        case HMServiceTypeGarageDoorOpener: name = "door.garage.closed"
         default: name = "bolt.fill"
         }
         return UIImage(systemName: name)?.withRenderingMode(.alwaysTemplate)
@@ -577,13 +623,13 @@ extension CameraViewController: UICollectionViewDataSource {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: CameraSnapshotCell.reuseId, for: indexPath) as! CameraSnapshotCell
         let accessory = cameraAccessories[indexPath.item]
         cell.configure(name: accessory.name)
+        cell.updateTimestamp(since: snapshotTimestamps[accessory.uniqueIdentifier])
 
         if let snapshotControl = snapshotControls[accessory.uniqueIdentifier],
            let snapshot = snapshotControl.mostRecentSnapshot {
             cell.cameraView.cameraSource = snapshot
         }
 
-        // Configure overlay buttons (icon-only in grid)
         let items = overlayData[accessory.uniqueIdentifier] ?? []
         cell.configureOverlays(items: items, target: self, action: #selector(overlayPillTapped(_:)))
 
@@ -617,8 +663,9 @@ extension CameraViewController: HMCameraSnapshotControlDelegate {
         guard error == nil else { return }
         for (index, accessory) in cameraAccessories.enumerated() {
             if snapshotControls[accessory.uniqueIdentifier] === cameraSnapshotControl {
-                let indexPath = IndexPath(item: index, section: 0)
                 DispatchQueue.main.async {
+                    self.snapshotTimestamps[accessory.uniqueIdentifier] = Date()
+                    let indexPath = IndexPath(item: index, section: 0)
                     self.collectionView.reloadItems(at: [indexPath])
                 }
                 break
@@ -654,6 +701,7 @@ private class CameraSnapshotCell: UICollectionViewCell {
 
     let cameraView = HMCameraView()
     private let nameLabel = UILabel()
+    private let timestampLabel = UILabel()
     private var overlayStack: UIStackView!
 
     override init(frame: CGRect) {
@@ -675,10 +723,23 @@ private class CameraSnapshotCell: UICollectionViewCell {
         contentView.addSubview(cameraView)
 
         nameLabel.translatesAutoresizingMaskIntoConstraints = false
-        nameLabel.font = .systemFont(ofSize: 11, weight: .medium)
+        nameLabel.font = .systemFont(ofSize: 10, weight: .medium)
         nameLabel.textColor = .white
-        nameLabel.textAlignment = .center
+        nameLabel.layer.shadowColor = UIColor.black.cgColor
+        nameLabel.layer.shadowOffset = CGSize(width: 0, height: 1)
+        nameLabel.layer.shadowOpacity = 0.8
+        nameLabel.layer.shadowRadius = 2
         contentView.addSubview(nameLabel)
+
+        timestampLabel.translatesAutoresizingMaskIntoConstraints = false
+        timestampLabel.font = .monospacedDigitSystemFont(ofSize: 10, weight: .medium)
+        timestampLabel.textColor = .white
+        timestampLabel.layer.shadowColor = UIColor.black.cgColor
+        timestampLabel.layer.shadowOffset = CGSize(width: 0, height: 1)
+        timestampLabel.layer.shadowOpacity = 0.8
+        timestampLabel.layer.shadowRadius = 2
+        timestampLabel.textAlignment = .right
+        contentView.addSubview(timestampLabel)
 
         overlayStack = UIStackView()
         overlayStack.axis = .horizontal
@@ -691,12 +752,13 @@ private class CameraSnapshotCell: UICollectionViewCell {
             cameraView.topAnchor.constraint(equalTo: contentView.topAnchor),
             cameraView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
             cameraView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
-            cameraView.bottomAnchor.constraint(equalTo: nameLabel.topAnchor, constant: -2),
+            cameraView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
 
-            nameLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 6),
-            nameLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -6),
-            nameLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -6),
-            nameLabel.heightAnchor.constraint(equalToConstant: 16),
+            nameLabel.topAnchor.constraint(equalTo: cameraView.topAnchor, constant: 4),
+            nameLabel.leadingAnchor.constraint(equalTo: cameraView.leadingAnchor, constant: 6),
+
+            timestampLabel.topAnchor.constraint(equalTo: cameraView.topAnchor, constant: 4),
+            timestampLabel.trailingAnchor.constraint(equalTo: cameraView.trailingAnchor, constant: -6),
 
             overlayStack.leadingAnchor.constraint(equalTo: cameraView.leadingAnchor, constant: 4),
             overlayStack.bottomAnchor.constraint(equalTo: cameraView.bottomAnchor, constant: -4)
@@ -705,6 +767,19 @@ private class CameraSnapshotCell: UICollectionViewCell {
 
     func configure(name: String) {
         nameLabel.text = name
+    }
+
+    func updateTimestamp(since date: Date?) {
+        guard let date = date else {
+            timestampLabel.text = nil
+            return
+        }
+        let seconds = Int(Date().timeIntervalSince(date))
+        if seconds < 60 {
+            timestampLabel.text = "\(seconds)s"
+        } else {
+            timestampLabel.text = "\(seconds / 60)m"
+        }
     }
 
     func configureOverlays(items: [(characteristic: HMCharacteristic, name: String, serviceType: String)], target: AnyObject, action: Selector) {
@@ -782,9 +857,9 @@ private class CameraSnapshotCell: UICollectionViewCell {
         let name: String
         switch type {
         case HMServiceTypeLightbulb: name = "lightbulb.fill"
-        case HMServiceTypeSwitch: name = "switch.2"
+        case HMServiceTypeSwitch: name = "power"
         case HMServiceTypeOutlet: name = "poweroutlet.type.b.fill"
-        case HMServiceTypeGarageDoorOpener: name = "door.garage.open"
+        case HMServiceTypeGarageDoorOpener: name = "door.garage.closed"
         default: name = "bolt.fill"
         }
         return UIImage(systemName: name)?.withRenderingMode(.alwaysTemplate)
@@ -794,6 +869,7 @@ private class CameraSnapshotCell: UICollectionViewCell {
         super.prepareForReuse()
         cameraView.cameraSource = nil
         nameLabel.text = nil
+        timestampLabel.text = nil
         overlayStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
     }
 }

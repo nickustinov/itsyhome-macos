@@ -328,6 +328,10 @@ class HomeKitManager: NSObject, Mac2iOS, HMHomeManagerDelegate {
                 }
             }
         }
+
+        if !hidden {
+            NotificationCenter.default.post(name: .cameraPanelDidShow, object: nil)
+        }
         #endif
     }
 
