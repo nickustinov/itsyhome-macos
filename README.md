@@ -49,7 +49,7 @@ Sync your favourites, hidden items, device groups, and shortcuts across all your
 
 ### Cameras
 
-View live video feeds from your HomeKit cameras directly in the menu bar. Overlay action buttons let you control nearby accessories without leaving the camera view — toggle lights, lock doors, or trigger scenes while watching the feed.
+View live video feeds from your HomeKit cameras directly in the menu bar. Overlay action buttons let you control nearby accessories without leaving the camera view — toggle lights and outlets, open garage doors and gates, or lock and unlock doors.
 
 ### Device groups
 
