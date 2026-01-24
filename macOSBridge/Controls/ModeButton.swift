@@ -64,7 +64,7 @@ class ModeButton: NSButton {
         } else if isMenuHighlighted {
             textColor = .white.withAlphaComponent(0.9)
         } else {
-            textColor = .tertiaryLabelColor
+            textColor = .secondaryLabelColor
         }
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.alignment = .center

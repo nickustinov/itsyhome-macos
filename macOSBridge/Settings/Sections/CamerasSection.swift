@@ -12,6 +12,66 @@ private extension NSPasteboard.PasteboardType {
     static let cameraItem = NSPasteboard.PasteboardType("com.itsyhome.cameraItem")
 }
 
+/// A simple flow layout view that wraps subviews to the next line when they don't fit.
+private class FlowLayoutView: NSView {
+    var spacing: CGFloat = 4
+    var lineSpacing: CGFloat = 4
+
+    private var arrangedSubviews: [NSView] = []
+
+    func addArrangedSubview(_ view: NSView) {
+        arrangedSubviews.append(view)
+        addSubview(view)
+        needsLayout = true
+        invalidateIntrinsicContentSize()
+    }
+
+    override var intrinsicContentSize: NSSize {
+        let width = superview?.bounds.width ?? bounds.width
+        guard width > 0 else { return NSSize(width: NSView.noIntrinsicMetric, height: 24) }
+        let height = computeHeight(forWidth: width)
+        return NSSize(width: NSView.noIntrinsicMetric, height: height)
+    }
+
+    func computeHeight(forWidth availableWidth: CGFloat) -> CGFloat {
+        var x: CGFloat = 0
+        var y: CGFloat = 0
+        var lineHeight: CGFloat = 0
+
+        for view in arrangedSubviews {
+            let size = view.fittingSize
+            if x > 0 && x + size.width > availableWidth {
+                y += lineHeight + lineSpacing
+                x = 0
+                lineHeight = 0
+            }
+            x += size.width + spacing
+            lineHeight = max(lineHeight, size.height)
+        }
+        return y + lineHeight
+    }
+
+    override func layout() {
+        super.layout()
+        let availableWidth = bounds.width
+        var x: CGFloat = 0
+        var y: CGFloat = 0
+        var lineHeight: CGFloat = 0
+
+        for view in arrangedSubviews {
+            let size = view.fittingSize
+            if x > 0 && x + size.width > availableWidth {
+                y += lineHeight + lineSpacing
+                x = 0
+                lineHeight = 0
+            }
+            view.frame = NSRect(x: x, y: y, width: size.width, height: size.height)
+            x += size.width + spacing
+            lineHeight = max(lineHeight, size.height)
+        }
+    }
+}
+
 class CamerasSection: NSView {
 
     private let stackView = NSStackView()
@@ -20,6 +80,7 @@ class CamerasSection: NSView {
     private var menuData: MenuData?
     private var cameras: [CameraData] = []
     private var cancellables = Set<AnyCancellable>()
+    private var lastLayoutWidth: CGFloat = 0
 
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -48,6 +109,18 @@ class CamerasSection: NSView {
     func configure(with data: MenuData) {
         self.menuData = data
         rebuildContent()
+    }
+
+    override func layout() {
+        super.layout()
+        guard bounds.width > 0, bounds.width != lastLayoutWidth else { return }
+        lastLayoutWidth = bounds.width
+        guard let table = camerasTableView, !cameras.isEmpty else { return }
+        table.noteHeightOfRows(withIndexesChanged: IndexSet(integersIn: 0..<cameras.count))
+        let newHeight = computeTableHeight(spacing: 4)
+        if let container = table.superview {
+            container.constraints.first(where: { $0.firstAttribute == .height })?.constant = newHeight
+        }
     }
 
     // MARK: - Content
@@ -99,10 +172,9 @@ class CamerasSection: NSView {
             addView(header, height: 32)
             addSpacer(height: 4)
 
-            let rowHeight: CGFloat = 46
             let spacing: CGFloat = 4
-            let tableHeight = CGFloat(cameras.count) * rowHeight + CGFloat(max(0, cameras.count - 1)) * spacing
-            let tableContainer = createCamerasTable(height: tableHeight, rowHeight: rowHeight, spacing: spacing)
+            let tableHeight = computeTableHeight(spacing: spacing)
+            let tableContainer = createCamerasTable(height: tableHeight, rowHeight: 60, spacing: spacing)
             addView(tableContainer, height: tableHeight)
         } else if menuData != nil {
             let emptyLabel = NSTextField(labelWithString: "No cameras found in this home.")
@@ -113,6 +185,20 @@ class CamerasSection: NSView {
         }
 
         addSpacer(height: 16)
+    }
+
+    private func computeTableHeight(spacing: CGFloat) -> CGFloat {
+        var totalHeight: CGFloat = 0
+        for camera in cameras {
+            let chipLines = computeChipLines(for: camera.uniqueIdentifier)
+            if chipLines == 0 {
+                totalHeight += 36
+            } else {
+                totalHeight += 36 + 6 + CGFloat(chipLines) * 20 + CGFloat(chipLines - 1) * 4 + 8
+            }
+        }
+        totalHeight += CGFloat(max(0, cameras.count - 1)) * spacing
+        return totalHeight
     }
 
     private func loadCameras() {
@@ -197,13 +283,12 @@ class CamerasSection: NSView {
         let container = CardBoxView()
         container.translatesAutoresizingMaskIntoConstraints = false
 
-        // Drag handle
+        // Top line: drag, eye, icon, name, add button
         let dragHandle = DragHandleView()
         dragHandle.translatesAutoresizingMaskIntoConstraints = false
         dragHandle.isHidden = !isPro
         container.addSubview(dragHandle)
 
-        // Eye button
         let eyeButton = NSButton()
         eyeButton.bezelStyle = .inline
         eyeButton.isBordered = false
@@ -219,14 +304,12 @@ class CamerasSection: NSView {
         eyeButton.translatesAutoresizingMaskIntoConstraints = false
         container.addSubview(eyeButton)
 
-        // Camera icon
         let iconView = NSImageView()
         iconView.image = NSImage(systemSymbolName: "video", accessibilityDescription: camera.name)
         iconView.contentTintColor = .secondaryLabelColor
         iconView.translatesAutoresizingMaskIntoConstraints = false
         container.addSubview(iconView)
 
-        // Name label
         let nameLabel = NSTextField(labelWithString: camera.name)
         nameLabel.font = .systemFont(ofSize: 13)
         nameLabel.textColor = .labelColor
@@ -234,54 +317,59 @@ class CamerasSection: NSView {
         nameLabel.translatesAutoresizingMaskIntoConstraints = false
         container.addSubview(nameLabel)
 
-        // Overlay accessories chips + add button
-        let chipsStack = NSStackView()
-        chipsStack.orientation = .horizontal
-        chipsStack.spacing = 4
-        chipsStack.alignment = .centerY
-        chipsStack.translatesAutoresizingMaskIntoConstraints = false
-
-        for serviceId in overlayIds {
-            if let service = findService(id: serviceId) {
-                let chip = createAccessoryChip(service: service, cameraId: camera.uniqueIdentifier)
-                chipsStack.addArrangedSubview(chip)
-            }
-        }
-
-        // Add button
         let addButton = NSButton(title: "Add accessory", target: self, action: #selector(addOverlayTapped(_:)))
         addButton.bezelStyle = .rounded
         addButton.controlSize = .regular
         addButton.tag = row
         addButton.isEnabled = isPro
         addButton.translatesAutoresizingMaskIntoConstraints = false
-        chipsStack.addArrangedSubview(addButton)
-
-        container.addSubview(chipsStack)
+        container.addSubview(addButton)
 
         NSLayoutConstraint.activate([
             dragHandle.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 8),
-            dragHandle.centerYAnchor.constraint(equalTo: container.centerYAnchor),
+            dragHandle.centerYAnchor.constraint(equalTo: addButton.centerYAnchor),
             dragHandle.widthAnchor.constraint(equalToConstant: 12),
             dragHandle.heightAnchor.constraint(equalToConstant: 20),
 
             eyeButton.leadingAnchor.constraint(equalTo: dragHandle.trailingAnchor, constant: 6),
-            eyeButton.centerYAnchor.constraint(equalTo: container.centerYAnchor),
+            eyeButton.centerYAnchor.constraint(equalTo: addButton.centerYAnchor),
             eyeButton.widthAnchor.constraint(equalToConstant: 20),
             eyeButton.heightAnchor.constraint(equalToConstant: 20),
 
             iconView.leadingAnchor.constraint(equalTo: eyeButton.trailingAnchor, constant: 8),
-            iconView.centerYAnchor.constraint(equalTo: container.centerYAnchor),
+            iconView.centerYAnchor.constraint(equalTo: addButton.centerYAnchor),
             iconView.widthAnchor.constraint(equalToConstant: 18),
             iconView.heightAnchor.constraint(equalToConstant: 18),
 
             nameLabel.leadingAnchor.constraint(equalTo: iconView.trailingAnchor, constant: 8),
-            nameLabel.centerYAnchor.constraint(equalTo: container.centerYAnchor),
+            nameLabel.centerYAnchor.constraint(equalTo: addButton.centerYAnchor),
 
-            chipsStack.leadingAnchor.constraint(greaterThanOrEqualTo: nameLabel.trailingAnchor, constant: 8),
-            chipsStack.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -12),
-            chipsStack.centerYAnchor.constraint(equalTo: container.centerYAnchor)
+            addButton.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -12),
+            addButton.topAnchor.constraint(equalTo: container.topAnchor, constant: 8),
         ])
+
+        // Bottom: chips (only if has overlays)
+        if !overlayIds.isEmpty {
+            let chipsFlow = FlowLayoutView()
+            chipsFlow.spacing = 4
+            chipsFlow.lineSpacing = 4
+            chipsFlow.translatesAutoresizingMaskIntoConstraints = false
+
+            for serviceId in overlayIds {
+                if let service = findService(id: serviceId) {
+                    let chip = createAccessoryChip(service: service, cameraId: camera.uniqueIdentifier)
+                    chipsFlow.addArrangedSubview(chip)
+                }
+            }
+
+            container.addSubview(chipsFlow)
+
+            NSLayoutConstraint.activate([
+                chipsFlow.topAnchor.constraint(equalTo: addButton.bottomAnchor, constant: 6),
+                chipsFlow.leadingAnchor.constraint(equalTo: iconView.leadingAnchor),
+                chipsFlow.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -12),
+            ])
+        }
 
         return container
     }
@@ -376,7 +464,8 @@ class CamerasSection: NSView {
             ServiceTypes.lightbulb,
             ServiceTypes.switch,
             ServiceTypes.outlet,
-            ServiceTypes.garageDoorOpener
+            ServiceTypes.garageDoorOpener,
+            ServiceTypes.lock
         ]
 
         // Collect eligible services grouped by room
@@ -395,7 +484,7 @@ class CamerasSection: NSView {
         guard !servicesByRoom.isEmpty else {
             let alert = NSAlert()
             alert.messageText = "No accessories available"
-            alert.informativeText = "All compatible accessories (lights, switches, outlets, garage openers) are already assigned to this camera."
+            alert.informativeText = "All compatible accessories (lights, switches, outlets, garage openers, locks) are already assigned to this camera."
             alert.alertStyle = .informational
             alert.addButton(withTitle: "OK")
             alert.runModal()
@@ -455,11 +544,12 @@ class CamerasSection: NSView {
     private func iconForServiceType(_ type: String) -> NSImage? {
         let name: String
         switch type {
-        case ServiceTypes.lightbulb: name = "lightbulb"
-        case ServiceTypes.switch: name = "switch.2"
-        case ServiceTypes.outlet: name = "poweroutlet.type.b"
-        case ServiceTypes.garageDoorOpener: name = "door.garage.open"
-        default: name = "bolt"
+        case ServiceTypes.lightbulb: name = "lightbulb.fill"
+        case ServiceTypes.switch: name = "power"
+        case ServiceTypes.outlet: name = "poweroutlet.type.b.fill"
+        case ServiceTypes.garageDoorOpener: name = "door.garage.closed"
+        case ServiceTypes.lock: name = "lock.fill"
+        default: name = "bolt.fill"
         }
         return NSImage(systemSymbolName: name, accessibilityDescription: nil)
     }
@@ -543,7 +633,43 @@ extension CamerasSection: NSTableViewDelegate, NSTableViewDataSource {
     }
 
     func tableView(_ tableView: NSTableView, heightOfRow row: Int) -> CGFloat {
-        46
+        let chipLines = computeChipLines(for: cameras[row].uniqueIdentifier)
+        if chipLines == 0 { return 36 }
+        return 36 + 6 + CGFloat(chipLines) * 20 + CGFloat(chipLines - 1) * 4 + 8
+    }
+
+    private func computeChipLines(for cameraId: String) -> Int {
+        let ids = PreferencesManager.shared.overlayAccessories(for: cameraId)
+        let chipWidths: [CGFloat] = ids.compactMap { id in
+            guard let service = findService(id: id) else { return nil }
+            let textWidth = min((service.name as NSString).size(withAttributes: [.font: NSFont.systemFont(ofSize: 10)]).width, 60)
+            // icon(5+12+3) + text + gap(2) + remove(14+3)
+            return 5 + 12 + 3 + textWidth + 2 + 14 + 3
+        }
+        if chipWidths.isEmpty { return 0 }
+
+        // Use best available width: table bounds > view bounds > fallback
+        let resolvedWidth: CGFloat
+        if let tw = camerasTableView?.bounds.width, tw > 0 {
+            resolvedWidth = tw
+        } else if bounds.width > 0 {
+            resolvedWidth = bounds.width
+        } else {
+            resolvedWidth = 560
+        }
+        let availableWidth = resolvedWidth - 66
+
+        var x: CGFloat = 0
+        var lines = 1
+        for width in chipWidths {
+            if x > 0 && x + width > availableWidth {
+                lines += 1
+                x = width + 4
+            } else {
+                x += width + 4
+            }
+        }
+        return lines
     }
 
     func tableView(_ tableView: NSTableView, shouldSelectRow row: Int) -> Bool {

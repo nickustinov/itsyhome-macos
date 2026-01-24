@@ -158,11 +158,11 @@ class ACMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable
         minusButton = NSButton(frame: NSRect(x: tempControlsX, y: 4, width: 20, height: 20))
         minusButton.isBordered = false
         minusButton.wantsLayer = true
-        minusButton.layer?.backgroundColor = NSColor.secondaryLabelColor.withAlphaComponent(0.08).cgColor
+        minusButton.layer?.backgroundColor = NSColor.secondaryLabelColor.withAlphaComponent(0.15).cgColor
         minusButton.layer?.cornerRadius = 4
         minusButton.title = "−"
         minusButton.font = NSFont.systemFont(ofSize: 12, weight: .bold)
-        minusButton.contentTintColor = .secondaryLabelColor
+        minusButton.contentTintColor = .labelColor
         controlsRow.addSubview(minusButton)
 
         // Target temp label
@@ -177,11 +177,11 @@ class ACMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable
         plusButton = NSButton(frame: NSRect(x: tempControlsX + 56, y: 4, width: 20, height: 20))
         plusButton.isBordered = false
         plusButton.wantsLayer = true
-        plusButton.layer?.backgroundColor = NSColor.secondaryLabelColor.withAlphaComponent(0.08).cgColor
+        plusButton.layer?.backgroundColor = NSColor.secondaryLabelColor.withAlphaComponent(0.15).cgColor
         plusButton.layer?.cornerRadius = 4
         plusButton.title = "+"
         plusButton.font = NSFont.systemFont(ofSize: 12, weight: .bold)
-        plusButton.contentTintColor = .secondaryLabelColor
+        plusButton.contentTintColor = .labelColor
         controlsRow.addSubview(plusButton)
 
         containerView.addSubview(controlsRow)

@@ -86,7 +86,7 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate {
     @objc private func preferencesDidChange() {
         // Immediately update camera status item visibility
         if let data = currentMenuData {
-            let camerasEnabled = PreferencesManager.shared.camerasEnabled && ProStatusCache.shared.isPro
+            let camerasEnabled = PreferencesManager.shared.camerasEnabled
             let shouldShow = data.hasCameras && camerasEnabled
             if !shouldShow {
                 dismissCameraPanel()
@@ -533,7 +533,7 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate {
         actionEngine.updateMenuData(data)
 
         WebhookServer.shared.configure(actionEngine: actionEngine)
-        let camerasEnabled = PreferencesManager.shared.camerasEnabled && ProStatusCache.shared.isPro
+        let camerasEnabled = PreferencesManager.shared.camerasEnabled
         setupCameraStatusItem(hasCameras: data.hasCameras && camerasEnabled)
 
         mainMenu.addItem(NSMenuItem.separator())

@@ -297,10 +297,21 @@ class CameraViewController: UIViewController {
             for item in items {
                 item.characteristic.readValue { [weak self] _ in
                     DispatchQueue.main.async {
-                        self?.collectionView.reloadData()
+                        self?.refreshVisiblePillStates()
                     }
                 }
             }
+        }
+    }
+
+    private func refreshVisiblePillStates() {
+        for cell in collectionView.visibleCells {
+            guard let snapshotCell = cell as? CameraSnapshotCell,
+                  let indexPath = collectionView.indexPath(for: cell),
+                  indexPath.item < cameraAccessories.count else { continue }
+            let uuid = cameraAccessories[indexPath.item].uniqueIdentifier
+            guard let items = overlayData[uuid] else { continue }
+            snapshotCell.updatePillStates(items: items)
         }
     }
 
@@ -311,12 +322,18 @@ class CameraViewController: UIViewController {
                     let type = service.serviceType
                     let name = service.name
 
-                    // Find the primary toggle characteristic
-                    let powerState = service.characteristics.first { $0.characteristicType == HMCharacteristicTypePowerState }
-                    if let c = powerState { return (c, name, type) }
-
-                    let targetDoor = service.characteristics.first { $0.characteristicType == HMCharacteristicTypeTargetDoorState }
-                    if let c = targetDoor { return (c, name, type) }
+                    // Match characteristic by service type
+                    switch type {
+                    case HMServiceTypeGarageDoorOpener:
+                        let c = service.characteristics.first { $0.characteristicType == HMCharacteristicTypeTargetDoorState }
+                        if let c { return (c, name, type) }
+                    case HMServiceTypeLockMechanism:
+                        let c = service.characteristics.first { $0.characteristicType == HMCharacteristicTypeTargetLockMechanismState }
+                        if let c { return (c, name, type) }
+                    default:
+                        let c = service.characteristics.first { $0.characteristicType == HMCharacteristicTypePowerState }
+                        if let c { return (c, name, type) }
+                    }
 
                     return nil
                 }
@@ -550,13 +567,11 @@ class CameraViewController: UIViewController {
             DispatchQueue.main.async {
                 if error != nil {
                     self?.updatePillState(pill, isOn: isOn)
-                } else {
-                    self?.collectionView.reloadData()
-                    // Re-read after delay for garage doors (state transitions asynchronously)
-                    if characteristic.characteristicType == HMCharacteristicTypeTargetDoorState {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                            self?.readOverlayCharacteristicValues()
-                        }
+                } else if characteristic.characteristicType == HMCharacteristicTypeTargetDoorState ||
+                          characteristic.characteristicType == HMCharacteristicTypeTargetLockMechanismState {
+                    // Re-read after delay for garage doors/locks (state transitions asynchronously)
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                        self?.readOverlayCharacteristicValues()
                     }
                 }
             }
@@ -564,11 +579,16 @@ class CameraViewController: UIViewController {
     }
 
     private func characteristicIsOn(_ characteristic: HMCharacteristic) -> Bool {
-        // Door state must be checked as Int first (NSNumber bridges to Bool incorrectly)
+        // Door/lock state must be checked as Int first (NSNumber bridges to Bool incorrectly)
         if characteristic.characteristicType == HMCharacteristicTypeTargetDoorState {
             let intVal = (characteristic.value as? NSNumber)?.intValue ?? 1
             // 0=open=ON, 1=closed=OFF
             return intVal == 0
+        }
+        if characteristic.characteristicType == HMCharacteristicTypeTargetLockMechanismState {
+            let intVal = (characteristic.value as? NSNumber)?.intValue ?? 0
+            // 1=locked=ON, 0=unlocked=OFF
+            return intVal == 1
         }
         if let intVal = (characteristic.value as? NSNumber)?.intValue {
             return intVal != 0
@@ -581,6 +601,10 @@ class CameraViewController: UIViewController {
             // currentlyOn means door is open (0), so toggle to closed (1)
             return currentlyOn ? 1 : 0
         }
+        if characteristic.characteristicType == HMCharacteristicTypeTargetLockMechanismState {
+            // currentlyOn means locked (1), so toggle to unlocked (0)
+            return currentlyOn ? 0 : 1
+        }
         return currentlyOn ? false : true
     }
 
@@ -591,6 +615,7 @@ class CameraViewController: UIViewController {
         case HMServiceTypeSwitch: name = "power"
         case HMServiceTypeOutlet: name = "poweroutlet.type.b.fill"
         case HMServiceTypeGarageDoorOpener: name = "door.garage.closed"
+        case HMServiceTypeLockMechanism: name = "lock.fill"
         default: name = "bolt.fill"
         }
         return UIImage(systemName: name)?.withRenderingMode(.alwaysTemplate)
@@ -791,6 +816,22 @@ private class CameraSnapshotCell: UICollectionViewCell {
         }
     }
 
+    func updatePillStates(items: [(characteristic: HMCharacteristic, name: String, serviceType: String)]) {
+        for (index, pill) in overlayStack.arrangedSubviews.enumerated() {
+            guard index < items.count else { break }
+            let isOn = characteristicIsOn(items[index].characteristic)
+            if isOn {
+                pill.backgroundColor = UIColor(white: 1.0, alpha: 0.85)
+                if let icon = pill.viewWithTag(1) as? UIImageView { icon.tintColor = .black }
+                if let label = pill.viewWithTag(2) as? UILabel { label.textColor = .black }
+            } else {
+                pill.backgroundColor = UIColor(white: 0.0, alpha: 0.6)
+                if let icon = pill.viewWithTag(1) as? UIImageView { icon.tintColor = .white }
+                if let label = pill.viewWithTag(2) as? UILabel { label.textColor = .white }
+            }
+        }
+    }
+
     private func createGridPill(characteristic: HMCharacteristic, name: String, serviceType: String, target: AnyObject, action: Selector) -> UIView {
         let pill = UIView()
         pill.layer.cornerRadius = 12
@@ -847,6 +888,10 @@ private class CameraSnapshotCell: UICollectionViewCell {
             let intVal = (characteristic.value as? NSNumber)?.intValue ?? 1
             return intVal == 0
         }
+        if characteristic.characteristicType == HMCharacteristicTypeTargetLockMechanismState {
+            let intVal = (characteristic.value as? NSNumber)?.intValue ?? 0
+            return intVal == 1
+        }
         if let intVal = (characteristic.value as? NSNumber)?.intValue {
             return intVal != 0
         }
@@ -860,6 +905,7 @@ private class CameraSnapshotCell: UICollectionViewCell {
         case HMServiceTypeSwitch: name = "power"
         case HMServiceTypeOutlet: name = "poweroutlet.type.b.fill"
         case HMServiceTypeGarageDoorOpener: name = "door.garage.closed"
+        case HMServiceTypeLockMechanism: name = "lock.fill"
         default: name = "bolt.fill"
         }
         return UIImage(systemName: name)?.withRenderingMode(.alwaysTemplate)

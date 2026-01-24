@@ -355,11 +355,10 @@ extension GroupsSettingsView: NSTableViewDelegate, NSTableViewDataSource {
         if originalRow == newRow { return false }
 
         PreferencesManager.shared.moveDeviceGroup(from: originalRow, to: newRow)
-        loadGroups()
 
-        tableView.beginUpdates()
-        tableView.moveRow(at: originalRow, to: newRow)
-        tableView.endUpdates()
+        DispatchQueue.main.async { [weak self] in
+            self?.rebuildContent()
+        }
 
         return true
     }
