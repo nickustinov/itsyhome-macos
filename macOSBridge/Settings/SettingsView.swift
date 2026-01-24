@@ -90,7 +90,7 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
             case .general: return "gearshape"
             case .accessories: return "lightbulb"
             case .groups: return "folder"
-            case .cameras: return "camera"
+            case .cameras: return "video"
             case .deeplinks: return "link"
             case .webhooks: return "network"
             case .about: return "info.circle"
@@ -127,6 +127,7 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
     func configure(with data: MenuData) {
         self.menuData = data
         accessoriesSection?.configure(with: data)
+        camerasSection?.configure(with: data)
     }
 
     override func viewDidMoveToWindow() {
@@ -269,6 +270,9 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
         case .cameras:
             if camerasSection == nil {
                 camerasSection = CamerasSection()
+                if let data = menuData {
+                    camerasSection?.configure(with: data)
+                }
             }
             contentView = camerasSection!
 

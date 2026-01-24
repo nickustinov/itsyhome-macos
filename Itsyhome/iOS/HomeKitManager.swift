@@ -26,6 +26,8 @@ class HomeKitManager: NSObject, Mac2iOS, HMHomeManagerDelegate {
     private(set) var accessories: [AccessoryInfo] = []
     private(set) var scenes: [SceneInfo] = []
 
+    var selectedHome: HMHome? { currentHome }
+
     var cameraAccessories: [HMAccessory] {
         guard let home = currentHome else { return [] }
         return home.accessories.filter { !($0.cameraProfiles ?? []).isEmpty }
@@ -350,7 +352,8 @@ class HomeKitManager: NSObject, Mac2iOS, HMHomeManagerDelegate {
             buildSceneData(from: scene)
         }
 
-        let menuData = MenuData(homes: homeData, rooms: roomData, accessories: accessoryData, scenes: sceneData, selectedHomeId: selectedHomeIdentifier, hasCameras: !cameraAccessories.isEmpty)
+        let cameraData = cameraAccessories.map { CameraData(uniqueIdentifier: $0.uniqueIdentifier, name: $0.name) }
+        let menuData = MenuData(homes: homeData, rooms: roomData, accessories: accessoryData, scenes: sceneData, selectedHomeId: selectedHomeIdentifier, hasCameras: !cameraAccessories.isEmpty, cameras: cameraData)
 
         do {
             let jsonData = try JSONEncoder().encode(menuData)

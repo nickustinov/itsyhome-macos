@@ -35,6 +35,9 @@ final class PreferencesManager {
         static let hideScenesSection = "hideScenesSection"
         static let hiddenRoomIds = "hiddenRoomIds"
         static let deviceGroups = "deviceGroups"
+        static let hiddenCameraIds = "hiddenCameraIds"
+        static let cameraOrder = "cameraOrder"
+        static let cameraOverlayAccessories = "cameraOverlayAccessories"
     }
 
     enum ScenesDisplayMode: String {
@@ -327,6 +330,93 @@ final class PreferencesManager {
             ids.insert(roomId)
         }
         hiddenRoomIds = ids
+    }
+
+    // MARK: - Hidden cameras (per-home)
+
+    var hiddenCameraIds: Set<String> {
+        get {
+            let array = defaults.stringArray(forKey: homeKey(Keys.hiddenCameraIds)) ?? []
+            return Set(array)
+        }
+        set {
+            defaults.set(Array(newValue), forKey: homeKey(Keys.hiddenCameraIds))
+            postNotification()
+        }
+    }
+
+    func isHidden(cameraId: String) -> Bool {
+        hiddenCameraIds.contains(cameraId)
+    }
+
+    func toggleHidden(cameraId: String) {
+        var ids = hiddenCameraIds
+        if ids.contains(cameraId) {
+            ids.remove(cameraId)
+        } else {
+            ids.insert(cameraId)
+        }
+        hiddenCameraIds = ids
+    }
+
+    // MARK: - Camera order (per-home)
+
+    var cameraOrder: [String] {
+        get { defaults.stringArray(forKey: homeKey(Keys.cameraOrder)) ?? [] }
+        set {
+            defaults.set(newValue, forKey: homeKey(Keys.cameraOrder))
+            postNotification()
+        }
+    }
+
+    func moveCameraOrder(from sourceIndex: Int, to destinationIndex: Int) {
+        var order = cameraOrder
+        guard sourceIndex >= 0, sourceIndex < order.count,
+              destinationIndex >= 0, destinationIndex < order.count else { return }
+        let item = order.remove(at: sourceIndex)
+        order.insert(item, at: destinationIndex)
+        cameraOrder = order
+    }
+
+    // MARK: - Camera overlay accessories (per-home)
+
+    /// Mapping of camera ID to array of service IDs for overlay controls
+    var cameraOverlayAccessories: [String: [String]] {
+        get {
+            guard let data = defaults.data(forKey: homeKey(Keys.cameraOverlayAccessories)),
+                  let dict = try? JSONDecoder().decode([String: [String]].self, from: data) else {
+                return [:]
+            }
+            return dict
+        }
+        set {
+            if let data = try? JSONEncoder().encode(newValue) {
+                defaults.set(data, forKey: homeKey(Keys.cameraOverlayAccessories))
+                postNotification()
+            }
+        }
+    }
+
+    func overlayAccessories(for cameraId: String) -> [String] {
+        cameraOverlayAccessories[cameraId] ?? []
+    }
+
+    func addOverlayAccessory(serviceId: String, to cameraId: String) {
+        var mapping = cameraOverlayAccessories
+        var list = mapping[cameraId] ?? []
+        if !list.contains(serviceId) {
+            list.append(serviceId)
+            mapping[cameraId] = list
+            cameraOverlayAccessories = mapping
+        }
+    }
+
+    func removeOverlayAccessory(serviceId: String, from cameraId: String) {
+        var mapping = cameraOverlayAccessories
+        var list = mapping[cameraId] ?? []
+        list.removeAll { $0 == serviceId }
+        mapping[cameraId] = list.isEmpty ? nil : list
+        cameraOverlayAccessories = mapping
     }
 
     // MARK: - Shortcuts (per-home)

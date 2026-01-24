@@ -34,6 +34,7 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate {
     private var menuIsOpen = false
     private var needsRebuild = false
     private var clickOutsideMonitor: Any?
+    private var localClickMonitor: Any?
     private var cameraPanelWindow: NSWindow?
     private var cameraPanelSize: NSSize = NSSize(width: 300, height: 300)
     private var isCameraPanelOpening = false
@@ -449,13 +450,13 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate {
 
     private func setupClickOutsideMonitor() {
         removeClickOutsideMonitor()
-        clickOutsideMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
+
+        let dismissCheck: () -> Void = { [weak self] in
             guard let self = self else { return }
             let screenPoint = NSEvent.mouseLocation
             if let panel = self.cameraPanelWindow, panel.frame.contains(screenPoint) {
                 return
             }
-            // Also ignore clicks on the camera status item button (toggle handled by action)
             if let button = self.cameraStatusItem?.button, let btnWindow = button.window {
                 let btnRect = button.convert(button.bounds, to: nil)
                 let btnScreenRect = btnWindow.convertToScreen(btnRect)
@@ -465,12 +466,31 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate {
             }
             self.dismissCameraPanel()
         }
+
+        // Catch clicks outside the app
+        clickOutsideMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { _ in
+            dismissCheck()
+        }
+
+        // Catch clicks on other windows within the app (e.g. settings window)
+        localClickMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] event in
+            guard let self = self, self.cameraPanelWindow?.isVisible == true else { return event }
+            // Ignore clicks on the camera panel itself or its status bar button
+            if event.window == self.cameraPanelWindow { return event }
+            if event.window == self.cameraStatusItem?.button?.window { return event }
+            self.dismissCameraPanel()
+            return event
+        }
     }
 
     private func removeClickOutsideMonitor() {
         if let monitor = clickOutsideMonitor {
             NSEvent.removeMonitor(monitor)
             clickOutsideMonitor = nil
+        }
+        if let monitor = localClickMonitor {
+            NSEvent.removeMonitor(monitor)
+            localClickMonitor = nil
         }
     }
 
@@ -621,6 +641,7 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate {
     }
 
     @objc private func openSettings(_ sender: Any?) {
+        dismissCameraPanel()
         if let data = currentMenuData {
             SettingsWindowController.shared.configure(with: data)
         }

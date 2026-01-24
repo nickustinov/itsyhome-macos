@@ -237,6 +237,16 @@ public struct AccessoryData: Codable {
     }
 }
 
+public struct CameraData: Codable {
+    public let uniqueIdentifier: String
+    public let name: String
+
+    public init(uniqueIdentifier: UUID, name: String) {
+        self.uniqueIdentifier = uniqueIdentifier.uuidString
+        self.name = name
+    }
+}
+
 public struct MenuData: Codable {
     public let homes: [HomeData]
     public let rooms: [RoomData]
@@ -244,14 +254,16 @@ public struct MenuData: Codable {
     public let scenes: [SceneData]
     public let selectedHomeId: String?
     public let hasCameras: Bool
+    public let cameras: [CameraData]
 
-    public init(homes: [HomeData], rooms: [RoomData], accessories: [AccessoryData], scenes: [SceneData], selectedHomeId: UUID?, hasCameras: Bool = false) {
+    public init(homes: [HomeData], rooms: [RoomData], accessories: [AccessoryData], scenes: [SceneData], selectedHomeId: UUID?, hasCameras: Bool = false, cameras: [CameraData] = []) {
         self.homes = homes
         self.rooms = rooms
         self.accessories = accessories
         self.scenes = scenes
         self.selectedHomeId = selectedHomeId?.uuidString
         self.hasCameras = hasCameras
+        self.cameras = cameras
     }
 }
 
