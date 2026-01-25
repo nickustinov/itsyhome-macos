@@ -62,6 +62,23 @@ struct AccessoryRowConfig {
     let showDragHandle: Bool
     let showEyeButton: Bool
     let itemId: String?  // For shortcut binding
+    let showPinButton: Bool
+    let isPinned: Bool
+    let serviceType: String?
+
+    init(name: String, icon: NSImage?, isFavourite: Bool, isItemHidden: Bool, isSectionHidden: Bool, showDragHandle: Bool, showEyeButton: Bool, itemId: String?, showPinButton: Bool = false, isPinned: Bool = false, serviceType: String? = nil) {
+        self.name = name
+        self.icon = icon
+        self.isFavourite = isFavourite
+        self.isItemHidden = isItemHidden
+        self.isSectionHidden = isSectionHidden
+        self.showDragHandle = showDragHandle
+        self.showEyeButton = showEyeButton
+        self.itemId = itemId
+        self.showPinButton = showPinButton
+        self.isPinned = isPinned
+        self.serviceType = serviceType
+    }
 }
 
 // MARK: - Accessory row view
@@ -75,17 +92,21 @@ class AccessoryRowView: NSView {
     private let typeIcon = NSImageView()
     private let nameLabel = NSTextField()
     private var shortcutButton: ShortcutButton?
+    private var pinButton: NSButton?
 
     private var isFavourite: Bool
     private var isItemHidden: Bool
+    private var isPinned: Bool
     private var itemId: String?
 
     var onStarToggled: (() -> Void)?
     var onEyeToggled: (() -> Void)?
+    var onPinToggled: (() -> Void)?
 
     init(config: AccessoryRowConfig) {
         self.isFavourite = config.isFavourite
         self.isItemHidden = config.isItemHidden
+        self.isPinned = config.isPinned
         self.itemId = config.itemId
 
         super.init(frame: NSRect(x: 0, y: 0, width: 360, height: AccessoryRowLayout.rowHeight))
@@ -159,6 +180,15 @@ class AccessoryRowView: NSView {
             shortcutButton = btn
             addSubview(btn)
         }
+
+        // Pin button (for pinning to menu bar)
+        if config.showPinButton {
+            let btn = NSButton(title: config.isPinned ? "Unpin" : "Pin", target: self, action: #selector(pinTapped))
+            btn.bezelStyle = .rounded
+            btn.controlSize = .small
+            pinButton = btn
+            addSubview(btn)
+        }
     }
 
     private func updateState(config: AccessoryRowConfig) {
@@ -198,6 +228,12 @@ class AccessoryRowView: NSView {
         onEyeToggled?()
     }
 
+    @objc private func pinTapped() {
+        isPinned.toggle()
+        pinButton?.title = isPinned ? "Unpin" : "Pin"
+        onPinToggled?()
+    }
+
     override func layout() {
         super.layout()
 
@@ -230,8 +266,19 @@ class AccessoryRowView: NSView {
         typeIcon.frame = NSRect(x: x, y: cardY + (L.cardHeight - L.iconSize) / 2, width: L.iconSize, height: L.iconSize)
         x += L.iconSize + L.spacing
 
-        // Shortcut button on the right (if present)
+        // Right-side controls
         var rightEdge = bounds.width - L.rightPadding
+
+        // Pin button on the right (if present)
+        if let pin = pinButton {
+            pin.sizeToFit()
+            let pinWidth = pin.frame.width
+            let pinHeight: CGFloat = 21
+            pin.frame = NSRect(x: rightEdge - pinWidth, y: cardY + (L.cardHeight - pinHeight) / 2, width: pinWidth, height: pinHeight)
+            rightEdge -= pinWidth + L.spacing
+        }
+
+        // Shortcut button (if present)
         if let shortcut = shortcutButton {
             let shortcutWidth: CGFloat = 100
             let shortcutHeight: CGFloat = 20

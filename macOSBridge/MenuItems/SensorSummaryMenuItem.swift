@@ -62,7 +62,7 @@ class SensorSummaryMenuItem: NSMenuItem, CharacteristicUpdatable, Characteristic
         let iconY: CGFloat = 8
         tempIconView = NSImageView(frame: NSRect(x: currentX, y: iconY, width: iconSize, height: iconSize))
         tempIconView.image = NSImage(systemSymbolName: "thermometer.medium", accessibilityDescription: nil)
-        tempIconView.contentTintColor = DS.Colors.mutedForeground
+        tempIconView.contentTintColor = .secondaryLabelColor
         tempIconView.imageScaling = .scaleProportionallyUpOrDown
         tempIconView.isHidden = !hasTemp
         containerView.addSubview(tempIconView)
@@ -74,7 +74,7 @@ class SensorSummaryMenuItem: NSMenuItem, CharacteristicUpdatable, Characteristic
         tempTitleLabel = NSTextField(labelWithString: "Temperature")
         tempTitleLabel.frame = NSRect(x: currentX, y: titleY, width: 80, height: 12)
         tempTitleLabel.font = DS.Typography.labelSmall
-        tempTitleLabel.textColor = DS.Colors.mutedForeground
+        tempTitleLabel.textColor = .secondaryLabelColor
         tempTitleLabel.isHidden = !hasTemp
         containerView.addSubview(tempTitleLabel)
 
@@ -83,7 +83,7 @@ class SensorSummaryMenuItem: NSMenuItem, CharacteristicUpdatable, Characteristic
         tempValueLabel = NSTextField(labelWithString: "—")
         tempValueLabel.frame = NSRect(x: currentX, y: valueY, width: 80, height: 14)
         tempValueLabel.font = DS.Typography.labelSmall
-        tempValueLabel.textColor = DS.Colors.mutedForeground
+        tempValueLabel.textColor = .secondaryLabelColor
         tempValueLabel.isHidden = !hasTemp
         containerView.addSubview(tempValueLabel)
 
@@ -92,7 +92,7 @@ class SensorSummaryMenuItem: NSMenuItem, CharacteristicUpdatable, Characteristic
         // Humidity section
         humidityIconView = NSImageView(frame: NSRect(x: currentX, y: iconY, width: iconSize, height: iconSize))
         humidityIconView.image = NSImage(systemSymbolName: "humidity", accessibilityDescription: nil)
-        humidityIconView.contentTintColor = DS.Colors.mutedForeground
+        humidityIconView.contentTintColor = .secondaryLabelColor
         humidityIconView.imageScaling = .scaleProportionallyUpOrDown
         humidityIconView.isHidden = !hasHumidity
         containerView.addSubview(humidityIconView)
@@ -103,7 +103,7 @@ class SensorSummaryMenuItem: NSMenuItem, CharacteristicUpdatable, Characteristic
         humidityTitleLabel = NSTextField(labelWithString: "Humidity")
         humidityTitleLabel.frame = NSRect(x: currentX, y: titleY, width: 70, height: 12)
         humidityTitleLabel.font = DS.Typography.labelSmall
-        humidityTitleLabel.textColor = DS.Colors.mutedForeground
+        humidityTitleLabel.textColor = .secondaryLabelColor
         humidityTitleLabel.isHidden = !hasHumidity
         containerView.addSubview(humidityTitleLabel)
 
@@ -111,7 +111,7 @@ class SensorSummaryMenuItem: NSMenuItem, CharacteristicUpdatable, Characteristic
         humidityValueLabel = NSTextField(labelWithString: "—")
         humidityValueLabel.frame = NSRect(x: currentX, y: valueY, width: 70, height: 14)
         humidityValueLabel.font = DS.Typography.labelSmall
-        humidityValueLabel.textColor = DS.Colors.mutedForeground
+        humidityValueLabel.textColor = .secondaryLabelColor
         humidityValueLabel.isHidden = !hasHumidity
         containerView.addSubview(humidityValueLabel)
 
@@ -150,10 +150,12 @@ class SensorSummaryMenuItem: NSMenuItem, CharacteristicUpdatable, Characteristic
 
         if values.count == 1 || minTemp == maxTemp {
             // Single value
-            tempValueLabel.stringValue = String(format: "%.1f°", minTemp)
+            tempValueLabel.stringValue = TemperatureFormatter.format(minTemp, decimals: 1)
         } else {
             // Range (smallest – largest)
-            tempValueLabel.stringValue = String(format: "%.1f–%.1f°", minTemp, maxTemp)
+            let minFormatted = TemperatureFormatter.format(minTemp, decimals: 1)
+            let maxFormatted = TemperatureFormatter.format(maxTemp, decimals: 1)
+            tempValueLabel.stringValue = "\(minFormatted.dropLast())–\(maxFormatted)"
         }
     }
 

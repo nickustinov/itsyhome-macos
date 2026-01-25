@@ -75,7 +75,7 @@ class ThermostatMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
         currentTempLabel = NSTextField(labelWithString: "--°")
         currentTempLabel.frame = NSRect(x: tempX, y: labelY, width: tempWidth, height: 17)
         currentTempLabel.font = DS.Typography.labelSmall
-        currentTempLabel.textColor = DS.Colors.mutedForeground
+        currentTempLabel.textColor = .secondaryLabelColor
         currentTempLabel.alignment = .right
         containerView.addSubview(currentTempLabel)
 
@@ -106,7 +106,7 @@ class ThermostatMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
         if characteristicId == currentTempCharacteristicId {
             if let temp = ValueConversion.toDouble(value) {
                 currentTemp = temp
-                currentTempLabel.stringValue = String(format: "%.0f°", temp)
+                currentTempLabel.stringValue = TemperatureFormatter.format(temp)
             }
         } else if characteristicId == targetTempCharacteristicId {
             if let temp = ValueConversion.toDouble(value) {

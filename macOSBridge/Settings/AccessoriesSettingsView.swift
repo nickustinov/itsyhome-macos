@@ -281,9 +281,12 @@ class AccessoriesSettingsView: NSView {
                     return i1 != i2 ? i1 < i2 : s1.name < s2.name
                 }
 
+                let pinnableTypes: Set<String> = [ServiceTypes.thermostat, ServiceTypes.heaterCooler]
                 for service in sorted {
                     let isFav = preferences.isFavourite(serviceId: service.uniqueIdentifier)
                     let isServiceHidden = preferences.isHidden(serviceId: service.uniqueIdentifier)
+                    let isPinned = preferences.isPinned(serviceId: service.uniqueIdentifier)
+                    let showPin = pinnableTypes.contains(service.serviceType)
                     let config = AccessoryRowConfig(
                         name: service.name,
                         icon: IconMapping.iconForServiceType(service.serviceType),
@@ -292,7 +295,10 @@ class AccessoriesSettingsView: NSView {
                         isSectionHidden: false,
                         showDragHandle: false,
                         showEyeButton: true,
-                        itemId: nil
+                        itemId: nil,
+                        showPinButton: showPin,
+                        isPinned: isPinned,
+                        serviceType: service.serviceType
                     )
                     let row = AccessoryRowView(config: config)
                     row.onStarToggled = { [weak self] in
@@ -301,6 +307,10 @@ class AccessoriesSettingsView: NSView {
                     }
                     row.onEyeToggled = { [weak self] in
                         preferences.toggleHidden(serviceId: service.uniqueIdentifier)
+                        self?.rebuild()
+                    }
+                    row.onPinToggled = { [weak self] in
+                        preferences.togglePinned(serviceId: service.uniqueIdentifier)
                         self?.rebuild()
                     }
                     addView(row, height: L.rowHeight)
@@ -788,6 +798,9 @@ extension AccessoriesSettingsView: NSTableViewDelegate, NSTableViewDataSource {
             let preferences = PreferencesManager.shared
             let isFav = preferences.isFavourite(serviceId: service.uniqueIdentifier)
             let isServiceHidden = preferences.isHidden(serviceId: service.uniqueIdentifier)
+            let isPinned = preferences.isPinned(serviceId: service.uniqueIdentifier)
+            let pinnableTypes: Set<String> = [ServiceTypes.thermostat, ServiceTypes.heaterCooler]
+            let showPin = pinnableTypes.contains(service.serviceType)
             let config = AccessoryRowConfig(
                 name: service.name,
                 icon: IconMapping.iconForServiceType(service.serviceType),
@@ -796,7 +809,10 @@ extension AccessoriesSettingsView: NSTableViewDelegate, NSTableViewDataSource {
                 isSectionHidden: roomHidden,
                 showDragHandle: false,
                 showEyeButton: true,
-                itemId: nil
+                itemId: nil,
+                showPinButton: showPin,
+                isPinned: isPinned,
+                serviceType: service.serviceType
             )
             let rowView = AccessoryRowView(config: config)
             rowView.onStarToggled = { [weak self] in
@@ -805,6 +821,10 @@ extension AccessoriesSettingsView: NSTableViewDelegate, NSTableViewDataSource {
             }
             rowView.onEyeToggled = { [weak self] in
                 preferences.toggleHidden(serviceId: service.uniqueIdentifier)
+                self?.rebuild()
+            }
+            rowView.onPinToggled = { [weak self] in
+                preferences.togglePinned(serviceId: service.uniqueIdentifier)
                 self?.rebuild()
             }
             return rowView

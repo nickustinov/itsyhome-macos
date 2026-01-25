@@ -40,6 +40,7 @@ final class PreferencesManager {
         static let cameraOverlayAccessories = "cameraOverlayAccessories"
         static let roomOrder = "roomOrder"
         static let sceneOrder = "sceneOrder"
+        static let pinnedServiceIds = "pinnedServiceIds"
     }
 
     enum ScenesDisplayMode: String {
@@ -307,15 +308,47 @@ final class PreferencesManager {
         }
     }
 
+    // MARK: - Pinned services (for menu bar, per-home)
+
+    var pinnedServiceIds: Set<String> {
+        get {
+            let array = defaults.stringArray(forKey: homeKey(Keys.pinnedServiceIds)) ?? []
+            return Set(array)
+        }
+        set {
+            defaults.set(Array(newValue), forKey: homeKey(Keys.pinnedServiceIds))
+            postNotification()
+        }
+    }
+
+    func isPinned(serviceId: String) -> Bool {
+        pinnedServiceIds.contains(serviceId)
+    }
+
+    func togglePinned(serviceId: String) {
+        var ids = pinnedServiceIds
+        if ids.contains(serviceId) {
+            ids.remove(serviceId)
+        } else {
+            ids.insert(serviceId)
+        }
+        pinnedServiceIds = ids
+    }
+
     // MARK: - Hidden rooms (per-home)
 
     var hiddenRoomIds: Set<String> {
         get {
-            let array = defaults.stringArray(forKey: homeKey(Keys.hiddenRoomIds)) ?? []
+            let key = homeKey(Keys.hiddenRoomIds)
+            let array = defaults.stringArray(forKey: key) ?? []
+            print("[Prefs] hiddenRoomIds GET: key='\(key)', value=\(array)")
             return Set(array)
         }
         set {
-            defaults.set(Array(newValue), forKey: homeKey(Keys.hiddenRoomIds))
+            let key = homeKey(Keys.hiddenRoomIds)
+            let array = Array(newValue)
+            print("[Prefs] hiddenRoomIds SET: key='\(key)', value=\(array)")
+            defaults.set(array, forKey: key)
             postNotification()
         }
     }
@@ -325,6 +358,7 @@ final class PreferencesManager {
     }
 
     func toggleHidden(roomId: String) {
+        print("[Prefs] toggleHidden(roomId: \(roomId))")
         var ids = hiddenRoomIds
         if ids.contains(roomId) {
             ids.remove(roomId)

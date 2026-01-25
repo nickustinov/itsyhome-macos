@@ -31,6 +31,7 @@
 		160978BDC19974A59FB1A4BB /* LightMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73072FCFE16311A3C25C1C2C /* LightMenuItem.swift */; };
 		16A327E2FD58F4B48606729C /* BaseMenuItems.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CFE6ECEB559109472BA360A /* BaseMenuItems.swift */; };
 		19DBF4D900CC57B5CA26166C /* ActionEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE6B3519AD69969925F8F105 /* ActionEngine.swift */; };
+		1B22E7CDDA48DCC5FFEA461C /* ThermostatStatusItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7015AC49D972A44CD1BC46DE /* ThermostatStatusItem.swift */; };
 		1C6AB0890960150B4D251149 /* CloudSyncTranslatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5DADAA257C2278B651DA7C1 /* CloudSyncTranslatorTests.swift */; };
 		1E24EAA5BFD6BC5B18ED2796 /* CameraViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0407B252FDFC384E196876DD /* CameraViewController.swift */; };
 		1F40AE6DB3424BCC0EC82C42 /* URLSchemeHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05A1A234EF733DB7475895AD /* URLSchemeHandler.swift */; };
@@ -83,6 +84,7 @@
 		81700D54D56303C83DD65445 /* PreferencesManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AD1C9F5AE818158EA2137D6 /* PreferencesManagerTests.swift */; };
 		823ABDFECC4D6E3E63AC3E02 /* HighlightingMenuItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA816D16806C49F55E7E09BD /* HighlightingMenuItemView.swift */; };
 		851260AF14FDF357AD88C04F /* BlindMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CDA7864F1CCF19AD70E1F96 /* BlindMenuItem.swift */; };
+		85A7FA1BF8285A1BF44CEA0E /* TemperatureFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 377DE1391A6CCD59734552A7 /* TemperatureFormatter.swift */; };
 		874A311DF0D311BD252A5F4C /* SceneMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3AD56C9EA919B09E7896B55 /* SceneMenuItem.swift */; };
 		8EC542FB9144F2B0695D7D4A /* URLSchemeHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05A1A234EF733DB7475895AD /* URLSchemeHandler.swift */; };
 		9152D628D15146FC06FE6B70 /* Protocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3A3EB6D0DE7E9C0DE57ABAF /* Protocols.swift */; };
@@ -102,10 +104,12 @@
 		B6E0BA859343F2AC750C12D5 /* HotkeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8DAE0D0C65A8D06C17611F3 /* HotkeyManager.swift */; };
 		BC18FC26A00B6D7E9D7D3575 /* ActionEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE6B3519AD69969925F8F105 /* ActionEngine.swift */; };
 		BDB2AF940BB608A11A976278 /* DeviceResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2C2BA989A5E5FBD918CAD29 /* DeviceResolver.swift */; };
+		BFE8D5619196D90414AA74BC /* ThermostatStatusItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7015AC49D972A44CD1BC46DE /* ThermostatStatusItem.swift */; };
 		C8A37E1284E27AADA3A6906B /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 181D73D7B6680B4F8CD37D4E /* DesignSystem.swift */; };
 		CA8E1F973147B8CE2E58FA52 /* BlindMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CDA7864F1CCF19AD70E1F96 /* BlindMenuItem.swift */; };
 		CAFADC7AC3708C1CF63E3E15 /* SwitchMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51B74BF9E1E02D2CF34C9F37 /* SwitchMenuItem.swift */; };
 		CCFB8C68628CB06195CD5CBB /* ValveMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E64829BF9C061EB52A28437 /* ValveMenuItem.swift */; };
+		CD46DAC3D441849FF023CC5A /* CameraPanelManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22C281E3CFA576C918B16C66 /* CameraPanelManager.swift */; };
 		CD6AE61B7DE19AA5DCD88280 /* ToggleSwitch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CD9AB0F2E79886D06C197E2 /* ToggleSwitch.swift */; };
 		CD9CC7D9F4C6F66CB4098F96 /* ModernSlider.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA517D9CAF4A470166D8C402 /* ModernSlider.swift */; };
 		CE60FBDD7DA3242E781072D4 /* ColorConversion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CBA4F5B869DA1C032B0B3EB /* ColorConversion.swift */; };
@@ -124,6 +128,7 @@
 		F0D475122112E46686ADF3C1 /* SensorSummaryMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 117549B5BED7ADDFB473C53C /* SensorSummaryMenuItem.swift */; };
 		F2A340D41E3B57E9F7FEE940 /* HomeKitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81F296FBD051BAC5B51F5322 /* HomeKitManager.swift */; };
 		F3ACBFD7F9E327CEBE68595D /* DeviceGroupTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ACE5B888DD591449DAA1BBB /* DeviceGroupTests.swift */; };
+		F5FCABEBCF642BE8C3921A78 /* TemperatureFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 377DE1391A6CCD59734552A7 /* TemperatureFormatter.swift */; };
 		F6E1CB4E74F98A6A40307F4F /* DeviceGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1078ED585A5ECE7DF0A569F6 /* DeviceGroup.swift */; };
 		FB77F2B3B67AF9C30D7A3108 /* LocalChangeNotifiableTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 074390035F5E079496B2A9FD /* LocalChangeNotifiableTests.swift */; };
 /* End PBXBuildFile section */
@@ -157,11 +162,13 @@
 		2015876131A8AE52D26618FC /* DeeplinksSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeeplinksSection.swift; sourceTree = "<group>"; };
 		2203CC92AE39248AE04E2480 /* HumidifierMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HumidifierMenuItem.swift; sourceTree = "<group>"; };
 		221351A6C7AB72AC5F0E1714 /* AccessoriesSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessoriesSettingsView.swift; sourceTree = "<group>"; };
+		22C281E3CFA576C918B16C66 /* CameraPanelManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraPanelManager.swift; sourceTree = "<group>"; };
 		29D500F71D0EA63DEF283D8B /* MacOSController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacOSController.swift; sourceTree = "<group>"; };
 		2E663466EEEB0E7EAA36C4C8 /* ProManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProManager.swift; sourceTree = "<group>"; };
 		2E76F58466E9E704D579F526 /* DeviceResolverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceResolverTests.swift; sourceTree = "<group>"; };
 		2F34BC0FC06EE9C93C6BC637 /* SwitchMenuItemTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwitchMenuItemTests.swift; sourceTree = "<group>"; };
 		2FBAFF70B90E3449AD09EFEE /* MenuBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBuilder.swift; sourceTree = "<group>"; };
+		377DE1391A6CCD59734552A7 /* TemperatureFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemperatureFormatter.swift; sourceTree = "<group>"; };
 		39978B305FBE0EDCA33CCAFB /* SettingsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindowController.swift; sourceTree = "<group>"; };
 		3AD1C9F5AE818158EA2137D6 /* PreferencesManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesManagerTests.swift; sourceTree = "<group>"; };
 		3F7082F795BA2C9AA55C64A0 /* ACMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ACMenuItem.swift; sourceTree = "<group>"; };
@@ -181,6 +188,7 @@
 		62AD62C3749331FE2DA3CA6B /* GeneralSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralSection.swift; sourceTree = "<group>"; };
 		6CFE6ECEB559109472BA360A /* BaseMenuItems.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaseMenuItems.swift; sourceTree = "<group>"; };
 		6EF08A602DCF69DA079C553B /* ProProducts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProProducts.swift; sourceTree = "<group>"; };
+		7015AC49D972A44CD1BC46DE /* ThermostatStatusItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThermostatStatusItem.swift; sourceTree = "<group>"; };
 		71AB516B350323CC9A1DAEE4 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		72F1F563C08E919FE1477C44 /* AirPurifierMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AirPurifierMenuItem.swift; sourceTree = "<group>"; };
 		73072FCFE16311A3C25C1C2C /* LightMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LightMenuItem.swift; sourceTree = "<group>"; };
@@ -254,6 +262,7 @@
 			children = (
 				4CBA4F5B869DA1C032B0B3EB /* ColorConversion.swift */,
 				D7001522F49F44848A26EC3E /* IconMapping.swift */,
+				377DE1391A6CCD59734552A7 /* TemperatureFormatter.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -272,6 +281,7 @@
 			isa = PBXGroup;
 			children = (
 				A554C4D26C15417928E429D4 /* Assets.xcassets */,
+				22C281E3CFA576C918B16C66 /* CameraPanelManager.swift */,
 				FED3835F8603DA9756A2B79B /* DebugMockAccessories.swift */,
 				D8DAE0D0C65A8D06C17611F3 /* HotkeyManager.swift */,
 				874AC367AE516CA50259C5B9 /* Info.plist */,
@@ -284,6 +294,7 @@
 				D2258862CCE787F231C5D76E /* DesignSystem */,
 				F993AEE95F23CC68310DE85E /* MenuItems */,
 				244BE2D237242FEC7E6B15A5 /* Models */,
+				793C583153901FFB74152678 /* PinnedAccessory */,
 				2BE0077BC968DC12164CC138 /* Pro */,
 				9956D260C6400CA53D1F56A3 /* Settings */,
 				0272ECDF6EEDE9BCD6BD3A6B /* Sync */,
@@ -391,6 +402,14 @@
 				748347D84F0BDF92DA4DE1E4 /* HomeKit.framework */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		793C583153901FFB74152678 /* PinnedAccessory */ = {
+			isa = PBXGroup;
+			children = (
+				7015AC49D972A44CD1BC46DE /* ThermostatStatusItem.swift */,
+			);
+			path = PinnedAccessory;
 			sourceTree = "<group>";
 		};
 		9956D260C6400CA53D1F56A3 /* Settings */ = {
@@ -651,6 +670,7 @@
 				3B59DD36C2400864DCEE2CA3 /* BaseMenuItems.swift in Sources */,
 				CA8E1F973147B8CE2E58FA52 /* BlindMenuItem.swift in Sources */,
 				0C50A9F7E4B39D3073FCB0C2 /* BridgeProtocols.swift in Sources */,
+				CD46DAC3D441849FF023CC5A /* CameraPanelManager.swift in Sources */,
 				11112BE937E38F4684A4A67E /* CamerasSection.swift in Sources */,
 				E53F247D68A3464066E31310 /* CloudSyncManager.swift in Sources */,
 				099D30F6620813668F633D46 /* CloudSyncTranslator.swift in Sources */,
@@ -689,7 +709,9 @@
 				21F39E80DC3F5C5543037DD6 /* SettingsWindowController.swift in Sources */,
 				EBD10F700CEFAA9D8C99229F /* ShortcutButton.swift in Sources */,
 				CAFADC7AC3708C1CF63E3E15 /* SwitchMenuItem.swift in Sources */,
+				85A7FA1BF8285A1BF44CEA0E /* TemperatureFormatter.swift in Sources */,
 				08D8F3C60170681EF3187BCE /* ThermostatMenuItem.swift in Sources */,
+				BFE8D5619196D90414AA74BC /* ThermostatStatusItem.swift in Sources */,
 				CD6AE61B7DE19AA5DCD88280 /* ToggleSwitch.swift in Sources */,
 				1F40AE6DB3424BCC0EC82C42 /* URLSchemeHandler.swift in Sources */,
 				93F37AF55F715D6075134E69 /* ValueConversion.swift in Sources */,
@@ -745,7 +767,9 @@
 				4DE21C1DE370423C77BB118D /* SensorSummaryMenuItem.swift in Sources */,
 				4959FC69F1F23C3ABA0365A1 /* SwitchMenuItem.swift in Sources */,
 				9FBEDE4F029FFD689286563C /* SwitchMenuItemTests.swift in Sources */,
+				F5FCABEBCF642BE8C3921A78 /* TemperatureFormatter.swift in Sources */,
 				94D04698ADBC211F1A888348 /* ThermostatMenuItem.swift in Sources */,
+				1B22E7CDDA48DCC5FFEA461C /* ThermostatStatusItem.swift in Sources */,
 				0E3C04C26FCF48722D26C6CE /* ToggleSwitch.swift in Sources */,
 				462B3D16738CD046AA4DA9CF /* URLSchemeHandler.swift in Sources */,
 				6E6BF460C164E03C263E90F7 /* URLSchemeHandlerTests.swift in Sources */,
@@ -780,7 +804,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_MAC_ICON_IN_CATALYST_APP = YES;
 				CODE_SIGN_ENTITLEMENTS = Itsyhome/Itsyhome.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 100;
+				CURRENT_PROJECT_VERSION = 110;
 				DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER = NO;
 				INFOPLIST_FILE = Itsyhome/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Itsyhome;
@@ -789,7 +813,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.0;
+				MARKETING_VERSION = 1.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.nickustinov.itsyhome;
 				PRODUCT_NAME = Itsyhome;
 				SDKROOT = iphoneos;
@@ -908,7 +932,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_MAC_ICON_IN_CATALYST_APP = YES;
 				CODE_SIGN_ENTITLEMENTS = Itsyhome/Itsyhome.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 100;
+				CURRENT_PROJECT_VERSION = 110;
 				DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER = NO;
 				INFOPLIST_FILE = Itsyhome/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Itsyhome;
@@ -917,7 +941,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.0;
+				MARKETING_VERSION = 1.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.nickustinov.itsyhome;
 				PRODUCT_NAME = Itsyhome;
 				SDKROOT = iphoneos;

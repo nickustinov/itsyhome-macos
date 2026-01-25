@@ -71,7 +71,7 @@ class LockMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshab
         statusLabel = NSTextField(labelWithString: "Locked")
         statusLabel.frame = NSRect(x: statusX, y: labelY, width: statusWidth, height: 17)
         statusLabel.font = DS.Typography.labelSmall
-        statusLabel.textColor = DS.Colors.mutedForeground
+        statusLabel.textColor = .secondaryLabelColor
         statusLabel.alignment = .right
         containerView.addSubview(statusLabel)
 
@@ -114,7 +114,7 @@ class LockMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshab
         iconView.image = NSImage(systemSymbolName: isLocked ? "lock.fill" : "lock.open", accessibilityDescription: nil)
         iconView.contentTintColor = DS.Colors.mutedForeground
         statusLabel.stringValue = isLocked ? "Locked" : "Unlocked"
-        statusLabel.textColor = DS.Colors.mutedForeground
+        statusLabel.textColor = .secondaryLabelColor
         toggleSwitch.setOn(isLocked, animated: false)
     }
 

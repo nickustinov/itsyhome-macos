@@ -102,7 +102,7 @@ class ACMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable
         tempLabel = NSTextField(labelWithString: "--°")
         tempLabel.frame = NSRect(x: tempX, y: labelY, width: tempWidth, height: 17)
         tempLabel.font = DS.Typography.labelSmall
-        tempLabel.textColor = DS.Colors.mutedForeground
+        tempLabel.textColor = .secondaryLabelColor
         tempLabel.alignment = .right
         containerView.addSubview(tempLabel)
 
@@ -175,8 +175,8 @@ class ACMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable
         // Target temp label
         targetLabel = NSTextField(labelWithString: "24°")
         targetLabel.frame = NSRect(x: tempControlsX + 22, y: 5, width: 32, height: 17)
-        targetLabel.font = NSFont.systemFont(ofSize: 11, weight: .medium)
-        targetLabel.textColor = DS.Colors.foreground
+        targetLabel.font = DS.Typography.labelSmall
+        targetLabel.textColor = .secondaryLabelColor
         targetLabel.alignment = .center
         controlsRow.addSubview(targetLabel)
 
@@ -244,7 +244,7 @@ class ACMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable
         } else if characteristicId == currentTempId {
             if let temp = ValueConversion.toDouble(value) {
                 currentTemp = temp
-                tempLabel.stringValue = String(format: "%.1f°", temp)
+                tempLabel.stringValue = TemperatureFormatter.format(temp, decimals: 1)
             }
         } else if characteristicId == currentStateId {
             if let state = ValueConversion.toInt(value) {
@@ -319,7 +319,7 @@ class ACMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable
         case 2: targetTemp = coolingThreshold  // cool mode
         default: targetTemp = coolingThreshold // auto - show cooling threshold
         }
-        targetLabel.stringValue = String(format: "%.0f°", targetTemp)
+        targetLabel.stringValue = TemperatureFormatter.format(targetTemp)
     }
 
     private func currentTargetTemp() -> Double {

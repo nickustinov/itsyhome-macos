@@ -46,6 +46,8 @@ struct CloudSyncTranslator {
         sceneNameToId.removeAll()
         roomIdToName = roomLookup
         roomNameToId = Dictionary(uniqueKeysWithValues: data.rooms.map { ($0.name, $0.uniqueIdentifier) })
+        print("[CloudSync Translator] updateMenuData: roomIdToName=\(roomIdToName)")
+        print("[CloudSync Translator] updateMenuData: roomNameToId=\(roomNameToId)")
 
         for accessory in data.accessories {
             let roomName = accessory.roomIdentifier.flatMap { roomLookup[$0] } ?? "Unknown"
@@ -72,33 +74,43 @@ struct CloudSyncTranslator {
     // MARK: - ID translation
 
     func translateIdsToStable(_ ids: [String], type: IdType) -> [String] {
-        ids.compactMap { id in
+        let result = ids.compactMap { id -> String? in
             switch type {
             case .service:
                 return serviceIdToStable[id] ?? sceneIdToName[id]
             case .scene:
                 return sceneIdToName[id]
             case .room:
-                return roomIdToName[id]
+                let name = roomIdToName[id]
+                if name == nil {
+                    print("[CloudSync Translator] translateIdsToStable: room id '\(id)' NOT FOUND in roomIdToName")
+                }
+                return name
             case .camera:
                 return cameraIdToName[id]
             }
         }
+        return result
     }
 
     func translateStableToIds(_ names: [String], type: IdType) -> [String] {
-        names.compactMap { name in
+        let result = names.compactMap { name -> String? in
             switch type {
             case .service:
                 return stableToServiceId[name] ?? sceneNameToId[name]
             case .scene:
                 return sceneNameToId[name]
             case .room:
-                return roomNameToId[name]
+                let id = roomNameToId[name]
+                if id == nil {
+                    print("[CloudSync Translator] translateStableToIds: room name '\(name)' NOT FOUND in roomNameToId")
+                }
+                return id
             case .camera:
                 return cameraNameToId[name]
             }
         }
+        return result
     }
 
     // MARK: - Device groups

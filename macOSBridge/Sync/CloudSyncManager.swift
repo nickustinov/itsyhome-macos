@@ -63,9 +63,16 @@ final class CloudSyncManager {
     }
 
     func startListening() {
-        guard !isListening else { return }
-        guard ProStatusCache.shared.isPro && isSyncEnabled else { return }
+        guard !isListening else {
+            print("[CloudSync] startListening: already listening")
+            return
+        }
+        guard ProStatusCache.shared.isPro && isSyncEnabled else {
+            print("[CloudSync] startListening: skipped (isPro=\(ProStatusCache.shared.isPro), syncEnabled=\(isSyncEnabled))")
+            return
+        }
 
+        print("[CloudSync] startListening: starting...")
         isListening = true
 
         NotificationCenter.default.addObserver(
@@ -83,10 +90,12 @@ final class CloudSyncManager {
         )
 
         // Pull cloud changes on startup (don't upload — let handleLocalChange handle uploads)
+        print("[CloudSync] startListening: pulling cloud changes...")
         isSyncing = true
         cloudStore.synchronize()
         pullFromCloudStore()
         isSyncing = false
+        print("[CloudSync] startListening: complete")
     }
 
     func stopListening() {
@@ -108,36 +117,70 @@ final class CloudSyncManager {
     // MARK: - Sync handlers
 
     @objc private func handleCloudChange(_ notification: Notification) {
-        guard !isSyncing else { return }
+        print("[CloudSync] handleCloudChange: received notification")
+        guard !isSyncing else {
+            print("[CloudSync] handleCloudChange: skipped (already syncing)")
+            return
+        }
         guard let userInfo = notification.userInfo,
               let changeReason = userInfo[NSUbiquitousKeyValueStoreChangeReasonKey] as? Int else {
+            print("[CloudSync] handleCloudChange: skipped (no change reason)")
             return
+        }
+
+        let reasonName: String
+        switch changeReason {
+        case NSUbiquitousKeyValueStoreServerChange: reasonName = "ServerChange"
+        case NSUbiquitousKeyValueStoreInitialSyncChange: reasonName = "InitialSyncChange"
+        case NSUbiquitousKeyValueStoreQuotaViolationChange: reasonName = "QuotaViolation"
+        case NSUbiquitousKeyValueStoreAccountChange: reasonName = "AccountChange"
+        default: reasonName = "Unknown(\(changeReason))"
+        }
+        print("[CloudSync] handleCloudChange: reason=\(reasonName)")
+
+        if let changedKeys = userInfo[NSUbiquitousKeyValueStoreChangedKeysKey] as? [String] {
+            print("[CloudSync] handleCloudChange: changedKeys=\(changedKeys)")
         }
 
         guard changeReason == NSUbiquitousKeyValueStoreServerChange ||
               changeReason == NSUbiquitousKeyValueStoreInitialSyncChange else {
+            print("[CloudSync] handleCloudChange: skipped (reason not relevant)")
             return
         }
 
         isSyncing = true
         pullFromCloudStore()
         isSyncing = false
+        print("[CloudSync] handleCloudChange: complete")
     }
 
     @objc private func handleLocalChange(_ notification: Notification) {
-        guard !isApplyingCloudChanges && !isSyncing else { return }
-        guard ProStatusCache.shared.isPro && isSyncEnabled else { return }
+        guard !isApplyingCloudChanges && !isSyncing else {
+            print("[CloudSync] handleLocalChange: skipped (applyingCloud=\(isApplyingCloudChanges), syncing=\(isSyncing))")
+            return
+        }
+        guard ProStatusCache.shared.isPro && isSyncEnabled else {
+            print("[CloudSync] handleLocalChange: skipped (isPro=\(ProStatusCache.shared.isPro), syncEnabled=\(isSyncEnabled))")
+            return
+        }
+        print("[CloudSync] handleLocalChange: uploading all syncable keys...")
         uploadAllSyncableKeys()
     }
 
     // MARK: - Pull
 
     private func pullFromCloudStore() {
+        print("[CloudSync] pullFromCloudStore: starting...")
         guard let homeId = PreferencesManager.shared.currentHomeId,
               let homeName = PreferencesManager.shared.currentHomeName else {
+            print("[CloudSync] pullFromCloudStore: skipped (no homeId/homeName)")
             return
         }
-        guard translator.hasData else { return }
+        print("[CloudSync] pullFromCloudStore: homeId=\(homeId), homeName=\(homeName)")
+        guard translator.hasData else {
+            print("[CloudSync] pullFromCloudStore: skipped (translator has no data)")
+            return
+        }
 
         isApplyingCloudChanges = true
         defer { isApplyingCloudChanges = false }
@@ -175,6 +218,7 @@ final class CloudSyncManager {
             appliedCount += 1
         }
 
+        print("[CloudSync] pullFromCloudStore: appliedCount=\(appliedCount)")
         if appliedCount > 0 {
             lastSyncTimestamp = Date()
             NotificationCenter.default.post(
@@ -189,16 +233,21 @@ final class CloudSyncManager {
         let localKey = "\(prefix)_\(homeId)"
 
         guard let cloudNames = cloudStore.object(forKey: cloudKey) as? [String] else {
+            print("[CloudSync] pullIdKey(\(prefix)): no cloud data for key '\(cloudKey)'")
             return false
         }
 
+        print("[CloudSync] pullIdKey(\(prefix)): cloudNames=\(cloudNames)")
         let localIds = translator.translateStableToIds(cloudNames, type: type)
         let currentIds = defaults.object(forKey: localKey) as? [String] ?? []
+        print("[CloudSync] pullIdKey(\(prefix)): translatedIds=\(localIds), currentIds=\(currentIds)")
 
         if localIds != currentIds {
+            print("[CloudSync] pullIdKey(\(prefix)): APPLYING change to '\(localKey)'")
             defaults.set(localIds, forKey: localKey)
             return true
         }
+        print("[CloudSync] pullIdKey(\(prefix)): no change needed")
         return false
     }
 
@@ -234,9 +283,14 @@ final class CloudSyncManager {
     private func uploadAllSyncableKeys() {
         guard let homeId = PreferencesManager.shared.currentHomeId,
               let homeName = PreferencesManager.shared.currentHomeName else {
+            print("[CloudSync] uploadAllSyncableKeys: skipped (no homeId/homeName)")
             return
         }
-        guard translator.hasData else { return }
+        guard translator.hasData else {
+            print("[CloudSync] uploadAllSyncableKeys: skipped (translator has no data)")
+            return
+        }
+        print("[CloudSync] uploadAllSyncableKeys: starting for home '\(homeName)'...")
 
         for prefix in serviceIdKeys {
             uploadIdKey(prefix: prefix, type: .service, homeName: homeName, homeId: homeId)
@@ -255,7 +309,8 @@ final class CloudSyncManager {
         uploadEncodedKey(prefix: "deviceGroups", homeName: homeName, homeId: homeId)
         uploadEncodedKey(prefix: "shortcuts", homeName: homeName, homeId: homeId)
 
-        cloudStore.synchronize()
+        let syncResult = cloudStore.synchronize()
+        print("[CloudSync] uploadAllSyncableKeys: synchronize returned \(syncResult)")
         lastSyncTimestamp = Date()
     }
 
@@ -263,13 +318,24 @@ final class CloudSyncManager {
         let localKey = "\(prefix)_\(homeId)"
         let cloudKey = "\(prefix)_\(homeName)"
 
-        guard let ids = defaults.object(forKey: localKey) as? [String], !ids.isEmpty else {
+        let ids = defaults.object(forKey: localKey) as? [String] ?? []
+
+        // If local array is empty, remove from cloud to prevent stale data from overwriting
+        if ids.isEmpty {
+            print("[CloudSync] uploadIdKey(\(prefix)): local is empty, removing '\(cloudKey)' from cloud")
+            cloudStore.removeObject(forKey: cloudKey)
             return
         }
 
+        print("[CloudSync] uploadIdKey(\(prefix)): localIds=\(ids)")
         let stableNames = translator.translateIdsToStable(ids, type: type)
-        guard !stableNames.isEmpty else { return }
+        print("[CloudSync] uploadIdKey(\(prefix)): stableNames=\(stableNames)")
+        guard !stableNames.isEmpty else {
+            print("[CloudSync] uploadIdKey(\(prefix)): skipped (no stable names)")
+            return
+        }
         cloudStore.set(stableNames, forKey: cloudKey)
+        print("[CloudSync] uploadIdKey(\(prefix)): uploaded to '\(cloudKey)'")
     }
 
     private func uploadEncodedKey(prefix: String, homeName: String, homeId: String) {
