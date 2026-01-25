@@ -16,7 +16,7 @@ class SettingsWindowController: NSWindowController {
 
     private init() {
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 750, height: 450),
+            contentRect: NSRect(x: 0, y: 0, width: 750, height: 600),
             styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
             backing: .buffered,
             defer: false
@@ -28,7 +28,7 @@ class SettingsWindowController: NSWindowController {
         super.init(window: window)
 
         // Vertically resizable only (fixed width)
-        window.setContentSize(NSSize(width: 750, height: 450))
+        window.setContentSize(NSSize(width: 750, height: 600))
         window.contentMinSize = NSSize(width: 750, height: 350)
         window.contentMaxSize = NSSize(width: 750, height: CGFloat.greatestFiniteMagnitude)
 
