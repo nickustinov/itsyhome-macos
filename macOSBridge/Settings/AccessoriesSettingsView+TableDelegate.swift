@@ -52,11 +52,9 @@ extension AccessoriesSettingsView: NSTableViewDelegate, NSTableViewDataSource {
         let config = AccessoryRowConfig(
             name: item.name,
             icon: item.icon,
-            isFavourite: true,
-            isItemHidden: false,
-            isSectionHidden: false,
             showDragHandle: true,
-            showEyeButton: false,
+            isFavourite: true,
+            showStarButton: true,
             itemId: item.id
         )
         let rowView = AccessoryRowView(config: config)
@@ -91,14 +89,15 @@ extension AccessoriesSettingsView: NSTableViewDelegate, NSTableViewDataSource {
         let config = AccessoryRowConfig(
             name: scene.name,
             icon: SceneIconInference.icon(for: scene.name),
+            showDragHandle: true,
             isFavourite: isFav,
             isItemHidden: isSceneHidden,
             isSectionHidden: isHidden,
-            showDragHandle: true,
+            isPinned: isPinned,
+            showStarButton: true,
             showEyeButton: true,
-            itemId: nil,
             showPinButton: true,
-            isPinned: isPinned
+            indentLevel: 1
         )
         let rowView = AccessoryRowView(config: config)
         rowView.onStarToggled = { [weak self] in
@@ -116,7 +115,7 @@ extension AccessoriesSettingsView: NSTableViewDelegate, NSTableViewDataSource {
         return rowView
     }
 
-    func createAccessoryRow(service: ServiceData, roomHidden: Bool) -> AccessoryRowView {
+    func createAccessoryRow(service: ServiceData, roomHidden: Bool, indentLevel: Int = 1) -> AccessoryRowView {
         let preferences = PreferencesManager.shared
         let isFav = preferences.isFavourite(serviceId: service.uniqueIdentifier)
         let isServiceHidden = preferences.isHidden(serviceId: service.uniqueIdentifier)
@@ -127,12 +126,12 @@ extension AccessoriesSettingsView: NSTableViewDelegate, NSTableViewDataSource {
             isFavourite: isFav,
             isItemHidden: isServiceHidden,
             isSectionHidden: roomHidden,
-            showDragHandle: false,
-            showEyeButton: true,
-            itemId: nil,
-            showPinButton: true,  // All accessories can be pinned
             isPinned: isPinned,
-            serviceType: service.serviceType
+            showStarButton: true,
+            showEyeButton: true,
+            showPinButton: true,
+            serviceType: service.serviceType,
+            indentLevel: indentLevel
         )
         let rowView = AccessoryRowView(config: config)
         rowView.onStarToggled = { [weak self] in

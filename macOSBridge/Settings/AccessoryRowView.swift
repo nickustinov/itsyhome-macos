@@ -2,7 +2,7 @@
 //  AccessoryRowView.swift
 //  macOSBridge
 //
-//  Unified row view for accessory lists with optional drag handle
+//  Unified row view for accessory lists, section headers, and rooms
 //
 
 import AppKit
@@ -14,6 +14,7 @@ struct AccessoryRowLayout {
     static let cardHeight: CGFloat = 32
     static let buttonSize: CGFloat = 20
     static let iconSize: CGFloat = 16
+    static let chevronSize: CGFloat = 14
     static let spacing: CGFloat = 6
     static let labelHeight: CGFloat = 17
     static let leftPadding: CGFloat = 8
@@ -21,6 +22,8 @@ struct AccessoryRowLayout {
     static let cardPadding: CGFloat = 2
     static let cardCornerRadius: CGFloat = 8
     static let dragHandleWidth: CGFloat = 10
+    static let indentWidth: CGFloat = 20
+    static let pipeSpacing: CGFloat = 8
 }
 
 // MARK: - Drag handle view
@@ -56,28 +59,69 @@ class DragHandleView: NSView {
 struct AccessoryRowConfig {
     let name: String
     let icon: NSImage?
+    let count: Int?  // Shows count after name (for groups/rooms)
+
+    // Left side options
+    let showDragHandle: Bool
+    let showChevron: Bool
+    let isCollapsed: Bool
+
+    // State
     let isFavourite: Bool
     let isItemHidden: Bool
     let isSectionHidden: Bool
-    let showDragHandle: Bool
-    let showEyeButton: Bool
-    let itemId: String?  // For shortcut binding
-    let showPinButton: Bool
     let isPinned: Bool
-    let serviceType: String?
 
-    init(name: String, icon: NSImage?, isFavourite: Bool, isItemHidden: Bool, isSectionHidden: Bool, showDragHandle: Bool, showEyeButton: Bool, itemId: String?, showPinButton: Bool = false, isPinned: Bool = false, serviceType: String? = nil) {
+    // Right side buttons
+    let showStarButton: Bool
+    let showEyeButton: Bool
+    let showPinButton: Bool
+
+    // Other
+    let itemId: String?  // For shortcut binding
+    let rowTag: Int  // For identifying in callbacks
+    let serviceType: String?
+    let indentLevel: Int  // 0 = no indent, 1 = nested under section
+    let isSectionHeader: Bool  // Uses medium weight font
+
+    init(
+        name: String,
+        icon: NSImage? = nil,
+        count: Int? = nil,
+        showDragHandle: Bool = false,
+        showChevron: Bool = false,
+        isCollapsed: Bool = false,
+        isFavourite: Bool = false,
+        isItemHidden: Bool = false,
+        isSectionHidden: Bool = false,
+        isPinned: Bool = false,
+        showStarButton: Bool = false,
+        showEyeButton: Bool = false,
+        showPinButton: Bool = false,
+        itemId: String? = nil,
+        rowTag: Int = 0,
+        serviceType: String? = nil,
+        indentLevel: Int = 0,
+        isSectionHeader: Bool = false
+    ) {
         self.name = name
         self.icon = icon
+        self.count = count
+        self.showDragHandle = showDragHandle
+        self.showChevron = showChevron
+        self.isCollapsed = isCollapsed
         self.isFavourite = isFavourite
         self.isItemHidden = isItemHidden
         self.isSectionHidden = isSectionHidden
-        self.showDragHandle = showDragHandle
-        self.showEyeButton = showEyeButton
-        self.itemId = itemId
-        self.showPinButton = showPinButton
         self.isPinned = isPinned
+        self.showStarButton = showStarButton
+        self.showEyeButton = showEyeButton
+        self.showPinButton = showPinButton
+        self.itemId = itemId
+        self.rowTag = rowTag
         self.serviceType = serviceType
+        self.indentLevel = indentLevel
+        self.isSectionHeader = isSectionHeader
     }
 }
 
@@ -87,27 +131,45 @@ class AccessoryRowView: NSView {
 
     private let cardBackground = NSView()
     private var dragHandle: DragHandleView?
-    private let starButton = NSButton()
-    private var eyeButton: NSButton?
-    private let typeIcon = NSImageView()
+    private var chevronButton: NSButton?
+    private var typeIcon: NSImageView?
     private let nameLabel = NSTextField()
-    private var shortcutButton: ShortcutButton?
+    private var countLabel: NSTextField?
+
+    // Right-side controls
+    private var starButton: NSButton?
+    private var eyeButton: NSButton?
     private var pinButton: NSButton?
+    private var shortcutButton: ShortcutButton?
+
+    // Pipe separators
+    private var pipes: [NSTextField] = []
 
     private var isFavourite: Bool
     private var isItemHidden: Bool
     private var isPinned: Bool
-    private var itemId: String?
+    private var isCollapsed: Bool
+    private let showDragHandle: Bool
+    private let showChevron: Bool
+    private let hasIcon: Bool
+    private let indentLevel: Int
+    let rowTag: Int
 
     var onStarToggled: (() -> Void)?
     var onEyeToggled: (() -> Void)?
     var onPinToggled: (() -> Void)?
+    var onChevronToggled: (() -> Void)?
 
     init(config: AccessoryRowConfig) {
         self.isFavourite = config.isFavourite
         self.isItemHidden = config.isItemHidden
         self.isPinned = config.isPinned
-        self.itemId = config.itemId
+        self.isCollapsed = config.isCollapsed
+        self.showDragHandle = config.showDragHandle
+        self.showChevron = config.showChevron
+        self.hasIcon = config.icon != nil
+        self.indentLevel = config.indentLevel
+        self.rowTag = config.rowTag
 
         super.init(frame: NSRect(x: 0, y: 0, width: 360, height: AccessoryRowLayout.rowHeight))
 
@@ -126,43 +188,38 @@ class AccessoryRowView: NSView {
         cardBackground.layer?.cornerRadius = AccessoryRowLayout.cardCornerRadius
         addSubview(cardBackground)
 
-        // Drag handle (optional)
+        // Drag handle
         if config.showDragHandle {
             dragHandle = DragHandleView()
             addSubview(dragHandle!)
         }
 
-        // Star button
-        starButton.bezelStyle = .inline
-        starButton.isBordered = false
-        starButton.imagePosition = .imageOnly
-        starButton.imageScaling = .scaleProportionallyUpOrDown
-        starButton.target = self
-        starButton.action = #selector(starTapped)
-        addSubview(starButton)
-
-        // Eye button (optional)
-        if config.showEyeButton {
-            let eye = NSButton()
-            eye.bezelStyle = .inline
-            eye.isBordered = false
-            eye.imagePosition = .imageOnly
-            eye.imageScaling = .scaleProportionallyUpOrDown
-            eye.target = self
-            eye.action = #selector(eyeTapped)
-            eyeButton = eye
-            addSubview(eye)
+        // Chevron (for collapsible sections)
+        if config.showChevron {
+            let btn = NSButton()
+            btn.bezelStyle = .inline
+            btn.isBordered = false
+            btn.imagePosition = .imageOnly
+            btn.imageScaling = .scaleNone
+            btn.target = self
+            btn.action = #selector(chevronTapped)
+            chevronButton = btn
+            addSubview(btn)
         }
 
         // Type icon
-        typeIcon.imageScaling = .scaleProportionallyUpOrDown
-        typeIcon.image = config.icon
-        typeIcon.contentTintColor = .secondaryLabelColor
-        addSubview(typeIcon)
+        if let icon = config.icon {
+            let iv = NSImageView()
+            iv.imageScaling = .scaleProportionallyUpOrDown
+            iv.image = icon
+            iv.contentTintColor = .secondaryLabelColor
+            typeIcon = iv
+            addSubview(iv)
+        }
 
         // Name label
         nameLabel.stringValue = config.name
-        nameLabel.font = .systemFont(ofSize: 13)
+        nameLabel.font = config.isSectionHeader ? .systemFont(ofSize: 13, weight: .medium) : .systemFont(ofSize: 13)
         nameLabel.textColor = .labelColor
         nameLabel.lineBreakMode = .byTruncatingTail
         nameLabel.isBezeled = false
@@ -170,7 +227,66 @@ class AccessoryRowView: NSView {
         nameLabel.drawsBackground = false
         addSubview(nameLabel)
 
-        // Shortcut button (only for favourites)
+        // Count label (for groups/rooms)
+        if let count = config.count {
+            let label = NSTextField(labelWithString: "\(count)")
+            label.font = .systemFont(ofSize: 11)
+            label.textColor = .secondaryLabelColor
+            countLabel = label
+            addSubview(label)
+        }
+
+        // Right side controls with pipes
+        var needsPipe = false
+
+        // Star button
+        if config.showStarButton {
+            let btn = NSButton()
+            btn.bezelStyle = .inline
+            btn.isBordered = false
+            btn.imagePosition = .imageOnly
+            btn.imageScaling = .scaleProportionallyUpOrDown
+            btn.target = self
+            btn.action = #selector(starTapped)
+            starButton = btn
+            addSubview(btn)
+            needsPipe = true
+        }
+
+        // Eye button
+        if config.showEyeButton {
+            if needsPipe {
+                pipes.append(createPipe())
+            }
+            let btn = NSButton()
+            btn.bezelStyle = .inline
+            btn.isBordered = false
+            btn.imagePosition = .imageOnly
+            btn.imageScaling = .scaleProportionallyUpOrDown
+            btn.target = self
+            btn.action = #selector(eyeTapped)
+            eyeButton = btn
+            addSubview(btn)
+            needsPipe = true
+        }
+
+        // Pin button
+        if config.showPinButton {
+            if needsPipe {
+                pipes.append(createPipe())
+            }
+            let btn = NSButton()
+            btn.bezelStyle = .inline
+            btn.isBordered = false
+            btn.imagePosition = .imageOnly
+            btn.imageScaling = .scaleProportionallyUpOrDown
+            btn.target = self
+            btn.action = #selector(pinTapped)
+            pinButton = btn
+            addSubview(btn)
+        }
+
+        // Shortcut button (only for favourites with itemId)
         if config.showDragHandle, let itemId = config.itemId {
             let btn = ShortcutButton(frame: .zero)
             btn.shortcut = PreferencesManager.shared.shortcut(for: itemId)
@@ -180,57 +296,82 @@ class AccessoryRowView: NSView {
             shortcutButton = btn
             addSubview(btn)
         }
+    }
 
-        // Pin button (for pinning to menu bar)
-        if config.showPinButton {
-            let btn = NSButton(title: config.isPinned ? "Unpin" : "Pin", target: self, action: #selector(pinTapped))
-            btn.bezelStyle = .rounded
-            btn.controlSize = .small
-            pinButton = btn
-            addSubview(btn)
-        }
+    private func createPipe() -> NSTextField {
+        let pipe = NSTextField(labelWithString: "|")
+        pipe.font = .systemFont(ofSize: 11)
+        pipe.textColor = .separatorColor
+        addSubview(pipe)
+        return pipe
     }
 
     private func updateState(config: AccessoryRowConfig) {
-        // Star
-        let starSymbol = isFavourite ? "star.fill" : "star"
-        starButton.image = NSImage(systemSymbolName: starSymbol, accessibilityDescription: nil)
-        starButton.contentTintColor = isFavourite ? .systemYellow : .tertiaryLabelColor
-
-        // Eye
-        if let eye = eyeButton {
-            let eyeSymbol = isItemHidden ? "eye.slash" : "eye"
-            eye.image = NSImage(systemSymbolName: eyeSymbol, accessibilityDescription: nil)
-            eye.contentTintColor = isItemHidden ? .tertiaryLabelColor : .secondaryLabelColor
+        // Chevron
+        if let chevron = chevronButton {
+            let symbol = isCollapsed ? "chevron.right" : "chevron.down"
+            let imgConfig = NSImage.SymbolConfiguration(pointSize: 12, weight: .medium)
+            chevron.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)?.withSymbolConfiguration(imgConfig)
+            chevron.contentTintColor = .secondaryLabelColor
         }
 
-        // Dim when hidden
-        let shouldDim = isItemHidden || config.isSectionHidden
-        nameLabel.alphaValue = shouldDim ? 0.5 : 1.0
-        typeIcon.alphaValue = shouldDim ? 0.5 : 1.0
-    }
+        // Star
+        if let star = starButton {
+            let symbol = isFavourite ? "star.fill" : "star"
+            star.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)
+            star.contentTintColor = isFavourite ? .systemYellow : .tertiaryLabelColor
+        }
 
-    @objc private func starTapped() {
-        isFavourite.toggle()
-        let symbol = isFavourite ? "star.fill" : "star"
-        starButton.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)
-        starButton.contentTintColor = isFavourite ? .systemYellow : .tertiaryLabelColor
-        onStarToggled?()
-    }
-
-    @objc private func eyeTapped() {
-        isItemHidden.toggle()
+        // Eye
         if let eye = eyeButton {
             let symbol = isItemHidden ? "eye.slash" : "eye"
             eye.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)
             eye.contentTintColor = isItemHidden ? .tertiaryLabelColor : .secondaryLabelColor
         }
+
+        // Pin
+        if let pin = pinButton {
+            let symbol = isPinned ? "pin.fill" : "pin"
+            pin.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)
+            pin.contentTintColor = isPinned ? .systemBlue : .tertiaryLabelColor
+        }
+
+        // Dim when hidden
+        let shouldDim = isItemHidden || config.isSectionHidden
+        nameLabel.alphaValue = shouldDim ? 0.5 : 1.0
+        typeIcon?.alphaValue = shouldDim ? 0.5 : 1.0
+        countLabel?.alphaValue = shouldDim ? 0.5 : 1.0
+    }
+
+    @objc private func chevronTapped() {
+        isCollapsed.toggle()
+        let symbol = isCollapsed ? "chevron.right" : "chevron.down"
+        let imgConfig = NSImage.SymbolConfiguration(pointSize: 12, weight: .medium)
+        chevronButton?.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)?.withSymbolConfiguration(imgConfig)
+        onChevronToggled?()
+    }
+
+    @objc private func starTapped() {
+        isFavourite.toggle()
+        let symbol = isFavourite ? "star.fill" : "star"
+        starButton?.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)
+        starButton?.contentTintColor = isFavourite ? .systemYellow : .tertiaryLabelColor
+        onStarToggled?()
+    }
+
+    @objc private func eyeTapped() {
+        isItemHidden.toggle()
+        let symbol = isItemHidden ? "eye.slash" : "eye"
+        eyeButton?.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)
+        eyeButton?.contentTintColor = isItemHidden ? .tertiaryLabelColor : .secondaryLabelColor
         onEyeToggled?()
     }
 
     @objc private func pinTapped() {
         isPinned.toggle()
-        pinButton?.title = isPinned ? "Unpin" : "Pin"
+        let symbol = isPinned ? "pin.fill" : "pin"
+        pinButton?.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)
+        pinButton?.contentTintColor = isPinned ? .systemBlue : .tertiaryLabelColor
         onPinToggled?()
     }
 
@@ -239,46 +380,74 @@ class AccessoryRowView: NSView {
 
         let L = AccessoryRowLayout.self
         let cardY = L.cardPadding
+        let indent = CGFloat(indentLevel) * L.indentWidth
 
-        // Card background
-        cardBackground.frame = NSRect(x: 0, y: cardY, width: bounds.width, height: L.cardHeight)
+        // Card background (indented)
+        cardBackground.frame = NSRect(x: indent, y: cardY, width: bounds.width - indent, height: L.cardHeight)
 
-        var x = L.leftPadding
+        var x = indent + L.leftPadding
 
-        // Drag handle
-        if let drag = dragHandle {
-            drag.frame = NSRect(x: x, y: cardY + (L.cardHeight - 14) / 2, width: L.dragHandleWidth, height: 14)
+        // Drag handle (or reserved space for alignment when other rows have it)
+        if showDragHandle {
+            if let drag = dragHandle {
+                drag.frame = NSRect(x: x, y: cardY + (L.cardHeight - 14) / 2, width: L.dragHandleWidth, height: 14)
+            }
             x += L.dragHandleWidth + L.spacing
         }
 
-        // Star button
-        starButton.frame = NSRect(x: x, y: cardY + (L.cardHeight - L.buttonSize) / 2, width: L.buttonSize, height: L.buttonSize)
-        x += L.buttonSize + L.spacing
+        // Chevron
+        if let chevron = chevronButton {
+            chevron.frame = NSRect(x: x, y: cardY + (L.cardHeight - L.chevronSize) / 2, width: L.chevronSize, height: L.chevronSize)
+            x += L.chevronSize + L.spacing
+        }
+
+        // Type icon
+        if let icon = typeIcon {
+            icon.frame = NSRect(x: x, y: cardY + (L.cardHeight - L.iconSize) / 2, width: L.iconSize, height: L.iconSize)
+            x += L.iconSize + L.spacing
+        }
+
+        // Right-side controls (calculate from right edge)
+        var rightEdge = bounds.width - L.rightPadding
+        var pipeIndex = pipes.count - 1
+
+        // Pin button
+        if let pin = pinButton {
+            pin.frame = NSRect(x: rightEdge - L.buttonSize, y: cardY + (L.cardHeight - L.buttonSize) / 2, width: L.buttonSize, height: L.buttonSize)
+            rightEdge -= L.buttonSize
+
+            if pipeIndex >= 0 {
+                rightEdge -= L.pipeSpacing
+                let pipe = pipes[pipeIndex]
+                pipe.sizeToFit()
+                pipe.frame = NSRect(x: rightEdge - pipe.frame.width / 2, y: cardY + (L.cardHeight - pipe.frame.height) / 2, width: pipe.frame.width, height: pipe.frame.height)
+                rightEdge -= L.pipeSpacing
+                pipeIndex -= 1
+            }
+        }
 
         // Eye button
         if let eye = eyeButton {
-            eye.frame = NSRect(x: x, y: cardY + (L.cardHeight - L.buttonSize) / 2, width: L.buttonSize, height: L.buttonSize)
-            x += L.buttonSize + L.spacing
+            eye.frame = NSRect(x: rightEdge - L.buttonSize, y: cardY + (L.cardHeight - L.buttonSize) / 2, width: L.buttonSize, height: L.buttonSize)
+            rightEdge -= L.buttonSize
+
+            if pipeIndex >= 0 {
+                rightEdge -= L.pipeSpacing
+                let pipe = pipes[pipeIndex]
+                pipe.sizeToFit()
+                pipe.frame = NSRect(x: rightEdge - pipe.frame.width / 2, y: cardY + (L.cardHeight - pipe.frame.height) / 2, width: pipe.frame.width, height: pipe.frame.height)
+                rightEdge -= L.pipeSpacing
+                pipeIndex -= 1
+            }
         }
 
-        // Type icon (with 8pt gap from control icons)
-        x += 8
-        typeIcon.frame = NSRect(x: x, y: cardY + (L.cardHeight - L.iconSize) / 2, width: L.iconSize, height: L.iconSize)
-        x += L.iconSize + L.spacing
-
-        // Right-side controls
-        var rightEdge = bounds.width - L.rightPadding
-
-        // Pin button on the right (if present)
-        if let pin = pinButton {
-            pin.sizeToFit()
-            let pinWidth = pin.frame.width
-            let pinHeight: CGFloat = 21
-            pin.frame = NSRect(x: rightEdge - pinWidth, y: cardY + (L.cardHeight - pinHeight) / 2, width: pinWidth, height: pinHeight)
-            rightEdge -= pinWidth + L.spacing
+        // Star button
+        if let star = starButton {
+            star.frame = NSRect(x: rightEdge - L.buttonSize, y: cardY + (L.cardHeight - L.buttonSize) / 2, width: L.buttonSize, height: L.buttonSize)
+            rightEdge -= L.buttonSize + L.spacing
         }
 
-        // Shortcut button (if present)
+        // Shortcut button (before star if present)
         if let shortcut = shortcutButton {
             let shortcutWidth: CGFloat = 100
             let shortcutHeight: CGFloat = 20
@@ -286,8 +455,23 @@ class AccessoryRowView: NSView {
             rightEdge -= shortcutWidth + L.spacing
         }
 
+        // Count label (after name)
+        var nameLabelWidth = rightEdge - x - L.spacing
+        if let count = countLabel {
+            count.sizeToFit()
+            let countWidth = count.frame.width
+            nameLabelWidth -= countWidth + 4
+        }
+
         // Name label
-        nameLabel.frame = NSRect(x: x, y: cardY + (L.cardHeight - L.labelHeight) / 2, width: max(0, rightEdge - x), height: L.labelHeight)
+        nameLabel.frame = NSRect(x: x, y: cardY + (L.cardHeight - L.labelHeight) / 2, width: max(0, nameLabelWidth), height: L.labelHeight)
+
+        // Position count label after name
+        if let count = countLabel {
+            count.sizeToFit()
+            let nameEndX = x + nameLabel.frame.width + 4
+            count.frame = NSRect(x: nameEndX, y: cardY + (L.cardHeight - count.frame.height) / 2, width: count.frame.width, height: count.frame.height)
+        }
     }
 
     override var intrinsicContentSize: NSSize {
@@ -295,102 +479,32 @@ class AccessoryRowView: NSView {
     }
 }
 
-// MARK: - Section header
+// MARK: - Section header (simple version for other sections)
 
 class AccessorySectionHeader: NSView {
 
     private let titleLabel = NSTextField()
-    private let chevronButton = NSButton()
-    private var eyeButton: NSButton?
 
-    private(set) var isCollapsed: Bool
-
-    var onVisibilityToggled: (() -> Void)?
-    var onCollapseToggled: (() -> Void)?
-
-    private let showChevron: Bool
-
-    init(title: String, isItemHidden: Bool = false, showEyeButton: Bool = false, isCollapsed: Bool = false, showChevron: Bool = false) {
-        self.isCollapsed = isCollapsed
-        self.showChevron = showChevron
+    init(title: String) {
         super.init(frame: NSRect(x: 0, y: 0, width: 360, height: 32))
-
-        if showChevron {
-            chevronButton.bezelStyle = .inline
-            chevronButton.isBordered = false
-            chevronButton.imagePosition = .imageOnly
-            chevronButton.imageScaling = .scaleNone
-            chevronButton.target = self
-            chevronButton.action = #selector(chevronTapped)
-            updateChevron()
-            addSubview(chevronButton)
-        }
 
         titleLabel.stringValue = title
         titleLabel.font = .systemFont(ofSize: 14, weight: .medium)
-        titleLabel.textColor = isItemHidden ? .tertiaryLabelColor : .labelColor
-        titleLabel.alphaValue = isItemHidden ? 0.5 : 1.0
+        titleLabel.textColor = .labelColor
         titleLabel.isBezeled = false
         titleLabel.isEditable = false
         titleLabel.drawsBackground = false
         addSubview(titleLabel)
-
-        if showEyeButton {
-            let eye = NSButton()
-            eye.bezelStyle = .inline
-            eye.isBordered = false
-            eye.imagePosition = .imageOnly
-            eye.imageScaling = .scaleProportionallyUpOrDown
-            let symbol = isItemHidden ? "eye.slash" : "eye"
-            eye.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)
-            eye.contentTintColor = isItemHidden ? .tertiaryLabelColor : .secondaryLabelColor
-            eye.target = self
-            eye.action = #selector(eyeTapped)
-            eyeButton = eye
-            addSubview(eye)
-        }
     }
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 
-    private func updateChevron() {
-        let symbol = isCollapsed ? "chevron.right" : "chevron.down"
-        let config = NSImage.SymbolConfiguration(pointSize: 12, weight: .medium)
-        chevronButton.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)?.withSymbolConfiguration(config)
-        chevronButton.contentTintColor = .secondaryLabelColor
-    }
-
-    @objc private func chevronTapped() {
-        isCollapsed.toggle()
-        updateChevron()
-        onCollapseToggled?()
-    }
-
-    @objc private func eyeTapped() {
-        onVisibilityToggled?()
-    }
-
     override func layout() {
         super.layout()
-
         let L = AccessoryRowLayout.self
-        var x: CGFloat = 0
-
-        // Chevron before title
-        if showChevron {
-            let chevronSize: CGFloat = 14
-            chevronButton.frame = NSRect(x: x, y: (bounds.height - chevronSize) / 2, width: chevronSize, height: chevronSize)
-            x += chevronSize + 2
-        }
-
-        if let eye = eyeButton {
-            eye.frame = NSRect(x: x, y: (bounds.height - L.buttonSize) / 2, width: L.buttonSize, height: L.buttonSize)
-            x += L.buttonSize + L.spacing
-        }
-
-        titleLabel.frame = NSRect(x: x, y: (bounds.height - L.labelHeight) / 2, width: bounds.width - x - 8, height: L.labelHeight)
+        titleLabel.frame = NSRect(x: 0, y: (bounds.height - L.labelHeight) / 2, width: bounds.width - 8, height: L.labelHeight)
     }
 
     override var intrinsicContentSize: NSSize {

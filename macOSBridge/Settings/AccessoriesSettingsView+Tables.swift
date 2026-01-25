@@ -84,200 +84,78 @@ extension AccessoriesSettingsView {
     }
 }
 
-// MARK: - Header strips
+// MARK: - Header strips using AccessoryRowView
 
 extension AccessoriesSettingsView {
 
     func createScenesHeaderStrip(isHidden: Bool, isCollapsed: Bool) -> NSView {
-        let L = AccessoryRowLayout.self
-        let container = CardBoxView()
-        container.translatesAutoresizingMaskIntoConstraints = false
-
-        let chevronButton = createChevronButton(isCollapsed: isCollapsed)
-        chevronButton.target = self
-        chevronButton.action = #selector(scenesChevronTapped)
-        container.addSubview(chevronButton)
-
-        let eyeButton = createEyeButton(isHidden: isHidden)
-        eyeButton.target = self
-        eyeButton.action = #selector(scenesEyeTapped)
-        container.addSubview(eyeButton)
-
-        let nameLabel = createHeaderLabel(text: "Scenes", isHidden: isHidden)
-        container.addSubview(nameLabel)
-
-        NSLayoutConstraint.activate([
-            chevronButton.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: L.leftPadding),
-            chevronButton.centerYAnchor.constraint(equalTo: container.centerYAnchor),
-            chevronButton.widthAnchor.constraint(equalToConstant: 14),
-            chevronButton.heightAnchor.constraint(equalToConstant: 14),
-
-            eyeButton.leadingAnchor.constraint(equalTo: chevronButton.trailingAnchor, constant: L.spacing),
-            eyeButton.centerYAnchor.constraint(equalTo: container.centerYAnchor),
-            eyeButton.widthAnchor.constraint(equalToConstant: L.buttonSize),
-            eyeButton.heightAnchor.constraint(equalToConstant: L.buttonSize),
-
-            nameLabel.leadingAnchor.constraint(equalTo: eyeButton.trailingAnchor, constant: L.spacing),
-            nameLabel.centerYAnchor.constraint(equalTo: container.centerYAnchor),
-            nameLabel.trailingAnchor.constraint(lessThanOrEqualTo: container.trailingAnchor, constant: -L.rightPadding)
-        ])
-
-        return container
+        let config = AccessoryRowConfig(
+            name: "Scenes",
+            showChevron: true,
+            isCollapsed: isCollapsed,
+            isItemHidden: isHidden,
+            showEyeButton: true,
+            isSectionHeader: true
+        )
+        let rowView = AccessoryRowView(config: config)
+        rowView.onChevronToggled = { [weak self] in
+            self?.scenesChevronTapped()
+        }
+        rowView.onEyeToggled = { [weak self] in
+            self?.scenesEyeTapped()
+        }
+        return rowView
     }
 
     func createOtherHeaderStrip(isCollapsed: Bool) -> NSView {
-        let L = AccessoryRowLayout.self
-        let container = CardBoxView()
-        container.translatesAutoresizingMaskIntoConstraints = false
-
-        let chevronButton = createChevronButton(isCollapsed: isCollapsed)
-        chevronButton.target = self
-        chevronButton.action = #selector(otherChevronTapped)
-        container.addSubview(chevronButton)
-
-        let nameLabel = createHeaderLabel(text: "Other", isHidden: false)
-        container.addSubview(nameLabel)
-
-        NSLayoutConstraint.activate([
-            chevronButton.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: L.leftPadding),
-            chevronButton.centerYAnchor.constraint(equalTo: container.centerYAnchor),
-            chevronButton.widthAnchor.constraint(equalToConstant: 14),
-            chevronButton.heightAnchor.constraint(equalToConstant: 14),
-
-            nameLabel.leadingAnchor.constraint(equalTo: chevronButton.trailingAnchor, constant: L.spacing),
-            nameLabel.centerYAnchor.constraint(equalTo: container.centerYAnchor),
-            nameLabel.trailingAnchor.constraint(lessThanOrEqualTo: container.trailingAnchor, constant: -L.rightPadding)
-        ])
-
-        return container
+        let config = AccessoryRowConfig(
+            name: "Other",
+            showChevron: true,
+            isCollapsed: isCollapsed,
+            isSectionHeader: true
+        )
+        let rowView = AccessoryRowView(config: config)
+        rowView.onChevronToggled = { [weak self] in
+            self?.otherChevronTapped()
+        }
+        return rowView
     }
 
     func createRoomHeaderView(room: RoomData, isHidden: Bool, isCollapsed: Bool, serviceCount: Int) -> NSView {
-        let L = AccessoryRowLayout.self
-        let container = CardBoxView()
-        container.translatesAutoresizingMaskIntoConstraints = false
-
         let preferences = PreferencesManager.shared
         let isPinned = preferences.isPinnedRoom(roomId: room.uniqueIdentifier)
         let roomIndex = orderedRooms.firstIndex(where: { $0.uniqueIdentifier == room.uniqueIdentifier }) ?? 0
 
-        let dragHandle = DragHandleView()
-        dragHandle.translatesAutoresizingMaskIntoConstraints = false
-        container.addSubview(dragHandle)
-
-        let chevronButton = createChevronButton(isCollapsed: isCollapsed)
-        chevronButton.tag = roomIndex
-        chevronButton.target = self
-        chevronButton.action = #selector(roomChevronTapped(_:))
-        container.addSubview(chevronButton)
-
-        let eyeButton = createEyeButton(isHidden: isHidden)
-        eyeButton.tag = roomIndex
-        eyeButton.target = self
-        eyeButton.action = #selector(roomEyeTapped(_:))
-        container.addSubview(eyeButton)
-
-        let nameLabel = createHeaderLabel(text: room.name, isHidden: isHidden)
-        nameLabel.lineBreakMode = .byTruncatingTail
-        container.addSubview(nameLabel)
-
-        let countLabel = NSTextField(labelWithString: "\(serviceCount)")
-        countLabel.font = .systemFont(ofSize: 11)
-        countLabel.textColor = .secondaryLabelColor
-        countLabel.alphaValue = isHidden ? 0.5 : 1.0
-        countLabel.translatesAutoresizingMaskIntoConstraints = false
-        container.addSubview(countLabel)
-
-        // Pin button on the right side (like accessory rows)
-        let pinButton = NSButton()
-        pinButton.bezelStyle = .accessoryBarAction
-        pinButton.title = isPinned ? "Unpin" : "Pin"
-        pinButton.font = .systemFont(ofSize: 11)
-        pinButton.controlSize = .small
-        pinButton.tag = roomIndex
-        pinButton.target = self
-        pinButton.action = #selector(roomPinTapped(_:))
-        pinButton.translatesAutoresizingMaskIntoConstraints = false
-        container.addSubview(pinButton)
-
-        NSLayoutConstraint.activate([
-            dragHandle.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: L.leftPadding),
-            dragHandle.centerYAnchor.constraint(equalTo: container.centerYAnchor),
-            dragHandle.widthAnchor.constraint(equalToConstant: L.dragHandleWidth),
-            dragHandle.heightAnchor.constraint(equalToConstant: 14),
-
-            chevronButton.leadingAnchor.constraint(equalTo: dragHandle.trailingAnchor, constant: L.spacing),
-            chevronButton.centerYAnchor.constraint(equalTo: container.centerYAnchor),
-            chevronButton.widthAnchor.constraint(equalToConstant: 14),
-            chevronButton.heightAnchor.constraint(equalToConstant: 14),
-
-            eyeButton.leadingAnchor.constraint(equalTo: chevronButton.trailingAnchor, constant: L.spacing),
-            eyeButton.centerYAnchor.constraint(equalTo: container.centerYAnchor),
-            eyeButton.widthAnchor.constraint(equalToConstant: L.buttonSize),
-            eyeButton.heightAnchor.constraint(equalToConstant: L.buttonSize),
-
-            nameLabel.leadingAnchor.constraint(equalTo: eyeButton.trailingAnchor, constant: L.spacing),
-            nameLabel.centerYAnchor.constraint(equalTo: container.centerYAnchor),
-
-            countLabel.leadingAnchor.constraint(equalTo: nameLabel.trailingAnchor, constant: 4),
-            countLabel.centerYAnchor.constraint(equalTo: container.centerYAnchor),
-
-            pinButton.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -L.rightPadding),
-            pinButton.centerYAnchor.constraint(equalTo: container.centerYAnchor),
-            countLabel.trailingAnchor.constraint(lessThanOrEqualTo: pinButton.leadingAnchor, constant: -8)
-        ])
-
-        return container
-    }
-
-    @objc private func roomPinTapped(_ sender: NSButton) {
-        guard sender.tag < orderedRooms.count else { return }
-        let room = orderedRooms[sender.tag]
-        PreferencesManager.shared.togglePinnedRoom(roomId: room.uniqueIdentifier)
-        rebuild()
-    }
-
-    // MARK: - Button factories
-
-    private func createChevronButton(isCollapsed: Bool) -> NSButton {
-        let button = NSButton()
-        button.bezelStyle = .inline
-        button.isBordered = false
-        button.imagePosition = .imageOnly
-        button.imageScaling = .scaleNone
-        let symbol = isCollapsed ? "chevron.right" : "chevron.down"
-        let config = NSImage.SymbolConfiguration(pointSize: 12, weight: .medium)
-        button.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)?.withSymbolConfiguration(config)
-        button.contentTintColor = .secondaryLabelColor
-        button.translatesAutoresizingMaskIntoConstraints = false
-        return button
-    }
-
-    private func createEyeButton(isHidden: Bool) -> NSButton {
-        let button = NSButton()
-        button.bezelStyle = .inline
-        button.isBordered = false
-        button.imagePosition = .imageOnly
-        button.imageScaling = .scaleProportionallyUpOrDown
-        let symbol = isHidden ? "eye.slash" : "eye"
-        button.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)
-        button.contentTintColor = isHidden ? .tertiaryLabelColor : .secondaryLabelColor
-        button.translatesAutoresizingMaskIntoConstraints = false
-        return button
-    }
-
-    private func createHeaderLabel(text: String, isHidden: Bool) -> NSTextField {
-        let label = NSTextField(labelWithString: text)
-        label.font = .systemFont(ofSize: 13, weight: .medium)
-        label.textColor = isHidden ? .tertiaryLabelColor : .labelColor
-        label.alphaValue = isHidden ? 0.5 : 1.0
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
+        let config = AccessoryRowConfig(
+            name: room.name,
+            icon: IconMapping.iconForRoom(room.name),
+            count: serviceCount,
+            showDragHandle: true,
+            showChevron: true,
+            isCollapsed: isCollapsed,
+            isItemHidden: isHidden,
+            isPinned: isPinned,
+            showEyeButton: true,
+            showPinButton: true,
+            rowTag: roomIndex,
+            isSectionHeader: true
+        )
+        let rowView = AccessoryRowView(config: config)
+        rowView.onChevronToggled = { [weak self] in
+            self?.roomChevronToggled(roomIndex: roomIndex)
+        }
+        rowView.onEyeToggled = { [weak self] in
+            self?.roomEyeToggled(roomIndex: roomIndex)
+        }
+        rowView.onPinToggled = { [weak self] in
+            self?.roomPinToggled(roomIndex: roomIndex)
+        }
+        return rowView
     }
 
     // MARK: - Actions
 
-    @objc func scenesChevronTapped() {
+    func scenesChevronTapped() {
         let scenesKey = "scenes"
         if expandedSections.contains(scenesKey) {
             expandedSections.remove(scenesKey)
@@ -287,12 +165,12 @@ extension AccessoriesSettingsView {
         rebuild()
     }
 
-    @objc func scenesEyeTapped() {
+    func scenesEyeTapped() {
         PreferencesManager.shared.hideScenesSection.toggle()
         rebuild()
     }
 
-    @objc func otherChevronTapped() {
+    func otherChevronTapped() {
         let otherKey = "other"
         if expandedSections.contains(otherKey) {
             expandedSections.remove(otherKey)
@@ -302,9 +180,9 @@ extension AccessoriesSettingsView {
         rebuild()
     }
 
-    @objc func roomChevronTapped(_ sender: NSButton) {
-        guard sender.tag < orderedRooms.count else { return }
-        let roomId = orderedRooms[sender.tag].uniqueIdentifier
+    private func roomChevronToggled(roomIndex: Int) {
+        guard roomIndex < orderedRooms.count else { return }
+        let roomId = orderedRooms[roomIndex].uniqueIdentifier
         if expandedSections.contains(roomId) {
             expandedSections.remove(roomId)
         } else {
@@ -313,10 +191,17 @@ extension AccessoriesSettingsView {
         rebuild()
     }
 
-    @objc func roomEyeTapped(_ sender: NSButton) {
-        guard sender.tag < orderedRooms.count else { return }
-        let roomId = orderedRooms[sender.tag].uniqueIdentifier
+    private func roomEyeToggled(roomIndex: Int) {
+        guard roomIndex < orderedRooms.count else { return }
+        let roomId = orderedRooms[roomIndex].uniqueIdentifier
         PreferencesManager.shared.toggleHidden(roomId: roomId)
+        rebuild()
+    }
+
+    private func roomPinToggled(roomIndex: Int) {
+        guard roomIndex < orderedRooms.count else { return }
+        let room = orderedRooms[roomIndex]
+        PreferencesManager.shared.togglePinnedRoom(roomId: room.uniqueIdentifier)
         rebuild()
     }
 }
