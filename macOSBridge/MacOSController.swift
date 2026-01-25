@@ -633,6 +633,10 @@ extension MacOSController: PinnedStatusItemDelegate {
     func pinnedStatusItem(_ item: PinnedStatusItem, readCharacteristic characteristicId: UUID) {
         iOSBridge?.readCharacteristic(identifier: characteristicId)
     }
+
+    func pinnedStatusItem(_ item: PinnedStatusItem, getCachedValue characteristicId: UUID) -> Any? {
+        return iOSBridge?.getCharacteristicValue(identifier: characteristicId)
+    }
 }
 
 // MARK: - CameraPanelManagerDelegate

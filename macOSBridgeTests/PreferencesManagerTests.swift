@@ -26,7 +26,8 @@ final class PreferencesManagerTests: XCTestCase {
             "hiddenSceneIds", "hiddenServiceIds", "hideScenesSection",
             "hiddenRoomIds", "hiddenCameraIds", "cameraOrder",
             "cameraOverlayAccessories", "deviceGroups", "shortcuts",
-            "roomOrder", "sceneOrder"
+            "roomOrder", "sceneOrder", "globalGroupOrder", "groupOrderByRoom",
+            "favouriteGroupIds"
         ]
         for suffix in keySuffixes {
             defaults.removeObject(forKey: "\(suffix)_\(testHomeId)")
@@ -461,5 +462,95 @@ final class PreferencesManagerTests: XCTestCase {
         let expectation = expectation(forNotification: PreferencesManager.preferencesChangedNotification, object: nil)
         prefs.camerasEnabled = true
         wait(for: [expectation], timeout: 1.0)
+    }
+
+    // MARK: - Global group order (per-home)
+
+    func testGlobalGroupOrderDefaultsEmpty() {
+        XCTAssertTrue(prefs.globalGroupOrder.isEmpty)
+    }
+
+    func testGlobalGroupOrderPersists() {
+        prefs.globalGroupOrder = ["group-a", "group-b", "group-c"]
+        XCTAssertEqual(prefs.globalGroupOrder, ["group-a", "group-b", "group-c"])
+    }
+
+    func testMoveGlobalGroup() {
+        prefs.globalGroupOrder = ["group-a", "group-b", "group-c"]
+        prefs.moveGlobalGroup(from: 0, to: 2)
+        XCTAssertEqual(prefs.globalGroupOrder, ["group-b", "group-c", "group-a"])
+    }
+
+    func testMoveGlobalGroupToBeginning() {
+        prefs.globalGroupOrder = ["group-a", "group-b", "group-c"]
+        prefs.moveGlobalGroup(from: 2, to: 0)
+        XCTAssertEqual(prefs.globalGroupOrder, ["group-c", "group-a", "group-b"])
+    }
+
+    func testMoveGlobalGroupOutOfBoundsNoOp() {
+        prefs.globalGroupOrder = ["group-a", "group-b"]
+        prefs.moveGlobalGroup(from: 5, to: 0)
+        XCTAssertEqual(prefs.globalGroupOrder, ["group-a", "group-b"])
+    }
+
+    // MARK: - Group order by room (per-home)
+
+    func testGroupOrderByRoomDefaultsEmpty() {
+        XCTAssertTrue(prefs.groupOrderByRoom.isEmpty)
+    }
+
+    func testGroupOrderByRoomPersists() {
+        prefs.setGroupOrder(["g1", "g2"], forRoom: "room-1")
+        XCTAssertEqual(prefs.groupOrder(forRoom: "room-1"), ["g1", "g2"])
+    }
+
+    func testMoveGroupInRoom() {
+        prefs.setGroupOrder(["g1", "g2", "g3"], forRoom: "room-1")
+        prefs.moveGroupInRoom("room-1", from: 0, to: 2)
+        XCTAssertEqual(prefs.groupOrder(forRoom: "room-1"), ["g2", "g3", "g1"])
+    }
+
+    func testMoveGroupInRoomToBeginning() {
+        prefs.setGroupOrder(["g1", "g2", "g3"], forRoom: "room-1")
+        prefs.moveGroupInRoom("room-1", from: 2, to: 0)
+        XCTAssertEqual(prefs.groupOrder(forRoom: "room-1"), ["g3", "g1", "g2"])
+    }
+
+    func testSetEmptyGroupOrderRemovesRoom() {
+        prefs.setGroupOrder(["g1"], forRoom: "room-1")
+        prefs.setGroupOrder([], forRoom: "room-1")
+        XCTAssertNil(prefs.groupOrderByRoom["room-1"])
+    }
+
+    // MARK: - Favourite groups (per-home)
+
+    func testFavouriteGroupIdsDefaultsEmpty() {
+        XCTAssertTrue(prefs.favouriteGroupIds.isEmpty)
+    }
+
+    func testToggleFavouriteGroup() {
+        let groupId = "group-1"
+        XCTAssertFalse(prefs.isFavouriteGroup(groupId: groupId))
+
+        prefs.toggleFavouriteGroup(groupId: groupId)
+        XCTAssertTrue(prefs.isFavouriteGroup(groupId: groupId))
+
+        prefs.toggleFavouriteGroup(groupId: groupId)
+        XCTAssertFalse(prefs.isFavouriteGroup(groupId: groupId))
+    }
+
+    func testToggleFavouriteGroupAddsToOrderedFavourites() {
+        let groupId = "group-1"
+        prefs.toggleFavouriteGroup(groupId: groupId)
+
+        XCTAssertTrue(prefs.orderedFavouriteIds.contains("groupFav:\(groupId)"))
+    }
+
+    func testToggleFavouriteGroupRemovesFromOrderedFavourites() {
+        let groupId = "group-1"
+        prefs.toggleFavouriteGroup(groupId: groupId)
+        prefs.toggleFavouriteGroup(groupId: groupId)
+
+        XCTAssertFalse(prefs.orderedFavouriteIds.contains("groupFav:\(groupId)"))
     }
 }

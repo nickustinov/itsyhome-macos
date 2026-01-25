@@ -14,6 +14,7 @@ protocol PinnedStatusItemDelegate: AnyObject {
     func pinnedStatusItemNeedsMenuBuilder(_ item: PinnedStatusItem) -> MenuBuilder?
     func pinnedStatusItemNeedsMenuData(_ item: PinnedStatusItem) -> MenuData?
     func pinnedStatusItem(_ item: PinnedStatusItem, readCharacteristic characteristicId: UUID)
+    func pinnedStatusItem(_ item: PinnedStatusItem, getCachedValue characteristicId: UUID) -> Any?
 }
 
 // MARK: - Pinned item type
@@ -125,7 +126,26 @@ class PinnedStatusItem: NSObject, NSMenuDelegate {
                 }
             }
 
-        case .room(_, let services):
+        case .room(let room, let services):
+            // Add groups that belong to this room first
+            if ProStatusCache.shared.isPro {
+                let preferences = PreferencesManager.shared
+                let roomGroups = preferences.deviceGroups.filter { $0.roomId == room.uniqueIdentifier }
+                let savedOrder = preferences.groupOrder(forRoom: room.uniqueIdentifier)
+                let orderedGroups = roomGroups.sorted { g1, g2 in
+                    let i1 = savedOrder.firstIndex(of: g1.id) ?? Int.max
+                    let i2 = savedOrder.firstIndex(of: g2.id) ?? Int.max
+                    return i1 < i2
+                }
+                for group in orderedGroups {
+                    let item = GroupMenuItem(group: group, menuData: menuData, bridge: builder.bridge)
+                    menu.addItem(item)
+                    menuItems.append(item)
+                }
+                if !orderedGroups.isEmpty && !services.isEmpty {
+                    menu.addItem(NSMenuItem.separator())
+                }
+            }
             // Add all services in the room
             builder.addServicesGroupedByType(to: menu, accessories: servicesAsAccessories(services))
             collectMenuItems(from: menu)
@@ -155,7 +175,10 @@ class PinnedStatusItem: NSObject, NSMenuDelegate {
         menu.addItem(NSMenuItem.separator())
         addSettingsItems()
 
-        // Request current values for all characteristics
+        // Apply cached values immediately for smooth initial display
+        applyCachedValues()
+
+        // Request fresh values from HomeKit (will update if different from cached)
         refreshCharacteristics()
     }
 
@@ -166,6 +189,20 @@ class PinnedStatusItem: NSObject, NSMenuDelegate {
             }
             if let submenu = item.submenu {
                 collectMenuItems(from: submenu)
+            }
+        }
+    }
+
+    private func applyCachedValues() {
+        // Apply cached values to menu items immediately for a smooth initial display
+        for item in menuItems {
+            if let refreshable = item as? CharacteristicRefreshable,
+               let updatable = item as? CharacteristicUpdatable {
+                for charId in refreshable.characteristicIdentifiers {
+                    if let value = delegate?.pinnedStatusItem(self, getCachedValue: charId) {
+                        updatable.updateValue(for: charId, value: value, isLocalChange: false)
+                    }
+                }
             }
         }
     }

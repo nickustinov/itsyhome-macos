@@ -95,11 +95,20 @@ class MenuBuilder {
         guard ProStatusCache.shared.isPro else { return false }
 
         let preferences = PreferencesManager.shared
-        let groups = preferences.deviceGroups
+        // Only show global groups (no room assignment) at the top level
+        let globalGroups = preferences.deviceGroups.filter { $0.roomId == nil }
 
-        guard !groups.isEmpty else { return false }
+        guard !globalGroups.isEmpty else { return false }
 
-        for group in groups {
+        // Order by globalGroupOrder
+        let savedOrder = preferences.globalGroupOrder
+        let orderedGroups = globalGroups.sorted { g1, g2 in
+            let i1 = savedOrder.firstIndex(of: g1.id) ?? Int.max
+            let i2 = savedOrder.firstIndex(of: g2.id) ?? Int.max
+            return i1 < i2
+        }
+
+        for group in orderedGroups {
             let item = GroupMenuItem(group: group, menuData: data, bridge: bridge)
             menu.addItem(item)
         }
@@ -155,7 +164,27 @@ class MenuBuilder {
             }
         }
 
-        let savedOrder = PreferencesManager.shared.roomOrder
+        // Build groups by room lookup (only for Pro users)
+        let preferences = PreferencesManager.shared
+        var groupsByRoom: [String: [DeviceGroup]] = [:]
+        if ProStatusCache.shared.isPro {
+            for group in preferences.deviceGroups {
+                if let roomId = group.roomId {
+                    groupsByRoom[roomId, default: []].append(group)
+                }
+            }
+            // Order groups within each room
+            for (roomId, roomGroups) in groupsByRoom {
+                let savedOrder = preferences.groupOrder(forRoom: roomId)
+                groupsByRoom[roomId] = roomGroups.sorted { g1, g2 in
+                    let i1 = savedOrder.firstIndex(of: g1.id) ?? Int.max
+                    let i2 = savedOrder.firstIndex(of: g2.id) ?? Int.max
+                    return i1 < i2
+                }
+            }
+        }
+
+        let savedOrder = preferences.roomOrder
         let orderedRooms = rooms.sorted { r1, r2 in
             let i1 = savedOrder.firstIndex(of: r1.uniqueIdentifier) ?? Int.max
             let i2 = savedOrder.firstIndex(of: r2.uniqueIdentifier) ?? Int.max
@@ -163,7 +192,11 @@ class MenuBuilder {
         }
 
         for room in orderedRooms {
-            guard let roomAccessories = accessoriesByRoom[room.uniqueIdentifier], !roomAccessories.isEmpty else {
+            let roomAccessories = accessoriesByRoom[room.uniqueIdentifier] ?? []
+            let roomGroups = groupsByRoom[room.uniqueIdentifier] ?? []
+
+            // Skip rooms with no accessories and no groups
+            guard !roomAccessories.isEmpty || !roomGroups.isEmpty else {
                 continue
             }
 
@@ -171,6 +204,19 @@ class MenuBuilder {
             let roomItem = createSubmenuItem(title: room.name, icon: icon)
 
             let submenu = StayOpenMenu()
+
+            // Add groups at the top of the room submenu
+            if let menuData = currentMenuData {
+                for group in roomGroups {
+                    let groupItem = GroupMenuItem(group: group, menuData: menuData, bridge: bridge)
+                    submenu.addItem(groupItem)
+                }
+                // Add separator after groups if there are both groups and accessories
+                if !roomGroups.isEmpty && !roomAccessories.isEmpty {
+                    submenu.addItem(NSMenuItem.separator())
+                }
+            }
+
             addServicesGroupedByType(to: submenu, accessories: roomAccessories)
             roomItem.submenu = submenu
             menu.addItem(roomItem)

@@ -109,7 +109,12 @@ struct CloudSyncTranslator {
         guard let groups = try? JSONDecoder().decode([DeviceGroup].self, from: data) else { return nil }
         let translated = groups.map { group -> [String: Any] in
             let stableIds = group.deviceIds.compactMap { serviceIdToStable[$0] }
-            return ["id": group.id, "name": group.name, "icon": group.icon, "deviceIds": stableIds]
+            var dict: [String: Any] = ["id": group.id, "name": group.name, "icon": group.icon, "deviceIds": stableIds]
+            // Translate roomId to roomName for cross-device sync
+            if let roomId = group.roomId, let roomName = roomIdToName[roomId] {
+                dict["roomName"] = roomName
+            }
+            return dict
         }
         return try? JSONSerialization.data(withJSONObject: translated)
     }
@@ -122,7 +127,12 @@ struct CloudSyncTranslator {
                   let icon = dict["icon"] as? String,
                   let stableIds = dict["deviceIds"] as? [String] else { return nil }
             let localIds = stableIds.compactMap { stableToServiceId[$0] }
-            return DeviceGroup(id: id, name: name, icon: icon, deviceIds: localIds)
+            // Translate roomName back to roomId
+            var roomId: String?
+            if let roomName = dict["roomName"] as? String {
+                roomId = roomNameToId[roomName]
+            }
+            return DeviceGroup(id: id, name: name, icon: icon, deviceIds: localIds, roomId: roomId)
         }
         return try? JSONEncoder().encode(groups)
     }

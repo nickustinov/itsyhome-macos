@@ -29,6 +29,8 @@ extension AccessoriesSettingsView {
         tableView.roomTableItems = { [weak self] in self?.roomTableItems ?? [] }
         self.roomsTableView = tableView
         configureTableView(tableView, dragType: .roomItem, intercellSpacing: 4)
+        // Also register for room group drops
+        tableView.registerForDraggedTypes([.roomItem, .roomGroupItem])
 
         let container = NSView()
         tableView.translatesAutoresizingMaskIntoConstraints = false
@@ -42,6 +44,19 @@ extension AccessoriesSettingsView {
         let tableView = NSTableView()
         self.scenesTableView = tableView
         configureTableView(tableView, dragType: .sceneItem)
+
+        let container = NSView()
+        tableView.translatesAutoresizingMaskIntoConstraints = false
+        container.addSubview(tableView)
+        pinToEdges(tableView, in: container)
+
+        return container
+    }
+
+    func createGlobalGroupsTable(height: CGFloat) -> NSView {
+        let tableView = NSTableView()
+        self.globalGroupsTableView = tableView
+        configureTableView(tableView, dragType: .globalGroupItem)
 
         let container = NSView()
         tableView.translatesAutoresizingMaskIntoConstraints = false
@@ -230,9 +245,10 @@ class RoomsTableView: NSTableView {
         let point = convert(event.locationInWindow, from: nil)
         let clickedRow = row(at: point)
 
-        // Only allow drag initiation from header rows
+        // Only allow drag initiation from header rows and group rows
         if clickedRow >= 0, let items = roomTableItems?(), clickedRow < items.count {
-            if !items[clickedRow].isHeader {
+            let item = items[clickedRow]
+            if !item.isHeader && !item.isGroup {
                 // For accessory rows, handle click but don't allow drag
                 // Just select/deselect without initiating drag
                 return

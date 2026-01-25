@@ -141,7 +141,6 @@
 		EA2BD76D206D991EBDA7FE4C /* CameraViewController+Audio.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDF6041C9E962ED63D2709FD /* CameraViewController+Audio.swift */; };
 		EBD10F700CEFAA9D8C99229F /* ShortcutButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1359B98719D1D9D23782463E /* ShortcutButton.swift */; };
 		ED027DAB764D6BD656E4F586 /* GroupEditorPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45ADAE5712E4621056FF217C /* GroupEditorPanel.swift */; };
-		EF5B75FFA100C7A2957EBEBC /* GroupsSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EE496DB240231CDFFDA2018 /* GroupsSettingsView.swift */; };
 		F019042FCFF1C339C065CD64 /* DeeplinksSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2015876131A8AE52D26618FC /* DeeplinksSection.swift */; };
 		F0D475122112E46686ADF3C1 /* SensorSummaryMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 117549B5BED7ADDFB473C53C /* SensorSummaryMenuItem.swift */; };
 		F2A340D41E3B57E9F7FEE940 /* HomeKitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81F296FBD051BAC5B51F5322 /* HomeKitManager.swift */; };
@@ -202,7 +201,6 @@
 		4CBA4F5B869DA1C032B0B3EB /* ColorConversion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorConversion.swift; sourceTree = "<group>"; };
 		4E64829BF9C061EB52A28437 /* ValveMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ValveMenuItem.swift; sourceTree = "<group>"; };
 		4E7FF79A158B9BA2B399F2EF /* ActionParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionParser.swift; sourceTree = "<group>"; };
-		4EE496DB240231CDFFDA2018 /* GroupsSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupsSettingsView.swift; sourceTree = "<group>"; };
 		51B74BF9E1E02D2CF34C9F37 /* SwitchMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwitchMenuItem.swift; sourceTree = "<group>"; };
 		5578B4AD774F2D31C1C4EE6C /* CloudSyncTranslator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSyncTranslator.swift; sourceTree = "<group>"; };
 		5735B31C003BD03DE4B28206 /* macOSBridge.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = macOSBridge.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -356,7 +354,6 @@
 				2015876131A8AE52D26618FC /* DeeplinksSection.swift */,
 				62AD62C3749331FE2DA3CA6B /* GeneralSection.swift */,
 				45ADAE5712E4621056FF217C /* GroupEditorPanel.swift */,
-				4EE496DB240231CDFFDA2018 /* GroupsSettingsView.swift */,
 				9C1443A561323B39B108F71E /* WebhooksSection.swift */,
 			);
 			path = Sections;
@@ -749,7 +746,6 @@
 				13CAC53E00A58CDF49407098 /* GeneralSection.swift in Sources */,
 				ED027DAB764D6BD656E4F586 /* GroupEditorPanel.swift in Sources */,
 				5400908F7EA3B99BACF94081 /* GroupMenuItem.swift in Sources */,
-				EF5B75FFA100C7A2957EBEBC /* GroupsSettingsView.swift in Sources */,
 				823ABDFECC4D6E3E63AC3E02 /* HighlightingMenuItemView.swift in Sources */,
 				B6E0BA859343F2AC750C12D5 /* HotkeyManager.swift in Sources */,
 				2FA906D09DF2D10CD127C5EB /* HumidifierMenuItem.swift in Sources */,

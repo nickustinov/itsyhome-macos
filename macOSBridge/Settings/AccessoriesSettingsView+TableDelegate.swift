@@ -15,6 +15,7 @@ extension AccessoriesSettingsView: NSTableViewDelegate, NSTableViewDataSource {
         if tableView === favouritesTableView { return favouriteItems.count }
         if tableView === roomsTableView { return roomTableItems.count }
         if tableView === scenesTableView { return sceneItems.count }
+        if tableView === globalGroupsTableView { return globalGroups.count }
         return 0
     }
 
@@ -28,12 +29,20 @@ extension AccessoriesSettingsView: NSTableViewDelegate, NSTableViewDataSource {
         if tableView === scenesTableView {
             return createSceneRowView(row: row)
         }
+        if tableView === globalGroupsTableView {
+            return createGlobalGroupRowView(row: row)
+        }
         return nil
     }
 
     func tableView(_ tableView: NSTableView, heightOfRow row: Int) -> CGFloat {
-        if tableView === roomsTableView, row < roomTableItems.count, case .separator = roomTableItems[row] {
-            return 12
+        if tableView === roomsTableView, row < roomTableItems.count {
+            switch roomTableItems[row] {
+            case .separator, .groupSeparator:
+                return 12
+            default:
+                break
+            }
         }
         return AccessoryRowLayout.rowHeight
     }
@@ -64,8 +73,9 @@ extension AccessoriesSettingsView: NSTableViewDelegate, NSTableViewDataSource {
         rowView.onStarToggled = { [weak self] in
             let preferences = PreferencesManager.shared
             switch item.kind {
-            case .scene: preferences.toggleFavourite(sceneId: item.id)
-            case .service: preferences.toggleFavourite(serviceId: item.id)
+            case .scene(let scene): preferences.toggleFavourite(sceneId: scene.uniqueIdentifier)
+            case .service(let service): preferences.toggleFavourite(serviceId: service.uniqueIdentifier)
+            case .group(let group): preferences.toggleFavouriteGroup(groupId: group.id)
             }
             self?.rebuild()
         }
@@ -77,6 +87,10 @@ extension AccessoriesSettingsView: NSTableViewDelegate, NSTableViewDataSource {
         switch item {
         case .header(let room, let isHidden, let isCollapsed, let serviceCount):
             return createRoomHeaderView(room: room, isHidden: isHidden, isCollapsed: isCollapsed, serviceCount: serviceCount)
+        case .group(let group, let roomId):
+            return createRoomGroupRowView(group: group, roomId: roomId, row: row)
+        case .groupSeparator:
+            return createSeparatorRow()
         case .accessory(let service, let roomHidden):
             return createAccessoryRow(service: service, roomHidden: roomHidden)
         case .separator:
@@ -171,9 +185,56 @@ extension AccessoriesSettingsView: NSTableViewDelegate, NSTableViewDataSource {
         return rowView
     }
 
+    private func createGlobalGroupRowView(row: Int) -> NSView {
+        let group = globalGroups[row]
+        return createGroupRowView(group: group, roomId: nil, row: row, showDragHandle: true)
+    }
+
+    private func createRoomGroupRowView(group: DeviceGroup, roomId: String?, row: Int) -> NSView {
+        return createGroupRowView(group: group, roomId: roomId, row: row, showDragHandle: true, indentLevel: 1)
+    }
+
+    private func createGroupRowView(group: DeviceGroup, roomId: String?, row: Int, showDragHandle: Bool, indentLevel: Int = 0) -> AccessoryRowView {
+        let preferences = PreferencesManager.shared
+        let isFav = preferences.isFavouriteGroup(groupId: group.id)
+        let isPinned = preferences.isPinnedGroup(groupId: group.id)
+        let isPro = ProStatusCache.shared.isPro
+
+        let config = AccessoryRowConfig(
+            name: group.name,
+            icon: NSImage(systemSymbolName: group.icon, accessibilityDescription: group.name),
+            count: group.deviceIds.count,
+            showDragHandle: showDragHandle && isPro,
+            isFavourite: isFav,
+            isPinned: isPinned,
+            showEditButton: isPro,
+            showStarButton: true,
+            showPinButton: true,
+            rowTag: row,
+            indentLevel: indentLevel
+        )
+
+        let rowView = AccessoryRowView(config: config)
+        rowView.onEditTapped = { [weak self] in
+            self?.showGroupEditor(group: group)
+        }
+        rowView.onStarToggled = { [weak self] in
+            preferences.toggleFavouriteGroup(groupId: group.id)
+            self?.rebuild()
+        }
+        rowView.onPinToggled = { [weak self] in
+            preferences.togglePinnedGroup(groupId: group.id)
+            self?.rebuild()
+        }
+        return rowView
+    }
+
     // MARK: - Drag and drop
 
     func tableView(_ tableView: NSTableView, pasteboardWriterForRow row: Int) -> NSPasteboardWriting? {
+        // Disable drag for non-pro users on group tables
+        let isPro = ProStatusCache.shared.isPro
+
         if tableView === favouritesTableView {
             let item = favouriteItems[row]
             let pb = NSPasteboardItem()
@@ -181,18 +242,32 @@ extension AccessoriesSettingsView: NSTableViewDelegate, NSTableViewDataSource {
             return pb
         }
         if tableView === roomsTableView {
-            // Only room headers are draggable
-            if case .header(let room, _, _, _) = roomTableItems[row] {
+            // Only room headers and groups are draggable
+            switch roomTableItems[row] {
+            case .header(let room, _, _, _):
                 let pb = NSPasteboardItem()
                 pb.setString(room.uniqueIdentifier, forType: .roomItem)
                 return pb
+            case .group(let group, let roomId):
+                guard isPro, let roomId = roomId else { return nil }
+                let pb = NSPasteboardItem()
+                pb.setString("\(group.id)|\(roomId)", forType: .roomGroupItem)
+                return pb
+            default:
+                return nil
             }
-            return nil
         }
         if tableView === scenesTableView {
             let scene = sceneItems[row]
             let pb = NSPasteboardItem()
             pb.setString(scene.uniqueIdentifier, forType: .sceneItem)
+            return pb
+        }
+        if tableView === globalGroupsTableView {
+            guard isPro else { return nil }
+            let group = globalGroups[row]
+            let pb = NSPasteboardItem()
+            pb.setString(group.id, forType: .globalGroupItem)
             return pb
         }
         return nil
@@ -202,7 +277,14 @@ extension AccessoriesSettingsView: NSTableViewDelegate, NSTableViewDataSource {
         guard dropOperation == .above else { return [] }
 
         if tableView === roomsTableView {
-            // Only allow dropping above header rows or at end
+            // Check what's being dragged
+            if info.draggingPasteboard.types?.contains(.roomGroupItem) == true {
+                // Room groups can only be dropped among other groups in the same room
+                // For simplicity, just allow the drop and handle validation in acceptDrop
+                return .move
+            }
+
+            // Only allow dropping above header rows or at end (for room reordering)
             if row < roomTableItems.count {
                 if case .header = roomTableItems[row] {
                     return .move
@@ -221,6 +303,10 @@ extension AccessoriesSettingsView: NSTableViewDelegate, NSTableViewDataSource {
             return .move
         }
 
+        if tableView === globalGroupsTableView {
+            return .move
+        }
+
         return .move
     }
 
@@ -234,10 +320,17 @@ extension AccessoriesSettingsView: NSTableViewDelegate, NSTableViewDataSource {
             return acceptFavouriteDrop(pb: pb, row: row, tableView: tableView)
         }
         if tableView === roomsTableView {
+            // Check if it's a room group drop first
+            if pb.string(forType: .roomGroupItem) != nil {
+                return acceptRoomGroupDrop(pb: pb, row: row)
+            }
             return acceptRoomDrop(pb: pb, row: row)
         }
         if tableView === scenesTableView {
             return acceptSceneDrop(pb: pb, row: row)
+        }
+        if tableView === globalGroupsTableView {
+            return acceptGlobalGroupDrop(pb: pb, row: row)
         }
         return false
     }
@@ -305,6 +398,71 @@ extension AccessoriesSettingsView: NSTableViewDelegate, NSTableViewDataSource {
         PreferencesManager.shared.moveScene(from: originalRow, to: newRow)
         rebuildSceneData()
         scenesTableView?.reloadData()
+
+        return true
+    }
+
+    private func acceptGlobalGroupDrop(pb: NSPasteboardItem, row: Int) -> Bool {
+        guard let draggedId = pb.string(forType: .globalGroupItem),
+              let originalRow = globalGroups.firstIndex(where: { $0.id == draggedId }) else {
+            return false
+        }
+
+        var newRow = row
+        if originalRow < newRow { newRow -= 1 }
+        if originalRow == newRow { return false }
+
+        PreferencesManager.shared.moveGlobalGroup(from: originalRow, to: newRow)
+        rebuildGroupData()
+        globalGroupsTableView?.reloadData()
+
+        return true
+    }
+
+    private func acceptRoomGroupDrop(pb: NSPasteboardItem, row: Int) -> Bool {
+        guard let data = pb.string(forType: .roomGroupItem) else { return false }
+        let parts = data.split(separator: "|")
+        guard parts.count == 2 else { return false }
+
+        let groupId = String(parts[0])
+        let roomId = String(parts[1])
+
+        guard let roomGroups = groupsByRoom[roomId],
+              let originalIndex = roomGroups.firstIndex(where: { $0.id == groupId }) else {
+            return false
+        }
+
+        // Find the target index within the room's groups
+        // Count how many group rows are before the drop row in this room
+        var targetIndex = 0
+        var foundRoom = false
+        for (i, item) in roomTableItems.enumerated() {
+            if case .header(let room, _, _, _) = item, room.uniqueIdentifier == roomId {
+                foundRoom = true
+                continue
+            }
+            if foundRoom {
+                if case .group = item {
+                    if i < row {
+                        targetIndex += 1
+                    }
+                } else if case .header = item {
+                    // Hit next room header, stop
+                    break
+                } else if case .groupSeparator = item {
+                    // Dropped after all groups
+                    break
+                }
+            }
+        }
+
+        if originalIndex < targetIndex { targetIndex -= 1 }
+        if originalIndex == targetIndex { return false }
+
+        PreferencesManager.shared.moveGroupInRoom(roomId, from: originalIndex, to: targetIndex)
+        rebuildGroupData()
+        rebuildRoomData()
+        roomsTableView?.reloadData()
 
         return true
     }

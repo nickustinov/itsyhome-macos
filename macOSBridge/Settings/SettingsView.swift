@@ -67,7 +67,6 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
     private enum Section: Int, CaseIterable {
         case general
         case accessories
-        case groups
         case cameras
         case deeplinks
         case webhooks
@@ -77,7 +76,6 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
             switch self {
             case .general: return "General"
             case .accessories: return "Accessories"
-            case .groups: return "Groups"
             case .cameras: return "Cameras"
             case .deeplinks: return "Deeplinks"
             case .webhooks: return "Webhooks/CLI"
@@ -89,7 +87,6 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
             switch self {
             case .general: return "gearshape"
             case .accessories: return "lightbulb"
-            case .groups: return "folder"
             case .cameras: return "video"
             case .deeplinks: return "link"
             case .webhooks: return "network"
@@ -99,7 +96,7 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
 
         var isProFeature: Bool {
             switch self {
-            case .groups, .cameras, .deeplinks, .webhooks: return true
+            case .cameras, .deeplinks, .webhooks: return true
             default: return false
             }
         }
@@ -108,7 +105,6 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
     // Content views (lazily created)
     private var generalSection: GeneralSection?
     private var accessoriesSection: AccessoriesSettingsView?
-    private var groupsSection: GroupsSettingsView?
     private var camerasSection: CamerasSection?
     private var deeplinksSection: DeeplinksSection?
     private var webhooksSection: WebhooksSection?
@@ -218,7 +214,6 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
 
     private func handleProStatusChanged() {
         // Clear cached Pro-feature sections so they rebuild with new state
-        groupsSection = nil
         camerasSection = nil
         deeplinksSection = nil
         webhooksSection = nil
@@ -257,15 +252,6 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
                 }
             }
             contentView = accessoriesSection!
-
-        case .groups:
-            if groupsSection == nil {
-                groupsSection = GroupsSettingsView()
-                if let data = menuData {
-                    groupsSection?.configure(with: data)
-                }
-            }
-            contentView = groupsSection!
 
         case .cameras:
             if camerasSection == nil {

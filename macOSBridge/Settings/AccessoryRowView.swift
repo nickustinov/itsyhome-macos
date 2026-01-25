@@ -80,6 +80,7 @@ struct AccessoryRowConfig {
     let isPinned: Bool
 
     // Right side buttons
+    let showEditButton: Bool
     let showStarButton: Bool
     let showEyeButton: Bool
     let showPinButton: Bool
@@ -103,6 +104,7 @@ struct AccessoryRowConfig {
         isItemHidden: Bool = false,
         isSectionHidden: Bool = false,
         isPinned: Bool = false,
+        showEditButton: Bool = false,
         showStarButton: Bool = false,
         showEyeButton: Bool = false,
         showPinButton: Bool = false,
@@ -123,6 +125,7 @@ struct AccessoryRowConfig {
         self.isItemHidden = isItemHidden
         self.isSectionHidden = isSectionHidden
         self.isPinned = isPinned
+        self.showEditButton = showEditButton
         self.showStarButton = showStarButton
         self.showEyeButton = showEyeButton
         self.showPinButton = showPinButton
@@ -146,6 +149,7 @@ class AccessoryRowView: NSView {
     private var countLabel: NSTextField?
 
     // Right-side controls
+    private var editButton: NSButton?
     private var starButton: NSButton?
     private var eyeButton: NSButton?
     private var pinButton: NSButton?
@@ -165,6 +169,7 @@ class AccessoryRowView: NSView {
     private let indentLevel: Int
     let rowTag: Int
 
+    var onEditTapped: (() -> Void)?
     var onStarToggled: (() -> Void)?
     var onEyeToggled: (() -> Void)?
     var onPinToggled: (() -> Void)?
@@ -250,8 +255,27 @@ class AccessoryRowView: NSView {
         // Right side controls with pipes
         var needsPipe = false
 
+        // Edit button (first on the right, so appears leftmost)
+        if config.showEditButton {
+            let btn = NSButton()
+            btn.bezelStyle = .inline
+            btn.isBordered = false
+            btn.imagePosition = .imageOnly
+            btn.imageScaling = .scaleProportionallyUpOrDown
+            btn.image = AccessoryRowLayout.image(named: "pencil")
+            btn.contentTintColor = .secondaryLabelColor
+            btn.target = self
+            btn.action = #selector(editTapped)
+            editButton = btn
+            addSubview(btn)
+            needsPipe = true
+        }
+
         // Star button
         if config.showStarButton {
+            if needsPipe {
+                pipes.append(createPipe())
+            }
             let btn = NSButton()
             btn.bezelStyle = .inline
             btn.isBordered = false
@@ -362,6 +386,10 @@ class AccessoryRowView: NSView {
         onChevronToggled?()
     }
 
+    @objc private func editTapped() {
+        onEditTapped?()
+    }
+
     @objc private func starTapped() {
         isFavourite.toggle()
         let iconName = isFavourite ? "star-fill" : "star"
@@ -452,10 +480,25 @@ class AccessoryRowView: NSView {
         // Star button
         if let star = starButton {
             star.frame = NSRect(x: rightEdge - L.buttonSize, y: cardY + (L.cardHeight - L.buttonSize) / 2, width: L.buttonSize, height: L.buttonSize)
+            rightEdge -= L.buttonSize
+
+            if pipeIndex >= 0 {
+                rightEdge -= L.pipeSpacing
+                let pipe = pipes[pipeIndex]
+                pipe.sizeToFit()
+                pipe.frame = NSRect(x: rightEdge - pipe.frame.width / 2, y: cardY + (L.cardHeight - pipe.frame.height) / 2, width: pipe.frame.width, height: pipe.frame.height)
+                rightEdge -= L.pipeSpacing
+                pipeIndex -= 1
+            }
+        }
+
+        // Edit button (leftmost of the action buttons)
+        if let edit = editButton {
+            edit.frame = NSRect(x: rightEdge - L.buttonSize, y: cardY + (L.cardHeight - L.buttonSize) / 2, width: L.buttonSize, height: L.buttonSize)
             rightEdge -= L.buttonSize + L.spacing
         }
 
-        // Shortcut button (before star if present)
+        // Shortcut button (before edit if present)
         if let shortcut = shortcutButton {
             let shortcutWidth: CGFloat = 100
             let shortcutHeight: CGFloat = 20

@@ -13,6 +13,8 @@ extension NSPasteboard.PasteboardType {
     static let favouriteItem = NSPasteboard.PasteboardType("com.itsyhome.favouriteItem")
     static let roomItem = NSPasteboard.PasteboardType("com.itsyhome.roomItem")
     static let sceneItem = NSPasteboard.PasteboardType("com.itsyhome.sceneItem")
+    static let globalGroupItem = NSPasteboard.PasteboardType("com.itsyhome.globalGroupItem")
+    static let roomGroupItem = NSPasteboard.PasteboardType("com.itsyhome.roomGroupItem")
 }
 
 // MARK: - Data models
@@ -21,6 +23,7 @@ struct FavouriteItem {
     enum Kind {
         case scene(SceneData)
         case service(ServiceData)
+        case group(DeviceGroup)
     }
     let kind: Kind
     let id: String
@@ -30,11 +33,18 @@ struct FavouriteItem {
 
 enum RoomTableItem {
     case header(room: RoomData, isHidden: Bool, isCollapsed: Bool, serviceCount: Int)
+    case group(group: DeviceGroup, roomId: String?)
+    case groupSeparator
     case accessory(service: ServiceData, roomHidden: Bool)
     case separator
 
     var isHeader: Bool {
         if case .header = self { return true }
+        return false
+    }
+
+    var isGroup: Bool {
+        if case .group = self { return true }
         return false
     }
 }
@@ -60,6 +70,11 @@ class AccessoriesSettingsView: NSView {
     var expandedSections: Set<String> = []
     var servicesByRoom: [String: [ServiceData]] = [:]
     var noRoomServices: [ServiceData] = []
+
+    // Groups data
+    var globalGroups: [DeviceGroup] = []
+    var groupsByRoom: [String: [DeviceGroup]] = [:]
+    var globalGroupsTableView: NSTableView?
 
     let typeOrder = [ServiceTypes.lightbulb, ServiceTypes.switch, ServiceTypes.outlet, ServiceTypes.fan,
                      ServiceTypes.heaterCooler, ServiceTypes.thermostat, ServiceTypes.windowCovering,
@@ -117,10 +132,17 @@ class AccessoriesSettingsView: NSView {
         let preferences = PreferencesManager.shared
         let sceneLookup = Dictionary(uniqueKeysWithValues: data.scenes.map { ($0.uniqueIdentifier, $0) })
         let serviceLookup = Dictionary(uniqueKeysWithValues: data.accessories.flatMap { $0.services }.map { ($0.uniqueIdentifier, $0) })
+        let groupLookup = Dictionary(uniqueKeysWithValues: preferences.deviceGroups.map { ($0.id, $0) })
 
         var items: [FavouriteItem] = []
         for id in preferences.orderedFavouriteIds {
-            if let scene = sceneLookup[id] {
+            if id.hasPrefix("groupFav:") {
+                let groupId = String(id.dropFirst("groupFav:".count))
+                if let group = groupLookup[groupId] {
+                    let icon = NSImage(systemSymbolName: group.icon, accessibilityDescription: group.name)
+                    items.append(FavouriteItem(kind: .group(group), id: id, name: group.name, icon: icon))
+                }
+            } else if let scene = sceneLookup[id] {
                 items.append(FavouriteItem(kind: .scene(scene), id: id, name: scene.name, icon: SceneIconInference.icon(for: scene.name)))
             } else if let service = serviceLookup[id] {
                 items.append(FavouriteItem(kind: .service(service), id: id, name: service.name, icon: IconMapping.iconForServiceType(service.serviceType)))
@@ -174,10 +196,21 @@ class AccessoriesSettingsView: NSView {
             let isHidden = preferences.isHidden(roomId: roomId)
             let isCollapsed = !expandedSections.contains(roomId)
             let services = servicesByRoom[roomId] ?? []
+            let roomGroups = groupsByRoom[roomId] ?? []
 
             items.append(.header(room: room, isHidden: isHidden, isCollapsed: isCollapsed, serviceCount: services.count))
 
             if !isCollapsed {
+                // Add groups at the top of each room
+                for group in roomGroups {
+                    items.append(.group(group: group, roomId: roomId))
+                }
+
+                // Add separator after groups if there are both groups and services
+                if !roomGroups.isEmpty && !services.isEmpty {
+                    items.append(.groupSeparator)
+                }
+
                 // Group services by type
                 var servicesByType: [String: [ServiceData]] = [:]
                 for service in services {
@@ -231,9 +264,62 @@ class AccessoriesSettingsView: NSView {
         preferences.sceneOrder = ordered.map { $0.uniqueIdentifier }
     }
 
+    func rebuildGroupData() {
+        let preferences = PreferencesManager.shared
+        let allGroups = preferences.deviceGroups
+
+        // Separate groups by room assignment
+        var global: [DeviceGroup] = []
+        var byRoom: [String: [DeviceGroup]] = [:]
+
+        for group in allGroups {
+            if let roomId = group.roomId {
+                byRoom[roomId, default: []].append(group)
+            } else {
+                global.append(group)
+            }
+        }
+
+        // Order global groups
+        let savedGlobalOrder = preferences.globalGroupOrder
+        var orderedGlobal: [DeviceGroup] = []
+        for groupId in savedGlobalOrder {
+            if let group = global.first(where: { $0.id == groupId }) {
+                orderedGlobal.append(group)
+            }
+        }
+        for group in global where !orderedGlobal.contains(where: { $0.id == group.id }) {
+            orderedGlobal.append(group)
+        }
+        globalGroups = orderedGlobal
+        if !orderedGlobal.isEmpty {
+            preferences.globalGroupOrder = orderedGlobal.map { $0.id }
+        }
+
+        // Order groups per room
+        for (roomId, roomGroups) in byRoom {
+            let savedRoomOrder = preferences.groupOrder(forRoom: roomId)
+            var ordered: [DeviceGroup] = []
+            for groupId in savedRoomOrder {
+                if let group = roomGroups.first(where: { $0.id == groupId }) {
+                    ordered.append(group)
+                }
+            }
+            for group in roomGroups where !ordered.contains(where: { $0.id == group.id }) {
+                ordered.append(group)
+            }
+            byRoom[roomId] = ordered
+            if !ordered.isEmpty {
+                preferences.setGroupOrder(ordered.map { $0.id }, forRoom: roomId)
+            }
+        }
+        groupsByRoom = byRoom
+    }
+
     // MARK: - Content building
 
     private func rebuildContent() {
+        rebuildGroupData()
         rebuildFavouritesList()
         rebuildRoomData()
         rebuildSceneData()
@@ -241,11 +327,13 @@ class AccessoriesSettingsView: NSView {
         favouritesTableView = nil
         roomsTableView = nil
         scenesTableView = nil
+        globalGroupsTableView = nil
 
         guard let data = menuData else { return }
 
         let preferences = PreferencesManager.shared
         let L = AccessoryRowLayout.self
+        let isPro = ProStatusCache.shared.isPro
 
         // Description
         let descLabel = NSTextField(wrappingLabelWithString: "Add accessories to Favourites to pin them at the top of your menu. Use the eye icon to hide sections or devices you don't need.")
@@ -256,12 +344,30 @@ class AccessoriesSettingsView: NSView {
         descLabel.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
         addSpacer(height: 16)
 
+        // Create group button (Pro only)
+        let createButton = NSButton(title: "Create group", target: self, action: #selector(createGroupTapped))
+        createButton.bezelStyle = .rounded
+        createButton.controlSize = .regular
+        createButton.isEnabled = isPro
+        createButton.translatesAutoresizingMaskIntoConstraints = false
+        stackView.addArrangedSubview(createButton)
+        addSpacer(height: 16)
+
         // Favourites section
         if !favouriteItems.isEmpty {
             let tableHeight = CGFloat(favouriteItems.count) * L.rowHeight
             let tableContainer = createFavouritesTable(height: tableHeight)
             addView(tableContainer, height: tableHeight)
             favouritesTableView?.reloadData()
+            addSeparator()
+        }
+
+        // Global groups section (groups with no room)
+        if !globalGroups.isEmpty {
+            let tableHeight = CGFloat(globalGroups.count) * L.rowHeight
+            let tableContainer = createGlobalGroupsTable(height: tableHeight)
+            addView(tableContainer, height: tableHeight)
+            globalGroupsTableView?.reloadData()
             addSeparator()
         }
 
@@ -367,9 +473,10 @@ class AccessoriesSettingsView: NSView {
         let L = AccessoryRowLayout.self
         var height: CGFloat = 0
         for (index, item) in roomTableItems.enumerated() {
-            if case .separator = item {
+            switch item {
+            case .separator, .groupSeparator:
                 height += 12
-            } else {
+            default:
                 height += L.rowHeight
             }
             // Add intercell spacing (except for last row)
@@ -402,5 +509,42 @@ class AccessoriesSettingsView: NSView {
             }
         }
         return nil
+    }
+
+    // MARK: - Group actions
+
+    @objc func createGroupTapped() {
+        showGroupEditor(group: nil)
+    }
+
+    func showGroupEditor(group: DeviceGroup?) {
+        guard let data = menuData else { return }
+
+        let editor = GroupEditorPanel(group: group, menuData: data)
+        editor.onSave = { [weak self] savedGroup in
+            if group == nil {
+                PreferencesManager.shared.addDeviceGroup(savedGroup)
+            } else {
+                PreferencesManager.shared.updateDeviceGroup(savedGroup)
+            }
+            self?.rebuild()
+        }
+
+        guard let window = self.window else { return }
+        window.beginSheet(editor.window!) { _ in }
+    }
+
+    func deleteGroup(_ group: DeviceGroup) {
+        let alert = NSAlert()
+        alert.messageText = "Delete group?"
+        alert.informativeText = "Are you sure you want to delete \"\(group.name)\"? This cannot be undone."
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: "Delete")
+        alert.addButton(withTitle: "Cancel")
+
+        if alert.runModal() == .alertFirstButtonReturn {
+            PreferencesManager.shared.deleteDeviceGroup(id: group.id)
+            rebuild()
+        }
     }
 }

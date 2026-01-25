@@ -107,4 +107,69 @@ final class DeviceGroupTests: XCTestCase {
         let group = DeviceGroup(id: "my-id", name: "Test")
         XCTAssertEqual(group.id, "my-id")
     }
+
+    // MARK: - Room ID tests
+
+    func testInitWithRoomId() {
+        let group = DeviceGroup(
+            id: "group-1",
+            name: "Room Group",
+            icon: "lightbulb",
+            deviceIds: ["d1", "d2"],
+            roomId: "room-123"
+        )
+
+        XCTAssertEqual(group.roomId, "room-123")
+    }
+
+    func testInitWithoutRoomIdDefaultsNil() {
+        let group = DeviceGroup(name: "Global Group")
+        XCTAssertNil(group.roomId)
+    }
+
+    func testRoomIdCanBeChanged() {
+        var group = DeviceGroup(name: "Test")
+        XCTAssertNil(group.roomId)
+
+        group.roomId = "room-456"
+        XCTAssertEqual(group.roomId, "room-456")
+
+        group.roomId = nil
+        XCTAssertNil(group.roomId)
+    }
+
+    func testEncodeDecodeWithRoomId() throws {
+        let original = DeviceGroup(
+            id: "test-id",
+            name: "Room Group",
+            icon: "fan",
+            deviceIds: ["a", "b"],
+            roomId: "room-789"
+        )
+
+        let encoder = JSONEncoder()
+        let data = try encoder.encode(original)
+
+        let decoder = JSONDecoder()
+        let decoded = try decoder.decode(DeviceGroup.self, from: data)
+
+        XCTAssertEqual(decoded.roomId, original.roomId)
+    }
+
+    func testEncodeDecodeWithNilRoomId() throws {
+        let original = DeviceGroup(
+            id: "test-id",
+            name: "Global Group",
+            icon: "folder",
+            deviceIds: ["a"]
+        )
+
+        let encoder = JSONEncoder()
+        let data = try encoder.encode(original)
+
+        let decoder = JSONDecoder()
+        let decoded = try decoder.decode(DeviceGroup.self, from: data)
+
+        XCTAssertNil(decoded.roomId)
+    }
 }

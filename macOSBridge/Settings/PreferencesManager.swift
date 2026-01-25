@@ -42,6 +42,9 @@ final class PreferencesManager {
         static let sceneOrder = "sceneOrder"
         static let pinnedServiceIds = "pinnedServiceIds"
         static let pinnedServiceShowName = "pinnedServiceShowName"
+        static let globalGroupOrder = "globalGroupOrder"
+        static let groupOrderByRoom = "groupOrderByRoom"
+        static let favouriteGroupIds = "favouriteGroupIds"
     }
 
     enum ScenesDisplayMode: String {
@@ -638,6 +641,98 @@ final class PreferencesManager {
     /// Find favourite ID by shortcut (for lookup when hotkey triggered)
     func favouriteId(for shortcut: ShortcutData) -> String? {
         shortcuts.first { $0.value == shortcut }?.key
+    }
+
+    // MARK: - Global group order (per-home)
+
+    /// Order of groups that have no room assignment (global groups)
+    var globalGroupOrder: [String] {
+        get { defaults.stringArray(forKey: homeKey(Keys.globalGroupOrder)) ?? [] }
+        set {
+            defaults.set(newValue, forKey: homeKey(Keys.globalGroupOrder))
+            postNotification()
+        }
+    }
+
+    func moveGlobalGroup(from sourceIndex: Int, to destinationIndex: Int) {
+        var order = globalGroupOrder
+        guard sourceIndex >= 0, sourceIndex < order.count,
+              destinationIndex >= 0, destinationIndex < order.count else { return }
+        let item = order.remove(at: sourceIndex)
+        order.insert(item, at: destinationIndex)
+        globalGroupOrder = order
+    }
+
+    // MARK: - Group order by room (per-home)
+
+    /// Per-room group ordering
+    var groupOrderByRoom: [String: [String]] {
+        get {
+            guard let data = defaults.data(forKey: homeKey(Keys.groupOrderByRoom)),
+                  let dict = try? JSONDecoder().decode([String: [String]].self, from: data) else {
+                return [:]
+            }
+            return dict
+        }
+        set {
+            if let data = try? JSONEncoder().encode(newValue) {
+                defaults.set(data, forKey: homeKey(Keys.groupOrderByRoom))
+                postNotification()
+            }
+        }
+    }
+
+    func groupOrder(forRoom roomId: String) -> [String] {
+        groupOrderByRoom[roomId] ?? []
+    }
+
+    func setGroupOrder(_ order: [String], forRoom roomId: String) {
+        var mapping = groupOrderByRoom
+        if order.isEmpty {
+            mapping.removeValue(forKey: roomId)
+        } else {
+            mapping[roomId] = order
+        }
+        groupOrderByRoom = mapping
+    }
+
+    func moveGroupInRoom(_ roomId: String, from sourceIndex: Int, to destinationIndex: Int) {
+        var order = groupOrder(forRoom: roomId)
+        guard sourceIndex >= 0, sourceIndex < order.count,
+              destinationIndex >= 0, destinationIndex < order.count else { return }
+        let item = order.remove(at: sourceIndex)
+        order.insert(item, at: destinationIndex)
+        setGroupOrder(order, forRoom: roomId)
+    }
+
+    // MARK: - Favourite groups (per-home)
+
+    var favouriteGroupIds: Set<String> {
+        get {
+            let array = defaults.stringArray(forKey: homeKey(Keys.favouriteGroupIds)) ?? []
+            return Set(array)
+        }
+        set {
+            defaults.set(Array(newValue), forKey: homeKey(Keys.favouriteGroupIds))
+            postNotification()
+        }
+    }
+
+    func isFavouriteGroup(groupId: String) -> Bool {
+        favouriteGroupIds.contains(groupId)
+    }
+
+    func toggleFavouriteGroup(groupId: String) {
+        var ids = favouriteGroupIds
+        let favId = "groupFav:\(groupId)"
+        if ids.contains(groupId) {
+            ids.remove(groupId)
+            removeFavourite(id: favId)
+        } else {
+            ids.insert(groupId)
+            addFavourite(id: favId)
+        }
+        favouriteGroupIds = ids
     }
 
     // MARK: - Device Groups (per-home)

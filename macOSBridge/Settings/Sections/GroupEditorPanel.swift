@@ -13,8 +13,10 @@ class GroupEditorPanel: NSViewController {
     private let menuData: MenuData
 
     private let nameField = NSTextField()
+    private let roomPopup = NSPopUpButton()
     private var deviceCheckboxes: [(checkbox: NSButton, serviceId: String)] = []
     private var selectedDeviceIds: Set<String> = []
+    private var selectedRoomId: String?
 
     var onSave: ((DeviceGroup) -> Void)?
 
@@ -23,6 +25,7 @@ class GroupEditorPanel: NSViewController {
         self.menuData = menuData
         if let group = group {
             self.selectedDeviceIds = Set(group.deviceIds)
+            self.selectedRoomId = group.roomId
         }
         super.init(nibName: nil, bundle: nil)
     }
@@ -32,7 +35,7 @@ class GroupEditorPanel: NSViewController {
     }
 
     override func loadView() {
-        let container = NSView(frame: NSRect(x: 0, y: 0, width: 400, height: 450))
+        let container = NSView(frame: NSRect(x: 0, y: 0, width: 400, height: 500))
         self.view = container
 
         // Title
@@ -52,6 +55,31 @@ class GroupEditorPanel: NSViewController {
         nameField.stringValue = existingGroup?.name ?? ""
         nameField.translatesAutoresizingMaskIntoConstraints = false
         container.addSubview(nameField)
+
+        // Room dropdown
+        let roomLabel = NSTextField(labelWithString: "Room (optional)")
+        roomLabel.font = .systemFont(ofSize: 12, weight: .medium)
+        roomLabel.textColor = .secondaryLabelColor
+        roomLabel.translatesAutoresizingMaskIntoConstraints = false
+        container.addSubview(roomLabel)
+
+        roomPopup.addItem(withTitle: "No room (global)")
+        roomPopup.menu?.addItem(NSMenuItem.separator())
+        for room in menuData.rooms.sorted(by: { $0.name < $1.name }) {
+            let item = NSMenuItem(title: room.name, action: nil, keyEquivalent: "")
+            item.representedObject = room.uniqueIdentifier
+            roomPopup.menu?.addItem(item)
+        }
+        roomPopup.target = self
+        roomPopup.action = #selector(roomSelected(_:))
+        roomPopup.translatesAutoresizingMaskIntoConstraints = false
+        container.addSubview(roomPopup)
+
+        // Select existing room if editing
+        if let roomId = selectedRoomId,
+           let room = menuData.rooms.first(where: { $0.uniqueIdentifier == roomId }) {
+            roomPopup.selectItem(withTitle: room.name)
+        }
 
         // Devices label
         let devicesLabel = NSTextField(labelWithString: "Select devices")
@@ -129,7 +157,14 @@ class GroupEditorPanel: NSViewController {
             nameField.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 20),
             nameField.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -20),
 
-            devicesLabel.topAnchor.constraint(equalTo: nameField.bottomAnchor, constant: 16),
+            roomLabel.topAnchor.constraint(equalTo: nameField.bottomAnchor, constant: 16),
+            roomLabel.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 20),
+
+            roomPopup.topAnchor.constraint(equalTo: roomLabel.bottomAnchor, constant: 4),
+            roomPopup.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 20),
+            roomPopup.widthAnchor.constraint(equalToConstant: 200),
+
+            devicesLabel.topAnchor.constraint(equalTo: roomPopup.bottomAnchor, constant: 16),
             devicesLabel.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 20),
 
             scrollView.topAnchor.constraint(equalTo: devicesLabel.bottomAnchor, constant: 8),
@@ -173,6 +208,15 @@ class GroupEditorPanel: NSViewController {
         return result
     }
 
+    @objc private func roomSelected(_ sender: NSPopUpButton) {
+        if sender.indexOfSelectedItem == 0 {
+            selectedRoomId = nil
+        } else if let item = sender.selectedItem,
+                  let roomId = item.representedObject as? String {
+            selectedRoomId = roomId
+        }
+    }
+
     @objc private func deviceToggled(_ sender: NSButton) {
         guard let item = deviceCheckboxes.first(where: { $0.checkbox === sender }) else { return }
         if sender.state == .on {
@@ -212,9 +256,9 @@ class GroupEditorPanel: NSViewController {
 
         let group: DeviceGroup
         if let existing = existingGroup {
-            group = DeviceGroup(id: existing.id, name: name, icon: icon, deviceIds: deviceIds)
+            group = DeviceGroup(id: existing.id, name: name, icon: icon, deviceIds: deviceIds, roomId: selectedRoomId)
         } else {
-            group = DeviceGroup(name: name, icon: icon, deviceIds: deviceIds)
+            group = DeviceGroup(name: name, icon: icon, deviceIds: deviceIds, roomId: selectedRoomId)
         }
 
         onSave?(group)

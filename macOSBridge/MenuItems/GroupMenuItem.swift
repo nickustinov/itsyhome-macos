@@ -7,7 +7,7 @@
 
 import AppKit
 
-class GroupMenuItem: NSMenuItem, CharacteristicUpdatable, LocalChangeNotifiable {
+class GroupMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable, LocalChangeNotifiable {
 
     private let group: DeviceGroup
     private let menuData: MenuData
@@ -177,43 +177,71 @@ class GroupMenuItem: NSMenuItem, CharacteristicUpdatable, LocalChangeNotifiable 
     private func initializeDeviceStates() {
         let services = group.resolveServices(in: menuData)
         for service in services {
-            // For blinds: track position (start at 0, will update from characteristic updates)
+            // For blinds: track position
             if service.serviceType == ServiceTypes.windowCovering {
                 if let currentIdString = service.currentPositionId,
                    let currentId = UUID(uuidString: currentIdString) {
-                    positionStates[currentId] = 0
+                    // Use cached value if available
+                    if let cachedValue = bridge?.getCharacteristicValue(identifier: currentId) {
+                        positionStates[currentId] = ValueConversion.toInt(cachedValue) ?? 0
+                    } else {
+                        positionStates[currentId] = 0
+                    }
                 }
                 if let targetIdString = service.targetPositionId,
                    let targetId = UUID(uuidString: targetIdString) {
                     targetPositionIds.append(targetId)
                 }
             }
-            // For power-based devices (lights, switches, etc.) - start OFF, will update from characteristic updates
+            // For power-based devices (lights, switches, etc.)
             else if let idString = service.powerStateId, let id = UUID(uuidString: idString) {
-                deviceStates[id] = false
+                // Use cached value if available
+                if let cachedValue = bridge?.getCharacteristicValue(identifier: id) {
+                    deviceStates[id] = ValueConversion.toBool(cachedValue) ?? false
+                } else {
+                    deviceStates[id] = false
+                }
                 characteristicToService[id] = service.uniqueIdentifier
             } else if let idString = service.activeId, let id = UUID(uuidString: idString) {
-                deviceStates[id] = false
+                // Use cached value if available
+                if let cachedValue = bridge?.getCharacteristicValue(identifier: id),
+                   let intValue = cachedValue as? Int {
+                    deviceStates[id] = intValue != 0
+                } else if let cachedValue = bridge?.getCharacteristicValue(identifier: id) {
+                    deviceStates[id] = ValueConversion.toBool(cachedValue) ?? false
+                } else {
+                    deviceStates[id] = false
+                }
                 characteristicToService[id] = service.uniqueIdentifier
             }
 
             // For lights: track brightness and color characteristics
             if service.serviceType == ServiceTypes.lightbulb {
                 if let idString = service.brightnessId, let id = UUID(uuidString: idString) {
-                    brightnessStates[id] = 100
+                    if let cachedValue = bridge?.getCharacteristicValue(identifier: id) {
+                        brightnessStates[id] = ValueConversion.toDouble(cachedValue) ?? 100
+                    } else {
+                        brightnessStates[id] = 100
+                    }
                     brightnessIds.append(id)
                 }
                 if let idString = service.hueId, let id = UUID(uuidString: idString) {
-                    hueStates[id] = 0
+                    if let cachedValue = bridge?.getCharacteristicValue(identifier: id) {
+                        hueStates[id] = ValueConversion.toDouble(cachedValue) ?? 0
+                    } else {
+                        hueStates[id] = 0
+                    }
                     hueIds.append(id)
                 }
                 if let idString = service.saturationId, let id = UUID(uuidString: idString) {
-                    saturationStates[id] = 100
+                    if let cachedValue = bridge?.getCharacteristicValue(identifier: id) {
+                        saturationStates[id] = ValueConversion.toDouble(cachedValue) ?? 100
+                    } else {
+                        saturationStates[id] = 100
+                    }
                     saturationIds.append(id)
                 }
                 if let idString = service.colorTemperatureId, let id = UUID(uuidString: idString) {
-                    colorTempStates[id] = 300
-                    colorTempIds.append(id)
                     // Track color temp range from first light that has it
                     if let min = service.colorTemperatureMin {
                         colorTempMin = min
@@ -221,10 +249,30 @@ class GroupMenuItem: NSMenuItem, CharacteristicUpdatable, LocalChangeNotifiable 
                     if let max = service.colorTemperatureMax {
                         colorTempMax = max
                     }
+                    if let cachedValue = bridge?.getCharacteristicValue(identifier: id) {
+                        colorTempStates[id] = ValueConversion.toDouble(cachedValue) ?? ((colorTempMin + colorTempMax) / 2)
+                    } else {
+                        colorTempStates[id] = (colorTempMin + colorTempMax) / 2
+                    }
+                    colorTempIds.append(id)
                 }
             }
         }
-        currentColorTemp = (colorTempMin + colorTempMax) / 2
+        // Calculate average values from cached states
+        if !brightnessStates.isEmpty {
+            currentBrightness = brightnessStates.values.reduce(0, +) / Double(brightnessStates.count)
+        }
+        if !hueStates.isEmpty {
+            currentHue = hueStates.values.reduce(0, +) / Double(hueStates.count)
+        }
+        if !saturationStates.isEmpty {
+            currentSaturation = saturationStates.values.reduce(0, +) / Double(saturationStates.count)
+        }
+        if !colorTempStates.isEmpty {
+            currentColorTemp = colorTempStates.values.reduce(0, +) / Double(colorTempStates.count)
+        } else {
+            currentColorTemp = (colorTempMin + colorTempMax) / 2
+        }
     }
 
     private func setupControl(height: CGFloat, labelX: CGFloat) {
@@ -237,7 +285,9 @@ class GroupMenuItem: NSMenuItem, CharacteristicUpdatable, LocalChangeNotifiable 
 
             let slider = ModernSlider(minValue: 0, maxValue: 100)
             slider.frame = NSRect(x: sliderX, y: sliderY, width: sliderWidth, height: 12)
-            slider.doubleValue = 0  // Start at 0, will update from characteristic updates
+            // Use cached average position
+            let avgPosition = positionStates.isEmpty ? 0 : positionStates.values.reduce(0, +) / positionStates.count
+            slider.doubleValue = Double(avgPosition)
             slider.progressTintColor = DS.Colors.sliderBlind
             slider.isContinuous = false
             slider.target = self
@@ -256,7 +306,9 @@ class GroupMenuItem: NSMenuItem, CharacteristicUpdatable, LocalChangeNotifiable 
 
             let toggle = ToggleSwitch()
             toggle.frame = NSRect(x: switchX, y: switchY, width: DS.ControlSize.switchWidth, height: DS.ControlSize.switchHeight)
-            toggle.setOn(false, animated: false)
+            // Use cached state
+            let isOn = deviceStates.values.contains(true)
+            toggle.setOn(isOn, animated: false)
             toggle.target = self
             toggle.action = #selector(toggleChanged(_:))
             containerView.addSubview(toggle)
@@ -269,7 +321,7 @@ class GroupMenuItem: NSMenuItem, CharacteristicUpdatable, LocalChangeNotifiable 
 
             let slider = ModernSlider(minValue: 0, maxValue: 100)
             slider.frame = NSRect(x: sliderX, y: sliderY, width: sliderWidth, height: 12)
-            slider.doubleValue = 100
+            slider.doubleValue = currentBrightness
             slider.progressTintColor = DS.Colors.sliderLight
             slider.isContinuous = false
             slider.isHidden = true  // Show only when lights are on
@@ -312,7 +364,9 @@ class GroupMenuItem: NSMenuItem, CharacteristicUpdatable, LocalChangeNotifiable 
 
             let toggle = ToggleSwitch()
             toggle.frame = NSRect(x: switchX, y: switchY, width: DS.ControlSize.switchWidth, height: DS.ControlSize.switchHeight)
-            toggle.setOn(false, animated: false)  // Start OFF, will update from bridge values
+            // Use cached state
+            let isOn = deviceStates.values.contains(true)
+            toggle.setOn(isOn, animated: false)
             toggle.target = self
             toggle.action = #selector(toggleChanged(_:))
             containerView.addSubview(toggle)
@@ -457,6 +511,10 @@ class GroupMenuItem: NSMenuItem, CharacteristicUpdatable, LocalChangeNotifiable 
 
         // Update icon
         switch commonType {
+        case ServiceTypes.windowCovering:
+            // For blinds, use position states
+            let avgPosition = positionStates.isEmpty ? 0 : positionStates.values.reduce(0, +) / positionStates.count
+            updateBlindsIcon(position: avgPosition)
         case ServiceTypes.lightbulb:
             iconView.image = NSImage(systemSymbolName: isOn ? "lightbulb.fill" : "lightbulb", accessibilityDescription: nil)
             iconView.contentTintColor = isOn ? DS.Colors.lightOn : DS.Colors.mutedForeground

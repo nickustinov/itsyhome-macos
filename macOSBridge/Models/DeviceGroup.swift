@@ -12,12 +12,14 @@ struct DeviceGroup: Codable, Identifiable {
     var name: String
     var icon: String
     var deviceIds: [String]  // Service unique identifiers
+    var roomId: String?  // Room this group belongs to, nil = global group
 
-    init(id: String = UUID().uuidString, name: String, icon: String = "folder", deviceIds: [String] = []) {
+    init(id: String = UUID().uuidString, name: String, icon: String = "folder", deviceIds: [String] = [], roomId: String? = nil) {
         self.id = id
         self.name = name
         self.icon = icon
         self.deviceIds = deviceIds
+        self.roomId = roomId
     }
 
     /// Returns true if all devices in the group are of the same type
