@@ -15,52 +15,58 @@ extension Notification.Name {
 
 class CameraViewController: UIViewController {
 
-    private var collectionView: UICollectionView!
-    private var emptyLabel: UILabel!
-    private var streamContainerView: UIView!
-    private var streamCameraView: HMCameraView!
-    private var streamSpinner: UIActivityIndicatorView!
-    private var backButton: UIButton!
-    private var streamOverlayStack: UIStackView!
+    // MARK: - UI elements
+
+    var collectionView: UICollectionView!
+    var emptyLabel: UILabel!
+    var streamContainerView: UIView!
+    var streamCameraView: HMCameraView!
+    var streamSpinner: UIActivityIndicatorView!
+    var backButton: UIButton!
+    var streamOverlayStack: UIStackView!
 
     // Audio controls
-    private var audioControlsStack: UIStackView!
-    private var muteButton: UIButton!
-    private var talkButton: UIButton!
+    var audioControlsStack: UIStackView!
+    var muteButton: UIButton!
+    var talkButton: UIButton!
 
-    private static let gridWidth: CGFloat = 300
-    private static let streamWidth: CGFloat = 530
-    private static let streamHeight: CGFloat = 298 // 16:9
+    // MARK: - Layout constants
 
-    private static let sectionTop: CGFloat = 15
-    private static let sectionBottom: CGFloat = 15
-    private static let sectionSide: CGFloat = 12
-    private static let lineSpacing: CGFloat = 8
-    private static let labelHeight: CGFloat = 0
+    static let gridWidth: CGFloat = 300
+    static let streamWidth: CGFloat = 530
+    static let streamHeight: CGFloat = 298 // 16:9
 
-    private var cameraAccessories: [HMAccessory] = []
-    private var snapshotControls: [UUID: HMCameraSnapshotControl] = [:]
-    private var activeStreamControl: HMCameraStreamControl?
-    private var activeStreamAccessory: HMAccessory?
+    static let sectionTop: CGFloat = 15
+    static let sectionBottom: CGFloat = 15
+    static let sectionSide: CGFloat = 12
+    static let lineSpacing: CGFloat = 8
+    static let labelHeight: CGFloat = 0
+
+    // MARK: - State
+
+    var cameraAccessories: [HMAccessory] = []
+    var snapshotControls: [UUID: HMCameraSnapshotControl] = [:]
+    var activeStreamControl: HMCameraStreamControl?
+    var activeStreamAccessory: HMAccessory?
 
     // Audio state
-    private var isMuted: Bool = false
-    private var isTalking: Bool = false
-    private var microphoneControl: HMCameraAudioControl?
-    private var speakerControl: HMCameraAudioControl?
-    private var snapshotTimer: Timer?
-    private var timestampTimer: Timer?
-    private var snapshotTimestamps: [UUID: Date] = [:]
-    private var hasLoadedInitialData = false
+    var isMuted: Bool = false
+    var isTalking: Bool = false
+    var microphoneControl: HMCameraAudioControl?
+    var speakerControl: HMCameraAudioControl?
+    var snapshotTimer: Timer?
+    var timestampTimer: Timer?
+    var snapshotTimestamps: [UUID: Date] = [:]
+    var hasLoadedInitialData = false
 
     /// Resolved overlay data per camera: [cameraUUID: [(characteristic, service name, service type)]]
-    private var overlayData: [UUID: [(characteristic: HMCharacteristic, name: String, serviceType: String)]] = [:]
+    var overlayData: [UUID: [(characteristic: HMCharacteristic, name: String, serviceType: String)]] = [:]
 
-    private var macOSController: iOS2Mac? {
+    var macOSController: iOS2Mac? {
         (UIApplication.shared.delegate as? AppDelegate)?.macOSController
     }
 
-    private var homeKitManager: HomeKitManager? {
+    var homeKitManager: HomeKitManager? {
         (UIApplication.shared.delegate as? AppDelegate)?.homeKitManager
     }
 
@@ -95,7 +101,6 @@ class CameraViewController: UIViewController {
     }
 
     @objc private func preferencesDidChange() {
-        // Only reload grid if not currently streaming
         guard activeStreamControl == nil else { return }
         loadCameras()
         emptyLabel.isHidden = !cameraAccessories.isEmpty
@@ -108,13 +113,11 @@ class CameraViewController: UIViewController {
 
     @objc private func panelDidShow() {
         takeAllSnapshots()
-        // Ensure correct size when panel re-appears
         let height = computeGridHeight()
         updatePanelSize(width: Self.gridWidth, height: height, animated: false)
     }
 
     @objc private func panelDidHide() {
-        // Reset to grid view when panel is hidden so it opens fresh next time
         if activeStreamControl != nil {
             backToGrid()
         }
@@ -131,7 +134,6 @@ class CameraViewController: UIViewController {
             takeAllSnapshots()
         }
 
-        // Ensure correct window size now that view.window exists
         let height = computeGridHeight()
         updatePanelSize(width: Self.gridWidth, height: height, animated: false)
 
@@ -257,256 +259,11 @@ class CameraViewController: UIViewController {
         setupAudioControls()
     }
 
-    private func setupAudioControls() {
-        // Audio controls stack (bottom-right)
-        audioControlsStack = UIStackView()
-        audioControlsStack.axis = .horizontal
-        audioControlsStack.spacing = 6
-        audioControlsStack.alignment = .center
-        audioControlsStack.translatesAutoresizingMaskIntoConstraints = false
-        audioControlsStack.isHidden = true
-        streamContainerView.addSubview(audioControlsStack)
+    // MARK: - Panel size
 
-        NSLayoutConstraint.activate([
-            audioControlsStack.trailingAnchor.constraint(equalTo: streamContainerView.trailingAnchor, constant: -8),
-            audioControlsStack.bottomAnchor.constraint(equalTo: streamContainerView.bottomAnchor, constant: -8)
-        ])
-
-        // Mute button
-        muteButton = createAudioButton(systemName: "speaker.wave.3.fill")
-        muteButton.addTarget(self, action: #selector(muteButtonTapped), for: .touchUpInside)
-        audioControlsStack.addArrangedSubview(muteButton)
-
-        // Talk button (hidden by default, shown only for cameras with speaker)
-        talkButton = createAudioButton(systemName: "mic.fill")
-        talkButton.addTarget(self, action: #selector(talkButtonTapped), for: .touchUpInside)
-        talkButton.isHidden = true
-        audioControlsStack.addArrangedSubview(talkButton)
-    }
-
-    private func createAudioButton(systemName: String) -> UIButton {
-        let button = UIButton(type: .custom)
-        let config = UIImage.SymbolConfiguration(pointSize: 14, weight: .medium)
-        let image = UIImage(systemName: systemName, withConfiguration: config)?.withTintColor(.white, renderingMode: .alwaysOriginal)
-        button.setImage(image, for: .normal)
-        button.backgroundColor = UIColor(white: 0, alpha: 0.5)
-        button.layer.cornerRadius = 14
-        button.translatesAutoresizingMaskIntoConstraints = false
-
-        NSLayoutConstraint.activate([
-            button.widthAnchor.constraint(equalToConstant: 28),
-            button.heightAnchor.constraint(equalToConstant: 28)
-        ])
-
-        return button
-    }
-
-    // MARK: - Audio controls
-
-    private func updateAudioControls(for accessory: HMAccessory) {
-        guard let profile = accessory.cameraProfiles?.first else {
-            audioControlsStack.isHidden = true
-            return
-        }
-
-        microphoneControl = profile.microphoneControl
-        speakerControl = profile.speakerControl
-
-        audioControlsStack.isHidden = microphoneControl == nil
-        talkButton.isHidden = speakerControl == nil
-
-        // Reset talk state
-        isTalking = false
-        updateTalkButtonState()
-    }
-
-    private func updateMuteButtonState() {
-        let config = UIImage.SymbolConfiguration(pointSize: 14, weight: .medium)
-        let iconName = isMuted ? "speaker.slash.fill" : "speaker.wave.3.fill"
-        let image = UIImage(systemName: iconName, withConfiguration: config)?.withTintColor(.white, renderingMode: .alwaysOriginal)
-        muteButton.setImage(image, for: .normal)
-    }
-
-    private func updateTalkButtonState() {
-        let config = UIImage.SymbolConfiguration(pointSize: 14, weight: .medium)
-        let iconName = isTalking ? "mic.fill" : "mic"
-        let color: UIColor = isTalking ? .systemGreen : .white
-        let image = UIImage(systemName: iconName, withConfiguration: config)?.withTintColor(color, renderingMode: .alwaysOriginal)
-        talkButton.setImage(image, for: .normal)
-        talkButton.backgroundColor = isTalking ? UIColor(white: 0, alpha: 0.7) : UIColor(white: 0, alpha: 0.5)
-    }
-
-    @objc private func muteButtonTapped() {
-        guard let stream = activeStreamControl?.cameraStream else { return }
-
-        let newMuteState = !isMuted
-        let newSetting: HMCameraAudioStreamSetting = newMuteState ? .muted : (HMCameraAudioStreamSetting(rawValue: 2) ?? .muted)
-
-        stream.updateAudioStreamSetting(newSetting) { [weak self] error in
-            DispatchQueue.main.async {
-                guard error == nil else { return }
-                self?.isMuted = newMuteState
-                self?.updateMuteButtonState()
-                if let accessory = self?.activeStreamAccessory {
-                    self?.saveMuteSetting(for: accessory, muted: newMuteState)
-                }
-            }
-        }
-    }
-
-    // MARK: - Audio preferences
-
-    private func saveMuteSetting(for accessory: HMAccessory, muted: Bool) {
-        let key = "cameraAudioMuted_\(accessory.uniqueIdentifier.uuidString)"
-        UserDefaults.standard.set(muted, forKey: key)
-    }
-
-    private func loadMuteSetting(for accessory: HMAccessory) -> Bool {
-        let key = "cameraAudioMuted_\(accessory.uniqueIdentifier.uuidString)"
-        // Default to false (unmuted)
-        return UserDefaults.standard.bool(forKey: key)
-    }
-
-    @objc private func talkButtonTapped() {
-        guard let speakerMuteChar = speakerControl?.mute else { return }
-
-        let newTalkState = !isTalking
-
-        // When talking, unmute speaker (mute = false)
-        // When not talking, mute speaker (mute = true)
-        speakerMuteChar.writeValue(!newTalkState) { [weak self] error in
-            DispatchQueue.main.async {
-                guard error == nil else { return }
-                self?.isTalking = newTalkState
-                self?.updateTalkButtonState()
-            }
-        }
-    }
-
-    private func resetAudioState() {
-        microphoneControl = nil
-        speakerControl = nil
-        isMuted = false
-        isTalking = false
-        audioControlsStack.isHidden = true
-    }
-
-    // MARK: - Camera loading
-
-    private func loadCameras() {
-        guard let manager = homeKitManager else { return }
-
-        let allCameras = manager.cameraAccessories
-        let homeId = manager.selectedHomeIdentifier?.uuidString ?? ""
-
-        // Read order and hidden from UserDefaults
-        let orderKey = "cameraOrder_\(homeId)"
-        let hiddenKey = "hiddenCameraIds_\(homeId)"
-        let order = UserDefaults.standard.stringArray(forKey: orderKey) ?? []
-        let hiddenIds = Set(UserDefaults.standard.stringArray(forKey: hiddenKey) ?? [])
-
-        // Apply order
-        var ordered: [HMAccessory] = []
-        var remaining = allCameras
-        for id in order {
-            if let uuid = UUID(uuidString: id),
-               let index = remaining.firstIndex(where: { $0.uniqueIdentifier == uuid }) {
-                ordered.append(remaining.remove(at: index))
-            }
-        }
-        ordered.append(contentsOf: remaining)
-
-        // Filter hidden
-        cameraAccessories = ordered.filter { !hiddenIds.contains($0.uniqueIdentifier.uuidString) }
-
-        // Resolve overlay data
-        resolveOverlayData(homeId: homeId)
-
-        let height = computeGridHeight()
-        macOSController?.resizeCameraPanel(width: Self.gridWidth, height: height, animated: false)
-    }
-
-    private func resolveOverlayData(homeId: String) {
-        overlayData = [:]
-        let overlayKey = "cameraOverlayAccessories_\(homeId)"
-        guard let data = UserDefaults.standard.data(forKey: overlayKey),
-              let mapping = try? JSONDecoder().decode([String: [String]].self, from: data),
-              let home = homeKitManager?.selectedHome else { return }
-
-        for camera in cameraAccessories {
-            let cameraId = camera.uniqueIdentifier.uuidString
-            guard let serviceIds = mapping[cameraId], !serviceIds.isEmpty else { continue }
-
-            var resolved: [(characteristic: HMCharacteristic, name: String, serviceType: String)] = []
-            for serviceIdStr in serviceIds {
-                guard let serviceUUID = UUID(uuidString: serviceIdStr) else { continue }
-                if let (characteristic, name, type) = findToggleCharacteristic(serviceUUID: serviceUUID, in: home) {
-                    resolved.append((characteristic: characteristic, name: name, serviceType: type))
-                }
-            }
-            if !resolved.isEmpty {
-                overlayData[camera.uniqueIdentifier] = resolved
-            }
-        }
-
-        // Read fresh values for all overlay characteristics
-        readOverlayCharacteristicValues()
-    }
-
-    private func readOverlayCharacteristicValues() {
-        for (_, items) in overlayData {
-            for item in items {
-                item.characteristic.readValue { [weak self] _ in
-                    DispatchQueue.main.async {
-                        self?.refreshVisiblePillStates()
-                    }
-                }
-            }
-        }
-    }
-
-    private func refreshVisiblePillStates() {
-        for cell in collectionView.visibleCells {
-            guard let snapshotCell = cell as? CameraSnapshotCell,
-                  let indexPath = collectionView.indexPath(for: cell),
-                  indexPath.item < cameraAccessories.count else { continue }
-            let uuid = cameraAccessories[indexPath.item].uniqueIdentifier
-            guard let items = overlayData[uuid] else { continue }
-            snapshotCell.updatePillStates(items: items)
-        }
-    }
-
-    private func findToggleCharacteristic(serviceUUID: UUID, in home: HMHome) -> (HMCharacteristic, String, String)? {
-        for accessory in home.accessories {
-            for service in accessory.services {
-                if service.uniqueIdentifier == serviceUUID {
-                    let type = service.serviceType
-                    let name = service.name
-
-                    // Match characteristic by service type
-                    switch type {
-                    case HMServiceTypeGarageDoorOpener:
-                        let c = service.characteristics.first { $0.characteristicType == HMCharacteristicTypeTargetDoorState }
-                        if let c { return (c, name, type) }
-                    case HMServiceTypeLockMechanism:
-                        let c = service.characteristics.first { $0.characteristicType == HMCharacteristicTypeTargetLockMechanismState }
-                        if let c { return (c, name, type) }
-                    default:
-                        let c = service.characteristics.first { $0.characteristicType == HMCharacteristicTypePowerState }
-                        if let c { return (c, name, type) }
-                    }
-
-                    return nil
-                }
-            }
-        }
-        return nil
-    }
-
-    private func updatePanelSize(width: CGFloat, height: CGFloat, animated: Bool) {
+    func updatePanelSize(width: CGFloat, height: CGFloat, animated: Bool) {
         #if targetEnvironment(macCatalyst)
         if let windowScene = view.window?.windowScene {
-            // In stream mode, allow resizing with 16:9 aspect ratio
             let isStreamMode = width > 400
             if isStreamMode {
                 windowScene.sizeRestrictions?.minimumSize = CGSize(width: 400, height: 225)
@@ -520,7 +277,7 @@ class CameraViewController: UIViewController {
         macOSController?.resizeCameraPanel(width: width, height: height, animated: animated)
     }
 
-    private func computeGridHeight() -> CGFloat {
+    func computeGridHeight() -> CGFloat {
         let count = cameraAccessories.count
         guard count > 0 else { return 150 }
 
@@ -528,267 +285,10 @@ class CameraViewController: UIViewController {
         let cellHeight = cellWidth * 9.0 / 16.0 + Self.labelHeight
 
         if count <= 3 {
-            // Show all cameras fully
             return Self.sectionTop + CGFloat(count) * cellHeight + CGFloat(count - 1) * Self.lineSpacing + Self.sectionBottom
         } else {
-            // Show 3 full + half of 4th to hint at scrollability
             return Self.sectionTop + 3 * cellHeight + 2 * Self.lineSpacing + Self.lineSpacing + cellHeight * 0.5
         }
-    }
-
-    // MARK: - Snapshots
-
-    private func takeAllSnapshots() {
-        for accessory in cameraAccessories {
-            guard let profile = accessory.cameraProfiles?.first,
-                  let snapshotControl = profile.snapshotControl else { continue }
-
-            snapshotControl.delegate = self
-            snapshotControls[accessory.uniqueIdentifier] = snapshotControl
-            snapshotControl.takeSnapshot()
-        }
-    }
-
-    private func startSnapshotTimer() {
-        snapshotTimer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in
-            self?.takeAllSnapshots()
-        }
-    }
-
-    private func stopSnapshotTimer() {
-        snapshotTimer?.invalidate()
-        snapshotTimer = nil
-    }
-
-    private func startTimestampTimer() {
-        timestampTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
-            self?.updateTimestampLabels()
-        }
-    }
-
-    private func stopTimestampTimer() {
-        timestampTimer?.invalidate()
-        timestampTimer = nil
-    }
-
-    private func updateTimestampLabels() {
-        for cell in collectionView.visibleCells {
-            guard let snapshotCell = cell as? CameraSnapshotCell,
-                  let indexPath = collectionView.indexPath(for: cell),
-                  indexPath.item < cameraAccessories.count else { continue }
-            let uuid = cameraAccessories[indexPath.item].uniqueIdentifier
-            snapshotCell.updateTimestamp(since: snapshotTimestamps[uuid])
-        }
-    }
-
-    // MARK: - Streaming
-
-    private func startStream(for accessory: HMAccessory) {
-        guard let profile = accessory.cameraProfiles?.first,
-              let streamControl = profile.streamControl else { return }
-
-        activeStreamAccessory = accessory
-
-        streamContainerView.isHidden = false
-        streamCameraView.isHidden = true
-        streamSpinner.startAnimating()
-        collectionView.isHidden = true
-        stopSnapshotTimer()
-
-        updatePanelSize(width: Self.streamWidth, height: Self.streamHeight, animated: false)
-        updateStreamOverlays(for: accessory)
-        updateAudioControls(for: accessory)
-
-        activeStreamControl = streamControl
-        streamControl.delegate = self
-        streamControl.startStream()
-    }
-
-    private func updateStreamOverlays(for accessory: HMAccessory) {
-        streamOverlayStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
-
-        guard let items = overlayData[accessory.uniqueIdentifier] else { return }
-
-        for item in items {
-            let pill = createOverlayPill(characteristic: item.characteristic, name: item.name, serviceType: item.serviceType, size: .large)
-            streamOverlayStack.addArrangedSubview(pill)
-        }
-
-        // Read current values
-        for item in items {
-            item.characteristic.readValue { [weak self] _ in
-                DispatchQueue.main.async {
-                    self?.refreshStreamOverlayStates()
-                }
-            }
-        }
-    }
-
-    private func refreshStreamOverlayStates() {
-        guard let accessory = activeStreamAccessory,
-              let items = overlayData[accessory.uniqueIdentifier] else { return }
-
-        for (index, pill) in streamOverlayStack.arrangedSubviews.enumerated() {
-            guard index < items.count else { break }
-            let isOn = characteristicIsOn(items[index].characteristic)
-            updatePillState(pill, isOn: isOn)
-        }
-    }
-
-    @objc private func backToGrid() {
-        activeStreamControl?.stopStream()
-        activeStreamControl = nil
-        activeStreamAccessory = nil
-        streamCameraView.cameraSource = nil
-        streamCameraView.isHidden = false
-        streamSpinner.stopAnimating()
-        streamContainerView.isHidden = true
-        streamOverlayStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
-        resetAudioState()
-        collectionView.isHidden = cameraAccessories.isEmpty
-        collectionView.setContentOffset(.zero, animated: false)
-
-        let height = computeGridHeight()
-        updatePanelSize(width: Self.gridWidth, height: height, animated: false)
-        startSnapshotTimer()
-    }
-
-    // MARK: - Overlay pills
-
-    private enum PillSize {
-        case large  // Stream view: matches Back button (28px, font 13)
-        case small  // Grid view: compact (24px, font 10)
-    }
-
-    private func createOverlayPill(characteristic: HMCharacteristic, name: String, serviceType: String, size: PillSize) -> UIView {
-        let pill = UIView()
-        pill.translatesAutoresizingMaskIntoConstraints = false
-
-        let isLarge = size == .large
-        let pillHeight: CGFloat = isLarge ? 28 : 24
-        let iconSize: CGFloat = isLarge ? 14 : 12
-        let fontSize: CGFloat = isLarge ? 13 : 10
-        let leadingPad: CGFloat = isLarge ? 10 : 6
-        let trailingPad: CGFloat = isLarge ? 12 : 6
-        let iconLabelGap: CGFloat = isLarge ? 4 : 3
-
-        pill.layer.cornerRadius = pillHeight / 2
-
-        let iconImage = iconForServiceType(serviceType)
-        let iconView = UIImageView(image: iconImage)
-        iconView.contentMode = .scaleAspectFit
-        iconView.translatesAutoresizingMaskIntoConstraints = false
-        iconView.tag = 1
-        pill.addSubview(iconView)
-
-        let label = UILabel()
-        label.text = name
-        label.font = .systemFont(ofSize: fontSize, weight: .medium)
-        label.translatesAutoresizingMaskIntoConstraints = false
-        label.tag = 2
-        pill.addSubview(label)
-
-        NSLayoutConstraint.activate([
-            pill.heightAnchor.constraint(equalToConstant: pillHeight),
-            iconView.leadingAnchor.constraint(equalTo: pill.leadingAnchor, constant: leadingPad),
-            iconView.centerYAnchor.constraint(equalTo: pill.centerYAnchor),
-            iconView.widthAnchor.constraint(equalToConstant: iconSize),
-            iconView.heightAnchor.constraint(equalToConstant: iconSize),
-            label.leadingAnchor.constraint(equalTo: iconView.trailingAnchor, constant: iconLabelGap),
-            label.centerYAnchor.constraint(equalTo: pill.centerYAnchor),
-            label.trailingAnchor.constraint(equalTo: pill.trailingAnchor, constant: -trailingPad)
-        ])
-
-        let tap = UITapGestureRecognizer(target: self, action: #selector(overlayPillTapped(_:)))
-        pill.addGestureRecognizer(tap)
-        pill.isUserInteractionEnabled = true
-
-        objc_setAssociatedObject(pill, &AssociatedKeys.characteristic, characteristic, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
-
-        let isOn = characteristicIsOn(characteristic)
-        updatePillState(pill, isOn: isOn)
-
-        return pill
-    }
-
-    private func updatePillState(_ pill: UIView, isOn: Bool) {
-        if isOn {
-            pill.backgroundColor = UIColor(white: 1.0, alpha: 0.85)
-            if let icon = pill.viewWithTag(1) as? UIImageView { icon.tintColor = .black }
-            if let label = pill.viewWithTag(2) as? UILabel { label.textColor = .black }
-        } else {
-            pill.backgroundColor = UIColor(white: 0.0, alpha: 0.6)
-            if let icon = pill.viewWithTag(1) as? UIImageView { icon.tintColor = .white }
-            if let label = pill.viewWithTag(2) as? UILabel { label.textColor = .white }
-        }
-    }
-
-    @objc private func overlayPillTapped(_ gesture: UITapGestureRecognizer) {
-        guard let pill = gesture.view,
-              let characteristic = objc_getAssociatedObject(pill, &AssociatedKeys.characteristic) as? HMCharacteristic else { return }
-
-        let isOn = characteristicIsOn(characteristic)
-        let newValue = toggleValue(for: characteristic, currentlyOn: isOn)
-
-        // Optimistic update
-        updatePillState(pill, isOn: !isOn)
-
-        characteristic.writeValue(newValue) { [weak self] error in
-            DispatchQueue.main.async {
-                if error != nil {
-                    self?.updatePillState(pill, isOn: isOn)
-                } else if characteristic.characteristicType == HMCharacteristicTypeTargetDoorState ||
-                          characteristic.characteristicType == HMCharacteristicTypeTargetLockMechanismState {
-                    // Re-read after delay for garage doors/locks (state transitions asynchronously)
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                        self?.readOverlayCharacteristicValues()
-                    }
-                }
-            }
-        }
-    }
-
-    private func characteristicIsOn(_ characteristic: HMCharacteristic) -> Bool {
-        // Door/lock state must be checked as Int first (NSNumber bridges to Bool incorrectly)
-        if characteristic.characteristicType == HMCharacteristicTypeTargetDoorState {
-            let intVal = (characteristic.value as? NSNumber)?.intValue ?? 1
-            // 0=open=ON, 1=closed=OFF
-            return intVal == 0
-        }
-        if characteristic.characteristicType == HMCharacteristicTypeTargetLockMechanismState {
-            let intVal = (characteristic.value as? NSNumber)?.intValue ?? 0
-            // 1=locked=ON, 0=unlocked=OFF
-            return intVal == 1
-        }
-        if let intVal = (characteristic.value as? NSNumber)?.intValue {
-            return intVal != 0
-        }
-        return false
-    }
-
-    private func toggleValue(for characteristic: HMCharacteristic, currentlyOn: Bool) -> Any {
-        if characteristic.characteristicType == HMCharacteristicTypeTargetDoorState {
-            // currentlyOn means door is open (0), so toggle to closed (1)
-            return currentlyOn ? 1 : 0
-        }
-        if characteristic.characteristicType == HMCharacteristicTypeTargetLockMechanismState {
-            // currentlyOn means locked (1), so toggle to unlocked (0)
-            return currentlyOn ? 0 : 1
-        }
-        return currentlyOn ? false : true
-    }
-
-    private func iconForServiceType(_ type: String) -> UIImage? {
-        let name: String
-        switch type {
-        case HMServiceTypeLightbulb: name = "lightbulb.fill"
-        case HMServiceTypeSwitch: name = "power"
-        case HMServiceTypeOutlet: name = "poweroutlet.type.b.fill"
-        case HMServiceTypeGarageDoorOpener: name = "door.garage.closed"
-        case HMServiceTypeLockMechanism: name = "lock.fill"
-        default: name = "bolt.fill"
-        }
-        return UIImage(systemName: name)?.withRenderingMode(.alwaysTemplate)
     }
 
     // MARK: - Public
@@ -803,299 +303,6 @@ class CameraViewController: UIViewController {
 
 // MARK: - Associated keys
 
-private struct AssociatedKeys {
+struct CameraAssociatedKeys {
     static var characteristic = "overlayCharacteristic"
-}
-
-// MARK: - UICollectionViewDataSource
-
-extension CameraViewController: UICollectionViewDataSource {
-    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        cameraAccessories.count
-    }
-
-    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: CameraSnapshotCell.reuseId, for: indexPath) as! CameraSnapshotCell
-        let accessory = cameraAccessories[indexPath.item]
-        cell.configure(name: accessory.name)
-        cell.updateTimestamp(since: snapshotTimestamps[accessory.uniqueIdentifier])
-
-        if let snapshotControl = snapshotControls[accessory.uniqueIdentifier],
-           let snapshot = snapshotControl.mostRecentSnapshot {
-            cell.cameraView.cameraSource = snapshot
-        }
-
-        let items = overlayData[accessory.uniqueIdentifier] ?? []
-        cell.configureOverlays(items: items, target: self, action: #selector(overlayPillTapped(_:)))
-
-        return cell
-    }
-}
-
-// MARK: - UICollectionViewDelegate
-
-extension CameraViewController: UICollectionViewDelegate {
-    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        let accessory = cameraAccessories[indexPath.item]
-        startStream(for: accessory)
-    }
-}
-
-// MARK: - UICollectionViewDelegateFlowLayout
-
-extension CameraViewController: UICollectionViewDelegateFlowLayout {
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        let width = CameraViewController.gridWidth - CameraViewController.sectionSide * 2
-        let height = width * 9.0 / 16.0 + CameraViewController.labelHeight
-        return CGSize(width: width, height: height)
-    }
-}
-
-// MARK: - HMCameraSnapshotControlDelegate
-
-extension CameraViewController: HMCameraSnapshotControlDelegate {
-    func cameraSnapshotControl(_ cameraSnapshotControl: HMCameraSnapshotControl, didTake snapshot: HMCameraSnapshot?, error: Error?) {
-        guard error == nil else { return }
-        for (index, accessory) in cameraAccessories.enumerated() {
-            if snapshotControls[accessory.uniqueIdentifier] === cameraSnapshotControl {
-                DispatchQueue.main.async {
-                    self.snapshotTimestamps[accessory.uniqueIdentifier] = Date()
-                    let indexPath = IndexPath(item: index, section: 0)
-                    self.collectionView.reloadItems(at: [indexPath])
-                }
-                break
-            }
-        }
-    }
-}
-
-// MARK: - HMCameraStreamControlDelegate
-
-extension CameraViewController: HMCameraStreamControlDelegate {
-    func cameraStreamControlDidStartStream(_ cameraStreamControl: HMCameraStreamControl) {
-        DispatchQueue.main.async {
-            if let stream = cameraStreamControl.cameraStream {
-                // Load saved mute preference
-                let savedMuted = self.activeStreamAccessory.map { self.loadMuteSetting(for: $0) } ?? false
-                self.isMuted = savedMuted
-                self.updateMuteButtonState()
-
-                // Apply audio setting based on saved mute preference
-                let audioSetting: HMCameraAudioStreamSetting = savedMuted ? .muted : (HMCameraAudioStreamSetting(rawValue: 2) ?? .muted)
-                stream.updateAudioStreamSetting(audioSetting) { _ in }
-            }
-            self.streamSpinner.stopAnimating()
-            self.streamCameraView.isHidden = false
-            self.streamCameraView.cameraSource = cameraStreamControl.cameraStream
-        }
-    }
-
-    func cameraStreamControl(_ cameraStreamControl: HMCameraStreamControl, didStopStreamWithError error: Error?) {
-        if error != nil {
-            DispatchQueue.main.async {
-                self.backToGrid()
-            }
-        }
-    }
-}
-
-// MARK: - CameraSnapshotCell
-
-private class CameraSnapshotCell: UICollectionViewCell {
-    static let reuseId = "CameraSnapshotCell"
-
-    let cameraView = HMCameraView()
-    private let nameLabel = UILabel()
-    private let timestampLabel = UILabel()
-    private var overlayStack: UIStackView!
-
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        setupViews()
-    }
-
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-
-    private func setupViews() {
-        contentView.backgroundColor = UIColor(white: 0.2, alpha: 1.0)
-        contentView.layer.cornerRadius = 6
-        contentView.clipsToBounds = true
-
-        cameraView.translatesAutoresizingMaskIntoConstraints = false
-        cameraView.isUserInteractionEnabled = false
-        contentView.addSubview(cameraView)
-
-        nameLabel.translatesAutoresizingMaskIntoConstraints = false
-        nameLabel.font = .systemFont(ofSize: 10, weight: .medium)
-        nameLabel.textColor = .white
-        nameLabel.layer.shadowColor = UIColor.black.cgColor
-        nameLabel.layer.shadowOffset = CGSize(width: 0, height: 1)
-        nameLabel.layer.shadowOpacity = 0.8
-        nameLabel.layer.shadowRadius = 2
-        contentView.addSubview(nameLabel)
-
-        timestampLabel.translatesAutoresizingMaskIntoConstraints = false
-        timestampLabel.font = .monospacedDigitSystemFont(ofSize: 10, weight: .medium)
-        timestampLabel.textColor = .white
-        timestampLabel.layer.shadowColor = UIColor.black.cgColor
-        timestampLabel.layer.shadowOffset = CGSize(width: 0, height: 1)
-        timestampLabel.layer.shadowOpacity = 0.8
-        timestampLabel.layer.shadowRadius = 2
-        timestampLabel.textAlignment = .right
-        contentView.addSubview(timestampLabel)
-
-        overlayStack = UIStackView()
-        overlayStack.axis = .horizontal
-        overlayStack.spacing = 4
-        overlayStack.alignment = .center
-        overlayStack.translatesAutoresizingMaskIntoConstraints = false
-        contentView.addSubview(overlayStack)
-
-        NSLayoutConstraint.activate([
-            cameraView.topAnchor.constraint(equalTo: contentView.topAnchor),
-            cameraView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
-            cameraView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
-            cameraView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
-
-            nameLabel.topAnchor.constraint(equalTo: cameraView.topAnchor, constant: 4),
-            nameLabel.leadingAnchor.constraint(equalTo: cameraView.leadingAnchor, constant: 6),
-
-            timestampLabel.topAnchor.constraint(equalTo: cameraView.topAnchor, constant: 4),
-            timestampLabel.trailingAnchor.constraint(equalTo: cameraView.trailingAnchor, constant: -6),
-
-            overlayStack.leadingAnchor.constraint(equalTo: cameraView.leadingAnchor, constant: 4),
-            overlayStack.bottomAnchor.constraint(equalTo: cameraView.bottomAnchor, constant: -4)
-        ])
-    }
-
-    func configure(name: String) {
-        nameLabel.text = name
-    }
-
-    func updateTimestamp(since date: Date?) {
-        guard let date = date else {
-            timestampLabel.text = nil
-            return
-        }
-        let seconds = Int(Date().timeIntervalSince(date))
-        if seconds < 60 {
-            timestampLabel.text = "\(seconds)s"
-        } else {
-            timestampLabel.text = "\(seconds / 60)m"
-        }
-    }
-
-    func configureOverlays(items: [(characteristic: HMCharacteristic, name: String, serviceType: String)], target: AnyObject, action: Selector) {
-        overlayStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
-
-        for item in items {
-            let pill = createGridPill(characteristic: item.characteristic, name: item.name, serviceType: item.serviceType, target: target, action: action)
-            overlayStack.addArrangedSubview(pill)
-        }
-    }
-
-    func updatePillStates(items: [(characteristic: HMCharacteristic, name: String, serviceType: String)]) {
-        for (index, pill) in overlayStack.arrangedSubviews.enumerated() {
-            guard index < items.count else { break }
-            let isOn = characteristicIsOn(items[index].characteristic)
-            if isOn {
-                pill.backgroundColor = UIColor(white: 1.0, alpha: 0.85)
-                if let icon = pill.viewWithTag(1) as? UIImageView { icon.tintColor = .black }
-                if let label = pill.viewWithTag(2) as? UILabel { label.textColor = .black }
-            } else {
-                pill.backgroundColor = UIColor(white: 0.0, alpha: 0.6)
-                if let icon = pill.viewWithTag(1) as? UIImageView { icon.tintColor = .white }
-                if let label = pill.viewWithTag(2) as? UILabel { label.textColor = .white }
-            }
-        }
-    }
-
-    private func createGridPill(characteristic: HMCharacteristic, name: String, serviceType: String, target: AnyObject, action: Selector) -> UIView {
-        let pill = UIView()
-        pill.layer.cornerRadius = 12
-        pill.translatesAutoresizingMaskIntoConstraints = false
-
-        let iconImage = iconForType(serviceType)
-        let iconView = UIImageView(image: iconImage)
-        iconView.contentMode = .scaleAspectFit
-        iconView.translatesAutoresizingMaskIntoConstraints = false
-        iconView.tag = 1
-        pill.addSubview(iconView)
-
-        let label = UILabel()
-        label.text = name
-        label.font = .systemFont(ofSize: 10, weight: .medium)
-        label.translatesAutoresizingMaskIntoConstraints = false
-        label.tag = 2
-        pill.addSubview(label)
-
-        NSLayoutConstraint.activate([
-            pill.heightAnchor.constraint(equalToConstant: 24),
-            iconView.leadingAnchor.constraint(equalTo: pill.leadingAnchor, constant: 6),
-            iconView.centerYAnchor.constraint(equalTo: pill.centerYAnchor),
-            iconView.widthAnchor.constraint(equalToConstant: 12),
-            iconView.heightAnchor.constraint(equalToConstant: 12),
-            label.leadingAnchor.constraint(equalTo: iconView.trailingAnchor, constant: 3),
-            label.centerYAnchor.constraint(equalTo: pill.centerYAnchor),
-            label.trailingAnchor.constraint(equalTo: pill.trailingAnchor, constant: -6)
-        ])
-
-        let tap = UITapGestureRecognizer(target: target, action: action)
-        pill.addGestureRecognizer(tap)
-        pill.isUserInteractionEnabled = true
-
-        objc_setAssociatedObject(pill, &AssociatedKeys.characteristic, characteristic, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
-
-        // Determine state and apply colors
-        let isOn = characteristicIsOn(characteristic)
-        if isOn {
-            pill.backgroundColor = UIColor(white: 1.0, alpha: 0.85)
-            iconView.tintColor = .black
-            label.textColor = .black
-        } else {
-            pill.backgroundColor = UIColor(white: 0.0, alpha: 0.6)
-            iconView.tintColor = .white
-            label.textColor = .white
-        }
-
-        return pill
-    }
-
-    private func characteristicIsOn(_ characteristic: HMCharacteristic) -> Bool {
-        if characteristic.characteristicType == HMCharacteristicTypeTargetDoorState {
-            let intVal = (characteristic.value as? NSNumber)?.intValue ?? 1
-            return intVal == 0
-        }
-        if characteristic.characteristicType == HMCharacteristicTypeTargetLockMechanismState {
-            let intVal = (characteristic.value as? NSNumber)?.intValue ?? 0
-            return intVal == 1
-        }
-        if let intVal = (characteristic.value as? NSNumber)?.intValue {
-            return intVal != 0
-        }
-        return false
-    }
-
-    private func iconForType(_ type: String) -> UIImage? {
-        let name: String
-        switch type {
-        case HMServiceTypeLightbulb: name = "lightbulb.fill"
-        case HMServiceTypeSwitch: name = "power"
-        case HMServiceTypeOutlet: name = "poweroutlet.type.b.fill"
-        case HMServiceTypeGarageDoorOpener: name = "door.garage.closed"
-        case HMServiceTypeLockMechanism: name = "lock.fill"
-        default: name = "bolt.fill"
-        }
-        return UIImage(systemName: name)?.withRenderingMode(.alwaysTemplate)
-    }
-
-    override func prepareForReuse() {
-        super.prepareForReuse()
-        cameraView.cameraSource = nil
-        nameLabel.text = nil
-        timestampLabel.text = nil
-        overlayStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
-    }
 }

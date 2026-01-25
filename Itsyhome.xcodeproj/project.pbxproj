@@ -11,8 +11,11 @@
 		010BCFB919140D13C4961A9E /* AccessoriesSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 221351A6C7AB72AC5F0E1714 /* AccessoriesSettingsView.swift */; };
 		018431CF2F20A2331B4F42FE /* ActionParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E7FF79A158B9BA2B399F2EF /* ActionParser.swift */; };
 		0189B807373567481D495882 /* SceneMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3AD56C9EA919B09E7896B55 /* SceneMenuItem.swift */; };
+		036159A13D67658A211B08A1 /* PinnedDesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6032BB2D6D8EC68869A857D2 /* PinnedDesignSystem.swift */; };
 		0554ECE0D0F5808206BF4215 /* WebhookServerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E5CD57B9AFE976E31909CE2 /* WebhookServerTests.swift */; };
+		05A1DB037EB7709B7048A05F /* CameraViewController+Data.swift in Sources */ = {isa = PBXBuildFile; fileRef = 374C2EC1F7A56B4ECE04924A /* CameraViewController+Data.swift */; };
 		069D686EF497B4BE291ED8F9 /* ValueConversionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C1BB4554FA59FCE166E2B86 /* ValueConversionTests.swift */; };
+		076F92194A749EDA89AE608E /* PinnedDesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6032BB2D6D8EC68869A857D2 /* PinnedDesignSystem.swift */; };
 		08D8F3C60170681EF3187BCE /* ThermostatMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86C440D0DF207C3DF9F3A5AD /* ThermostatMenuItem.swift */; };
 		099D30F6620813668F633D46 /* CloudSyncTranslator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5578B4AD774F2D31C1C4EE6C /* CloudSyncTranslator.swift */; };
 		0A005DFA734D5F67E70BA99A /* DeviceResolverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E76F58466E9E704D579F526 /* DeviceResolverTests.swift */; };
@@ -31,18 +34,21 @@
 		160978BDC19974A59FB1A4BB /* LightMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73072FCFE16311A3C25C1C2C /* LightMenuItem.swift */; };
 		16A327E2FD58F4B48606729C /* BaseMenuItems.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CFE6ECEB559109472BA360A /* BaseMenuItems.swift */; };
 		19DBF4D900CC57B5CA26166C /* ActionEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE6B3519AD69969925F8F105 /* ActionEngine.swift */; };
-		1B22E7CDDA48DCC5FFEA461C /* ThermostatStatusItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7015AC49D972A44CD1BC46DE /* ThermostatStatusItem.swift */; };
 		1C6AB0890960150B4D251149 /* CloudSyncTranslatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5DADAA257C2278B651DA7C1 /* CloudSyncTranslatorTests.swift */; };
 		1E24EAA5BFD6BC5B18ED2796 /* CameraViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0407B252FDFC384E196876DD /* CameraViewController.swift */; };
+		1E6C7F244DAA12026DED3B53 /* CameraViewController+CollectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E38D91D9B55FBEBB1C7D33B /* CameraViewController+CollectionView.swift */; };
 		1F40AE6DB3424BCC0EC82C42 /* URLSchemeHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05A1A234EF733DB7475895AD /* URLSchemeHandler.swift */; };
 		20065FF911389BDD959B2D6B /* ProManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E663466EEEB0E7EAA36C4C8 /* ProManager.swift */; };
 		21F39E80DC3F5C5543037DD6 /* SettingsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39978B305FBE0EDCA33CCAFB /* SettingsWindowController.swift */; };
 		23C223BDBF39445BABE3E41E /* AccessoryRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99356FF270E11FD9201F3359 /* AccessoryRowView.swift */; };
 		243C3F0D744EDDE9D9608B3C /* IconMapping.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7001522F49F44848A26EC3E /* IconMapping.swift */; };
+		2452DBB79A0EA0759948E493 /* CameraViewController+Streaming.swift in Sources */ = {isa = PBXBuildFile; fileRef = 914A41E0AA9D87F86AA5935F /* CameraViewController+Streaming.swift */; };
 		259E77A4CA92FB96D11ECD4C /* GarageDoorMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0F3944EC8821BD1947AA8C /* GarageDoorMenuItem.swift */; };
 		2780E8A3CC3916038B2D93EF /* ActionParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E7FF79A158B9BA2B399F2EF /* ActionParser.swift */; };
+		27FC3479736EE81BDB5FBCC0 /* CameraViewController+Snapshots.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0F7D45A6094C8C996325854 /* CameraViewController+Snapshots.swift */; };
 		280C74C7265950C9756B365E /* MacOSController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29D500F71D0EA63DEF283D8B /* MacOSController.swift */; };
 		28A43FD6F2622B9CF35BC2C0 /* LockMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4374C26148C6FEAAFD207413 /* LockMenuItem.swift */; };
+		28B5F7BA9021D479977F312E /* AccessoriesSettingsView+TableDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D69710E65E70E915FAA68786 /* AccessoriesSettingsView+TableDelegate.swift */; };
 		2FA906D09DF2D10CD127C5EB /* HumidifierMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2203CC92AE39248AE04E2480 /* HumidifierMenuItem.swift */; };
 		3468ABB31915D39AF41D2621 /* ProProducts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EF08A602DCF69DA079C553B /* ProProducts.swift */; };
 		3719FEBA07D012C6D4D5B663 /* MenuBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FBAFF70B90E3449AD09EFEE /* MenuBuilder.swift */; };
@@ -52,7 +58,9 @@
 		462B3D16738CD046AA4DA9CF /* URLSchemeHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05A1A234EF733DB7475895AD /* URLSchemeHandler.swift */; };
 		4959FC69F1F23C3ABA0365A1 /* SwitchMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51B74BF9E1E02D2CF34C9F37 /* SwitchMenuItem.swift */; };
 		4DE21C1DE370423C77BB118D /* SensorSummaryMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 117549B5BED7ADDFB473C53C /* SensorSummaryMenuItem.swift */; };
+		4F3453F7475E6BAE4F33924F /* AccessoriesSettingsView+Tables.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE7F2CC398ABB654FDBA459F /* AccessoriesSettingsView+Tables.swift */; };
 		51296CE1AEA687F0449B01EA /* ModeButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7593F05E9EAB8871D43D8E8 /* ModeButton.swift */; };
+		52879709E1E4AD686ABA7139 /* CloudSyncTranslatorShortcutsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86731711622CF92DD3B29BE0 /* CloudSyncTranslatorShortcutsTests.swift */; };
 		52BED706E1E2183D364BA285 /* BridgeProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88919649EAF34363518DE9FF /* BridgeProtocols.swift */; };
 		530B7958DAC64B1723E66A79 /* GarageDoorMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0F3944EC8821BD1947AA8C /* GarageDoorMenuItem.swift */; };
 		538121CA4DBF8EEB27C242A1 /* ScenesGridMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = B33028C597EEA3DAE92520C3 /* ScenesGridMenuItem.swift */; };
@@ -69,16 +77,21 @@
 		67E9EC3321181637F2778AD9 /* ModeButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7593F05E9EAB8871D43D8E8 /* ModeButton.swift */; };
 		680D90D25922D1D80083CFC7 /* SecuritySystemMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBD57CCBF703A5861D8AEFB0 /* SecuritySystemMenuItem.swift */; };
 		68F393A22B7CEFA4BC9A0867 /* ProStatusCacheTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D6209D5D4AF8B8C8228A9CB /* ProStatusCacheTests.swift */; };
+		6BE051EBFED016414C5D8F08 /* CameraViewController+Overlays.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97019F49E19F08ED22A6720B /* CameraViewController+Overlays.swift */; };
 		6C54534AB061917B6EB6D307 /* IconMapping.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7001522F49F44848A26EC3E /* IconMapping.swift */; };
 		6E332413D206C25EBCCC03DF /* WebhookServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0096925C98FD6B955AB016 /* WebhookServer.swift */; };
 		6E6BF460C164E03C263E90F7 /* URLSchemeHandlerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99DC1291FE6F040A1673F599 /* URLSchemeHandlerTests.swift */; };
+		6ECD2A8E74161BA10E24C979 /* CloudSyncTranslatorTestHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8BC522AE2A26BA136B9347B /* CloudSyncTranslatorTestHelpers.swift */; };
 		703DBF83A3BBDD5C6A6DB225 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E67C906ECD67B8E10255EFC /* SettingsView.swift */; };
 		721D0C78421B4D27A7722A00 /* SettingsCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDB13572FA0DD4098A9721D2 /* SettingsCard.swift */; };
 		73574BD61159AC8923B414F8 /* FanMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE776817A51695FBA936B1 /* FanMenuItem.swift */; };
 		76BD3DDF71BC336FC74CB2D3 /* CameraSceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF4C9E2A9610BD23BE84E2F9 /* CameraSceneDelegate.swift */; };
 		772EAC65582AA05AFFA09210 /* AirPurifierMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72F1F563C08E919FE1477C44 /* AirPurifierMenuItem.swift */; };
+		77813AE35FF97A14DB35E1C2 /* CloudSyncTranslatorOrderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57701CE0637BE61201588A16 /* CloudSyncTranslatorOrderTests.swift */; };
 		786699F2C5038B043DDACCDB /* ColorConversion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CBA4F5B869DA1C032B0B3EB /* ColorConversion.swift */; };
+		7B4F924672483F90EAC207BC /* PinnedPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4D102B76D810A5EA88388C7 /* PinnedPanelView.swift */; };
 		7BB119B671B3D114D30396B0 /* DeviceResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2C2BA989A5E5FBD918CAD29 /* DeviceResolver.swift */; };
+		7F4F0B9C698512C72037CB9C /* CameraViewController+HomeKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DFABEDCE616EA991243B06A /* CameraViewController+HomeKit.swift */; };
 		806CCEC2325035CD0F9D0690 /* LockMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4374C26148C6FEAAFD207413 /* LockMenuItem.swift */; };
 		80BA4CBB1ADDA67E5A9ABB5A /* FanMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE776817A51695FBA936B1 /* FanMenuItem.swift */; };
 		81700D54D56303C83DD65445 /* PreferencesManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AD1C9F5AE818158EA2137D6 /* PreferencesManagerTests.swift */; };
@@ -91,9 +104,13 @@
 		91DC242EDBAC2B3ADF8BE6B3 /* WebhookServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0096925C98FD6B955AB016 /* WebhookServer.swift */; };
 		9279623381FB28CEBFF44097 /* ProProducts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EF08A602DCF69DA079C553B /* ProProducts.swift */; };
 		93F37AF55F715D6075134E69 /* ValueConversion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46EB6A2D48574EFA0940AA54 /* ValueConversion.swift */; };
+		947C04E9B2C3D8A610F86AAF /* PinnedStatusItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A2E98692B043E97671C5B1A /* PinnedStatusItem.swift */; };
 		94D04698ADBC211F1A888348 /* ThermostatMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86C440D0DF207C3DF9F3A5AD /* ThermostatMenuItem.swift */; };
+		95C36CCD4FADD1E5D599FCF1 /* CloudSyncTranslatorDeviceGroupsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80A89008C02F5EDA5137756A /* CloudSyncTranslatorDeviceGroupsTests.swift */; };
 		985B67023A87C83880C511BE /* CloudSyncManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9EBA01EDDE859ED8AC024C5 /* CloudSyncManagerTests.swift */; };
 		98F783AA77C8DA2CF5D5A923 /* ModernSlider.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA517D9CAF4A470166D8C402 /* ModernSlider.swift */; };
+		9B55E502BE8265C5CD70C0FB /* CloudSyncTranslatorCameraTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78063132727D342A2B432E1C /* CloudSyncTranslatorCameraTests.swift */; };
+		9C86FF5A1BF850043DC70F8C /* PinnedStatusItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A2E98692B043E97671C5B1A /* PinnedStatusItem.swift */; };
 		9FBEDE4F029FFD689286563C /* SwitchMenuItemTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F34BC0FC06EE9C93C6BC637 /* SwitchMenuItemTests.swift */; };
 		A39C19839A70844424127BF4 /* DebugMockAccessories.swift in Sources */ = {isa = PBXBuildFile; fileRef = FED3835F8603DA9756A2B79B /* DebugMockAccessories.swift */; };
 		A453BEC6F07575A955C9EF4E /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10754E8AB01F87A12A293A7 /* SceneDelegate.swift */; };
@@ -102,9 +119,10 @@
 		AD9481FF14C9C1A6554663B1 /* ValueConversion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46EB6A2D48574EFA0940AA54 /* ValueConversion.swift */; };
 		AE2684040DE50AEBB0A3A844 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A554C4D26C15417928E429D4 /* Assets.xcassets */; };
 		B6E0BA859343F2AC750C12D5 /* HotkeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8DAE0D0C65A8D06C17611F3 /* HotkeyManager.swift */; };
+		B7D6F7258AD7EE41FD484A9B /* CameraSnapshotCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E54535E59CC4328A2DCF58 /* CameraSnapshotCell.swift */; };
 		BC18FC26A00B6D7E9D7D3575 /* ActionEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE6B3519AD69969925F8F105 /* ActionEngine.swift */; };
 		BDB2AF940BB608A11A976278 /* DeviceResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2C2BA989A5E5FBD918CAD29 /* DeviceResolver.swift */; };
-		BFE8D5619196D90414AA74BC /* ThermostatStatusItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7015AC49D972A44CD1BC46DE /* ThermostatStatusItem.swift */; };
+		C313D5CE6F814C94E259E7BD /* ACStatusItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EFAF80C419C6EFB5B6DDABE /* ACStatusItem.swift */; };
 		C8A37E1284E27AADA3A6906B /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 181D73D7B6680B4F8CD37D4E /* DesignSystem.swift */; };
 		CA8E1F973147B8CE2E58FA52 /* BlindMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CDA7864F1CCF19AD70E1F96 /* BlindMenuItem.swift */; };
 		CAFADC7AC3708C1CF63E3E15 /* SwitchMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51B74BF9E1E02D2CF34C9F37 /* SwitchMenuItem.swift */; };
@@ -112,6 +130,7 @@
 		CD46DAC3D441849FF023CC5A /* CameraPanelManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22C281E3CFA576C918B16C66 /* CameraPanelManager.swift */; };
 		CD6AE61B7DE19AA5DCD88280 /* ToggleSwitch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CD9AB0F2E79886D06C197E2 /* ToggleSwitch.swift */; };
 		CD9CC7D9F4C6F66CB4098F96 /* ModernSlider.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA517D9CAF4A470166D8C402 /* ModernSlider.swift */; };
+		CDF0FF43009152F73BD24B77 /* ACStatusItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EFAF80C419C6EFB5B6DDABE /* ACStatusItem.swift */; };
 		CE60FBDD7DA3242E781072D4 /* ColorConversion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CBA4F5B869DA1C032B0B3EB /* ColorConversion.swift */; };
 		CECFFBB02999B556D5D55093 /* ActionParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2D7D48C5DF8A0F64F6CD9B2 /* ActionParserTests.swift */; };
 		D2096D71A418CA85F0ECD074 /* PreferencesManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC234CA03045239CB9D178E6 /* PreferencesManager.swift */; };
@@ -120,7 +139,9 @@
 		E003741ECCB38525B6A202D9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A554C4D26C15417928E429D4 /* Assets.xcassets */; };
 		E19EB0697A29FB223575BEFA /* macOSBridge.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 5735B31C003BD03DE4B28206 /* macOSBridge.bundle */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		E3926443EE62FD43B0C618E8 /* AboutSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB02A6E6A0F93A3A51FBACC1 /* AboutSection.swift */; };
+		E4850517F12CB934749D8578 /* PinnedPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4D102B76D810A5EA88388C7 /* PinnedPanelView.swift */; };
 		E53F247D68A3464066E31310 /* CloudSyncManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D91667CA03C981ACF4D8EDA /* CloudSyncManager.swift */; };
+		EA2BD76D206D991EBDA7FE4C /* CameraViewController+Audio.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDF6041C9E962ED63D2709FD /* CameraViewController+Audio.swift */; };
 		EBD10F700CEFAA9D8C99229F /* ShortcutButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1359B98719D1D9D23782463E /* ShortcutButton.swift */; };
 		ED027DAB764D6BD656E4F586 /* GroupEditorPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45ADAE5712E4621056FF217C /* GroupEditorPanel.swift */; };
 		EF5B75FFA100C7A2957EBEBC /* GroupsSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EE496DB240231CDFFDA2018 /* GroupsSettingsView.swift */; };
@@ -155,6 +176,7 @@
 		0407B252FDFC384E196876DD /* CameraViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraViewController.swift; sourceTree = "<group>"; };
 		05A1A234EF733DB7475895AD /* URLSchemeHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLSchemeHandler.swift; sourceTree = "<group>"; };
 		074390035F5E079496B2A9FD /* LocalChangeNotifiableTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalChangeNotifiableTests.swift; sourceTree = "<group>"; };
+		0EFAF80C419C6EFB5B6DDABE /* ACStatusItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ACStatusItem.swift; sourceTree = "<group>"; };
 		1078ED585A5ECE7DF0A569F6 /* DeviceGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceGroup.swift; sourceTree = "<group>"; };
 		117549B5BED7ADDFB473C53C /* SensorSummaryMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorSummaryMenuItem.swift; sourceTree = "<group>"; };
 		1359B98719D1D9D23782463E /* ShortcutButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutButton.swift; sourceTree = "<group>"; };
@@ -163,14 +185,17 @@
 		2203CC92AE39248AE04E2480 /* HumidifierMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HumidifierMenuItem.swift; sourceTree = "<group>"; };
 		221351A6C7AB72AC5F0E1714 /* AccessoriesSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessoriesSettingsView.swift; sourceTree = "<group>"; };
 		22C281E3CFA576C918B16C66 /* CameraPanelManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraPanelManager.swift; sourceTree = "<group>"; };
+		27E54535E59CC4328A2DCF58 /* CameraSnapshotCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraSnapshotCell.swift; sourceTree = "<group>"; };
 		29D500F71D0EA63DEF283D8B /* MacOSController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacOSController.swift; sourceTree = "<group>"; };
 		2E663466EEEB0E7EAA36C4C8 /* ProManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProManager.swift; sourceTree = "<group>"; };
 		2E76F58466E9E704D579F526 /* DeviceResolverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceResolverTests.swift; sourceTree = "<group>"; };
 		2F34BC0FC06EE9C93C6BC637 /* SwitchMenuItemTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwitchMenuItemTests.swift; sourceTree = "<group>"; };
 		2FBAFF70B90E3449AD09EFEE /* MenuBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBuilder.swift; sourceTree = "<group>"; };
+		374C2EC1F7A56B4ECE04924A /* CameraViewController+Data.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CameraViewController+Data.swift"; sourceTree = "<group>"; };
 		377DE1391A6CCD59734552A7 /* TemperatureFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemperatureFormatter.swift; sourceTree = "<group>"; };
 		39978B305FBE0EDCA33CCAFB /* SettingsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindowController.swift; sourceTree = "<group>"; };
 		3AD1C9F5AE818158EA2137D6 /* PreferencesManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesManagerTests.swift; sourceTree = "<group>"; };
+		3DFABEDCE616EA991243B06A /* CameraViewController+HomeKit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CameraViewController+HomeKit.swift"; sourceTree = "<group>"; };
 		3F7082F795BA2C9AA55C64A0 /* ACMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ACMenuItem.swift; sourceTree = "<group>"; };
 		4374C26148C6FEAAFD207413 /* LockMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockMenuItem.swift; sourceTree = "<group>"; };
 		45ADAE5712E4621056FF217C /* GroupEditorPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupEditorPanel.swift; sourceTree = "<group>"; };
@@ -184,42 +209,56 @@
 		51B74BF9E1E02D2CF34C9F37 /* SwitchMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwitchMenuItem.swift; sourceTree = "<group>"; };
 		5578B4AD774F2D31C1C4EE6C /* CloudSyncTranslator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSyncTranslator.swift; sourceTree = "<group>"; };
 		5735B31C003BD03DE4B28206 /* macOSBridge.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = macOSBridge.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
+		57701CE0637BE61201588A16 /* CloudSyncTranslatorOrderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSyncTranslatorOrderTests.swift; sourceTree = "<group>"; };
 		5E5CD57B9AFE976E31909CE2 /* WebhookServerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebhookServerTests.swift; sourceTree = "<group>"; };
+		6032BB2D6D8EC68869A857D2 /* PinnedDesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinnedDesignSystem.swift; sourceTree = "<group>"; };
 		62AD62C3749331FE2DA3CA6B /* GeneralSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralSection.swift; sourceTree = "<group>"; };
+		6A2E98692B043E97671C5B1A /* PinnedStatusItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinnedStatusItem.swift; sourceTree = "<group>"; };
 		6CFE6ECEB559109472BA360A /* BaseMenuItems.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaseMenuItems.swift; sourceTree = "<group>"; };
 		6EF08A602DCF69DA079C553B /* ProProducts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProProducts.swift; sourceTree = "<group>"; };
-		7015AC49D972A44CD1BC46DE /* ThermostatStatusItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThermostatStatusItem.swift; sourceTree = "<group>"; };
 		71AB516B350323CC9A1DAEE4 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		72F1F563C08E919FE1477C44 /* AirPurifierMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AirPurifierMenuItem.swift; sourceTree = "<group>"; };
 		73072FCFE16311A3C25C1C2C /* LightMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LightMenuItem.swift; sourceTree = "<group>"; };
 		748347D84F0BDF92DA4DE1E4 /* HomeKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = HomeKit.framework; path = System/Library/Frameworks/HomeKit.framework; sourceTree = SDKROOT; };
+		78063132727D342A2B432E1C /* CloudSyncTranslatorCameraTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSyncTranslatorCameraTests.swift; sourceTree = "<group>"; };
+		80A89008C02F5EDA5137756A /* CloudSyncTranslatorDeviceGroupsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSyncTranslatorDeviceGroupsTests.swift; sourceTree = "<group>"; };
 		81F296FBD051BAC5B51F5322 /* HomeKitManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeKitManager.swift; sourceTree = "<group>"; };
+		86731711622CF92DD3B29BE0 /* CloudSyncTranslatorShortcutsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSyncTranslatorShortcutsTests.swift; sourceTree = "<group>"; };
 		86C440D0DF207C3DF9F3A5AD /* ThermostatMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThermostatMenuItem.swift; sourceTree = "<group>"; };
 		874AC367AE516CA50259C5B9 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		88919649EAF34363518DE9FF /* BridgeProtocols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BridgeProtocols.swift; sourceTree = "<group>"; };
 		8A88562EA2E11D2E4E9370E8 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		8D6209D5D4AF8B8C8228A9CB /* ProStatusCacheTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProStatusCacheTests.swift; sourceTree = "<group>"; };
+		8E38D91D9B55FBEBB1C7D33B /* CameraViewController+CollectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CameraViewController+CollectionView.swift"; sourceTree = "<group>"; };
 		8E67C906ECD67B8E10255EFC /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		914A41E0AA9D87F86AA5935F /* CameraViewController+Streaming.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CameraViewController+Streaming.swift"; sourceTree = "<group>"; };
+		97019F49E19F08ED22A6720B /* CameraViewController+Overlays.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CameraViewController+Overlays.swift"; sourceTree = "<group>"; };
 		99356FF270E11FD9201F3359 /* AccessoryRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessoryRowView.swift; sourceTree = "<group>"; };
 		99DC1291FE6F040A1673F599 /* URLSchemeHandlerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLSchemeHandlerTests.swift; sourceTree = "<group>"; };
 		9C1443A561323B39B108F71E /* WebhooksSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebhooksSection.swift; sourceTree = "<group>"; };
 		9CD9AB0F2E79886D06C197E2 /* ToggleSwitch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToggleSwitch.swift; sourceTree = "<group>"; };
 		9CDA7864F1CCF19AD70E1F96 /* BlindMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlindMenuItem.swift; sourceTree = "<group>"; };
 		9D91667CA03C981ACF4D8EDA /* CloudSyncManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSyncManager.swift; sourceTree = "<group>"; };
+		A0F7D45A6094C8C996325854 /* CameraViewController+Snapshots.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CameraViewController+Snapshots.swift"; sourceTree = "<group>"; };
 		A3A3EB6D0DE7E9C0DE57ABAF /* Protocols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Protocols.swift; sourceTree = "<group>"; };
 		A3AD56C9EA919B09E7896B55 /* SceneMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneMenuItem.swift; sourceTree = "<group>"; };
 		A554C4D26C15417928E429D4 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		AA816D16806C49F55E7E09BD /* HighlightingMenuItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HighlightingMenuItemView.swift; sourceTree = "<group>"; };
 		AB0F3944EC8821BD1947AA8C /* GarageDoorMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GarageDoorMenuItem.swift; sourceTree = "<group>"; };
+		AE7F2CC398ABB654FDBA459F /* AccessoriesSettingsView+Tables.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AccessoriesSettingsView+Tables.swift"; sourceTree = "<group>"; };
 		AFFF50FE92C7137DE82A4A69 /* macOSBridgeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = macOSBridgeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B10754E8AB01F87A12A293A7 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		B33028C597EEA3DAE92520C3 /* ScenesGridMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScenesGridMenuItem.swift; sourceTree = "<group>"; };
 		B7593F05E9EAB8871D43D8E8 /* ModeButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModeButton.swift; sourceTree = "<group>"; };
 		B9EBA01EDDE859ED8AC024C5 /* CloudSyncManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSyncManagerTests.swift; sourceTree = "<group>"; };
 		BB02A6E6A0F93A3A51FBACC1 /* AboutSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutSection.swift; sourceTree = "<group>"; };
+		BDF6041C9E962ED63D2709FD /* CameraViewController+Audio.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CameraViewController+Audio.swift"; sourceTree = "<group>"; };
+		C8BC522AE2A26BA136B9347B /* CloudSyncTranslatorTestHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSyncTranslatorTestHelpers.swift; sourceTree = "<group>"; };
 		CC0737BC4060CFA7950A61F8 /* GroupMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupMenuItem.swift; sourceTree = "<group>"; };
 		CE0096925C98FD6B955AB016 /* WebhookServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebhookServer.swift; sourceTree = "<group>"; };
 		D0E47D2FA39B625CC3FA0E66 /* Itsyhome.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Itsyhome.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D4D102B76D810A5EA88388C7 /* PinnedPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinnedPanelView.swift; sourceTree = "<group>"; };
+		D69710E65E70E915FAA68786 /* AccessoriesSettingsView+TableDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AccessoriesSettingsView+TableDelegate.swift"; sourceTree = "<group>"; };
 		D7001522F49F44848A26EC3E /* IconMapping.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IconMapping.swift; sourceTree = "<group>"; };
 		D8DAE0D0C65A8D06C17611F3 /* HotkeyManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotkeyManager.swift; sourceTree = "<group>"; };
 		DC234CA03045239CB9D178E6 /* PreferencesManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesManager.swift; sourceTree = "<group>"; };
@@ -368,7 +407,15 @@
 			children = (
 				8A88562EA2E11D2E4E9370E8 /* AppDelegate.swift */,
 				EF4C9E2A9610BD23BE84E2F9 /* CameraSceneDelegate.swift */,
+				27E54535E59CC4328A2DCF58 /* CameraSnapshotCell.swift */,
 				0407B252FDFC384E196876DD /* CameraViewController.swift */,
+				BDF6041C9E962ED63D2709FD /* CameraViewController+Audio.swift */,
+				8E38D91D9B55FBEBB1C7D33B /* CameraViewController+CollectionView.swift */,
+				374C2EC1F7A56B4ECE04924A /* CameraViewController+Data.swift */,
+				3DFABEDCE616EA991243B06A /* CameraViewController+HomeKit.swift */,
+				97019F49E19F08ED22A6720B /* CameraViewController+Overlays.swift */,
+				A0F7D45A6094C8C996325854 /* CameraViewController+Snapshots.swift */,
+				914A41E0AA9D87F86AA5935F /* CameraViewController+Streaming.swift */,
 				81F296FBD051BAC5B51F5322 /* HomeKitManager.swift */,
 				B10754E8AB01F87A12A293A7 /* SceneDelegate.swift */,
 			);
@@ -407,7 +454,10 @@
 		793C583153901FFB74152678 /* PinnedAccessory */ = {
 			isa = PBXGroup;
 			children = (
-				7015AC49D972A44CD1BC46DE /* ThermostatStatusItem.swift */,
+				0EFAF80C419C6EFB5B6DDABE /* ACStatusItem.swift */,
+				6032BB2D6D8EC68869A857D2 /* PinnedDesignSystem.swift */,
+				D4D102B76D810A5EA88388C7 /* PinnedPanelView.swift */,
+				6A2E98692B043E97671C5B1A /* PinnedStatusItem.swift */,
 			);
 			path = PinnedAccessory;
 			sourceTree = "<group>";
@@ -416,6 +466,8 @@
 			isa = PBXGroup;
 			children = (
 				221351A6C7AB72AC5F0E1714 /* AccessoriesSettingsView.swift */,
+				D69710E65E70E915FAA68786 /* AccessoriesSettingsView+TableDelegate.swift */,
+				AE7F2CC398ABB654FDBA459F /* AccessoriesSettingsView+Tables.swift */,
 				99356FF270E11FD9201F3359 /* AccessoryRowView.swift */,
 				DC234CA03045239CB9D178E6 /* PreferencesManager.swift */,
 				DDB13572FA0DD4098A9721D2 /* SettingsCard.swift */,
@@ -430,6 +482,11 @@
 			isa = PBXGroup;
 			children = (
 				B9EBA01EDDE859ED8AC024C5 /* CloudSyncManagerTests.swift */,
+				78063132727D342A2B432E1C /* CloudSyncTranslatorCameraTests.swift */,
+				80A89008C02F5EDA5137756A /* CloudSyncTranslatorDeviceGroupsTests.swift */,
+				57701CE0637BE61201588A16 /* CloudSyncTranslatorOrderTests.swift */,
+				86731711622CF92DD3B29BE0 /* CloudSyncTranslatorShortcutsTests.swift */,
+				C8BC522AE2A26BA136B9347B /* CloudSyncTranslatorTestHelpers.swift */,
 				E5DADAA257C2278B651DA7C1 /* CloudSyncTranslatorTests.swift */,
 				4ACE5B888DD591449DAA1BBB /* DeviceGroupTests.swift */,
 				074390035F5E079496B2A9FD /* LocalChangeNotifiableTests.swift */,
@@ -649,6 +706,14 @@
 				A5BA2A1B45F8FAAEB59ABB6C /* AppDelegate.swift in Sources */,
 				52BED706E1E2183D364BA285 /* BridgeProtocols.swift in Sources */,
 				76BD3DDF71BC336FC74CB2D3 /* CameraSceneDelegate.swift in Sources */,
+				B7D6F7258AD7EE41FD484A9B /* CameraSnapshotCell.swift in Sources */,
+				EA2BD76D206D991EBDA7FE4C /* CameraViewController+Audio.swift in Sources */,
+				1E6C7F244DAA12026DED3B53 /* CameraViewController+CollectionView.swift in Sources */,
+				05A1DB037EB7709B7048A05F /* CameraViewController+Data.swift in Sources */,
+				7F4F0B9C698512C72037CB9C /* CameraViewController+HomeKit.swift in Sources */,
+				6BE051EBFED016414C5D8F08 /* CameraViewController+Overlays.swift in Sources */,
+				27FC3479736EE81BDB5FBCC0 /* CameraViewController+Snapshots.swift in Sources */,
+				2452DBB79A0EA0759948E493 /* CameraViewController+Streaming.swift in Sources */,
 				1E24EAA5BFD6BC5B18ED2796 /* CameraViewController.swift in Sources */,
 				F2A340D41E3B57E9F7FEE940 /* HomeKitManager.swift in Sources */,
 				A453BEC6F07575A955C9EF4E /* SceneDelegate.swift in Sources */,
@@ -661,7 +726,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				646767AF7A71690332C474E0 /* ACMenuItem.swift in Sources */,
+				CDF0FF43009152F73BD24B77 /* ACStatusItem.swift in Sources */,
 				E3926443EE62FD43B0C618E8 /* AboutSection.swift in Sources */,
+				28B5F7BA9021D479977F312E /* AccessoriesSettingsView+TableDelegate.swift in Sources */,
+				4F3453F7475E6BAE4F33924F /* AccessoriesSettingsView+Tables.swift in Sources */,
 				010BCFB919140D13C4961A9E /* AccessoriesSettingsView.swift in Sources */,
 				23C223BDBF39445BABE3E41E /* AccessoryRowView.swift in Sources */,
 				19DBF4D900CC57B5CA26166C /* ActionEngine.swift in Sources */,
@@ -696,6 +764,9 @@
 				3719FEBA07D012C6D4D5B663 /* MenuBuilder.swift in Sources */,
 				51296CE1AEA687F0449B01EA /* ModeButton.swift in Sources */,
 				98F783AA77C8DA2CF5D5A923 /* ModernSlider.swift in Sources */,
+				036159A13D67658A211B08A1 /* PinnedDesignSystem.swift in Sources */,
+				E4850517F12CB934749D8578 /* PinnedPanelView.swift in Sources */,
+				9C86FF5A1BF850043DC70F8C /* PinnedStatusItem.swift in Sources */,
 				D2096D71A418CA85F0ECD074 /* PreferencesManager.swift in Sources */,
 				20065FF911389BDD959B2D6B /* ProManager.swift in Sources */,
 				3468ABB31915D39AF41D2621 /* ProProducts.swift in Sources */,
@@ -711,7 +782,6 @@
 				CAFADC7AC3708C1CF63E3E15 /* SwitchMenuItem.swift in Sources */,
 				85A7FA1BF8285A1BF44CEA0E /* TemperatureFormatter.swift in Sources */,
 				08D8F3C60170681EF3187BCE /* ThermostatMenuItem.swift in Sources */,
-				BFE8D5619196D90414AA74BC /* ThermostatStatusItem.swift in Sources */,
 				CD6AE61B7DE19AA5DCD88280 /* ToggleSwitch.swift in Sources */,
 				1F40AE6DB3424BCC0EC82C42 /* URLSchemeHandler.swift in Sources */,
 				93F37AF55F715D6075134E69 /* ValueConversion.swift in Sources */,
@@ -726,6 +796,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				00F3743A0841F193C487A90D /* ACMenuItem.swift in Sources */,
+				C313D5CE6F814C94E259E7BD /* ACStatusItem.swift in Sources */,
 				BC18FC26A00B6D7E9D7D3575 /* ActionEngine.swift in Sources */,
 				A59EA0092ED0DD63857F5043 /* ActionEngineTests.swift in Sources */,
 				018431CF2F20A2331B4F42FE /* ActionParser.swift in Sources */,
@@ -737,6 +808,11 @@
 				53ECA3675440CD9BAC4279B3 /* CloudSyncManager.swift in Sources */,
 				985B67023A87C83880C511BE /* CloudSyncManagerTests.swift in Sources */,
 				111E21896B8031FB1B180CDD /* CloudSyncTranslator.swift in Sources */,
+				9B55E502BE8265C5CD70C0FB /* CloudSyncTranslatorCameraTests.swift in Sources */,
+				95C36CCD4FADD1E5D599FCF1 /* CloudSyncTranslatorDeviceGroupsTests.swift in Sources */,
+				77813AE35FF97A14DB35E1C2 /* CloudSyncTranslatorOrderTests.swift in Sources */,
+				52879709E1E4AD686ABA7139 /* CloudSyncTranslatorShortcutsTests.swift in Sources */,
+				6ECD2A8E74161BA10E24C979 /* CloudSyncTranslatorTestHelpers.swift in Sources */,
 				1C6AB0890960150B4D251149 /* CloudSyncTranslatorTests.swift in Sources */,
 				786699F2C5038B043DDACCDB /* ColorConversion.swift in Sources */,
 				C8A37E1284E27AADA3A6906B /* DesignSystem.swift in Sources */,
@@ -755,6 +831,9 @@
 				28A43FD6F2622B9CF35BC2C0 /* LockMenuItem.swift in Sources */,
 				67E9EC3321181637F2778AD9 /* ModeButton.swift in Sources */,
 				CD9CC7D9F4C6F66CB4098F96 /* ModernSlider.swift in Sources */,
+				076F92194A749EDA89AE608E /* PinnedDesignSystem.swift in Sources */,
+				7B4F924672483F90EAC207BC /* PinnedPanelView.swift in Sources */,
+				947C04E9B2C3D8A610F86AAF /* PinnedStatusItem.swift in Sources */,
 				158EC3D55E6D386D2AD13DC0 /* PreferencesManager.swift in Sources */,
 				81700D54D56303C83DD65445 /* PreferencesManagerTests.swift in Sources */,
 				64A2F6EC52618A2CA486EA00 /* ProManager.swift in Sources */,
@@ -769,7 +848,6 @@
 				9FBEDE4F029FFD689286563C /* SwitchMenuItemTests.swift in Sources */,
 				F5FCABEBCF642BE8C3921A78 /* TemperatureFormatter.swift in Sources */,
 				94D04698ADBC211F1A888348 /* ThermostatMenuItem.swift in Sources */,
-				1B22E7CDDA48DCC5FFEA461C /* ThermostatStatusItem.swift in Sources */,
 				0E3C04C26FCF48722D26C6CE /* ToggleSwitch.swift in Sources */,
 				462B3D16738CD046AA4DA9CF /* URLSchemeHandler.swift in Sources */,
 				6E6BF460C164E03C263E90F7 /* URLSchemeHandlerTests.swift in Sources */,
