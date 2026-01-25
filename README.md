@@ -224,22 +224,35 @@ This app uses Mac Catalyst with a native AppKit plugin for the menu bar:
 
 ```
 Itsyhome/
-├── iOS/                    # Main Catalyst app (hidden, headless)
-│   ├── AppDelegate.swift   # App lifecycle
-│   ├── HomeKitManager.swift # HomeKit integration
-│   └── SceneDelegate.swift
-├── Shared/                 # Shared code between iOS and macOS
-│   └── BridgeProtocols.swift
+├── iOS/                           # Main Catalyst app (hidden, headless)
+│   ├── AppDelegate.swift          # App lifecycle, loads macOS plugin
+│   ├── HomeKitManager.swift       # HomeKit integration (Mac2iOS protocol)
+│   ├── SceneDelegate.swift
+│   └── CameraSceneDelegate.swift  # Camera window handling
+├── Shared/                        # Shared code between iOS and macOS
+│   ├── BridgeProtocols.swift      # Bridge protocols & codable data structures
+│   └── URLSchemeHandler.swift     # URL scheme deeplink handling
 └── Resources/
 
-macOSBridge/                # Native AppKit plugin
-├── MacOSController.swift   # Menu bar controller
-├── DesignSystem/           # Design tokens and custom controls
-├── MenuItems/              # Custom menu item views
-└── Settings/               # Preferences and favourites
+macOSBridge/                       # Native AppKit plugin for menu bar
+├── MacOSController.swift          # Main menu bar controller (iOS2Mac protocol)
+├── MenuBuilder.swift              # Builds NSMenu from service data
+├── ActionEngine/                  # Unified API for executing actions
+│   ├── ActionEngine.swift         # Core action execution engine
+│   ├── ActionParser.swift         # Parses actions from URL schemes
+│   └── DeviceResolver.swift       # Resolves targets to devices
+├── MenuItems/                     # Device-specific menu item views
+├── DesignSystem/                  # shadcn/ui-inspired design tokens
+├── Controls/                      # Custom UI controls
+├── Settings/                      # Preferences & settings UI
+├── Pro/                           # Pro subscription management (StoreKit 2)
+├── Sync/                          # iCloud sync (Pro)
+├── Webhook/                       # HTTP server (Pro)
+├── Models/                        # Data models
+└── Utilities/                     # Helpers (color conversion, icon mapping)
 ```
 
-The iOS/Catalyst app runs headless and manages HomeKit communication. It loads the `macOSBridge` plugin which provides the native AppKit menu bar interface.
+The iOS/Catalyst app runs headless and manages HomeKit communication. It loads the `macOSBridge` plugin which provides the native AppKit menu bar interface. Communication happens via bidirectional protocols (Mac2iOS & iOS2Mac) with JSON-serialized data.
 
 ## How it works
 
@@ -258,16 +271,29 @@ xcodegen generate
 
 ## Testing
 
-The project includes unit tests for the macOSBridge plugin. Run tests with:
+The project includes comprehensive unit tests for the macOSBridge plugin. Run tests with:
 
 ```bash
 xcodebuild test -scheme macOSBridgeTests -destination "platform=macOS"
 ```
 
 Test coverage includes:
-- `LocalChangeNotifiableTests` - Notification protocol for syncing menu items
-- `ValueConversionTests` - Type conversion utilities for HomeKit values
-- `SwitchMenuItemTests` - Menu item behaviour and protocol conformance
+
+| Test suite | Description |
+|------------|-------------|
+| `SwitchMenuItemTests` | Menu item behaviour and protocol conformance |
+| `ValueConversionTests` | Type conversion utilities for HomeKit values |
+| `LocalChangeNotifiableTests` | Notification protocol for syncing menu items |
+| `ActionEngineTests` | Action parsing and execution (toggle, brightness, scenes, etc.) |
+| `ActionParserTests` | URL scheme parsing |
+| `DeviceResolverTests` | Target resolution logic |
+| `URLSchemeHandlerTests` | URL scheme handler |
+| `WebhookServerTests` | HTTP server lifecycle and endpoints |
+| `CloudSyncManagerTests` | iCloud sync |
+| `CloudSyncTranslatorTests` | ID translation for sync |
+| `DeviceGroupTests` | Device group functionality |
+| `PreferencesManagerTests` | Settings persistence |
+| `ProStatusCacheTests` | Pro status caching |
 
 ## HomeKit entitlement
 
