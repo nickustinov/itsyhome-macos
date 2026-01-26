@@ -247,10 +247,10 @@ Fixing all accessory types to be fully HAP-compliant with proper controls.
 |---|-----------|--------|
 | 1 | Outlet | ✅ Complete |
 | 2 | Fan | ✅ Complete |
-| 3 | Window Covering | ⬜ Pending |
-| 4 | HeaterCooler | ⬜ Pending |
-| 5 | Humidifier | ⬜ Pending |
-| 6 | Air Purifier | ⬜ Pending |
+| 3 | Window Covering | ✅ Complete |
+| 4 | HeaterCooler | ✅ Complete |
+| 5 | Humidifier | ✅ Complete |
+| 6 | Air Purifier | ✅ Complete |
 | 7 | Thermostat | ⬜ Pending |
 
 ---

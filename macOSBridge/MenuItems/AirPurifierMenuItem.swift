@@ -16,16 +16,22 @@ class AirPurifierMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRe
     private var currentStateId: UUID?
     private var targetStateId: UUID?
     private var rotationSpeedId: UUID?
+    private var swingModeId: UUID?
 
     private var isActive: Bool = false
     private var currentState: Int = 0  // 0=inactive, 1=idle, 2=purifying
     private var targetState: Int = 0   // 0=manual, 1=auto
     private var speed: Double = 100
+    private var swingMode: Int = 0     // 0=DISABLED, 1=ENABLED
 
     private let containerView: HighlightingMenuItemView
     private let iconView: NSImageView
     private let nameLabel: NSTextField
     private let powerToggle: ToggleSwitch
+
+    // Swing button (Row 1, before toggle)
+    private var swingButtonGroup: ModeButtonGroup?
+    private var swingButton: ModeButton?
 
     // Controls row (shown when active)
     private let controlsRow: NSView
@@ -46,6 +52,7 @@ class AirPurifierMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRe
         if let id = currentStateId { ids.append(id) }
         if let id = targetStateId { ids.append(id) }
         if let id = rotationSpeedId { ids.append(id) }
+        if let id = swingModeId { ids.append(id) }
         return ids
     }
 
@@ -58,6 +65,7 @@ class AirPurifierMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRe
         self.currentStateId = serviceData.currentAirPurifierStateId.flatMap { UUID(uuidString: $0) }
         self.targetStateId = serviceData.targetAirPurifierStateId.flatMap { UUID(uuidString: $0) }
         self.rotationSpeedId = serviceData.rotationSpeedId.flatMap { UUID(uuidString: $0) }
+        self.swingModeId = serviceData.swingModeId.flatMap { UUID(uuidString: $0) }
 
         self.hasSpeed = rotationSpeedId != nil
         self.speedMin = serviceData.rotationSpeedMin ?? 0
@@ -66,7 +74,7 @@ class AirPurifierMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRe
         // Create wrapper view - start collapsed
         containerView = HighlightingMenuItemView(frame: NSRect(x: 0, y: 0, width: DS.ControlSize.menuItemWidth, height: collapsedHeight))
 
-        // Row 1: Icon, name, power toggle
+        // Row 1: Icon, name, swing button (optional), power toggle
         let iconY = (collapsedHeight - DS.ControlSize.iconMedium) / 2
 
         // Icon
@@ -76,19 +84,32 @@ class AirPurifierMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRe
         iconView.imageScaling = .scaleProportionallyUpOrDown
         containerView.addSubview(iconView)
 
-        // Power toggle position
+        // Power toggle position (calculate first for alignment)
         let switchX = DS.ControlSize.menuItemWidth - DS.Spacing.md - DS.ControlSize.switchWidth
 
-        // Name label
+        // Swing button group position (right before toggle, only if present)
+        let swingGroupWidth = ModeButtonGroup.widthForIconButtons(count: 1)
+        let swingGroupX = switchX - (swingModeId != nil ? swingGroupWidth + DS.Spacing.sm : 0)
+
+        // Name label (fills space up to swing button or toggle)
         let labelX = DS.Spacing.md + DS.ControlSize.iconMedium + DS.Spacing.sm
         let labelY = (collapsedHeight - 17) / 2
-        let labelWidth = switchX - labelX - DS.Spacing.sm
+        let labelWidth = (swingModeId != nil ? swingGroupX : switchX) - labelX - DS.Spacing.sm
         nameLabel = NSTextField(labelWithString: serviceData.name)
         nameLabel.frame = NSRect(x: labelX, y: labelY, width: labelWidth, height: 17)
         nameLabel.font = DS.Typography.label
         nameLabel.textColor = DS.Colors.foreground
         nameLabel.lineBreakMode = .byTruncatingTail
         containerView.addSubview(nameLabel)
+
+        // Swing button group (on Row 1, before toggle)
+        if swingModeId != nil {
+            let swingY = (collapsedHeight - 18) / 2
+            let swingGroup = ModeButtonGroup(frame: NSRect(x: swingGroupX, y: swingY, width: swingGroupWidth, height: 18))
+            swingButton = swingGroup.addButton(icon: "wind", color: DS.Colors.sliderFan)
+            containerView.addSubview(swingGroup)
+            swingButtonGroup = swingGroup
+        }
 
         // Power toggle
         let switchY = (collapsedHeight - DS.ControlSize.switchHeight) / 2
@@ -174,6 +195,9 @@ class AirPurifierMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRe
 
         speedSlider.target = self
         speedSlider.action = #selector(sliderChanged(_:))
+
+        swingButton?.target = self
+        swingButton?.action = #selector(swingTapped(_:))
     }
 
     required init(coder: NSCoder) {
@@ -201,6 +225,11 @@ class AirPurifierMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRe
                 speed = newSpeed
                 speedSlider.doubleValue = newSpeed
             }
+        } else if characteristicId == swingModeId {
+            if let mode = ValueConversion.toInt(value) {
+                swingMode = mode
+                updateSwingButton()
+            }
         }
     }
 
@@ -220,6 +249,9 @@ class AirPurifierMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRe
         iconView.frame.origin.y = iconY
         nameLabel.frame.origin.y = labelY
         powerToggle.frame.origin.y = switchY
+        if let swingGroup = swingButtonGroup {
+            swingGroup.frame.origin.y = topAreaY + (collapsedHeight - 18) / 2
+        }
 
         // Show speed slider when active and has speed
         speedSlider.isHidden = !isActive || !hasSpeed
@@ -266,5 +298,18 @@ class AirPurifierMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRe
             bridge?.writeCharacteristic(identifier: id, value: value)
             notifyLocalChange(characteristicId: id, value: value)
         }
+    }
+
+    @objc private func swingTapped(_ sender: NSButton) {
+        swingMode = swingMode == 0 ? 1 : 0
+        if let id = swingModeId {
+            bridge?.writeCharacteristic(identifier: id, value: swingMode)
+            notifyLocalChange(characteristicId: id, value: swingMode)
+        }
+        updateSwingButton()
+    }
+
+    private func updateSwingButton() {
+        swingButton?.isSelected = swingMode == 1
     }
 }

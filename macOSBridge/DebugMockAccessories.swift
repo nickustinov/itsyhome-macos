@@ -198,6 +198,7 @@ enum DebugMockups {
                 accessoryName: "Mock",
                 roomIdentifier: nil,
                 activeId: UUID(),
+                swingModeId: UUID(),
                 currentAirPurifierStateId: UUID(),
                 targetAirPurifierStateId: UUID()
             ),

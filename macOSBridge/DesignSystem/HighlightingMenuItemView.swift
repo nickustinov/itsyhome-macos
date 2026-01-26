@@ -35,6 +35,17 @@ class HighlightingMenuItemView: NSView {
         trackingArea = area
     }
 
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        // Reset highlight state when menu closes (window becomes nil)
+        // or when menu reopens (window changes)
+        if isMouseInside {
+            isMouseInside = false
+            updateTextColors(highlighted: false)
+            needsDisplay = true
+        }
+    }
+
     override func mouseEntered(with event: NSEvent) {
         isMouseInside = true
         updateTextColors(highlighted: true)
