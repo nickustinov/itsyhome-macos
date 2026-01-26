@@ -12,48 +12,53 @@ A native macOS menu bar app for controlling your HomeKit smart home devices.
 
 - **Menu bar access** - Control your smart home from the macOS menu bar
 - **Full HomeKit support** - Lights, switches, outlets, fans, thermostats, AC units, blinds, locks, garage doors, humidifiers, air purifiers, valves, cameras, and security systems
-- **Scenes** - Execute and toggle HomeKit scenes with state tracking
-- **Favourites** - Pin frequently used devices and scenes to the top of the menu
+- **Scenes** - Execute and toggle HomeKit scenes with automatic state tracking
+- **Favourites** - Pin frequently used devices, scenes, and groups to the top of the menu
 - **Multi-home support** - Switch between multiple HomeKit homes
 - **Native experience** - Built with AppKit for a true macOS look and feel
 - **Device groups** - Create custom groups to control multiple devices at once *(Pro)*
-- **iCloud sync** - Sync favourites and settings across your Macs *(Pro)*
+- **Menu bar pinning** - Pin rooms, devices, scenes, or groups as separate menu bar items with optional keyboard shortcuts *(Pro)*
+- **iCloud sync** - Sync favourites, groups, and settings across your Macs *(Pro)*
 - **Deeplinks** - Control devices from Shortcuts, Alfred, Raycast, Stream Deck *(Pro)*
-- **Cameras** - Live video feed with overlay action buttons to control accessories *(Pro)*
+- **Cameras** - Live video feed with overlay action buttons to control nearby accessories *(Pro)*
 - **Webhooks/CLI** - Built-in HTTP server with a dedicated CLI tool *(Pro)*
 
 ## Supported devices
 
 | Device type | Features |
 |-------------|----------|
-| Lights | On/off, brightness slider |
-| Switches & Outlets | On/off toggle |
-| Fans | On/off, speed control |
-| Thermostats | Current temp, target temp slider, heat/cool mode |
-| AC / Heater-Cooler | Power, mode selection, temperature control |
-| Blinds / Window coverings | Position slider |
-| Locks | Lock/unlock toggle |
-| Garage doors | Open/close with status |
-| Humidifiers & Dehumidifiers | Power, mode, target humidity |
-| Air purifiers | Power, mode, speed control |
-| Valves | Open/close toggle |
-| Security systems | Arm home/away/night, disarm |
-| Cameras | Live video feed with overlay action buttons to control accessories *(Pro)* |
-| Temperature & Humidity sensors | Summary display per room |
+| Lights | On/off, brightness slider, RGB color picker, color temperature picker |
+| Switches & Outlets | On/off toggle, in-use indicator for outlets |
+| Fans | On/off, speed slider, auto mode, rotation direction, swing mode |
+| Thermostats | Off/Heat/Cool/Auto modes, target temperature stepper, heating/cooling thresholds for Auto mode |
+| AC / Heater-Cooler | Auto/Heat/Cool modes, temperature control, swing mode toggle |
+| Blinds / Window coverings | Position slider, horizontal/vertical tilt control |
+| Locks | Lock/unlock toggle with status |
+| Garage doors | Open/close toggle, status display (opening/closing/stopped), obstruction detection |
+| Humidifiers & Dehumidifiers | Auto/Humidify/Dehumidify modes, humidity display, water level indicator, swing mode |
+| Air purifiers | Manual/Auto modes, speed slider, swing mode |
+| Valves | Open/close toggle, in-use indicator (irrigation, shower, faucet types) |
+| Security systems | Off/Stay/Away/Night modes, triggered state indicator |
+| Cameras | Live video feed with overlay action buttons to control nearby accessories *(Pro)* |
+| Temperature & Humidity sensors | Summary display per room with ranges |
 
 ## Itsyhome Pro
 
-### iCloud sync
+### Menu bar pinning
 
-Sync your favourites, hidden items, device groups, and shortcuts across all your Macs.
+Pin rooms, devices, scenes, or groups directly to the menu bar for instant access. Each pinned item appears as a separate menu bar icon. Optionally display names next to icons and assign custom keyboard shortcuts for even faster control.
+
+### Device groups
+
+Create custom groups of devices to control multiple devices at once. Groups can be scoped to a room or made global. Light groups support full control (power, brightness, color), blind groups control position, and lock groups toggle all locks together. Groups show partial state indicators when devices differ (e.g., "2/3 on").
 
 ### Cameras
 
 View live video feeds from your HomeKit cameras directly in the menu bar. Overlay action buttons let you control nearby accessories without leaving the camera view — toggle lights and outlets, open garage doors and gates, or lock and unlock doors.
 
-### Device groups
+### iCloud sync
 
-Create custom groups of devices to control multiple devices at once. Groups appear in your menu bar and can be controlled via deeplinks and webhooks.
+Sync your favourites, hidden items, device groups, shortcuts, and pinned items across all your Macs.
 
 ### Deeplinks
 
@@ -277,14 +282,14 @@ xcodegen generate
 The project includes comprehensive unit tests for the macOSBridge plugin. Run tests with:
 
 ```bash
-xcodebuild test -scheme macOSBridgeTests -destination "platform=macOS"
+xcodebuild test -scheme Itsyhome -destination "platform=macOS"
 ```
 
 Test coverage includes:
 
 | Test suite | Description |
 |------------|-------------|
-| `SwitchMenuItemTests` | Menu item behaviour and protocol conformance |
+| `*MenuItemTests` | Menu item behaviour for all device types (Light, Switch, Fan, Thermostat, AC, Blind, Lock, GarageDoor, Humidifier, AirPurifier, Valve, SecuritySystem) |
 | `ValueConversionTests` | Type conversion utilities for HomeKit values |
 | `LocalChangeNotifiableTests` | Notification protocol for syncing menu items |
 | `ActionEngineTests` | Action parsing and execution (toggle, brightness, scenes, etc.) |
@@ -293,9 +298,10 @@ Test coverage includes:
 | `URLSchemeHandlerTests` | URL scheme handler |
 | `WebhookServerTests` | HTTP server lifecycle and endpoints |
 | `CloudSyncManagerTests` | iCloud sync |
-| `CloudSyncTranslatorTests` | ID translation for sync |
+| `CloudSyncTranslatorTests` | ID translation for sync (cameras, groups, order, shortcuts) |
 | `DeviceGroupTests` | Device group functionality |
 | `PreferencesManagerTests` | Settings persistence |
+| `IconResolverTests` | Device icon resolution |
 | `ProStatusCacheTests` | Pro status caching |
 
 ## HomeKit entitlement
