@@ -52,7 +52,7 @@ class GarageDoorMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
         let iconY = (height - DS.ControlSize.iconMedium) / 2
         iconView = NSImageView(frame: NSRect(x: DS.Spacing.md, y: iconY, width: DS.ControlSize.iconMedium, height: DS.ControlSize.iconMedium))
         iconView.image = PhosphorIcon.fill("garage")
-        iconView.contentTintColor = DS.Colors.mutedForeground
+        iconView.contentTintColor = DS.Colors.iconForeground
         iconView.imageScaling = .scaleProportionallyUpOrDown
         containerView.addSubview(iconView)
 
@@ -93,8 +93,6 @@ class GarageDoorMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
 
         self.view = containerView
 
-        // Exclude icon from highlight - it has semantic color (open/closed)
-        containerView.excludeFromHighlight = [iconView]
         containerView.closesMenuOnAction = false
         containerView.onAction = { [weak self] in
             guard let self else { return }
@@ -158,7 +156,7 @@ class GarageDoorMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
         } else {
             iconView.image = PhosphorIcon.icon("garage", filled: filled)
         }
-        iconView.contentTintColor = DS.Colors.mutedForeground
+        iconView.contentTintColor = DS.Colors.iconForeground
         statusLabel.stringValue = stateText
         statusLabel.textColor = .secondaryLabelColor
         toggleSwitch.setOn(!isOpen, animated: false)  // ON = closed, OFF = open

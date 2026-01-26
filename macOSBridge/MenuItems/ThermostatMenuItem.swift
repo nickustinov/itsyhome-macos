@@ -53,7 +53,7 @@ class ThermostatMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
         let iconY = (height - DS.ControlSize.iconMedium) / 2
         iconView = NSImageView(frame: NSRect(x: DS.Spacing.md, y: iconY, width: DS.ControlSize.iconMedium, height: DS.ControlSize.iconMedium))
         iconView.image = PhosphorIcon.regular("thermometer")
-        iconView.contentTintColor = DS.Colors.mutedForeground
+        iconView.contentTintColor = DS.Colors.iconForeground
         iconView.imageScaling = .scaleProportionallyUpOrDown
         containerView.addSubview(iconView)
 
@@ -93,8 +93,6 @@ class ThermostatMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
 
         self.view = containerView
 
-        // Exclude icon from highlight - it has semantic color (mode indicator)
-        containerView.excludeFromHighlight = [iconView]
 
         // Set up action
         targetSlider.target = self
@@ -131,7 +129,6 @@ class ThermostatMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
         default: ("thermometer", false, DS.Colors.mutedForeground)
         }
         iconView.image = PhosphorIcon.icon(iconName, filled: filled)
-        iconView.contentTintColor = color
     }
 
     @objc private func sliderChanged(_ sender: ModernSlider) {

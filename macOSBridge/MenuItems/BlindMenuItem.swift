@@ -46,7 +46,7 @@ class BlindMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
         let iconY = (height - DS.ControlSize.iconMedium) / 2
         iconView = NSImageView(frame: NSRect(x: DS.Spacing.md, y: iconY, width: DS.ControlSize.iconMedium, height: DS.ControlSize.iconMedium))
         iconView.image = PhosphorIcon.regular("caret-up-down")
-        iconView.contentTintColor = DS.Colors.mutedForeground
+        iconView.contentTintColor = DS.Colors.iconForeground
         iconView.imageScaling = .scaleProportionallyUpOrDown
         containerView.addSubview(iconView)
 
@@ -78,8 +78,6 @@ class BlindMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
 
         self.view = containerView
 
-        // Exclude icon from highlight - it has semantic color (open/closed)
-        containerView.excludeFromHighlight = [iconView]
         containerView.closesMenuOnAction = false
         containerView.onAction = { [weak self] in
             guard let self else { return }
@@ -127,7 +125,6 @@ class BlindMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
     private func updateIcon() {
         // Using caret-up-down for blinds, filled when open
         iconView.image = PhosphorIcon.icon("caret-up-down", filled: position > 0)
-        iconView.contentTintColor = position > 0 ? DS.Colors.info : DS.Colors.mutedForeground
     }
 
     @objc private func sliderChanged(_ sender: ModernSlider) {

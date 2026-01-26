@@ -62,7 +62,7 @@ class FanMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshabl
         let iconY = (height - DS.ControlSize.iconMedium) / 2
         iconView = NSImageView(frame: NSRect(x: DS.Spacing.md, y: iconY, width: DS.ControlSize.iconMedium, height: DS.ControlSize.iconMedium))
         iconView.image = PhosphorIcon.regular("fan")
-        iconView.contentTintColor = DS.Colors.mutedForeground
+        iconView.contentTintColor = DS.Colors.iconForeground
         iconView.imageScaling = .scaleProportionallyUpOrDown
         containerView.addSubview(iconView)
 
@@ -104,8 +104,6 @@ class FanMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshabl
 
         self.view = containerView
 
-        // Exclude icon from highlight - it has semantic color (on/off)
-        containerView.excludeFromHighlight = [iconView]
         containerView.closesMenuOnAction = false
         containerView.onAction = { [weak self] in
             guard let self else { return }
@@ -143,7 +141,6 @@ class FanMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshabl
 
     private func updateUI() {
         iconView.image = PhosphorIcon.icon("fan", filled: isActive)
-        iconView.contentTintColor = isActive ? DS.Colors.fanOn : DS.Colors.mutedForeground
         toggleSwitch.setOn(isActive, animated: false)
 
         let showSlider = isActive && hasSpeed

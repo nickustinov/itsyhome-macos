@@ -15,9 +15,6 @@ class HighlightingMenuItemView: NSView {
     var onMouseExit: (() -> Void)?
     var closesMenuOnAction: Bool = true
 
-    /// Image views to exclude from highlight color changes (e.g., icons with semantic colors)
-    var excludeFromHighlight: Set<NSImageView> = []
-
     private var isMouseInside = false
     private var trackingArea: NSTrackingArea?
     private var originalTextColors: [ObjectIdentifier: NSColor] = [:]
@@ -76,8 +73,6 @@ class HighlightingMenuItemView: NSView {
                     textField.textColor = original
                 }
             } else if let imageView = subview as? NSImageView {
-                // Skip icons with semantic colors (mode indicators, etc.)
-                if excludeFromHighlight.contains(imageView) { continue }
                 let key = ObjectIdentifier(imageView)
                 if highlighted {
                     if originalTintColors[key] == nil {

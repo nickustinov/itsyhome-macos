@@ -64,6 +64,13 @@ enum DS {
             }
         }
 
+        /// Icon color - dimmed foreground for icons in menu items
+        static var iconForeground: NSColor {
+            NSColor(name: nil) { appearance in
+                appearance.isDark ? NSColor(white: 0.6, alpha: 1) : NSColor(white: 0.45, alpha: 1)
+            }
+        }
+
         static var accent: NSColor {
             NSColor(name: nil) { appearance in
                 appearance.isDark ? NSColor(white: 0.269, alpha: 1) : NSColor(white: 0.97, alpha: 1)

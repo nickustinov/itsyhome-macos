@@ -72,7 +72,7 @@ class AirPurifierMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRe
         // Icon
         iconView = NSImageView(frame: NSRect(x: DS.Spacing.md, y: iconY, width: DS.ControlSize.iconMedium, height: DS.ControlSize.iconMedium))
         iconView.image = PhosphorIcon.regular("wind")
-        iconView.contentTintColor = DS.Colors.mutedForeground
+        iconView.contentTintColor = DS.Colors.iconForeground
         iconView.imageScaling = .scaleProportionallyUpOrDown
         containerView.addSubview(iconView)
 
@@ -151,8 +151,6 @@ class AirPurifierMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRe
 
         self.view = containerView
 
-        // Exclude icon from highlight - it has semantic color (state indicator)
-        containerView.excludeFromHighlight = [iconView]
         containerView.closesMenuOnAction = false
         containerView.onAction = { [weak self] in
             guard let self else { return }
@@ -233,7 +231,6 @@ class AirPurifierMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRe
         let filled = isActive
         let color: NSColor = isActive ? DS.Colors.success : DS.Colors.mutedForeground
         iconView.image = PhosphorIcon.icon("wind", filled: filled)
-        iconView.contentTintColor = color
     }
 
     private func updateModeButtons() {

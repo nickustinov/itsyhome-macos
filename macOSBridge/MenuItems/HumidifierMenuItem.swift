@@ -73,7 +73,7 @@ class HumidifierMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
         // Icon
         iconView = NSImageView(frame: NSRect(x: DS.Spacing.md, y: iconY, width: DS.ControlSize.iconMedium, height: DS.ControlSize.iconMedium))
         iconView.image = PhosphorIcon.regular("drop-half")
-        iconView.contentTintColor = DS.Colors.mutedForeground
+        iconView.contentTintColor = DS.Colors.iconForeground
         iconView.imageScaling = .scaleProportionallyUpOrDown
         containerView.addSubview(iconView)
 
@@ -154,8 +154,6 @@ class HumidifierMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
 
         self.view = containerView
 
-        // Exclude icon from highlight - it has semantic color (mode indicator)
-        containerView.excludeFromHighlight = [iconView]
         containerView.closesMenuOnAction = false
         containerView.onAction = { [weak self] in
             guard let self else { return }
@@ -249,7 +247,6 @@ class HumidifierMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
             }
         }()
         iconView.image = PhosphorIcon.icon(iconName, filled: filled)
-        iconView.contentTintColor = color
     }
 
     private func updateModeButtons() {

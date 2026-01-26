@@ -308,7 +308,7 @@ class MenuBuilder {
         let iconY = (height - DS.ControlSize.iconMedium) / 2
         let iconView = NSImageView(frame: NSRect(x: DS.Spacing.md, y: iconY, width: DS.ControlSize.iconMedium, height: DS.ControlSize.iconMedium))
         iconView.image = icon
-        iconView.contentTintColor = DS.Colors.foreground
+        iconView.contentTintColor = DS.Colors.iconForeground
         iconView.imageScaling = .scaleProportionallyUpOrDown
         containerView.addSubview(iconView)
 
@@ -348,7 +348,7 @@ class MenuBuilder {
         let iconY = (height - DS.ControlSize.iconMedium) / 2
         let iconView = NSImageView(frame: NSRect(x: DS.Spacing.md, y: iconY, width: DS.ControlSize.iconMedium, height: DS.ControlSize.iconMedium))
         iconView.image = icon
-        iconView.contentTintColor = DS.Colors.foreground
+        iconView.contentTintColor = DS.Colors.iconForeground
         iconView.imageScaling = .scaleProportionallyUpOrDown
         containerView.addSubview(iconView)
 

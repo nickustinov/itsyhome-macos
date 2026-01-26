@@ -48,7 +48,7 @@ class ValveMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
         let iconY = (DS.ControlSize.menuItemHeight - DS.ControlSize.iconMedium) / 2
         iconView = NSImageView(frame: NSRect(x: DS.Spacing.md, y: iconY, width: DS.ControlSize.iconMedium, height: DS.ControlSize.iconMedium))
         iconView.image = PhosphorIcon.regular(Self.iconName(for: valveType))
-        iconView.contentTintColor = DS.Colors.mutedForeground
+        iconView.contentTintColor = DS.Colors.iconForeground
         iconView.imageScaling = .scaleProportionallyUpOrDown
         containerView.addSubview(iconView)
 
@@ -85,8 +85,6 @@ class ValveMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
 
         self.view = containerView
 
-        // Exclude icon from highlight - it has semantic color (on/off)
-        containerView.excludeFromHighlight = [iconView]
         containerView.closesMenuOnAction = false
         containerView.onAction = { [weak self] in
             guard let self else { return }
@@ -134,7 +132,6 @@ class ValveMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
     private func updateUI() {
         let iconName = Self.iconName(for: valveType)
         iconView.image = PhosphorIcon.icon(iconName, filled: isActive)
-        iconView.contentTintColor = isActive ? DS.Colors.info : DS.Colors.mutedForeground
 
         toggleSwitch.setOn(isActive, animated: false)
 

@@ -59,7 +59,7 @@ class SecuritySystemMenuItem: NSMenuItem, CharacteristicUpdatable, Characteristi
         // Icon
         iconView = NSImageView(frame: NSRect(x: DS.Spacing.md, y: iconY, width: DS.ControlSize.iconMedium, height: DS.ControlSize.iconMedium))
         iconView.image = PhosphorIcon.regular("lock-open")
-        iconView.contentTintColor = DS.Colors.mutedForeground
+        iconView.contentTintColor = DS.Colors.iconForeground
         iconView.imageScaling = .scaleProportionallyUpOrDown
         containerView.addSubview(iconView)
 
@@ -124,8 +124,6 @@ class SecuritySystemMenuItem: NSMenuItem, CharacteristicUpdatable, Characteristi
 
         self.view = containerView
 
-        // Exclude icon from highlight - it has semantic color (state indicator)
-        containerView.excludeFromHighlight = [iconView]
 
         // Set up actions
         modeButtonOff.target = self
@@ -176,7 +174,6 @@ class SecuritySystemMenuItem: NSMenuItem, CharacteristicUpdatable, Characteristi
         }()
 
         iconView.image = PhosphorIcon.icon(iconName, filled: filled)
-        iconView.contentTintColor = color
 
         // Show triggered indicator
         triggeredIcon.isHidden = !isTriggered

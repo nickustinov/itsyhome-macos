@@ -48,7 +48,7 @@ class SceneMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
         let iconY = (height - DS.ControlSize.iconMedium) / 2
         iconView = NSImageView(frame: NSRect(x: DS.Spacing.md, y: iconY, width: DS.ControlSize.iconMedium, height: DS.ControlSize.iconMedium))
         iconView.image = Self.inferIcon(for: sceneData)
-        iconView.contentTintColor = DS.Colors.mutedForeground
+        iconView.contentTintColor = DS.Colors.iconForeground
         iconView.imageScaling = .scaleProportionallyUpOrDown
         containerView.addSubview(iconView)
 
@@ -74,8 +74,6 @@ class SceneMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
 
         self.view = containerView
 
-        // Exclude icon from highlight - it has semantic color (active state)
-        containerView.excludeFromHighlight = [iconView]
         containerView.closesMenuOnAction = false
         containerView.onAction = { [weak self] in
             guard let self else { return }
@@ -164,7 +162,6 @@ class SceneMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
     }
 
     private func updateUI() {
-        iconView.contentTintColor = isActive ? DS.Colors.warning : DS.Colors.mutedForeground
         toggleSwitch.setOn(isActive, animated: false)
         toggleSwitch.needsDisplay = true
         iconView.needsDisplay = true

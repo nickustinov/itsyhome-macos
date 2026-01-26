@@ -41,7 +41,7 @@ class SwitchMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresh
         iconView = NSImageView(frame: NSRect(x: DS.Spacing.md, y: iconY, width: DS.ControlSize.iconMedium, height: DS.ControlSize.iconMedium))
         let iconName = serviceData.serviceType == ServiceTypes.outlet ? "plug" : "power"
         iconView.image = PhosphorIcon.regular(iconName)
-        iconView.contentTintColor = DS.Colors.mutedForeground
+        iconView.contentTintColor = DS.Colors.iconForeground
         iconView.imageScaling = .scaleProportionallyUpOrDown
         containerView.addSubview(iconView)
 
@@ -67,8 +67,6 @@ class SwitchMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresh
 
         self.view = containerView
 
-        // Exclude icon from highlight - it has semantic color (on/off)
-        containerView.excludeFromHighlight = [iconView]
         containerView.closesMenuOnAction = false
         containerView.onAction = { [weak self] in
             guard let self else { return }
@@ -102,7 +100,6 @@ class SwitchMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresh
     private func updateUI() {
         let iconName = serviceData.serviceType == ServiceTypes.outlet ? "plug" : "power"
         iconView.image = PhosphorIcon.icon(iconName, filled: isOn)
-        iconView.contentTintColor = isOn ? DS.Colors.success : DS.Colors.mutedForeground
         toggleSwitch.setOn(isOn, animated: false)
     }
 
