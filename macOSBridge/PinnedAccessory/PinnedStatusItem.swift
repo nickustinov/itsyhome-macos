@@ -101,9 +101,9 @@ class PinnedStatusItem: NSObject, NSMenuDelegate {
 
         // Determine what to show in the title
         if let statusText = statusText {
-            // Show status text (e.g., "21°") with optional name
+            // Show status text (e.g., "21°") with optional name - icon first, then name
             button.imagePosition = .imageLeading
-            button.title = showName ? "\(statusText) \(itemName)" : statusText
+            button.title = showName ? "\(itemName) \(statusText)" : statusText
         } else if showName {
             button.imagePosition = .imageLeading
             button.title = itemName
@@ -134,8 +134,25 @@ class PinnedStatusItem: NSObject, NSMenuDelegate {
         case ServiceTypes.airPurifier:
             return airPurifierStatus(for: service)
         default:
-            return (IconMapping.iconForServiceType(service.serviceType), nil)
+            // For lights, switches, outlets, fans, valves, etc. - check on/off state
+            let isOn = getOnOffState(for: service)
+            return (IconMapping.iconForServiceType(service.serviceType, filled: isOn), nil)
         }
+    }
+
+    /// Get on/off state for a service by checking powerStateId or activeId
+    private func getOnOffState(for service: ServiceData) -> Bool {
+        // Check powerStateId first (lights, switches, outlets)
+        if let powerId = service.powerStateId.flatMap({ UUID(uuidString: $0) }),
+           let power = cachedValues[powerId] as? Int ?? (cachedValues[powerId] as? Double).map({ Int($0) }) ?? (cachedValues[powerId] as? Bool).map({ $0 ? 1 : 0 }) {
+            return power != 0
+        }
+        // Check activeId (fans, valves, purifiers)
+        if let activeId = service.activeId.flatMap({ UUID(uuidString: $0) }),
+           let active = cachedValues[activeId] as? Int ?? (cachedValues[activeId] as? Double).map({ Int($0) }) ?? (cachedValues[activeId] as? Bool).map({ $0 ? 1 : 0 }) {
+            return active != 0
+        }
+        return false
     }
 
     private func heaterCoolerStatus(for service: ServiceData) -> (icon: NSImage?, text: String?) {
@@ -146,24 +163,32 @@ class PinnedStatusItem: NSObject, NSMenuDelegate {
             tempText = formatTemperature(temp)
         }
 
-        // Get mode for icon
-        var modeIcon: NSImage?
-        if let modeId = service.targetHeaterCoolerStateId.flatMap({ UUID(uuidString: $0) }),
-           let mode = cachedValues[modeId] as? Int ?? (cachedValues[modeId] as? Double).map({ Int($0) }) {
-            // 0 = auto, 1 = heat, 2 = cool
-            switch mode {
-            case 1:
-                modeIcon = PhosphorIcon.fill("fire")
-            case 2:
-                modeIcon = PhosphorIcon.fill("snowflake")
-            default:
-                modeIcon = PhosphorIcon.fill("arrows-left-right")
-            }
-        } else {
-            modeIcon = IconMapping.iconForServiceType(service.serviceType)
+        // Check if active (on/off)
+        var isActive = false
+        if let activeId = service.activeId.flatMap({ UUID(uuidString: $0) }),
+           let active = cachedValues[activeId] as? Int ?? (cachedValues[activeId] as? Double).map({ Int($0) }) ?? (cachedValues[activeId] as? Bool).map({ $0 ? 1 : 0 }) {
+            isActive = active != 0
         }
 
-        return (modeIcon, tempText)
+        // When OFF, use default icon from centralized config
+        if !isActive {
+            return (IconMapping.iconForServiceType(service.serviceType, filled: false), tempText)
+        }
+
+        // Get mode icon from centralized config
+        var modeIcon: NSImage?
+        if let modeId = service.targetHeaterCoolerStateId.flatMap({ UUID(uuidString: $0) }),
+           let modeValue = cachedValues[modeId] as? Int ?? (cachedValues[modeId] as? Double).map({ Int($0) }) {
+            // 0 = auto, 1 = heat, 2 = cool
+            let mode: String = switch modeValue {
+            case 1: "heat"
+            case 2: "cool"
+            default: "auto"
+            }
+            modeIcon = PhosphorIcon.modeIcon(for: service.serviceType, mode: mode, filled: true)
+        }
+
+        return (modeIcon ?? IconMapping.iconForServiceType(service.serviceType, filled: true), tempText)
     }
 
     private func thermostatStatus(for service: ServiceData) -> (icon: NSImage?, text: String?) {
@@ -173,26 +198,25 @@ class PinnedStatusItem: NSObject, NSMenuDelegate {
             tempText = formatTemperature(temp)
         }
 
-        // Get mode for icon
+        // Get mode icon from centralized config
         var modeIcon: NSImage?
         if let modeId = service.targetHeatingCoolingStateId.flatMap({ UUID(uuidString: $0) }),
-           let mode = cachedValues[modeId] as? Int ?? (cachedValues[modeId] as? Double).map({ Int($0) }) {
+           let modeValue = cachedValues[modeId] as? Int ?? (cachedValues[modeId] as? Double).map({ Int($0) }) {
             // 0 = off, 1 = heat, 2 = cool, 3 = auto
-            switch mode {
-            case 1:
-                modeIcon = PhosphorIcon.fill("fire")
-            case 2:
-                modeIcon = PhosphorIcon.fill("snowflake")
-            case 3:
-                modeIcon = PhosphorIcon.fill("arrows-left-right")
-            default:
-                modeIcon = IconMapping.iconForServiceType(service.serviceType)
+            if modeValue == 0 {
+                // Off - use default icon
+                modeIcon = IconMapping.iconForServiceType(service.serviceType, filled: false)
+            } else {
+                let mode: String = switch modeValue {
+                case 1: "heat"
+                case 2: "cool"
+                default: "auto"
+                }
+                modeIcon = PhosphorIcon.modeIcon(for: service.serviceType, mode: mode, filled: true)
             }
-        } else {
-            modeIcon = IconMapping.iconForServiceType(service.serviceType)
         }
 
-        return (modeIcon, tempText)
+        return (modeIcon ?? IconMapping.iconForServiceType(service.serviceType, filled: false), tempText)
     }
 
     private func humidifierStatus(for service: ServiceData) -> (icon: NSImage?, text: String?) {
@@ -201,16 +225,38 @@ class PinnedStatusItem: NSObject, NSMenuDelegate {
            let humidity = cachedValues[humidityId] as? Double ?? (cachedValues[humidityId] as? Int).map({ Double($0) }) {
             humidityText = "\(Int(humidity))%"
         }
-        return (IconMapping.iconForServiceType(service.serviceType), humidityText)
+
+        // Check if active (on/off)
+        let isActive = getOnOffState(for: service)
+
+        // When OFF, use default icon from centralized config
+        if !isActive {
+            return (IconMapping.iconForServiceType(service.serviceType, filled: false), humidityText)
+        }
+
+        // Get mode icon from centralized config
+        // 0 = auto, 1 = humidifier, 2 = dehumidifier
+        if let modeId = service.targetHumidifierDehumidifierStateId.flatMap({ UUID(uuidString: $0) }),
+           let modeValue = cachedValues[modeId] as? Int ?? (cachedValues[modeId] as? Double).map({ Int($0) }) {
+            let mode = modeValue == 2 ? "dehumidify" : "humidify"
+            if let icon = PhosphorIcon.modeIcon(for: service.serviceType, mode: mode, filled: true) {
+                return (icon, humidityText)
+            }
+        }
+
+        return (IconMapping.iconForServiceType(service.serviceType, filled: true), humidityText)
     }
 
     private func windowCoveringStatus(for service: ServiceData) -> (icon: NSImage?, text: String?) {
         var positionText: String?
+        var isOpen = false
         if let posId = service.currentPositionId.flatMap({ UUID(uuidString: $0) }),
            let position = cachedValues[posId] as? Int ?? (cachedValues[posId] as? Double).map({ Int($0) }) {
             positionText = "\(position)%"
+            isOpen = position > 0
         }
-        return (IconMapping.iconForServiceType(service.serviceType), positionText)
+        // Filled when open, regular when closed
+        return (PhosphorIcon.icon("caret-up-down", filled: isOpen), positionText)
     }
 
     private func lockStatus(for service: ServiceData) -> (icon: NSImage?, text: String?) {
@@ -292,9 +338,8 @@ class PinnedStatusItem: NSObject, NSMenuDelegate {
     }
 
     private func airPurifierStatus(for service: ServiceData) -> (icon: NSImage?, text: String?) {
-        // Air purifiers might have air quality, but typically just show active state
-        // For now just use the standard icon
-        return (IconMapping.iconForServiceType(service.serviceType), nil)
+        let isActive = getOnOffState(for: service)
+        return (IconMapping.iconForServiceType(service.serviceType, filled: isActive), nil)
     }
 
     private func formatTemperature(_ celsius: Double) -> String {
@@ -319,9 +364,12 @@ class PinnedStatusItem: NSObject, NSMenuDelegate {
 
         // Get characteristic IDs that affect display
         let displayIds: [String?] = [
+            service.powerStateId,  // For lights, switches, outlets on/off state
+            service.activeId,  // For heater/cooler, fans, valves on/off state
             service.currentTemperatureId,
             service.targetHeaterCoolerStateId,
             service.targetHeatingCoolingStateId,
+            service.targetHumidifierDehumidifierStateId,  // For humidifier mode
             service.humidityId,
             service.currentPositionId,
             service.lockCurrentStateId,
@@ -492,8 +540,6 @@ class PinnedStatusItem: NSObject, NSMenuDelegate {
         showNameItem.state = showName ? .on : .off
         menu.addItem(showNameItem)
 
-        menu.addItem(NSMenuItem.separator())
-
         let unpinItem = NSMenuItem(
             title: "Unpin from menu bar",
             action: #selector(unpinItem(_:)),
@@ -592,9 +638,12 @@ class PinnedStatusItem: NSObject, NSMenuDelegate {
         guard case .service(let service) = itemType else { return false }
 
         let displayIds: [String?] = [
+            service.powerStateId,  // For lights, switches, outlets on/off state
+            service.activeId,  // For heater/cooler, fans, valves on/off state
             service.currentTemperatureId,
             service.targetHeaterCoolerStateId,
             service.targetHeatingCoolingStateId,
+            service.targetHumidifierDehumidifierStateId,  // For humidifier mode
             service.humidityId,
             service.currentPositionId,
             service.lockCurrentStateId,

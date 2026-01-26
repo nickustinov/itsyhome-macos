@@ -72,7 +72,7 @@ class HumidifierMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
 
         // Icon
         iconView = NSImageView(frame: NSRect(x: DS.Spacing.md, y: iconY, width: DS.ControlSize.iconMedium, height: DS.ControlSize.iconMedium))
-        iconView.image = PhosphorIcon.regular("drop-half")
+        iconView.image = IconMapping.iconForServiceType(serviceData.serviceType, filled: false)
         iconView.contentTintColor = DS.Colors.iconForeground
         iconView.imageScaling = .scaleProportionallyUpOrDown
         containerView.addSubview(iconView)
@@ -236,17 +236,14 @@ class HumidifierMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
     }
 
     private func updateStateIcon() {
-        let (iconName, filled, color): (String, Bool, NSColor) = {
-            if !isActive {
-                return ("drop-half", false, DS.Colors.mutedForeground)
-            }
-            switch currentState {
-            case 2: return ("drop-half", true, DS.Colors.info)      // humidifying - blue
-            case 3: return ("drop", true, DS.Colors.warning)        // dehumidifying - orange
-            default: return ("drop-half", true, DS.Colors.success)  // idle/inactive but on - green
-            }
-        }()
-        iconView.image = PhosphorIcon.icon(iconName, filled: filled)
+        if !isActive {
+            iconView.image = IconMapping.iconForServiceType(serviceData.serviceType, filled: false)
+            return
+        }
+        // currentState: 2 = humidifying, 3 = dehumidifying
+        let mode = currentState == 3 ? "dehumidify" : "humidify"
+        iconView.image = PhosphorIcon.modeIcon(for: serviceData.serviceType, mode: mode, filled: true)
+            ?? IconMapping.iconForServiceType(serviceData.serviceType, filled: true)
     }
 
     private func updateModeButtons() {

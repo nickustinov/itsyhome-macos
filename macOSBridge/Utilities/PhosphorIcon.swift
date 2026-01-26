@@ -86,6 +86,25 @@ extension PhosphorIcon {
     struct AccessoryIconConfig {
         let defaultIcon: String
         let suggestedIcons: [String]
+        /// Mode-specific icons (e.g., heat/cool/auto for AC, locked/unlocked for locks)
+        let modeIcons: [String: String]
+
+        init(defaultIcon: String, suggestedIcons: [String], modeIcons: [String: String] = [:]) {
+            self.defaultIcon = defaultIcon
+            self.suggestedIcons = suggestedIcons
+            self.modeIcons = modeIcons
+        }
+    }
+
+    /// Get mode icon name for a service type and mode
+    static func modeIconName(for serviceType: String, mode: String) -> String? {
+        accessoryIconConfigs[serviceType]?.modeIcons[mode]
+    }
+
+    /// Get mode icon for a service type and mode
+    static func modeIcon(for serviceType: String, mode: String, filled: Bool = true) -> NSImage? {
+        guard let iconName = modeIconName(for: serviceType, mode: mode) else { return nil }
+        return icon(iconName, filled: filled)
     }
 
     /// Get the default icon for a service type
@@ -127,19 +146,22 @@ extension PhosphorIcon {
         // Thermostats
         ServiceTypes.thermostat: AccessoryIconConfig(
             defaultIcon: "thermometer",
-            suggestedIcons: ["thermometer", "thermometer-cold", "thermometer-hot", "thermometer-simple"]
+            suggestedIcons: ["thermometer", "thermometer-cold", "thermometer-hot", "thermometer-simple"],
+            modeIcons: ["heat": "fire", "cool": "snowflake", "auto": "arrows-left-right"]
         ),
 
         // Heater/Cooler (AC)
         ServiceTypes.heaterCooler: AccessoryIconConfig(
-            defaultIcon: "thermometer",
-            suggestedIcons: ["thermometer", "snowflake", "fire", "fire-simple", "thermometer-cold", "thermometer-hot", "thermometer-simple"]
+            defaultIcon: "snowflake",
+            suggestedIcons: ["snowflake", "thermometer", "fire", "fire-simple", "thermometer-cold", "thermometer-hot", "thermometer-simple"],
+            modeIcons: ["heat": "fire", "cool": "snowflake", "auto": "arrows-left-right"]
         ),
 
         // Door Locks
         ServiceTypes.lock: AccessoryIconConfig(
             defaultIcon: "lock",
-            suggestedIcons: ["lock", "lock-key", "lock-simple", "lock-laminated", "keyhole", "key"]
+            suggestedIcons: ["lock", "lock-key", "lock-simple", "lock-laminated", "keyhole", "key"],
+            modeIcons: ["locked": "lock", "unlocked": "lock-open"]
         ),
 
         // Fans
@@ -157,13 +179,15 @@ extension PhosphorIcon {
         // Garage Doors
         ServiceTypes.garageDoorOpener: AccessoryIconConfig(
             defaultIcon: "garage",
-            suggestedIcons: ["garage", "car", "car-profile", "car-simple"]
+            suggestedIcons: ["garage", "car", "car-profile", "car-simple"],
+            modeIcons: ["open": "garage", "closed": "garage", "obstructed": "warning"]
         ),
 
         // Humidifiers
         ServiceTypes.humidifierDehumidifier: AccessoryIconConfig(
-            defaultIcon: "drop",
-            suggestedIcons: ["drop", "drop-simple", "drop-half", "drop-half-bottom"]
+            defaultIcon: "drop-half",
+            suggestedIcons: ["drop-half", "drop", "drop-simple", "drop-half-bottom"],
+            modeIcons: ["humidify": "drop-half", "dehumidify": "drop"]
         ),
 
         // Air Purifiers
@@ -180,8 +204,9 @@ extension PhosphorIcon {
 
         // Security Systems
         ServiceTypes.securitySystem: AccessoryIconConfig(
-            defaultIcon: "shield-check",
-            suggestedIcons: ["shield-check", "shield-star", "key", "lock"]
+            defaultIcon: "shield",
+            suggestedIcons: ["shield", "shield-check", "shield-star", "key", "lock"],
+            modeIcons: ["disarmed": "shield", "armed": "shield-check", "triggered": "shield-warning"]
         ),
 
         // Temperature Sensors

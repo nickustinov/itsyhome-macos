@@ -75,7 +75,7 @@ class ACMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable
 
         // Icon
         iconView = NSImageView(frame: NSRect(x: DS.Spacing.md, y: iconY, width: DS.ControlSize.iconMedium, height: DS.ControlSize.iconMedium))
-        iconView.image = PhosphorIcon.regular("thermometer")
+        iconView.image = IconMapping.iconForServiceType(serviceData.serviceType, filled: false)
         iconView.contentTintColor = DS.Colors.iconForeground
         iconView.imageScaling = .scaleProportionallyUpOrDown
         containerView.addSubview(iconView)
@@ -293,18 +293,20 @@ class ACMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable
 
     private func updateStateIcon() {
         // Show icon based on target mode (what user selected), not current operation state
-        let (iconName, color): (String, NSColor) = {
-            if !isActive {
-                return ("thermometer", DS.Colors.mutedForeground)
-            }
-            // targetState: 0 = auto, 1 = heat, 2 = cool
-            switch targetState {
-            case 1: return ("fire", DS.Colors.thermostatHeat)
-            case 2: return ("snowflake", DS.Colors.thermostatCool)
-            default: return ("arrows-left-right", DS.Colors.success)  // auto mode
-            }
-        }()
-        iconView.image = PhosphorIcon.icon(iconName, filled: isActive)
+        if !isActive {
+            // Off - use default icon from centralized config
+            iconView.image = IconMapping.iconForServiceType(serviceData.serviceType, filled: false)
+            return
+        }
+        // Get mode icon from centralized config
+        // targetState: 0 = auto, 1 = heat, 2 = cool
+        let mode: String = switch targetState {
+        case 1: "heat"
+        case 2: "cool"
+        default: "auto"
+        }
+        iconView.image = PhosphorIcon.modeIcon(for: serviceData.serviceType, mode: mode, filled: true)
+            ?? IconMapping.iconForServiceType(serviceData.serviceType, filled: true)
     }
 
     private func updateModeButtons() {

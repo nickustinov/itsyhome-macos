@@ -517,12 +517,15 @@ class GroupMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
             let avgPosition = positionStates.isEmpty ? 0 : positionStates.values.reduce(0, +) / positionStates.count
             updateBlindsIcon(position: avgPosition)
         case ServiceTypes.lightbulb:
-            iconView.image = PhosphorIcon.icon("lightbulb", filled: isOn)
+            iconView.image = IconMapping.iconForServiceType(ServiceTypes.lightbulb, filled: isOn)
         case ServiceTypes.fan:
-            iconView.image = PhosphorIcon.icon("fan", filled: isOn)
+            iconView.image = IconMapping.iconForServiceType(ServiceTypes.fan, filled: isOn)
         case ServiceTypes.lock:
-            iconView.image = PhosphorIcon.icon(isOn ? "lock" : "lock-open", filled: isOn)
+            let mode = isOn ? "locked" : "unlocked"
+            iconView.image = PhosphorIcon.modeIcon(for: ServiceTypes.lock, mode: mode, filled: isOn)
+                ?? IconMapping.iconForServiceType(ServiceTypes.lock, filled: isOn)
         default:
+            // Use group's custom icon
             iconView.image = PhosphorIcon.icon(group.icon, filled: isOn)
         }
 
@@ -726,6 +729,6 @@ class GroupMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
 
     private func updateBlindsIcon(position: Int) {
         let isOpen = position > 0
-        iconView.image = PhosphorIcon.icon("caret-up-down", filled: isOpen)
+        iconView.image = IconMapping.iconForServiceType(ServiceTypes.windowCovering, filled: isOpen)
     }
 }

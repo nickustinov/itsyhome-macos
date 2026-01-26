@@ -47,7 +47,7 @@ class ValveMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
         // Icon
         let iconY = (DS.ControlSize.menuItemHeight - DS.ControlSize.iconMedium) / 2
         iconView = NSImageView(frame: NSRect(x: DS.Spacing.md, y: iconY, width: DS.ControlSize.iconMedium, height: DS.ControlSize.iconMedium))
-        iconView.image = PhosphorIcon.regular(Self.iconName(for: valveType))
+        iconView.image = IconMapping.iconForServiceType(serviceData.serviceType, filled: false)
         iconView.contentTintColor = DS.Colors.iconForeground
         iconView.imageScaling = .scaleProportionallyUpOrDown
         containerView.addSubview(iconView)
@@ -130,8 +130,7 @@ class ValveMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
     }
 
     private func updateUI() {
-        let iconName = Self.iconName(for: valveType)
-        iconView.image = PhosphorIcon.icon(iconName, filled: isActive)
+        iconView.image = IconMapping.iconForServiceType(serviceData.serviceType, filled: isActive)
 
         toggleSwitch.setOn(isActive, animated: false)
 

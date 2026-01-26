@@ -71,7 +71,7 @@ class AirPurifierMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRe
 
         // Icon
         iconView = NSImageView(frame: NSRect(x: DS.Spacing.md, y: iconY, width: DS.ControlSize.iconMedium, height: DS.ControlSize.iconMedium))
-        iconView.image = PhosphorIcon.regular("wind")
+        iconView.image = IconMapping.iconForServiceType(serviceData.serviceType, filled: false)
         iconView.contentTintColor = DS.Colors.iconForeground
         iconView.imageScaling = .scaleProportionallyUpOrDown
         containerView.addSubview(iconView)
@@ -230,7 +230,7 @@ class AirPurifierMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRe
     private func updateStateIcon() {
         let filled = isActive
         let color: NSColor = isActive ? DS.Colors.success : DS.Colors.mutedForeground
-        iconView.image = PhosphorIcon.icon("wind", filled: filled)
+        iconView.image = IconMapping.iconForServiceType(serviceData.serviceType, filled: filled)
     }
 
     private func updateModeButtons() {

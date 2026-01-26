@@ -58,7 +58,7 @@ class SecuritySystemMenuItem: NSMenuItem, CharacteristicUpdatable, Characteristi
 
         // Icon
         iconView = NSImageView(frame: NSRect(x: DS.Spacing.md, y: iconY, width: DS.ControlSize.iconMedium, height: DS.ControlSize.iconMedium))
-        iconView.image = PhosphorIcon.regular("lock-open")
+        iconView.image = IconMapping.iconForServiceType(serviceData.serviceType, filled: false)
         iconView.contentTintColor = DS.Colors.iconForeground
         iconView.imageScaling = .scaleProportionallyUpOrDown
         containerView.addSubview(iconView)
@@ -163,17 +163,21 @@ class SecuritySystemMenuItem: NSMenuItem, CharacteristicUpdatable, Characteristi
         let isArmed = currentState != 3 && currentState != 4
         let isTriggered = currentState == 4
 
-        let (iconName, filled, color): (String, Bool, NSColor) = {
-            if isTriggered {
-                return ("shield-warning", true, DS.Colors.destructive)
-            } else if isArmed {
-                return ("shield-check", true, DS.Colors.success)
-            } else {
-                return ("shield", false, DS.Colors.mutedForeground)
-            }
-        }()
+        let mode: String
+        let filled: Bool
+        if isTriggered {
+            mode = "triggered"
+            filled = true
+        } else if isArmed {
+            mode = "armed"
+            filled = true
+        } else {
+            mode = "disarmed"
+            filled = false
+        }
 
-        iconView.image = PhosphorIcon.icon(iconName, filled: filled)
+        iconView.image = PhosphorIcon.modeIcon(for: serviceData.serviceType, mode: mode, filled: filled)
+            ?? IconMapping.iconForServiceType(serviceData.serviceType, filled: filled)
 
         // Show triggered indicator
         triggeredIcon.isHidden = !isTriggered
