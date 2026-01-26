@@ -45,7 +45,7 @@ class BlindMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
         // Icon
         let iconY = (height - DS.ControlSize.iconMedium) / 2
         iconView = NSImageView(frame: NSRect(x: DS.Spacing.md, y: iconY, width: DS.ControlSize.iconMedium, height: DS.ControlSize.iconMedium))
-        iconView.image = IconMapping.iconForServiceType(serviceData.serviceType, filled: false)
+        iconView.image = IconResolver.icon(for: serviceData, filled: false)
         iconView.contentTintColor = DS.Colors.iconForeground
         iconView.imageScaling = .scaleProportionallyUpOrDown
         containerView.addSubview(iconView)
@@ -124,7 +124,7 @@ class BlindMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
 
     private func updateIcon() {
         // Using caret-up-down for blinds, filled when open
-        iconView.image = IconMapping.iconForServiceType(serviceData.serviceType, filled: position > 0)
+        iconView.image = IconResolver.icon(for: serviceData, filled: position > 0)
     }
 
     @objc private func sliderChanged(_ sender: ModernSlider) {

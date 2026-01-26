@@ -51,7 +51,7 @@ class GarageDoorMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
         // Icon
         let iconY = (height - DS.ControlSize.iconMedium) / 2
         iconView = NSImageView(frame: NSRect(x: DS.Spacing.md, y: iconY, width: DS.ControlSize.iconMedium, height: DS.ControlSize.iconMedium))
-        iconView.image = IconMapping.iconForServiceType(serviceData.serviceType, filled: true)
+        iconView.image = IconResolver.icon(for: serviceData, filled: true)
         iconView.contentTintColor = DS.Colors.iconForeground
         iconView.imageScaling = .scaleProportionallyUpOrDown
         containerView.addSubview(iconView)
@@ -153,9 +153,9 @@ class GarageDoorMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
 
         if isObstructed {
             iconView.image = PhosphorIcon.modeIcon(for: serviceData.serviceType, mode: "obstructed", filled: false)
-                ?? IconMapping.iconForServiceType(serviceData.serviceType, filled: false)
+                ?? IconResolver.icon(for: serviceData, filled: false)
         } else {
-            iconView.image = IconMapping.iconForServiceType(serviceData.serviceType, filled: filled)
+            iconView.image = IconResolver.icon(for: serviceData, filled: filled)
         }
         iconView.contentTintColor = DS.Colors.iconForeground
         statusLabel.stringValue = stateText

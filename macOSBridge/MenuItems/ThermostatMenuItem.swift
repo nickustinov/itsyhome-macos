@@ -52,7 +52,7 @@ class ThermostatMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
         // Icon
         let iconY = (height - DS.ControlSize.iconMedium) / 2
         iconView = NSImageView(frame: NSRect(x: DS.Spacing.md, y: iconY, width: DS.ControlSize.iconMedium, height: DS.ControlSize.iconMedium))
-        iconView.image = IconMapping.iconForServiceType(serviceData.serviceType, filled: false)
+        iconView.image = IconResolver.icon(for: serviceData, filled: false)
         iconView.contentTintColor = DS.Colors.iconForeground
         iconView.imageScaling = .scaleProportionallyUpOrDown
         containerView.addSubview(iconView)
@@ -125,11 +125,11 @@ class ThermostatMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
     private func updateModeUI() {
         // mode: 0 = off, 1 = heat, 2 = cool
         if mode == 0 {
-            iconView.image = IconMapping.iconForServiceType(serviceData.serviceType, filled: false)
+            iconView.image = IconResolver.icon(for: serviceData, filled: false)
         } else {
             let modeStr = mode == 1 ? "heat" : "cool"
             iconView.image = PhosphorIcon.modeIcon(for: serviceData.serviceType, mode: modeStr, filled: true)
-                ?? IconMapping.iconForServiceType(serviceData.serviceType, filled: true)
+                ?? IconResolver.icon(for: serviceData, filled: true)
         }
     }
 

@@ -91,6 +91,7 @@ struct AccessoryRowConfig {
     let serviceType: String?
     let indentLevel: Int  // 0 = no indent, 1 = nested under section
     let isSectionHeader: Bool  // Uses medium weight font
+    let isIconEditable: Bool  // Shows clickable icon for custom icon picker
 
     init(
         name: String,
@@ -112,7 +113,8 @@ struct AccessoryRowConfig {
         rowTag: Int = 0,
         serviceType: String? = nil,
         indentLevel: Int = 0,
-        isSectionHeader: Bool = false
+        isSectionHeader: Bool = false,
+        isIconEditable: Bool = false
     ) {
         self.name = name
         self.icon = icon
@@ -134,6 +136,7 @@ struct AccessoryRowConfig {
         self.serviceType = serviceType
         self.indentLevel = indentLevel
         self.isSectionHeader = isSectionHeader
+        self.isIconEditable = isIconEditable
     }
 }
 
@@ -145,6 +148,7 @@ class AccessoryRowView: NSView {
     private var dragHandle: DragHandleView?
     private var chevronButton: NSButton?
     private var typeIcon: NSImageView?
+    private var iconButton: NSButton?
     private let nameLabel = NSTextField()
     private var countLabel: NSTextField?
 
@@ -166,6 +170,7 @@ class AccessoryRowView: NSView {
     private let reserveDragHandleSpace: Bool
     private let showChevron: Bool
     private let hasIcon: Bool
+    private let isIconEditable: Bool
     private let indentLevel: Int
     let rowTag: Int
 
@@ -174,6 +179,12 @@ class AccessoryRowView: NSView {
     var onEyeToggled: (() -> Void)?
     var onPinToggled: (() -> Void)?
     var onChevronToggled: (() -> Void)?
+    var onIconTapped: (() -> Void)?
+
+    /// Returns the icon view for positioning popovers
+    var iconView: NSView? {
+        iconButton ?? typeIcon
+    }
 
     init(config: AccessoryRowConfig) {
         self.isFavourite = config.isFavourite
@@ -184,6 +195,7 @@ class AccessoryRowView: NSView {
         self.reserveDragHandleSpace = config.reserveDragHandleSpace
         self.showChevron = config.showChevron
         self.hasIcon = config.icon != nil
+        self.isIconEditable = config.isIconEditable
         self.indentLevel = config.indentLevel
         self.rowTag = config.rowTag
 
@@ -223,14 +235,28 @@ class AccessoryRowView: NSView {
             addSubview(btn)
         }
 
-        // Type icon
+        // Type icon (button if editable, image view otherwise)
         if let icon = config.icon {
-            let iv = NSImageView()
-            iv.imageScaling = .scaleProportionallyUpOrDown
-            iv.image = icon
-            iv.contentTintColor = .secondaryLabelColor
-            typeIcon = iv
-            addSubview(iv)
+            if config.isIconEditable {
+                let btn = NSButton()
+                btn.bezelStyle = .inline
+                btn.isBordered = false
+                btn.imagePosition = .imageOnly
+                btn.imageScaling = .scaleProportionallyUpOrDown
+                btn.image = icon
+                btn.contentTintColor = .secondaryLabelColor
+                btn.target = self
+                btn.action = #selector(iconTapped)
+                iconButton = btn
+                addSubview(btn)
+            } else {
+                let iv = NSImageView()
+                iv.imageScaling = .scaleProportionallyUpOrDown
+                iv.image = icon
+                iv.contentTintColor = .secondaryLabelColor
+                typeIcon = iv
+                addSubview(iv)
+            }
         }
 
         // Name label
@@ -373,6 +399,7 @@ class AccessoryRowView: NSView {
         let shouldDim = isItemHidden || config.isSectionHidden
         nameLabel.alphaValue = shouldDim ? 0.5 : 1.0
         typeIcon?.alphaValue = shouldDim ? 0.5 : 1.0
+        iconButton?.alphaValue = shouldDim ? 0.5 : 1.0
         countLabel?.alphaValue = shouldDim ? 0.5 : 1.0
     }
 
@@ -407,6 +434,16 @@ class AccessoryRowView: NSView {
         onPinToggled?()
     }
 
+    @objc private func iconTapped() {
+        onIconTapped?()
+    }
+
+    /// Update the icon image (used after custom icon selection)
+    func updateIcon(_ icon: NSImage?) {
+        typeIcon?.image = icon
+        iconButton?.image = icon
+    }
+
     override func layout() {
         super.layout()
 
@@ -433,9 +470,12 @@ class AccessoryRowView: NSView {
             x += L.chevronSize + L.spacing
         }
 
-        // Type icon
+        // Type icon (either image view or button)
         if let icon = typeIcon {
             icon.frame = NSRect(x: x, y: cardY + (L.cardHeight - L.iconSize) / 2, width: L.iconSize, height: L.iconSize)
+            x += L.iconSize + L.spacing
+        } else if let btn = iconButton {
+            btn.frame = NSRect(x: x, y: cardY + (L.cardHeight - L.iconSize) / 2, width: L.iconSize, height: L.iconSize)
             x += L.iconSize + L.spacing
         }
 

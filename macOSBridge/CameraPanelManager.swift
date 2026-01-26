@@ -34,6 +34,7 @@ final class CameraPanelManager {
         if hasCameras {
             if cameraStatusItem == nil {
                 let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
+                item.autosaveName = "com.itsyhome.cameras"
                 if let button = item.button {
                     let pluginBundle = Bundle(for: CameraPanelManager.self)
                     if let icon = pluginBundle.image(forResource: "CameraMenuBarIcon") {

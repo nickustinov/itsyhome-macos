@@ -443,7 +443,7 @@ class AccessoriesSettingsView: NSView {
             } else if let scene = sceneLookup[id] {
                 items.append(FavouriteItem(kind: .scene(scene), id: id, name: scene.name, icon: SceneIconInference.icon(for: scene.name)))
             } else if let service = serviceLookup[id] {
-                items.append(FavouriteItem(kind: .service(service), id: id, name: service.name, icon: IconMapping.iconForServiceType(service.serviceType)))
+                items.append(FavouriteItem(kind: .service(service), id: id, name: service.name, icon: IconResolver.icon(for: service)))
             }
         }
         favouriteItems = items

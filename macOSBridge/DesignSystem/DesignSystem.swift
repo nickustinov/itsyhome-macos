@@ -64,11 +64,9 @@ enum DS {
             }
         }
 
-        /// Icon color - dimmed foreground for icons in menu items
+        /// Icon color - same as foreground for icons in menu items
         static var iconForeground: NSColor {
-            NSColor(name: nil) { appearance in
-                appearance.isDark ? NSColor(white: 0.6, alpha: 1) : NSColor(white: 0.45, alpha: 1)
-            }
+            foreground
         }
 
         static var accent: NSColor {
@@ -206,7 +204,7 @@ enum DS {
 
         // Icon
         static let iconSmall: CGFloat = 14
-        static let iconMedium: CGFloat = 18
+        static let iconMedium: CGFloat = 14
         static let iconLarge: CGFloat = 22
 
         // Menu item

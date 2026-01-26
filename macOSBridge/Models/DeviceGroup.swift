@@ -14,7 +14,7 @@ struct DeviceGroup: Codable, Identifiable {
     var deviceIds: [String]  // Service unique identifiers
     var roomId: String?  // Room this group belongs to, nil = global group
 
-    init(id: String = UUID().uuidString, name: String, icon: String = "folder", deviceIds: [String] = [], roomId: String? = nil) {
+    init(id: String = UUID().uuidString, name: String, icon: String = "squares-four", deviceIds: [String] = [], roomId: String? = nil) {
         self.id = id
         self.name = name
         self.icon = icon
@@ -49,22 +49,15 @@ struct DeviceGroup: Codable, Identifiable {
         let serviceDict = Dictionary(uniqueKeysWithValues: allServices.map { ($0.uniqueIdentifier, $0) })
         let services = deviceIds.compactMap { serviceDict[$0] }
 
-        guard let firstType = services.first?.serviceType else { return "folder" }
-
-        // If homogeneous, use type-specific icon
-        if services.allSatisfy({ $0.serviceType == firstType }) {
-            switch firstType {
-            case ServiceTypes.lightbulb: return "lightbulb"
-            case ServiceTypes.switch, ServiceTypes.outlet: return "powerplug"
-            case ServiceTypes.fan: return "fan"
-            case ServiceTypes.windowCovering: return "blinds.horizontal.closed"
-            case ServiceTypes.lock: return "lock"
-            case ServiceTypes.thermostat, ServiceTypes.heaterCooler: return "thermometer"
-            case ServiceTypes.garageDoorOpener: return "door.garage.closed"
-            default: return "folder"
-            }
+        guard let firstType = services.first?.serviceType else {
+            return PhosphorIcon.defaultGroupIcon
         }
 
-        return "folder"
+        // If homogeneous, use type-specific icon from centralized mapping
+        if services.allSatisfy({ $0.serviceType == firstType }) {
+            return PhosphorIcon.defaultIconName(for: firstType)
+        }
+
+        return PhosphorIcon.defaultGroupIcon
     }
 }

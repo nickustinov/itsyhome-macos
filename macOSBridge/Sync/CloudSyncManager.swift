@@ -174,6 +174,9 @@ final class CloudSyncManager {
         if pullEncodedKey(prefix: "shortcuts", homeName: homeName, homeId: homeId) {
             appliedCount += 1
         }
+        if pullEncodedKey(prefix: "customIcons", homeName: homeName, homeId: homeId) {
+            appliedCount += 1
+        }
 
         if appliedCount > 0 {
             lastSyncTimestamp = Date()
@@ -215,6 +218,8 @@ final class CloudSyncManager {
             translatedData = translator.translateDeviceGroupsFromCloud(cloudData)
         } else if prefix == "cameraOverlayAccessories" {
             translatedData = translator.translateCameraOverlaysFromCloud(cloudData)
+        } else if prefix == "customIcons" {
+            translatedData = translator.translateCustomIconsFromCloud(cloudData)
         } else {
             translatedData = translator.translateShortcutsFromCloud(cloudData)
         }
@@ -254,6 +259,7 @@ final class CloudSyncManager {
         uploadEncodedKey(prefix: "cameraOverlayAccessories", homeName: homeName, homeId: homeId)
         uploadEncodedKey(prefix: "deviceGroups", homeName: homeName, homeId: homeId)
         uploadEncodedKey(prefix: "shortcuts", homeName: homeName, homeId: homeId)
+        uploadEncodedKey(prefix: "customIcons", homeName: homeName, homeId: homeId)
 
         cloudStore.synchronize()
         lastSyncTimestamp = Date()
@@ -287,6 +293,8 @@ final class CloudSyncManager {
             translatedData = translator.translateDeviceGroupsToCloud(data)
         } else if prefix == "cameraOverlayAccessories" {
             translatedData = translator.translateCameraOverlaysToCloud(data)
+        } else if prefix == "customIcons" {
+            translatedData = translator.translateCustomIconsToCloud(data)
         } else {
             translatedData = translator.translateShortcutsToCloud(data)
         }

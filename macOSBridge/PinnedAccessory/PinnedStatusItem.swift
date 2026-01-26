@@ -51,6 +51,7 @@ class PinnedStatusItem: NSObject, NSMenuDelegate {
         self.itemName = itemName
         self.itemType = itemType
         self.statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        self.statusItem.autosaveName = "com.itsyhome.pinned.\(itemId)"
 
         super.init()
 
@@ -79,17 +80,17 @@ class PinnedStatusItem: NSObject, NSMenuDelegate {
             icon = displayIcon
             statusText = displayText
 
-        case .room:
-            icon = IconMapping.iconForRoom(itemName)
+        case .room(let roomData, _):
+            icon = IconResolver.icon(forRoomId: roomData.uniqueIdentifier, roomName: itemName)
 
         case .scene:
-            icon = SceneIconInference.icon(for: itemName)
+            icon = IconResolver.icon(forSceneId: itemId, sceneName: itemName)
 
         case .scenesSection:
             icon = PhosphorIcon.regular("sparkle")
 
         case .group:
-            icon = PhosphorIcon.regular("squares-four")
+            icon = IconResolver.icon(forGroupId: itemId)
         }
 
         // Resize icon for menu bar (18x18 is standard)
@@ -136,7 +137,7 @@ class PinnedStatusItem: NSObject, NSMenuDelegate {
         default:
             // For lights, switches, outlets, fans, valves, etc. - check on/off state
             let isOn = getOnOffState(for: service)
-            return (IconMapping.iconForServiceType(service.serviceType, filled: isOn), nil)
+            return (IconResolver.icon(for: service, filled: isOn), nil)
         }
     }
 
@@ -172,7 +173,7 @@ class PinnedStatusItem: NSObject, NSMenuDelegate {
 
         // When OFF, use default icon from centralized config
         if !isActive {
-            return (IconMapping.iconForServiceType(service.serviceType, filled: false), tempText)
+            return (IconResolver.icon(for: service, filled: false), tempText)
         }
 
         // Get mode icon from centralized config
@@ -188,7 +189,7 @@ class PinnedStatusItem: NSObject, NSMenuDelegate {
             modeIcon = PhosphorIcon.modeIcon(for: service.serviceType, mode: mode, filled: true)
         }
 
-        return (modeIcon ?? IconMapping.iconForServiceType(service.serviceType, filled: true), tempText)
+        return (modeIcon ?? IconResolver.icon(for: service, filled: true), tempText)
     }
 
     private func thermostatStatus(for service: ServiceData) -> (icon: NSImage?, text: String?) {
@@ -205,7 +206,7 @@ class PinnedStatusItem: NSObject, NSMenuDelegate {
             // 0 = off, 1 = heat, 2 = cool, 3 = auto
             if modeValue == 0 {
                 // Off - use default icon
-                modeIcon = IconMapping.iconForServiceType(service.serviceType, filled: false)
+                modeIcon = IconResolver.icon(for: service, filled: false)
             } else {
                 let mode: String = switch modeValue {
                 case 1: "heat"
@@ -216,7 +217,7 @@ class PinnedStatusItem: NSObject, NSMenuDelegate {
             }
         }
 
-        return (modeIcon ?? IconMapping.iconForServiceType(service.serviceType, filled: false), tempText)
+        return (modeIcon ?? IconResolver.icon(for: service, filled: false), tempText)
     }
 
     private func humidifierStatus(for service: ServiceData) -> (icon: NSImage?, text: String?) {
@@ -231,7 +232,7 @@ class PinnedStatusItem: NSObject, NSMenuDelegate {
 
         // When OFF, use default icon from centralized config
         if !isActive {
-            return (IconMapping.iconForServiceType(service.serviceType, filled: false), humidityText)
+            return (IconResolver.icon(for: service, filled: false), humidityText)
         }
 
         // Get mode icon from centralized config
@@ -244,7 +245,7 @@ class PinnedStatusItem: NSObject, NSMenuDelegate {
             }
         }
 
-        return (IconMapping.iconForServiceType(service.serviceType, filled: true), humidityText)
+        return (IconResolver.icon(for: service, filled: true), humidityText)
     }
 
     private func windowCoveringStatus(for service: ServiceData) -> (icon: NSImage?, text: String?) {
@@ -278,7 +279,7 @@ class PinnedStatusItem: NSObject, NSMenuDelegate {
             }
             return (icon, text)
         }
-        return (IconMapping.iconForServiceType(service.serviceType), nil)
+        return (IconResolver.icon(for: service), nil)
     }
 
     private func garageDoorStatus(for service: ServiceData) -> (icon: NSImage?, text: String?) {
@@ -306,7 +307,7 @@ class PinnedStatusItem: NSObject, NSMenuDelegate {
             }
             return (icon, text)
         }
-        return (IconMapping.iconForServiceType(service.serviceType), nil)
+        return (IconResolver.icon(for: service), nil)
     }
 
     private func securitySystemStatus(for service: ServiceData) -> (icon: NSImage?, text: String?) {
@@ -334,12 +335,12 @@ class PinnedStatusItem: NSObject, NSMenuDelegate {
             }
             return (icon, text)
         }
-        return (IconMapping.iconForServiceType(service.serviceType), nil)
+        return (IconResolver.icon(for: service), nil)
     }
 
     private func airPurifierStatus(for service: ServiceData) -> (icon: NSImage?, text: String?) {
         let isActive = getOnOffState(for: service)
-        return (IconMapping.iconForServiceType(service.serviceType, filled: isActive), nil)
+        return (IconResolver.icon(for: service, filled: isActive), nil)
     }
 
     private func formatTemperature(_ celsius: Double) -> String {

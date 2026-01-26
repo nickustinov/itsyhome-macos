@@ -190,7 +190,7 @@ class MenuBuilder {
                 continue
             }
 
-            let icon = IconMapping.iconForRoom(room.name)
+            let icon = IconResolver.icon(forRoomId: room.uniqueIdentifier, roomName: room.name)
             let roomItem = createSubmenuItem(title: room.name, icon: icon)
 
             let submenu = StayOpenMenu()
@@ -414,7 +414,7 @@ class MenuBuilder {
 
         default:
             let item = NSMenuItem(title: service.name, action: nil, keyEquivalent: "")
-            item.image = IconMapping.iconForServiceType(service.serviceType)
+            item.image = IconResolver.icon(for: service)
             menuItem = item
         }
 

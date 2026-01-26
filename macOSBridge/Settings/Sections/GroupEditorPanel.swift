@@ -57,7 +57,7 @@ class GroupEditorPanel: NSViewController {
         container.addSubview(nameField)
 
         // Room dropdown
-        let roomLabel = NSTextField(labelWithString: "Room (optional)")
+        let roomLabel = NSTextField(labelWithString: "Room")
         roomLabel.font = .systemFont(ofSize: 12, weight: .medium)
         roomLabel.textColor = .secondaryLabelColor
         roomLabel.translatesAutoresizingMaskIntoConstraints = false

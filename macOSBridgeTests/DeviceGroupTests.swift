@@ -17,7 +17,7 @@ final class DeviceGroupTests: XCTestCase {
 
         XCTAssertFalse(group.id.isEmpty)
         XCTAssertEqual(group.name, "Test Group")
-        XCTAssertEqual(group.icon, "folder")
+        XCTAssertEqual(group.icon, "squares-four")
         XCTAssertTrue(group.deviceIds.isEmpty)
     }
 

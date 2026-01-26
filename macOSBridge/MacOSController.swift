@@ -298,6 +298,7 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate {
     }
 
     private func setupStatusItem() {
+        statusItem.autosaveName = "com.itsyhome.main"
         if let button = statusItem.button {
             let pluginBundle = Bundle(for: MacOSController.self)
             if let icon = pluginBundle.image(forResource: "MenuBarIcon") {

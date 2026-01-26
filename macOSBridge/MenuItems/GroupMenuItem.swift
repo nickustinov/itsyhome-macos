@@ -96,7 +96,7 @@ class GroupMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
         // Icon
         let iconY = (height - DS.ControlSize.iconMedium) / 2
         iconView = NSImageView(frame: NSRect(x: DS.Spacing.md, y: iconY, width: DS.ControlSize.iconMedium, height: DS.ControlSize.iconMedium))
-        iconView.image = PhosphorIcon.regular(group.icon)
+        iconView.image = IconResolver.icon(for: group)
         iconView.contentTintColor = DS.Colors.iconForeground
         iconView.imageScaling = .scaleProportionallyUpOrDown
         containerView.addSubview(iconView)
@@ -510,23 +510,35 @@ class GroupMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
         // Update toggle
         toggleSwitch?.setOn(isOn, animated: false)
 
-        // Update icon
-        switch commonType {
-        case ServiceTypes.windowCovering:
-            // For blinds, use position states
-            let avgPosition = positionStates.isEmpty ? 0 : positionStates.values.reduce(0, +) / positionStates.count
-            updateBlindsIcon(position: avgPosition)
-        case ServiceTypes.lightbulb:
-            iconView.image = IconMapping.iconForServiceType(ServiceTypes.lightbulb, filled: isOn)
-        case ServiceTypes.fan:
-            iconView.image = IconMapping.iconForServiceType(ServiceTypes.fan, filled: isOn)
-        case ServiceTypes.lock:
-            let mode = isOn ? "locked" : "unlocked"
-            iconView.image = PhosphorIcon.modeIcon(for: ServiceTypes.lock, mode: mode, filled: isOn)
-                ?? IconMapping.iconForServiceType(ServiceTypes.lock, filled: isOn)
-        default:
-            // Use group's custom icon
-            iconView.image = PhosphorIcon.icon(group.icon, filled: isOn)
+        // Update icon - check for custom icon first
+        if PreferencesManager.shared.customIcon(for: group.id) != nil {
+            // Use custom icon with filled based on state
+            let filled: Bool
+            if commonType == ServiceTypes.windowCovering {
+                let avgPosition = positionStates.isEmpty ? 0 : positionStates.values.reduce(0, +) / positionStates.count
+                filled = avgPosition > 0
+            } else {
+                filled = isOn
+            }
+            iconView.image = IconResolver.icon(for: group, filled: filled)
+        } else {
+            switch commonType {
+            case ServiceTypes.windowCovering:
+                // For blinds, use position states
+                let avgPosition = positionStates.isEmpty ? 0 : positionStates.values.reduce(0, +) / positionStates.count
+                updateBlindsIcon(position: avgPosition)
+            case ServiceTypes.lightbulb:
+                iconView.image = IconMapping.iconForServiceType(ServiceTypes.lightbulb, filled: isOn)
+            case ServiceTypes.fan:
+                iconView.image = IconMapping.iconForServiceType(ServiceTypes.fan, filled: isOn)
+            case ServiceTypes.lock:
+                let mode = isOn ? "locked" : "unlocked"
+                iconView.image = PhosphorIcon.modeIcon(for: ServiceTypes.lock, mode: mode, filled: isOn)
+                    ?? IconMapping.iconForServiceType(ServiceTypes.lock, filled: isOn)
+            default:
+                // Use group's assigned icon
+                iconView.image = IconResolver.icon(for: group, filled: isOn)
+            }
         }
 
         // Show "2/3" if partial
@@ -729,6 +741,10 @@ class GroupMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
 
     private func updateBlindsIcon(position: Int) {
         let isOpen = position > 0
-        iconView.image = IconMapping.iconForServiceType(ServiceTypes.windowCovering, filled: isOpen)
+        if PreferencesManager.shared.customIcon(for: group.id) != nil {
+            iconView.image = IconResolver.icon(for: group, filled: isOpen)
+        } else {
+            iconView.image = IconMapping.iconForServiceType(ServiceTypes.windowCovering, filled: isOpen)
+        }
     }
 }

@@ -7,6 +7,29 @@
 
 import AppKit
 
+// MARK: - Icon picker
+
+extension AccessoriesSettingsView: IconPickerPopoverDelegate {
+
+    func showIconPicker(for itemId: String, serviceType: String?, itemType: IconPickerPopover.ItemType, relativeTo view: NSView, iconView: NSView? = nil) {
+        let picker = IconPickerPopover(itemId: itemId, serviceType: serviceType, itemType: itemType)
+        picker.delegate = self
+
+        let popover = NSPopover()
+        popover.contentViewController = picker
+        popover.behavior = .transient
+
+        // Show relative to icon if provided, otherwise relative to the row
+        let targetView = iconView ?? view
+        popover.show(relativeTo: targetView.bounds, of: targetView, preferredEdge: .maxX)
+    }
+
+    func iconPicker(_ picker: IconPickerPopover, didSelectIcon iconName: String?) {
+        // Rebuild to reflect the icon change
+        rebuild()
+    }
+}
+
 // MARK: - Header strips using AccessoryRowView
 
 extension AccessoriesSettingsView {
@@ -61,7 +84,7 @@ extension AccessoriesSettingsView {
 
         let config = AccessoryRowConfig(
             name: room.name,
-            icon: IconMapping.iconForRoom(room.name),
+            icon: IconResolver.icon(forRoomId: room.uniqueIdentifier, roomName: room.name),
             count: serviceCount,
             showDragHandle: true,
             showChevron: true,
@@ -71,7 +94,8 @@ extension AccessoriesSettingsView {
             showEyeButton: true,
             showPinButton: true,
             rowTag: roomIndex,
-            isSectionHeader: true
+            isSectionHeader: true,
+            isIconEditable: true
         )
         let rowView = AccessoryRowView(config: config)
         rowView.onChevronToggled = { [weak self] in
@@ -82,6 +106,16 @@ extension AccessoriesSettingsView {
         }
         rowView.onPinToggled = { [weak self] in
             self?.roomPinToggled(roomIndex: roomIndex)
+        }
+        rowView.onIconTapped = { [weak self, weak rowView] in
+            guard let self = self, let rowView = rowView else { return }
+            self.showIconPicker(
+                for: room.uniqueIdentifier,
+                serviceType: nil,
+                itemType: .room,
+                relativeTo: rowView,
+                iconView: rowView.iconView
+            )
         }
         return rowView
     }

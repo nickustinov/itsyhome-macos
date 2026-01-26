@@ -61,13 +61,34 @@ extension AccessoriesSettingsView: NSTableViewDelegate, NSTableViewDataSource {
 
     private func createFavouriteRowView(row: Int) -> NSView {
         let item = favouriteItems[row]
+        // Get the resolved icon based on item type
+        let icon: NSImage?
+        let serviceType: String?
+        let itemType: IconPickerPopover.ItemType
+        switch item.kind {
+        case .scene(let scene):
+            icon = IconResolver.icon(for: scene)
+            serviceType = nil
+            itemType = .scene
+        case .service(let service):
+            icon = IconResolver.icon(for: service)
+            serviceType = service.serviceType
+            itemType = .service
+        case .group(let group):
+            icon = IconResolver.icon(for: group)
+            serviceType = nil
+            itemType = .group
+        }
+
         let config = AccessoryRowConfig(
             name: item.name,
-            icon: item.icon,
+            icon: icon,
             showDragHandle: true,
             isFavourite: true,
             showStarButton: true,
-            itemId: item.id
+            itemId: item.id,
+            serviceType: serviceType,
+            isIconEditable: true
         )
         let rowView = AccessoryRowView(config: config)
         rowView.onStarToggled = { [weak self] in
@@ -78,6 +99,23 @@ extension AccessoriesSettingsView: NSTableViewDelegate, NSTableViewDataSource {
             case .group(let group): preferences.toggleFavouriteGroup(groupId: group.id)
             }
             self?.rebuild()
+        }
+        rowView.onIconTapped = { [weak self, weak rowView] in
+            guard let self = self, let rowView = rowView else { return }
+            // Determine the actual item ID for icon storage
+            let actualItemId: String
+            switch item.kind {
+            case .scene(let scene): actualItemId = scene.uniqueIdentifier
+            case .service(let service): actualItemId = service.uniqueIdentifier
+            case .group(let group): actualItemId = group.id
+            }
+            self.showIconPicker(
+                for: actualItemId,
+                serviceType: serviceType,
+                itemType: itemType,
+                relativeTo: rowView,
+                iconView: rowView.iconView
+            )
         }
         return rowView
     }
@@ -124,7 +162,7 @@ extension AccessoriesSettingsView: NSTableViewDelegate, NSTableViewDataSource {
         let isPinned = preferences.isPinnedScene(sceneId: scene.uniqueIdentifier)
         let config = AccessoryRowConfig(
             name: scene.name,
-            icon: SceneIconInference.icon(for: scene.name),
+            icon: IconResolver.icon(for: scene),
             showDragHandle: true,
             isFavourite: isFav,
             isItemHidden: isSceneHidden,
@@ -133,7 +171,9 @@ extension AccessoriesSettingsView: NSTableViewDelegate, NSTableViewDataSource {
             showStarButton: true,
             showEyeButton: true,
             showPinButton: true,
-            indentLevel: 1
+            itemId: scene.uniqueIdentifier,
+            indentLevel: 1,
+            isIconEditable: true
         )
         let rowView = AccessoryRowView(config: config)
         rowView.onStarToggled = { [weak self] in
@@ -148,6 +188,16 @@ extension AccessoriesSettingsView: NSTableViewDelegate, NSTableViewDataSource {
             preferences.togglePinnedScene(sceneId: scene.uniqueIdentifier)
             self?.rebuild()
         }
+        rowView.onIconTapped = { [weak self, weak rowView] in
+            guard let self = self, let rowView = rowView else { return }
+            self.showIconPicker(
+                for: scene.uniqueIdentifier,
+                serviceType: nil,
+                itemType: .scene,
+                relativeTo: rowView,
+                iconView: rowView.iconView
+            )
+        }
         return rowView
     }
 
@@ -158,7 +208,7 @@ extension AccessoriesSettingsView: NSTableViewDelegate, NSTableViewDataSource {
         let isPinned = preferences.isPinned(serviceId: service.uniqueIdentifier)
         let config = AccessoryRowConfig(
             name: service.name,
-            icon: IconMapping.iconForServiceType(service.serviceType),
+            icon: IconResolver.icon(for: service),
             isFavourite: isFav,
             isItemHidden: isServiceHidden,
             isSectionHidden: roomHidden,
@@ -166,8 +216,10 @@ extension AccessoriesSettingsView: NSTableViewDelegate, NSTableViewDataSource {
             showStarButton: true,
             showEyeButton: true,
             showPinButton: true,
+            itemId: service.uniqueIdentifier,
             serviceType: service.serviceType,
-            indentLevel: indentLevel
+            indentLevel: indentLevel,
+            isIconEditable: true
         )
         let rowView = AccessoryRowView(config: config)
         rowView.onStarToggled = { [weak self] in
@@ -181,6 +233,16 @@ extension AccessoriesSettingsView: NSTableViewDelegate, NSTableViewDataSource {
         rowView.onPinToggled = { [weak self] in
             preferences.togglePinned(serviceId: service.uniqueIdentifier)
             self?.rebuild()
+        }
+        rowView.onIconTapped = { [weak self, weak rowView] in
+            guard let self = self, let rowView = rowView else { return }
+            self.showIconPicker(
+                for: service.uniqueIdentifier,
+                serviceType: service.serviceType,
+                itemType: .service,
+                relativeTo: rowView,
+                iconView: rowView.iconView
+            )
         }
         return rowView
     }
@@ -204,7 +266,7 @@ extension AccessoriesSettingsView: NSTableViewDelegate, NSTableViewDataSource {
 
         let config = AccessoryRowConfig(
             name: group.name,
-            icon: PhosphorIcon.regular(group.icon),
+            icon: IconResolver.icon(for: group),
             count: group.deviceIds.count,
             showDragHandle: showDragHandle,
             reserveDragHandleSpace: reserveDragSpace && !showDragHandle,
@@ -213,8 +275,10 @@ extension AccessoriesSettingsView: NSTableViewDelegate, NSTableViewDataSource {
             showEditButton: true,
             showStarButton: true,
             showPinButton: true,
+            itemId: group.id,
             rowTag: row,
-            indentLevel: indentLevel
+            indentLevel: indentLevel,
+            isIconEditable: true
         )
 
         let rowView = AccessoryRowView(config: config)
@@ -228,6 +292,16 @@ extension AccessoriesSettingsView: NSTableViewDelegate, NSTableViewDataSource {
         rowView.onPinToggled = { [weak self] in
             preferences.togglePinnedGroup(groupId: group.id)
             self?.rebuild()
+        }
+        rowView.onIconTapped = { [weak self, weak rowView] in
+            guard let self = self, let rowView = rowView else { return }
+            self.showIconPicker(
+                for: group.id,
+                serviceType: nil,
+                itemType: .group,
+                relativeTo: rowView,
+                iconView: rowView.iconView
+            )
         }
         return rowView
     }

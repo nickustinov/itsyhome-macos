@@ -75,7 +75,7 @@ class ACMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable
 
         // Icon
         iconView = NSImageView(frame: NSRect(x: DS.Spacing.md, y: iconY, width: DS.ControlSize.iconMedium, height: DS.ControlSize.iconMedium))
-        iconView.image = IconMapping.iconForServiceType(serviceData.serviceType, filled: false)
+        iconView.image = IconResolver.icon(for: serviceData, filled: false)
         iconView.contentTintColor = DS.Colors.iconForeground
         iconView.imageScaling = .scaleProportionallyUpOrDown
         containerView.addSubview(iconView)
@@ -294,11 +294,11 @@ class ACMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable
     private func updateStateIcon() {
         // Show icon based on target mode (what user selected), not current operation state
         if !isActive {
-            // Off - use default icon from centralized config
-            iconView.image = IconMapping.iconForServiceType(serviceData.serviceType, filled: false)
+            // Off - use custom/default icon
+            iconView.image = IconResolver.icon(for: serviceData, filled: false)
             return
         }
-        // Get mode icon from centralized config
+        // Get mode icon from centralized config (mode icons don't use custom icons)
         // targetState: 0 = auto, 1 = heat, 2 = cool
         let mode: String = switch targetState {
         case 1: "heat"
@@ -306,7 +306,7 @@ class ACMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable
         default: "auto"
         }
         iconView.image = PhosphorIcon.modeIcon(for: serviceData.serviceType, mode: mode, filled: true)
-            ?? IconMapping.iconForServiceType(serviceData.serviceType, filled: true)
+            ?? IconResolver.icon(for: serviceData, filled: true)
     }
 
     private func updateModeButtons() {

@@ -73,6 +73,25 @@ enum PhosphorIcon {
             _ = fill(name)
         }
     }
+
+    /// Get all available icon names (excluding fill variants)
+    static func allIconNames() -> [String] {
+        guard let resourcePath = bundle.resourcePath else { return [] }
+        let phosphorPath = (resourcePath as NSString).appendingPathComponent("PhosphorIcons")
+
+        do {
+            let files = try FileManager.default.contentsOfDirectory(atPath: phosphorPath)
+            var names: Set<String> = []
+            for file in files where file.hasPrefix("ph.") && file.hasSuffix(".svg") && !file.contains(".fill.") {
+                // Extract name: "ph.name.svg" -> "name"
+                let name = String(file.dropFirst(3).dropLast(4))
+                names.insert(name)
+            }
+            return names.sorted()
+        } catch {
+            return []
+        }
+    }
 }
 
 /// Token class to locate the macOSBridge bundle
@@ -152,7 +171,7 @@ extension PhosphorIcon {
 
         // Heater/Cooler (AC)
         ServiceTypes.heaterCooler: AccessoryIconConfig(
-            defaultIcon: "snowflake",
+            defaultIcon: "thermometer-simple",
             suggestedIcons: ["snowflake", "thermometer", "fire", "fire-simple", "thermometer-cold", "thermometer-hot", "thermometer-simple"],
             modeIcons: ["heat": "fire", "cool": "snowflake", "auto": "arrows-left-right"]
         ),
@@ -172,8 +191,8 @@ extension PhosphorIcon {
 
         // Window Coverings / Blinds
         ServiceTypes.windowCovering: AccessoryIconConfig(
-            defaultIcon: "caret-up-down",
-            suggestedIcons: ["caret-up-down", "list"]
+            defaultIcon: "arrows-out-line-vertical",
+            suggestedIcons: ["arrows-out-line-vertical", "caret-up-down", "list"]
         ),
 
         // Garage Doors

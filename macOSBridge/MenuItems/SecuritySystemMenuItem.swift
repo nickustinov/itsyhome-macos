@@ -58,7 +58,7 @@ class SecuritySystemMenuItem: NSMenuItem, CharacteristicUpdatable, Characteristi
 
         // Icon
         iconView = NSImageView(frame: NSRect(x: DS.Spacing.md, y: iconY, width: DS.ControlSize.iconMedium, height: DS.ControlSize.iconMedium))
-        iconView.image = IconMapping.iconForServiceType(serviceData.serviceType, filled: false)
+        iconView.image = IconResolver.icon(for: serviceData, filled: false)
         iconView.contentTintColor = DS.Colors.iconForeground
         iconView.imageScaling = .scaleProportionallyUpOrDown
         containerView.addSubview(iconView)
@@ -177,7 +177,7 @@ class SecuritySystemMenuItem: NSMenuItem, CharacteristicUpdatable, Characteristi
         }
 
         iconView.image = PhosphorIcon.modeIcon(for: serviceData.serviceType, mode: mode, filled: filled)
-            ?? IconMapping.iconForServiceType(serviceData.serviceType, filled: filled)
+            ?? IconResolver.icon(for: serviceData, filled: filled)
 
         // Show triggered indicator
         triggeredIcon.isHidden = !isTriggered

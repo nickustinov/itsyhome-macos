@@ -233,6 +233,6 @@ class SceneMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
     }
 
     private static func inferIcon(for scene: SceneData) -> NSImage? {
-        SceneIconInference.icon(for: scene.name)
+        IconResolver.icon(for: scene)
     }
 }

@@ -193,4 +193,64 @@ struct CloudSyncTranslator {
         }
         return try? JSONEncoder().encode(translated)
     }
+
+    // MARK: - Custom icons
+
+    private static let sceneIconPrefix = "scene::"
+    private static let groupIconPrefix = "group::"
+
+    func translateCustomIconsToCloud(_ data: Data) -> Data? {
+        guard let dict = try? JSONDecoder().decode([String: String].self, from: data) else { return nil }
+        var translated: [String: String] = [:]
+        for (itemId, iconName) in dict {
+            // Try service ID first
+            if let stable = serviceIdToStable[itemId] {
+                translated[stable] = iconName
+            }
+            // Try scene ID
+            else if let sceneName = sceneIdToName[itemId] {
+                translated[Self.sceneIconPrefix + sceneName] = iconName
+            }
+            // Try group ID (groups use their own IDs which are UUIDs)
+            else if groupIds.contains(itemId) {
+                translated[Self.groupIconPrefix + itemId] = iconName
+            }
+            // Try room ID
+            else if let roomName = roomIdToName[itemId] {
+                translated["room::" + roomName] = iconName
+            }
+        }
+        return try? JSONEncoder().encode(translated)
+    }
+
+    func translateCustomIconsFromCloud(_ data: Data) -> Data? {
+        guard let dict = try? JSONDecoder().decode([String: String].self, from: data) else { return nil }
+        var translated: [String: String] = [:]
+        for (stable, iconName) in dict {
+            // Check for scene prefix
+            if stable.hasPrefix(Self.sceneIconPrefix) {
+                let sceneName = String(stable.dropFirst(Self.sceneIconPrefix.count))
+                if let sceneId = sceneNameToId[sceneName] {
+                    translated[sceneId] = iconName
+                }
+            }
+            // Check for group prefix
+            else if stable.hasPrefix(Self.groupIconPrefix) {
+                let groupId = String(stable.dropFirst(Self.groupIconPrefix.count))
+                translated[groupId] = iconName
+            }
+            // Check for room prefix
+            else if stable.hasPrefix("room::") {
+                let roomName = String(stable.dropFirst(6))
+                if let roomId = roomNameToId[roomName] {
+                    translated[roomId] = iconName
+                }
+            }
+            // Try as service stable name
+            else if let serviceId = stableToServiceId[stable] {
+                translated[serviceId] = iconName
+            }
+        }
+        return try? JSONEncoder().encode(translated)
+    }
 }
