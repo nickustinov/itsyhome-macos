@@ -97,6 +97,7 @@ targets:
       - path: macOSBridge
         excludes:
           - "MacOSController.swift"
+          - "MacOSController+*.swift"
           - "MenuBuilder.swift"
           - "DebugMockAccessories.swift"
           - "HotkeyManager.swift"
@@ -105,6 +106,14 @@ targets:
           - "Controls/ShortcutButton.swift"
           - "PinnedAccessory/**"
       - path: macOSBridge/Settings/PreferencesManager.swift
+      - path: macOSBridge/Settings/PreferencesManager+Favourites.swift
+      - path: macOSBridge/Settings/PreferencesManager+Hidden.swift
+      - path: macOSBridge/Settings/PreferencesManager+Pinned.swift
+      - path: macOSBridge/Settings/PreferencesManager+Ordering.swift
+      - path: macOSBridge/Settings/PreferencesManager+Cameras.swift
+      - path: macOSBridge/Settings/PreferencesManager+Groups.swift
+      - path: macOSBridge/Settings/PreferencesManager+Shortcuts.swift
+      - path: macOSBridge/Settings/PreferencesManager+Icons.swift
       - path: Itsyhome/Shared
         buildPhase: sources
     dependencies:

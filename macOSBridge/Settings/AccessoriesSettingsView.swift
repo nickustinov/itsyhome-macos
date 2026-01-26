@@ -63,6 +63,7 @@ class AccessoriesSettingsView: NSView {
     private var globalGroupsSection: SettingsSectionContainer!
     private var scenesHeaderContainer: SimpleHeightContainer!
     private var scenesTableSection: SettingsSectionContainer!
+    private var scenesSeparator: NSView!
     private var roomsSection: SimpleHeightContainer!
     private var otherHeaderContainer: SimpleHeightContainer!
     private var otherContentContainer: SimpleHeightContainer!
@@ -175,6 +176,10 @@ class AccessoriesSettingsView: NSView {
         scenesTableSection.setContent(scenesTableView)
         addSection(scenesTableSection)
 
+        // Separator after scenes
+        scenesSeparator = createSectionSeparator()
+        addSection(scenesSeparator)
+
         // Rooms section
         roomsSection = SimpleHeightContainer()
         roomsTableView = RoomsTableView()
@@ -244,6 +249,25 @@ class AccessoriesSettingsView: NSView {
         spacer.heightAnchor.constraint(equalToConstant: height).isActive = true
     }
 
+    private func createSectionSeparator() -> NSView {
+        let container = NSView()
+        container.translatesAutoresizingMaskIntoConstraints = false
+
+        let separator = NSBox()
+        separator.boxType = .separator
+        separator.translatesAutoresizingMaskIntoConstraints = false
+        container.addSubview(separator)
+
+        NSLayoutConstraint.activate([
+            container.heightAnchor.constraint(equalToConstant: 16),
+            separator.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 8),
+            separator.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -8),
+            separator.centerYAnchor.constraint(equalTo: container.centerYAnchor)
+        ])
+
+        return container
+    }
+
     // MARK: - Section Updates
 
     private func updateAllSections() {
@@ -284,11 +308,13 @@ class AccessoriesSettingsView: NSView {
         guard let data = menuData else {
             scenesHeaderContainer.isHidden = true
             scenesTableSection.isHidden = true
+            scenesSeparator.isHidden = true
             return
         }
 
         let hasScenes = !data.scenes.isEmpty
         scenesHeaderContainer.isHidden = !hasScenes
+        scenesSeparator.isHidden = !hasScenes
 
         if hasScenes {
             let preferences = PreferencesManager.shared
