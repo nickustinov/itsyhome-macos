@@ -41,6 +41,7 @@ public struct ServiceData: Codable {
 
     // Characteristic UUIDs - each service type uses different ones
     public let powerStateId: String?           // Lights, switches, outlets
+    public let outletInUseId: String?          // Outlets - read-only, true if drawing power
     public let brightnessId: String?           // Dimmable lights
     public let hueId: String?                  // RGB lights (0-360)
     public let saturationId: String?           // RGB lights (0-100)
@@ -98,6 +99,7 @@ public struct ServiceData: Codable {
         roomIdentifier: UUID?,
         isReachable: Bool = true,
         powerStateId: UUID? = nil,
+        outletInUseId: UUID? = nil,
         brightnessId: UUID? = nil,
         hueId: UUID? = nil,
         saturationId: UUID? = nil,
@@ -150,6 +152,7 @@ public struct ServiceData: Codable {
         self.roomIdentifier = roomIdentifier?.uuidString
         self.isReachable = isReachable
         self.powerStateId = powerStateId?.uuidString
+        self.outletInUseId = outletInUseId?.uuidString
         self.brightnessId = brightnessId?.uuidString
         self.hueId = hueId?.uuidString
         self.saturationId = saturationId?.uuidString
@@ -395,6 +398,7 @@ public protocol iOS2Mac: NSObjectProtocol {
 
 @objc public class CharacteristicTypes: NSObject {
     @objc public static let powerState = "00000025-0000-1000-8000-0026BB765291"
+    @objc public static let outletInUse = "00000026-0000-1000-8000-0026BB765291"
     @objc public static let brightness = "00000008-0000-1000-8000-0026BB765291"
     @objc public static let hue = "00000013-0000-1000-8000-0026BB765291"
     @objc public static let saturation = "0000002F-0000-1000-8000-0026BB765291"

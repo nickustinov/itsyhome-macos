@@ -13,16 +13,20 @@ class SwitchMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresh
     weak var bridge: Mac2iOS?
 
     private var powerCharacteristicId: UUID?
+    private var outletInUseId: UUID?
     private var isOn: Bool = false
+    private var isInUse: Bool = false
 
     private let containerView: HighlightingMenuItemView
     private let iconView: NSImageView
     private let nameLabel: NSTextField
+    private let inUseIndicator: NSView
     private let toggleSwitch: ToggleSwitch
 
     var characteristicIdentifiers: [UUID] {
         var ids: [UUID] = []
         if let id = powerCharacteristicId { ids.append(id) }
+        if let id = outletInUseId { ids.append(id) }
         return ids
     }
 
@@ -32,6 +36,9 @@ class SwitchMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresh
 
         // Extract characteristic UUIDs from ServiceData
         self.powerCharacteristicId = serviceData.powerStateId.flatMap { UUID(uuidString: $0) }
+        self.outletInUseId = serviceData.outletInUseId.flatMap { UUID(uuidString: $0) }
+
+        let isOutlet = serviceData.serviceType == ServiceTypes.outlet
 
         // Create the custom view
         containerView = HighlightingMenuItemView(frame: NSRect(x: 0, y: 0, width: DS.ControlSize.menuItemWidth, height: DS.ControlSize.menuItemHeight))
@@ -48,6 +55,20 @@ class SwitchMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresh
         let labelX = DS.Spacing.md + DS.ControlSize.iconMedium + DS.Spacing.sm
         let labelY = (DS.ControlSize.menuItemHeight - 17) / 2
         let labelWidth = DS.ControlSize.menuItemWidth - labelX - DS.ControlSize.switchWidth - DS.Spacing.lg - DS.Spacing.md
+
+        // In Use indicator (small dot before switch) - only for outlets
+        let indicatorSize: CGFloat = 6
+        let switchX = DS.ControlSize.menuItemWidth - DS.ControlSize.switchWidth - DS.Spacing.md
+        let indicatorX = switchX - indicatorSize - DS.Spacing.sm
+        let indicatorY = (DS.ControlSize.menuItemHeight - indicatorSize) / 2
+        inUseIndicator = NSView(frame: NSRect(x: indicatorX, y: indicatorY, width: indicatorSize, height: indicatorSize))
+        inUseIndicator.wantsLayer = true
+        inUseIndicator.layer?.backgroundColor = DS.Colors.success.cgColor
+        inUseIndicator.layer?.cornerRadius = indicatorSize / 2
+        inUseIndicator.isHidden = true  // Initially hidden
+        if isOutlet {
+            containerView.addSubview(inUseIndicator)
+        }
         nameLabel = NSTextField(labelWithString: serviceData.name)
         nameLabel.frame = NSRect(x: labelX, y: labelY, width: labelWidth, height: 17)
         nameLabel.font = DS.Typography.label
@@ -55,8 +76,7 @@ class SwitchMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresh
         nameLabel.lineBreakMode = .byTruncatingTail
         containerView.addSubview(nameLabel)
 
-        // Toggle switch
-        let switchX = DS.ControlSize.menuItemWidth - DS.ControlSize.switchWidth - DS.Spacing.md
+        // Toggle switch (switchX already defined above for indicator positioning)
         let switchY = (DS.ControlSize.menuItemHeight - DS.ControlSize.switchHeight) / 2
         toggleSwitch = ToggleSwitch()
         toggleSwitch.frame = NSRect(x: switchX, y: switchY, width: DS.ControlSize.switchWidth, height: DS.ControlSize.switchHeight)
@@ -93,12 +113,22 @@ class SwitchMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresh
                 isOn = power
                 updateUI()
             }
+        } else if characteristicId == outletInUseId {
+            if let inUse = ValueConversion.toBool(value) {
+                isInUse = inUse
+                updateInUseIndicator()
+            }
         }
     }
 
     private func updateUI() {
         iconView.image = IconResolver.icon(for: serviceData, filled: isOn)
         toggleSwitch.setOn(isOn, animated: false)
+    }
+
+    private func updateInUseIndicator() {
+        // Show green dot when outlet is in use (drawing power)
+        inUseIndicator.isHidden = !isInUse
     }
 
     @objc private func togglePower(_ sender: ToggleSwitch) {

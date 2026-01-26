@@ -207,6 +207,11 @@ final class WebhookServer {
             let decoded = String(rest).removingPercentEncoding ?? String(rest)
             handleInfo(target: decoded, connection: connection, engine: engine)
             return true
+        case "debug":
+            let rest = path.dropFirst(6) // drop "debug/"
+            let decoded = String(rest).removingPercentEncoding ?? String(rest)
+            handleDebug(target: decoded, connection: connection, engine: engine)
+            return true
         default:
             return false
         }
@@ -315,11 +320,10 @@ final class WebhookServer {
         if let room = data.rooms.first(where: { $0.name.lowercased() == lowered }) {
             let roomServices = data.accessories.filter { $0.roomIdentifier == room.uniqueIdentifier }
                 .flatMap { $0.services }
-            if !roomServices.isEmpty {
-                let items = roomServices.map { buildServiceInfoJSON($0, in: data, engine: engine) }
-                sendResponse(connection: connection, status: 200, body: "[\(items.joined(separator: ","))]")
-                return
-            }
+            // Return empty array for rooms with no devices
+            let items = roomServices.map { buildServiceInfoJSON($0, in: data, engine: engine) }
+            sendResponse(connection: connection, status: 200, body: "[\(items.joined(separator: ","))]")
+            return
         }
 
         // Try exact device name match
@@ -344,6 +348,174 @@ final class WebhookServer {
         case .notFound, .ambiguous:
             sendResponse(connection: connection, status: 404, body: errorJSON("Not found: \(target)"))
         }
+    }
+
+    private func handleDebug(target: String, connection: NWConnection, engine: ActionEngine) {
+        guard let data = engine.menuData else {
+            sendResponse(connection: connection, status: 500, body: errorJSON("No data available"))
+            return
+        }
+
+        let lowered = target.lowercased()
+
+        // Find matching services
+        let matchingServices = data.accessories.flatMap { $0.services }
+            .filter { $0.name.lowercased() == lowered || $0.accessoryName.lowercased() == lowered }
+
+        if matchingServices.isEmpty {
+            sendResponse(connection: connection, status: 404, body: errorJSON("Not found: \(target)"))
+            return
+        }
+
+        let items = matchingServices.map { buildDebugJSON($0, in: data, engine: engine) }
+        if items.count == 1 {
+            sendResponse(connection: connection, status: 200, body: items[0])
+        } else {
+            sendResponse(connection: connection, status: 200, body: "[\(items.joined(separator: ","))]")
+        }
+    }
+
+    private func buildDebugJSON(_ service: ServiceData, in data: MenuData, engine: ActionEngine) -> String {
+        let roomLookup = Dictionary(uniqueKeysWithValues: data.rooms.map { ($0.uniqueIdentifier, $0.name) })
+        let accessory = data.accessories.first { $0.services.contains(where: { $0.uniqueIdentifier == service.uniqueIdentifier }) }
+        let roomName = accessory?.roomIdentifier.flatMap { roomLookup[String(describing: $0)] }
+
+        var fields: [String] = [
+            "\"name\":\"\(escapeJSON(service.name))\"",
+            "\"accessoryName\":\"\(escapeJSON(service.accessoryName))\"",
+            "\"serviceType\":\"\(escapeJSON(service.serviceType))\"",
+            "\"serviceTypeLabel\":\"\(escapeJSON(serviceTypeLabel(service.serviceType)))\"",
+            "\"serviceId\":\"\(escapeJSON(service.uniqueIdentifier))\"",
+            "\"reachable\":\(accessory?.isReachable ?? false)"
+        ]
+
+        if let room = roomName {
+            fields.append("\"room\":\"\(escapeJSON(room))\"")
+        }
+        if let roomId = service.roomIdentifier {
+            fields.append("\"roomId\":\"\(escapeJSON(roomId))\"")
+        }
+
+        // Build characteristics object with all available characteristic IDs and their values
+        var chars: [String] = []
+
+        func addChar(_ name: String, _ idString: String?) {
+            guard let idStr = idString, let uuid = UUID(uuidString: idStr) else { return }
+            let value = engine.bridge?.getCharacteristicValue(identifier: uuid)
+            let valueStr: String
+            if let v = value {
+                if let b = v as? Bool {
+                    valueStr = b ? "true" : "false"
+                } else if let i = v as? Int {
+                    valueStr = "\(i)"
+                } else if let d = v as? Double {
+                    valueStr = "\(d)"
+                } else if let n = v as? NSNumber {
+                    valueStr = "\(n)"
+                } else {
+                    valueStr = "\"\(escapeJSON(String(describing: v)))\""
+                }
+            } else {
+                valueStr = "null"
+            }
+            chars.append("\"\(name)\":{\"id\":\"\(idStr)\",\"value\":\(valueStr)}")
+        }
+
+        // Power/Active
+        addChar("powerState", service.powerStateId)
+        addChar("active", service.activeId)
+
+        // Light characteristics
+        addChar("brightness", service.brightnessId)
+        addChar("hue", service.hueId)
+        addChar("saturation", service.saturationId)
+        addChar("colorTemperature", service.colorTemperatureId)
+
+        // Temperature
+        addChar("currentTemperature", service.currentTemperatureId)
+        addChar("targetTemperature", service.targetTemperatureId)
+
+        // Thermostat modes
+        addChar("heatingCoolingState", service.heatingCoolingStateId)
+        addChar("targetHeatingCoolingState", service.targetHeatingCoolingStateId)
+
+        // HeaterCooler (AC)
+        addChar("currentHeaterCoolerState", service.currentHeaterCoolerStateId)
+        addChar("targetHeaterCoolerState", service.targetHeaterCoolerStateId)
+        addChar("coolingThresholdTemperature", service.coolingThresholdTemperatureId)
+        addChar("heatingThresholdTemperature", service.heatingThresholdTemperatureId)
+
+        // Lock
+        addChar("lockCurrentState", service.lockCurrentStateId)
+        addChar("lockTargetState", service.lockTargetStateId)
+
+        // Position (blinds)
+        addChar("currentPosition", service.currentPositionId)
+        addChar("targetPosition", service.targetPositionId)
+
+        // Humidity
+        addChar("humidity", service.humidityId)
+
+        // Motion
+        addChar("motionDetected", service.motionDetectedId)
+
+        // Fan
+        addChar("rotationSpeed", service.rotationSpeedId)
+
+        // Garage door
+        addChar("currentDoorState", service.currentDoorStateId)
+        addChar("targetDoorState", service.targetDoorStateId)
+        addChar("obstructionDetected", service.obstructionDetectedId)
+
+        // Contact sensor
+        addChar("contactSensorState", service.contactSensorStateId)
+
+        // Humidifier/Dehumidifier
+        addChar("currentHumidifierDehumidifierState", service.currentHumidifierDehumidifierStateId)
+        addChar("targetHumidifierDehumidifierState", service.targetHumidifierDehumidifierStateId)
+        addChar("humidifierThreshold", service.humidifierThresholdId)
+        addChar("dehumidifierThreshold", service.dehumidifierThresholdId)
+
+        // Air Purifier
+        addChar("currentAirPurifierState", service.currentAirPurifierStateId)
+        addChar("targetAirPurifierState", service.targetAirPurifierStateId)
+
+        // Valve
+        addChar("inUse", service.inUseId)
+        addChar("setDuration", service.setDurationId)
+        addChar("remainingDuration", service.remainingDurationId)
+
+        // Security System
+        addChar("securitySystemCurrentState", service.securitySystemCurrentStateId)
+        addChar("securitySystemTargetState", service.securitySystemTargetStateId)
+
+        if !chars.isEmpty {
+            fields.append("\"characteristics\":{\(chars.joined(separator: ","))}")
+        }
+
+        // Add min/max values if present
+        var limits: [String] = []
+        if let min = service.colorTemperatureMin {
+            limits.append("\"colorTemperatureMin\":\(min)")
+        }
+        if let max = service.colorTemperatureMax {
+            limits.append("\"colorTemperatureMax\":\(max)")
+        }
+        if let min = service.rotationSpeedMin {
+            limits.append("\"rotationSpeedMin\":\(min)")
+        }
+        if let max = service.rotationSpeedMax {
+            limits.append("\"rotationSpeedMax\":\(max)")
+        }
+        if let valveType = service.valveTypeValue {
+            limits.append("\"valveType\":\(valveType)")
+        }
+
+        if !limits.isEmpty {
+            fields.append("\"limits\":{\(limits.joined(separator: ","))}")
+        }
+
+        return "{\(fields.joined(separator: ","))}"
     }
 
     private func sendServiceInfoResponse(_ services: [ServiceData], data: MenuData, engine: ActionEngine, connection: NWConnection) {

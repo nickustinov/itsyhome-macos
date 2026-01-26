@@ -241,6 +241,13 @@ class MenuBuilder {
                     humiditySensors.append(service)
                 } else if !excludedTypes.contains(service.serviceType) {
                     servicesByType[service.serviceType, default: []].append(service)
+                    // Also collect temperature/humidity from thermostats, ACs, etc.
+                    if service.currentTemperatureId != nil {
+                        temperatureSensors.append(service)
+                    }
+                    if service.humidityId != nil {
+                        humiditySensors.append(service)
+                    }
                 }
             }
         }

@@ -14,6 +14,8 @@ private let logger = Logger(subsystem: "com.nickustinov.itsyhome", category: "Ho
 
 class HomeKitManager: NSObject, Mac2iOS, HMHomeManagerDelegate {
 
+    private static let selectedHomeKey = "selectedHomeIdentifier"
+
     private var homeManager: HMHomeManager?
     private var currentHome: HMHome?
 
@@ -38,8 +40,11 @@ class HomeKitManager: NSObject, Mac2iOS, HMHomeManagerDelegate {
         set {
             if let id = newValue, let manager = homeManager {
                 currentHome = manager.homes.first { $0.uniqueIdentifier == id }
+                // Persist the selection
+                UserDefaults.standard.set(id.uuidString, forKey: Self.selectedHomeKey)
             } else {
                 currentHome = homeManager?.primaryHome ?? homeManager?.homes.first
+                UserDefaults.standard.removeObject(forKey: Self.selectedHomeKey)
             }
             fetchDataAndReloadMenu()
         }
@@ -418,6 +423,7 @@ class HomeKitManager: NSObject, Mac2iOS, HMHomeManagerDelegate {
             roomIdentifier: svc.roomIdentifier,
             isReachable: isReachable,
             powerStateId: charId(HMCharacteristicTypePowerState),
+            outletInUseId: charId(CharacteristicTypes.outletInUse),
             brightnessId: charId(HMCharacteristicTypeBrightness),
             hueId: charId(CharacteristicTypes.hue),
             saturationId: charId(CharacteristicTypes.saturation),
@@ -553,13 +559,21 @@ class HomeKitManager: NSObject, Mac2iOS, HMHomeManagerDelegate {
     
     func homeManagerDidUpdateHomes(_ manager: HMHomeManager) {
         logger.info("homeManagerDidUpdateHomes - count: \(manager.homes.count)")
-        
+
         // Select home if none selected
         if currentHome == nil {
-            currentHome = manager.primaryHome ?? manager.homes.first
-            logger.info("Selected home: \(self.currentHome?.name ?? "none", privacy: .public)")
+            // Try to restore previously selected home
+            if let savedId = UserDefaults.standard.string(forKey: Self.selectedHomeKey),
+               let uuid = UUID(uuidString: savedId),
+               let savedHome = manager.homes.first(where: { $0.uniqueIdentifier == uuid }) {
+                currentHome = savedHome
+                logger.info("Restored home: \(self.currentHome?.name ?? "none", privacy: .public)")
+            } else {
+                currentHome = manager.primaryHome ?? manager.homes.first
+                logger.info("Selected home: \(self.currentHome?.name ?? "none", privacy: .public)")
+            }
         }
-        
+
         fetchDataAndReloadMenu()
     }
 }

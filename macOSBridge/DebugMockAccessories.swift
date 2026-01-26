@@ -9,7 +9,7 @@
 import AppKit
 
 /// Set to true to show mock accessories in the menu for UI testing.
-let DebugShowMockAccessories = false
+let DebugShowMockAccessories = true
 
 enum DebugMockups {
 
@@ -20,6 +20,14 @@ enum DebugMockups {
         for service in mocks {
             if let item = builder.createMenuItemForService(service) {
                 menu.addItem(item)
+
+                // Send initial mock values for characteristics that need them
+                if let switchItem = item as? SwitchMenuItem,
+                   let outletInUseIdStr = service.outletInUseId,
+                   let outletInUseId = UUID(uuidString: outletInUseIdStr) {
+                    // Mock outlet is "in use" (drawing power)
+                    switchItem.updateValue(for: outletInUseId, value: true)
+                }
             }
         }
         menu.addItem(NSMenuItem.separator())
@@ -60,11 +68,12 @@ enum DebugMockups {
             ),
             ServiceData(
                 uniqueIdentifier: UUID(),
-                name: "Mock Outlet",
+                name: "Mock Outlet (In Use)",
                 serviceType: ServiceTypes.outlet,
                 accessoryName: "Mock",
                 roomIdentifier: nil,
-                powerStateId: UUID()
+                powerStateId: UUID(),
+                outletInUseId: UUID()
             ),
             ServiceData(
                 uniqueIdentifier: UUID(),
