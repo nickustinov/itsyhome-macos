@@ -25,6 +25,7 @@ class LockMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshab
     var characteristicIdentifiers: [UUID] {
         var ids: [UUID] = []
         if let id = lockStateCharacteristicId { ids.append(id) }
+        if let id = targetStateCharacteristicId { ids.append(id) }
         return ids
     }
 

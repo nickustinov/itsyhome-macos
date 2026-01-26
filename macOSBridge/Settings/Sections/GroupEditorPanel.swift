@@ -19,6 +19,7 @@ class GroupEditorPanel: NSViewController {
     private var selectedRoomId: String?
 
     var onSave: ((DeviceGroup) -> Void)?
+    var onDelete: ((DeviceGroup) -> Void)?
 
     init(group: DeviceGroup?, menuData: MenuData) {
         self.existingGroup = group
@@ -133,6 +134,16 @@ class GroupEditorPanel: NSViewController {
         scrollView.contentView = clipView
 
         // Buttons
+        var deleteButton: NSButton?
+        if existingGroup != nil {
+            let btn = NSButton(title: "Delete", target: self, action: #selector(deleteTapped))
+            btn.bezelStyle = .rounded
+            btn.contentTintColor = .systemRed
+            btn.translatesAutoresizingMaskIntoConstraints = false
+            container.addSubview(btn)
+            deleteButton = btn
+        }
+
         let cancelButton = NSButton(title: "Cancel", target: self, action: #selector(cancelTapped))
         cancelButton.bezelStyle = .rounded
         cancelButton.keyEquivalent = "\u{1b}" // Escape
@@ -146,7 +157,7 @@ class GroupEditorPanel: NSViewController {
         container.addSubview(saveButton)
 
         // Layout
-        NSLayoutConstraint.activate([
+        var constraints: [NSLayoutConstraint] = [
             titleLabel.topAnchor.constraint(equalTo: container.topAnchor, constant: 20),
             titleLabel.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 20),
 
@@ -181,7 +192,16 @@ class GroupEditorPanel: NSViewController {
 
             saveButton.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -20),
             saveButton.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -20)
-        ])
+        ]
+
+        if let deleteButton = deleteButton {
+            constraints.append(contentsOf: [
+                deleteButton.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -20),
+                deleteButton.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 20)
+            ])
+        }
+
+        NSLayoutConstraint.activate(constraints)
     }
 
     private func groupServicesByRoom() -> [String: [ServiceData]] {
@@ -228,6 +248,23 @@ class GroupEditorPanel: NSViewController {
 
     @objc private func cancelTapped() {
         view.window?.sheetParent?.endSheet(view.window!, returnCode: .cancel)
+    }
+
+    @objc private func deleteTapped() {
+        guard let group = existingGroup else { return }
+
+        let alert = NSAlert()
+        alert.messageText = "Delete group?"
+        alert.informativeText = "Are you sure you want to delete \"\(group.name)\"? This cannot be undone."
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: "Delete")
+        alert.addButton(withTitle: "Cancel")
+
+        let response = alert.runModal()
+        if response == .alertFirstButtonReturn {
+            onDelete?(group)
+            view.window?.sheetParent?.endSheet(view.window!, returnCode: .OK)
+        }
     }
 
     @objc private func saveTapped() {

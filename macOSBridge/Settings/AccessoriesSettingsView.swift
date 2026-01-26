@@ -702,6 +702,10 @@ class AccessoriesSettingsView: NSView {
             }
             self?.rebuild()
         }
+        editor.onDelete = { [weak self] deletedGroup in
+            PreferencesManager.shared.deleteDeviceGroup(id: deletedGroup.id)
+            self?.rebuild()
+        }
 
         guard let window = self.window else { return }
         window.beginSheet(editor.window!) { _ in }

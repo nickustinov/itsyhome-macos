@@ -321,12 +321,12 @@ class MenuBuilder {
         containerView.addSubview(iconView)
 
         // Chevron (right-aligned)
-        let chevronSize: CGFloat = 10
+        let chevronSize: CGFloat = 12
         let chevronX = width - DS.Spacing.md - chevronSize
         let chevronY = (height - chevronSize) / 2
         let chevronView = NSImageView(frame: NSRect(x: chevronX, y: chevronY, width: chevronSize, height: chevronSize))
         chevronView.image = PhosphorIcon.regular("caret-right")
-        chevronView.contentTintColor = DS.Colors.mutedForeground
+        chevronView.contentTintColor = DS.Colors.foreground
         chevronView.imageScaling = .scaleProportionallyUpOrDown
         containerView.addSubview(chevronView)
 
