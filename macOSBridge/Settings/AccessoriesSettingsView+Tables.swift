@@ -12,6 +12,12 @@ import AppKit
 extension AccessoriesSettingsView: IconPickerPopoverDelegate {
 
     func showIconPicker(for itemId: String, serviceType: String?, itemType: IconPickerPopover.ItemType, relativeTo view: NSView, iconView: NSView? = nil) {
+        // Icon customization is a PRO feature
+        guard ProStatusCache.shared.isPro else {
+            showProUpgradeAlert()
+            return
+        }
+
         let picker = IconPickerPopover(itemId: itemId, serviceType: serviceType, itemType: itemType)
         picker.delegate = self
 
@@ -22,6 +28,20 @@ extension AccessoriesSettingsView: IconPickerPopoverDelegate {
         // Show relative to icon if provided, otherwise relative to the row
         let targetView = iconView ?? view
         popover.show(relativeTo: targetView.bounds, of: targetView, preferredEdge: .maxX)
+    }
+
+    private func showProUpgradeAlert() {
+        let alert = NSAlert()
+        alert.messageText = "Custom icons require Itsyhome Pro"
+        alert.informativeText = "Upgrade to Pro to customize icons for your accessories, scenes, groups, and rooms."
+        alert.alertStyle = .informational
+        alert.addButton(withTitle: "Get Pro")
+        alert.addButton(withTitle: "Not now")
+
+        if alert.runModal() == .alertFirstButtonReturn {
+            // Navigate to General section to show Pro purchase options
+            NotificationCenter.default.post(name: SettingsView.navigateToSectionNotification, object: "General")
+        }
     }
 
     func iconPicker(_ picker: IconPickerPopover, didSelectIcon iconName: String?) {
