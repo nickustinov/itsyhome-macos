@@ -71,11 +71,18 @@ extension PinnedStatusItem {
                 menuItems.append(item)
             }
 
-        case .group(let group, _):
-            // Add group menu item with all its services
-            let item = GroupMenuItem(group: group, menuData: menuData, bridge: builder.bridge)
-            menu.addItem(item)
-            menuItems.append(item)
+        case .group(let group, let services):
+            // Add group menu item with toggle at the top
+            let groupItem = GroupMenuItem(group: group, menuData: menuData, bridge: builder.bridge)
+            menu.addItem(groupItem)
+            menuItems.append(groupItem)
+
+            // Add separator
+            menu.addItem(NSMenuItem.separator())
+
+            // Add individual accessories from the group
+            builder.addServicesGroupedByType(to: menu, accessories: servicesAsAccessories(services))
+            collectMenuItems(from: menu)
         }
 
         // Add separator and settings

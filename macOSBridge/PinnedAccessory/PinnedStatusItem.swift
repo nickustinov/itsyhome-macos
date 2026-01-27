@@ -89,8 +89,8 @@ class PinnedStatusItem: NSObject, NSMenuDelegate {
         case .scenesSection:
             icon = PhosphorIcon.regular("sparkle")
 
-        case .group:
-            icon = IconResolver.icon(forGroupId: itemId)
+        case .group(let group, _):
+            icon = IconResolver.icon(for: group)
         }
 
         // Resize icon for menu bar (18x18 is standard)
