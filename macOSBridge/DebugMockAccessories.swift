@@ -9,7 +9,7 @@
 import AppKit
 
 /// Set to true to show mock accessories in the menu for UI testing.
-let DebugShowMockAccessories = false
+let DebugShowMockAccessories = true
 
 enum DebugMockups {
 
@@ -57,10 +57,6 @@ enum DebugMockups {
                     if let humidityIdStr = service.humidityId,
                        let humidityId = UUID(uuidString: humidityIdStr) {
                         humidifierItem.updateValue(for: humidityId, value: 45.0)
-                    }
-                    if let waterLevelIdStr = service.waterLevelId,
-                       let waterLevelId = UUID(uuidString: waterLevelIdStr) {
-                        humidifierItem.updateValue(for: waterLevelId, value: 65.0)
                     }
                 }
             }
@@ -193,7 +189,7 @@ enum DebugMockups {
             ),
             ServiceData(
                 uniqueIdentifier: UUID(),
-                name: "Mock Humidifier",
+                name: "Mock Combo H/D",
                 serviceType: ServiceTypes.humidifierDehumidifier,
                 accessoryName: "Mock",
                 roomIdentifier: nil,
@@ -203,7 +199,32 @@ enum DebugMockups {
                 currentHumidifierDehumidifierStateId: UUID(),
                 targetHumidifierDehumidifierStateId: UUID(),
                 humidifierThresholdId: UUID(),
-                waterLevelId: UUID()
+                dehumidifierThresholdId: UUID()
+            ),
+            ServiceData(
+                uniqueIdentifier: UUID(),
+                name: "Mock Humidifier",
+                serviceType: ServiceTypes.humidifierDehumidifier,
+                accessoryName: "Mock",
+                roomIdentifier: nil,
+                humidityId: UUID(),
+                activeId: UUID(),
+                swingModeId: UUID(),
+                currentHumidifierDehumidifierStateId: UUID(),
+                targetHumidifierDehumidifierStateId: UUID(),
+                humidifierThresholdId: UUID()
+            ),
+            ServiceData(
+                uniqueIdentifier: UUID(),
+                name: "Mock Dehumidifier",
+                serviceType: ServiceTypes.humidifierDehumidifier,
+                accessoryName: "Mock",
+                roomIdentifier: nil,
+                humidityId: UUID(),
+                activeId: UUID(),
+                currentHumidifierDehumidifierStateId: UUID(),
+                targetHumidifierDehumidifierStateId: UUID(),
+                dehumidifierThresholdId: UUID()
             ),
             ServiceData(
                 uniqueIdentifier: UUID(),

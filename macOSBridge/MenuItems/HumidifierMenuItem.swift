@@ -19,16 +19,14 @@ class HumidifierMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
     private var humidifierThresholdId: UUID?
     private var dehumidifierThresholdId: UUID?
     private var swingModeId: UUID?
-    private var waterLevelId: UUID?
 
     private var isActive: Bool = false
     private var currentState: Int = 0  // 0=inactive, 1=idle, 2=humidifying, 3=dehumidifying
-    private var targetState: Int = 0   // 0=auto, 1=humidifier, 2=dehumidifier
+    private var targetState: Int = 1   // 1=humidifier, 2=dehumidifier (no auto mode)
     private var currentHumidity: Double = 0
     private var humidifierThreshold: Double = 50
     private var dehumidifierThreshold: Double = 50
     private var swingMode: Int = 0     // 0=DISABLED, 1=ENABLED
-    private var waterLevel: Double = -1  // -1 = not available
 
     private let containerView: HighlightingMenuItemView
     private let iconView: NSImageView
@@ -40,16 +38,25 @@ class HumidifierMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
     private var swingButtonGroup: ModeButtonGroup?
     private var swingButton: ModeButton?
 
-    // Controls row (shown when active)
+    // Controls row (shown when active): mode buttons on left, threshold on right
     private let controlsRow: NSView
-    private let modeButtonAuto: ModeButton
     private let modeButtonHumidify: ModeButton
     private let modeButtonDehumidify: ModeButton
-    private var waterLevelIconView: NSImageView?
-    private var waterLevelLabel: NSTextField?
+
+    // Threshold controls (on same row as mode buttons, right side)
+    private var minusButton: NSButton?
+    private var thresholdLabel: NSTextField?
+    private var plusButton: NSButton?
+
+    private let hasThresholds: Bool
+
+    // Device capabilities based on available thresholds
+    private let canHumidify: Bool
+    private let canDehumidify: Bool
+    private var isComboDevice: Bool { canHumidify && canDehumidify }
 
     private let collapsedHeight: CGFloat = DS.ControlSize.menuItemHeight
-    private let expandedHeight: CGFloat = DS.ControlSize.menuItemHeight + 36
+    private var expandedHeight: CGFloat { DS.ControlSize.menuItemHeight + 36 }  // Just one extra row
 
     var characteristicIdentifiers: [UUID] {
         var ids: [UUID] = []
@@ -60,7 +67,6 @@ class HumidifierMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
         if let id = humidifierThresholdId { ids.append(id) }
         if let id = dehumidifierThresholdId { ids.append(id) }
         if let id = swingModeId { ids.append(id) }
-        if let id = waterLevelId { ids.append(id) }
         return ids
     }
 
@@ -76,7 +82,14 @@ class HumidifierMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
         self.humidifierThresholdId = serviceData.humidifierThresholdId.flatMap { UUID(uuidString: $0) }
         self.dehumidifierThresholdId = serviceData.dehumidifierThresholdId.flatMap { UUID(uuidString: $0) }
         self.swingModeId = serviceData.swingModeId.flatMap { UUID(uuidString: $0) }
-        self.waterLevelId = serviceData.waterLevelId.flatMap { UUID(uuidString: $0) }
+        self.hasThresholds = humidifierThresholdId != nil || dehumidifierThresholdId != nil
+        self.canHumidify = humidifierThresholdId != nil
+        self.canDehumidify = dehumidifierThresholdId != nil
+
+        // Local variables for use during init (before super.init)
+        let localCanHumidify = humidifierThresholdId != nil
+        let localCanDehumidify = dehumidifierThresholdId != nil
+        let localIsComboDevice = localCanHumidify && localCanDehumidify
 
         // Create wrapper view (full width for menu sizing) - start collapsed
         containerView = HighlightingMenuItemView(frame: NSRect(x: 0, y: 0, width: DS.ControlSize.menuItemWidth, height: collapsedHeight))
@@ -139,15 +152,35 @@ class HumidifierMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
                                    height: DS.ControlSize.switchHeight)
         containerView.addSubview(powerToggle)
 
-        // Controls row (initially hidden, with bottom padding)
+        // Controls row (initially hidden): mode buttons on left (combo only), threshold on right
         controlsRow = NSView(frame: NSRect(x: 0, y: DS.Spacing.sm, width: DS.ControlSize.menuItemWidth, height: 26))
         controlsRow.isHidden = true
 
-        // Mode buttons container (pill-shaped dark background)
+        // Threshold stepper on right side: [−] 50% [+]
+        let thresholdX = DS.ControlSize.menuItemWidth - DS.Spacing.md - 90
+        let minusBtn = StepperButton.create(title: "−", size: .regular)
+        minusBtn.frame.origin = NSPoint(x: thresholdX, y: 4)
+        controlsRow.addSubview(minusBtn)
+        minusButton = minusBtn
+
+        let threshLabel = NSTextField(labelWithString: "50%")
+        threshLabel.frame = NSRect(x: thresholdX + 22, y: 5, width: 44, height: 17)
+        threshLabel.font = DS.Typography.labelSmall
+        threshLabel.textColor = .secondaryLabelColor
+        threshLabel.alignment = .center
+        controlsRow.addSubview(threshLabel)
+        thresholdLabel = threshLabel
+
+        let plusBtn = StepperButton.create(title: "+", size: .regular)
+        plusBtn.frame.origin = NSPoint(x: thresholdX + 68, y: 4)
+        controlsRow.addSubview(plusBtn)
+        plusButton = plusBtn
+
+        // Mode buttons - always show both, but disable unsupported mode
         let buttonWidth: CGFloat = 52
         let buttonHeight: CGFloat = 18
         let containerPadding: CGFloat = 2
-        let modeContainerWidth = buttonWidth * 3 + containerPadding * 2
+        let modeContainerWidth = buttonWidth * 2 + containerPadding * 2
         let modeContainerHeight = buttonHeight + containerPadding * 2
 
         let modeContainer = NSView(frame: NSRect(x: labelX, y: 3, width: modeContainerWidth, height: modeContainerHeight))
@@ -155,50 +188,28 @@ class HumidifierMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
         modeContainer.layer?.backgroundColor = NSColor.secondaryLabelColor.withAlphaComponent(0.08).cgColor
         modeContainer.layer?.cornerRadius = modeContainerHeight / 2
 
-        modeButtonAuto = ModeButton(title: "Auto", color: DS.Colors.success)  // Green
-        modeButtonAuto.frame = NSRect(x: containerPadding, y: containerPadding, width: buttonWidth, height: buttonHeight)
-        modeButtonAuto.tag = 0
-        modeContainer.addSubview(modeButtonAuto)
-
         modeButtonHumidify = ModeButton(title: "Humid", color: DS.Colors.info)  // Blue - adding moisture
-        modeButtonHumidify.frame = NSRect(x: containerPadding + buttonWidth, y: containerPadding, width: buttonWidth, height: buttonHeight)
+        modeButtonHumidify.frame = NSRect(x: containerPadding, y: containerPadding, width: buttonWidth, height: buttonHeight)
         modeButtonHumidify.tag = 1
+        modeButtonHumidify.isDisabled = !localCanHumidify
         modeContainer.addSubview(modeButtonHumidify)
 
         modeButtonDehumidify = ModeButton(title: "Dry", color: DS.Colors.warning)  // Orange - removing moisture
-        modeButtonDehumidify.frame = NSRect(x: containerPadding + buttonWidth * 2, y: containerPadding, width: buttonWidth, height: buttonHeight)
+        modeButtonDehumidify.frame = NSRect(x: containerPadding + buttonWidth, y: containerPadding, width: buttonWidth, height: buttonHeight)
         modeButtonDehumidify.tag = 2
+        modeButtonDehumidify.isDisabled = !localCanDehumidify
         modeContainer.addSubview(modeButtonDehumidify)
 
         controlsRow.addSubview(modeContainer)
 
-        // Water level icon and label (right side of Row 2, only if present)
-        if waterLevelId != nil {
-            let iconSize: CGFloat = 14
-            let labelWidth: CGFloat = 32
-            let spacing: CGFloat = 2
-            let totalWidth = iconSize + spacing + labelWidth
-            let startX = DS.ControlSize.menuItemWidth - DS.Spacing.md - totalWidth
-
-            // Center vertically with mode buttons (mode container: y=3, h=22, center=14)
-            let waterIcon = NSImageView(frame: NSRect(x: startX, y: 7, width: iconSize, height: iconSize))
-            waterIcon.image = PhosphorIcon.regular("drop-half-bottom")
-            waterIcon.contentTintColor = .secondaryLabelColor
-            waterIcon.imageScaling = .scaleProportionallyUpOrDown
-            controlsRow.addSubview(waterIcon)
-            waterLevelIconView = waterIcon
-
-            let waterLabel = NSTextField(labelWithString: "--%")
-            waterLabel.frame = NSRect(x: startX + iconSize + spacing, y: 4, width: labelWidth, height: 17)
-            waterLabel.font = DS.Typography.labelSmall
-            waterLabel.textColor = .secondaryLabelColor
-            waterLabel.alignment = .right
-            controlsRow.addSubview(waterLabel)
-            waterLevelLabel = waterLabel
+        // Set initial target state based on device capabilities
+        if localCanHumidify {
+            modeButtonHumidify.isSelected = true
+            targetState = 1
+        } else {
+            modeButtonDehumidify.isSelected = true
+            targetState = 2
         }
-
-        // Set initial selection
-        modeButtonAuto.isSelected = true
 
         containerView.addSubview(controlsRow)
 
@@ -222,8 +233,7 @@ class HumidifierMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
         powerToggle.target = self
         powerToggle.action = #selector(togglePower(_:))
 
-        modeButtonAuto.target = self
-        modeButtonAuto.action = #selector(modeChanged(_:))
+        // Mode button actions
         modeButtonHumidify.target = self
         modeButtonHumidify.action = #selector(modeChanged(_:))
         modeButtonDehumidify.target = self
@@ -231,6 +241,12 @@ class HumidifierMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
 
         swingButton?.target = self
         swingButton?.action = #selector(swingTapped(_:))
+
+        // Threshold button actions
+        minusButton?.target = self
+        minusButton?.action = #selector(decreaseThreshold(_:))
+        plusButton?.target = self
+        plusButton?.action = #selector(increaseThreshold(_:))
     }
 
     required init(coder: NSCoder) {
@@ -257,24 +273,22 @@ class HumidifierMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
             if let state = ValueConversion.toInt(value) {
                 targetState = state
                 updateModeButtons()
+                updateThresholdLabel()
             }
         } else if characteristicId == humidifierThresholdId {
             if let threshold = ValueConversion.toDouble(value) {
                 humidifierThreshold = threshold
+                updateThresholdLabel()
             }
         } else if characteristicId == dehumidifierThresholdId {
             if let threshold = ValueConversion.toDouble(value) {
                 dehumidifierThreshold = threshold
+                updateThresholdLabel()
             }
         } else if characteristicId == swingModeId {
             if let mode = ValueConversion.toInt(value) {
                 swingMode = mode
                 updateSwingButton()
-            }
-        } else if characteristicId == waterLevelId {
-            if let level = ValueConversion.toDouble(value) {
-                waterLevel = level
-                waterLevelLabel?.stringValue = String(format: "%.0f%%", level)
             }
         }
     }
@@ -301,6 +315,8 @@ class HumidifierMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
         }
 
         updateStateIcon()
+        updateModeButtons()
+        updateThresholdLabel()
     }
 
     private func updateStateIcon() {
@@ -315,7 +331,6 @@ class HumidifierMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
     }
 
     private func updateModeButtons() {
-        modeButtonAuto.isSelected = (targetState == 0)
         modeButtonHumidify.isSelected = (targetState == 1)
         modeButtonDehumidify.isSelected = (targetState == 2)
     }
@@ -332,6 +347,7 @@ class HumidifierMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
     @objc private func modeChanged(_ sender: ModeButton) {
         targetState = sender.tag
         updateModeButtons()
+        updateThresholdLabel()
         if let id = targetStateId {
             bridge?.writeCharacteristic(identifier: id, value: targetState)
             notifyLocalChange(characteristicId: id, value: targetState)
@@ -349,5 +365,55 @@ class HumidifierMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
 
     private func updateSwingButton() {
         swingButton?.isSelected = swingMode == 1
+    }
+
+    // MARK: - Threshold controls
+
+    private func updateThresholdLabel() {
+        // Show the appropriate threshold based on current mode
+        // targetState: 1=humidifier, 2=dehumidifier
+        let threshold = targetState == 2 ? dehumidifierThreshold : humidifierThreshold
+        thresholdLabel?.stringValue = String(format: "%.0f%%", threshold)
+    }
+
+    @objc private func decreaseThreshold(_ sender: NSButton) {
+        // targetState: 1=humidifier, 2=dehumidifier
+        if targetState == 2 {
+            let clamped = min(max(dehumidifierThreshold - 5, 0), 100)
+            dehumidifierThreshold = clamped
+            updateThresholdLabel()
+            if let id = dehumidifierThresholdId {
+                bridge?.writeCharacteristic(identifier: id, value: Float(clamped))
+                notifyLocalChange(characteristicId: id, value: Float(clamped))
+            }
+        } else {
+            let clamped = min(max(humidifierThreshold - 5, 0), 100)
+            humidifierThreshold = clamped
+            updateThresholdLabel()
+            if let id = humidifierThresholdId {
+                bridge?.writeCharacteristic(identifier: id, value: Float(clamped))
+                notifyLocalChange(characteristicId: id, value: Float(clamped))
+            }
+        }
+    }
+
+    @objc private func increaseThreshold(_ sender: NSButton) {
+        if targetState == 2 {
+            let clamped = min(max(dehumidifierThreshold + 5, 0), 100)
+            dehumidifierThreshold = clamped
+            updateThresholdLabel()
+            if let id = dehumidifierThresholdId {
+                bridge?.writeCharacteristic(identifier: id, value: Float(clamped))
+                notifyLocalChange(characteristicId: id, value: Float(clamped))
+            }
+        } else {
+            let clamped = min(max(humidifierThreshold + 5, 0), 100)
+            humidifierThreshold = clamped
+            updateThresholdLabel()
+            if let id = humidifierThresholdId {
+                bridge?.writeCharacteristic(identifier: id, value: Float(clamped))
+                notifyLocalChange(characteristicId: id, value: Float(clamped))
+            }
+        }
     }
 }

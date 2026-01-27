@@ -1,33 +1,39 @@
 # HomeKit accessories reference
 
-This document describes all HomeKit accessory types and their characteristics, organized by implementation status.
+This document describes HomeKit accessory types and their characteristics based on the [Apple HomeKit Accessory Protocol (HAP) specification](https://github.com/apple/HomeKitADK).
+
+**Sources:**
+- [Apple HomeKitADK - HAPServiceTypes.h](https://github.com/apple/HomeKitADK/blob/master/HAP/HAPServiceTypes.h) - Service definitions with required/optional characteristics
+- [esp-homekit - characteristics.h](https://github.com/maximkulkin/esp-homekit/blob/master/include/homekit/characteristics.h) - Characteristic properties (format, permissions, ranges)
+
+---
 
 ## Supported accessories
 
-| Hex | Service | Status |
-|-----|---------|--------|
-| 0x43 | [Lightbulb](#lightbulb-0x43) | Supported |
-| 0x49 | [Switch](#switch-0x49) | Supported |
-| 0x47 | [Outlet](#outlet-0x47) | Supported |
-| 0x4A | [Thermostat](#thermostat-0x4a) | Supported |
-| 0xBC | [Heater Cooler](#heater-cooler-0xbc) | Supported |
-| 0x45 | [Lock Mechanism](#lock-mechanism-0x45) | Supported |
-| 0x8C | [Window Covering](#window-covering-0x8c) | Supported |
-| 0x81 | [Door](#door-0x81) | Supported |
-| 0x8B | [Window](#window-0x8b) | Supported |
-| 0x8A | [Temperature Sensor](#temperature-sensor-0x8a) | Supported |
-| 0x82 | [Humidity Sensor](#humidity-sensor-0x82) | Supported |
-| 0x85 | [Motion Sensor](#motion-sensor-0x85) | Supported |
-| 0x80 | [Contact Sensor](#contact-sensor-0x80) | Supported |
-| 0x40 | [Fan (v1)](#fan-v1-0x40) | Supported |
-| 0xB7 | [Fan (v2)](#fan-v2-0xb7) | Supported |
-| 0x41 | [Garage Door Opener](#garage-door-opener-0x41) | Supported |
-| 0xBD | [Humidifier Dehumidifier](#humidifier-dehumidifier-0xbd) | Supported |
-| 0xBB | [Air Purifier](#air-purifier-0xbb) | Supported |
-| 0xD0 | [Valve](#valve-0xd0) | Supported |
-| 0xD7 | [Faucet](#faucet-0xd7) | Supported |
-| 0xB9 | [Slat](#slat-0xb9) | Supported |
-| 0x7E | [Security System](#security-system-0x7e) | Supported |
+| Hex | Service | Itsyhome |
+|-----|---------|----------|
+| 0x43 | [Lightbulb](#lightbulb-0x43) | ✓ |
+| 0x49 | [Switch](#switch-0x49) | ✓ |
+| 0x47 | [Outlet](#outlet-0x47) | ✓ |
+| 0x4A | [Thermostat](#thermostat-0x4a) | ✓ |
+| 0xBC | [Heater Cooler](#heater-cooler-0xbc) | ✓ |
+| 0x45 | [Lock Mechanism](#lock-mechanism-0x45) | ✓ |
+| 0x8C | [Window Covering](#window-covering-0x8c) | ✓ |
+| 0x81 | [Door](#door-0x81) | ✓ |
+| 0x8B | [Window](#window-0x8b) | ✓ |
+| 0x8A | [Temperature Sensor](#temperature-sensor-0x8a) | ✓ |
+| 0x82 | [Humidity Sensor](#humidity-sensor-0x82) | ✓ |
+| 0x85 | [Motion Sensor](#motion-sensor-0x85) | ✓ |
+| 0x80 | [Contact Sensor](#contact-sensor-0x80) | ✓ |
+| 0x40 | [Fan (v1)](#fan-v1-0x40) | ✓ |
+| 0xB7 | [Fan (v2)](#fan-v2-0xb7) | ✓ |
+| 0x41 | [Garage Door Opener](#garage-door-opener-0x41) | ✓ |
+| 0xBD | [Humidifier Dehumidifier](#humidifier-dehumidifier-0xbd) | ✓ |
+| 0xBB | [Air Purifier](#air-purifier-0xbb) | ✓ |
+| 0xD0 | [Valve](#valve-0xd0) | ✓ |
+| 0xD7 | [Faucet](#faucet-0xd7) | ✓ |
+| 0xB9 | [Slat](#slat-0xb9) | ✓ |
+| 0x7E | [Security System](#security-system-0x7e) | ✓ |
 
 ---
 
@@ -35,29 +41,20 @@ This document describes all HomeKit accessory types and their characteristics, o
 
 **UUID:** `00000043-0000-1000-8000-0026BB765291`
 
-**Description:** Controls a light source with optional brightness, color (hue/saturation), and color temperature.
-
 **Required characteristics:**
 
-| Characteristic | UUID | Format | Values | Writable |
-|----------------|------|--------|--------|----------|
-| On | 0x25 | bool | true/false | Yes |
+| Characteristic | UUID | Format | Permissions | Range | Itsyhome |
+|----------------|------|--------|-------------|-------|----------|
+| On | 0x25 | bool | read, write, notify | — | ✓ read/write |
 
 **Optional characteristics:**
 
-| Characteristic | UUID | Format | Values | Writable |
-|----------------|------|--------|--------|----------|
-| Brightness | 0x08 | int | 0-100 (percentage) | Yes |
-| Hue | 0x13 | float | 0-360 (degrees) | Yes |
-| Saturation | 0x2F | float | 0-100 (percentage) | Yes |
-| ColorTemperature | 0xCE | uint32 | 140-500 (Mired) | Yes |
-| Name | 0x23 | string | - | No |
-
-**Implementation notes:**
-- Brightness only present on dimmable lights
-- Hue and Saturation present together for RGB color lights
-- ColorTemperature present for tunable white lights (may coexist with Hue/Saturation)
-- ColorTemperature range varies by device (min/max Mired values)
+| Characteristic | UUID | Format | Permissions | Range | Itsyhome |
+|----------------|------|--------|-------------|-------|----------|
+| Brightness | 0x08 | int | read, write, notify | 0-100 | ✓ read/write |
+| Hue | 0x13 | float | read, write, notify | 0-360 | ✓ read/write |
+| Saturation | 0x2F | float | read, write, notify | 0-100 | ✓ read/write |
+| Color Temperature | 0xCE | uint32 | read, write, notify | 50-400 | ✓ read/write |
 
 ---
 
@@ -65,19 +62,11 @@ This document describes all HomeKit accessory types and their characteristics, o
 
 **UUID:** `00000049-0000-1000-8000-0026BB765291`
 
-**Description:** A simple on/off switch with no additional features.
-
 **Required characteristics:**
 
-| Characteristic | UUID | Format | Values | Writable |
-|----------------|------|--------|--------|----------|
-| On | 0x25 | bool | true/false | Yes |
-
-**Optional characteristics:**
-
-| Characteristic | UUID | Format | Values | Writable |
-|----------------|------|--------|--------|----------|
-| Name | 0x23 | string | - | No |
+| Characteristic | UUID | Format | Permissions | Range | Itsyhome |
+|----------------|------|--------|-------------|-------|----------|
+| On | 0x25 | bool | read, write, notify | — | ✓ read/write |
 
 ---
 
@@ -85,24 +74,12 @@ This document describes all HomeKit accessory types and their characteristics, o
 
 **UUID:** `00000047-0000-1000-8000-0026BB765291`
 
-**Description:** A smart outlet/plug that can report whether it's drawing power.
-
 **Required characteristics:**
 
-| Characteristic | UUID | Format | Values | Writable |
-|----------------|------|--------|--------|----------|
-| On | 0x25 | bool | true/false | Yes |
-| OutletInUse | 0x26 | bool | true/false | No |
-
-**Optional characteristics:**
-
-| Characteristic | UUID | Format | Values | Writable |
-|----------------|------|--------|--------|----------|
-| Name | 0x23 | string | - | No |
-
-**Implementation notes:**
-- OutletInUse indicates whether the outlet is drawing power (device connected and consuming electricity)
-- An outlet can be On but not InUse (switched on but nothing plugged in)
+| Characteristic | UUID | Format | Permissions | Range | Itsyhome |
+|----------------|------|--------|-------------|-------|----------|
+| On | 0x25 | bool | read, write, notify | — | ✓ read/write |
+| Outlet In Use | 0x26 | bool | read, notify | — | ✓ read |
 
 ---
 
@@ -110,31 +87,24 @@ This document describes all HomeKit accessory types and their characteristics, o
 
 **UUID:** `0000004A-0000-1000-8000-0026BB765291`
 
-**Description:** Climate control device for heating and cooling with temperature setpoints.
-
 **Required characteristics:**
 
-| Characteristic | UUID | Format | Values | Writable |
-|----------------|------|--------|--------|----------|
-| CurrentTemperature | 0x11 | float | 0-100 (Celsius) | No |
-| TargetTemperature | 0x35 | float | 10-38 (Celsius) | Yes |
-| CurrentHeatingCoolingState | 0x0F | uint8 | 0=OFF, 1=HEAT, 2=COOL | No |
-| TargetHeatingCoolingState | 0x33 | uint8 | 0=OFF, 1=HEAT, 2=COOL, 3=AUTO | Yes |
+| Characteristic | UUID | Format | Permissions | Range | Values | Itsyhome |
+|----------------|------|--------|-------------|-------|--------|----------|
+| Current Heating Cooling State | 0x0F | uint8 | read, notify | 0-2 | 0=OFF, 1=HEAT, 2=COOL | ✓ read |
+| Target Heating Cooling State | 0x33 | uint8 | read, write, notify | 0-3 | 0=OFF, 1=HEAT, 2=COOL, 3=AUTO | ✓ read/write |
+| Current Temperature | 0x11 | float | read, notify | 0-100 | Celsius | ✓ read |
+| Target Temperature | 0x35 | float | read, write, notify | 10-38 | Celsius | ✓ read/write |
+| Temperature Display Units | 0x36 | uint8 | read, write, notify | 0-1 | 0=CELSIUS, 1=FAHRENHEIT | ✗ |
 
 **Optional characteristics:**
 
-| Characteristic | UUID | Format | Values | Writable |
-|----------------|------|--------|--------|----------|
-| CoolingThresholdTemperature | 0x0D | float | 10-35 (Celsius) | Yes |
-| HeatingThresholdTemperature | 0x12 | float | 0-25 (Celsius) | Yes |
-| TemperatureDisplayUnits | 0x36 | uint8 | 0=CELSIUS, 1=FAHRENHEIT | Yes |
-| Name | 0x23 | string | - | No |
-
-**Implementation notes:**
-- CurrentHeatingCoolingState reflects actual operation (read-only)
-- TargetHeatingCoolingState sets desired mode
-- When in AUTO mode, both threshold temperatures are used to define the temperature range
-- When in HEAT or COOL mode, only TargetTemperature is used
+| Characteristic | UUID | Format | Permissions | Range | Itsyhome |
+|----------------|------|--------|-------------|-------|----------|
+| Cooling Threshold Temperature | 0x0D | float | read, write, notify | 10-35 | ✓ read/write |
+| Heating Threshold Temperature | 0x12 | float | read, write, notify | 0-25 | ✓ read/write |
+| Current Relative Humidity | 0x10 | float | read, notify | 0-100 | ✗ |
+| Target Relative Humidity | 0x34 | float | read, write, notify | 0-100 | ✗ |
 
 ---
 
@@ -142,32 +112,25 @@ This document describes all HomeKit accessory types and their characteristics, o
 
 **UUID:** `000000BC-0000-1000-8000-0026BB765291`
 
-**Description:** Air conditioning unit with heating and cooling capabilities.
-
 **Required characteristics:**
 
-| Characteristic | UUID | Format | Values | Writable |
-|----------------|------|--------|--------|----------|
-| Active | 0xB0 | uint8 | 0=INACTIVE, 1=ACTIVE | Yes |
-| CurrentTemperature | 0x11 | float | 0-100 (Celsius) | No |
-| CurrentHeaterCoolerState | 0xB1 | uint8 | 0=INACTIVE, 1=IDLE, 2=HEATING, 3=COOLING | No |
-| TargetHeaterCoolerState | 0xB2 | uint8 | 0=AUTO, 1=HEAT, 2=COOL | Yes |
+| Characteristic | UUID | Format | Permissions | Range | Values | Itsyhome |
+|----------------|------|--------|-------------|-------|--------|----------|
+| Active | 0xB0 | uint8 | read, write, notify | 0-1 | 0=INACTIVE, 1=ACTIVE | ✓ read/write |
+| Current Temperature | 0x11 | float | read, notify | 0-100 | Celsius | ✓ read |
+| Current Heater Cooler State | 0xB1 | uint8 | read, notify | 0-3 | 0=INACTIVE, 1=IDLE, 2=HEATING, 3=COOLING | ✓ read |
+| Target Heater Cooler State | 0xB2 | uint8 | read, write, notify | 0-2 | 0=AUTO, 1=HEAT, 2=COOL | ✓ read/write |
 
 **Optional characteristics:**
 
-| Characteristic | UUID | Format | Values | Writable |
-|----------------|------|--------|--------|----------|
-| CoolingThresholdTemperature | 0x0D | float | 10-35 (Celsius) | Yes |
-| HeatingThresholdTemperature | 0x12 | float | 0-25 (Celsius) | Yes |
-| RotationSpeed | 0x29 | float | 0-100 (percentage) | Yes |
-| SwingMode | 0xB6 | uint8 | 0=DISABLED, 1=ENABLED | Yes |
-| Name | 0x23 | string | - | No |
-
-**Implementation notes:**
-- Active controls power on/off
-- CurrentHeaterCoolerState shows actual operation including IDLE when target reached
-- In AUTO mode, both threshold temperatures define the comfort range
-- In HEAT or COOL mode, only the corresponding threshold is used
+| Characteristic | UUID | Format | Permissions | Range | Itsyhome |
+|----------------|------|--------|-------------|-------|----------|
+| Cooling Threshold Temperature | 0x0D | float | read, write, notify | 10-35 | ✓ read/write |
+| Heating Threshold Temperature | 0x12 | float | read, write, notify | 0-25 | ✓ read/write |
+| Rotation Speed | 0x29 | float | read, write, notify | 0-100 | ✗ |
+| Swing Mode | 0xB6 | uint8 | read, write, notify | 0-1 | ✓ read/write |
+| Temperature Display Units | 0x36 | uint8 | read, write, notify | 0-1 | ✗ |
+| Lock Physical Controls | 0xA7 | uint8 | read, write, notify | 0-1 | ✗ |
 
 ---
 
@@ -175,24 +138,12 @@ This document describes all HomeKit accessory types and their characteristics, o
 
 **UUID:** `00000045-0000-1000-8000-0026BB765291`
 
-**Description:** Door lock that can be locked and unlocked.
-
 **Required characteristics:**
 
-| Characteristic | UUID | Format | Values | Writable |
-|----------------|------|--------|--------|----------|
-| LockCurrentState | 0x1D | uint8 | 0=UNSECURED, 1=SECURED, 2=JAMMED, 3=UNKNOWN | No |
-| LockTargetState | 0x1E | uint8 | 0=UNSECURED, 1=SECURED | Yes |
-
-**Optional characteristics:**
-
-| Characteristic | UUID | Format | Values | Writable |
-|----------------|------|--------|--------|----------|
-| Name | 0x23 | string | - | No |
-
-**Implementation notes:**
-- LockCurrentState may differ from LockTargetState during transition or if jammed
-- JAMMED state indicates a mechanical issue preventing lock/unlock
+| Characteristic | UUID | Format | Permissions | Range | Values | Itsyhome |
+|----------------|------|--------|-------------|-------|--------|----------|
+| Lock Current State | 0x1D | uint8 | read, notify | 0-3 | 0=UNSECURED, 1=SECURED, 2=JAMMED, 3=UNKNOWN | ✓ read |
+| Lock Target State | 0x1E | uint8 | read, write, notify | 0-1 | 0=UNSECURED, 1=SECURED | ✓ read/write |
 
 ---
 
@@ -200,31 +151,24 @@ This document describes all HomeKit accessory types and their characteristics, o
 
 **UUID:** `0000008C-0000-1000-8000-0026BB765291`
 
-**Description:** Motorized blinds, shades, or shutters with position and optional tilt control.
-
 **Required characteristics:**
 
-| Characteristic | UUID | Format | Values | Writable |
-|----------------|------|--------|--------|----------|
-| CurrentPosition | 0x6D | uint8 | 0-100 (percentage) | No |
-| TargetPosition | 0x7C | uint8 | 0-100 (percentage) | Yes |
-| PositionState | 0x72 | uint8 | 0=GOING_TO_MIN, 1=GOING_TO_MAX, 2=STOPPED | No |
+| Characteristic | UUID | Format | Permissions | Range | Values | Itsyhome |
+|----------------|------|--------|-------------|-------|--------|----------|
+| Current Position | 0x6D | uint8 | read, notify | 0-100 | percentage | ✓ read |
+| Target Position | 0x7C | uint8 | read, write, notify | 0-100 | percentage | ✓ read/write |
+| Position State | 0x72 | uint8 | read, notify | 0-2 | 0=DECREASING, 1=INCREASING, 2=STOPPED | ✓ read |
 
 **Optional characteristics:**
 
-| Characteristic | UUID | Format | Values | Writable |
-|----------------|------|--------|--------|----------|
-| CurrentHorizontalTiltAngle | 0x6C | int | -90 to 90 (degrees) | No |
-| TargetHorizontalTiltAngle | 0x7B | int | -90 to 90 (degrees) | Yes |
-| CurrentVerticalTiltAngle | 0x6E | int | -90 to 90 (degrees) | No |
-| TargetVerticalTiltAngle | 0x7D | int | -90 to 90 (degrees) | Yes |
-| ObstructionDetected | 0x24 | bool | true/false | No |
-| Name | 0x23 | string | - | No |
-
-**Implementation notes:**
-- Position 0 = fully closed, 100 = fully open
-- Tilt angle controls slat angle (horizontal or vertical depending on blind type)
-- Only one tilt direction (horizontal or vertical) is typically present
+| Characteristic | UUID | Format | Permissions | Range | Itsyhome |
+|----------------|------|--------|-------------|-------|----------|
+| Current Horizontal Tilt Angle | 0x6C | int | read, notify | -90 to 90 | ✓ read |
+| Target Horizontal Tilt Angle | 0x7B | int | read, write, notify | -90 to 90 | ✓ read/write |
+| Current Vertical Tilt Angle | 0x6E | int | read, notify | -90 to 90 | ✓ read |
+| Target Vertical Tilt Angle | 0x7D | int | read, write, notify | -90 to 90 | ✓ read/write |
+| Hold Position | 0x6F | bool | write | — | ✗ |
+| Obstruction Detected | 0x24 | bool | read, notify | — | ✗ |
 
 ---
 
@@ -232,26 +176,20 @@ This document describes all HomeKit accessory types and their characteristics, o
 
 **UUID:** `00000081-0000-1000-8000-0026BB765291`
 
-**Description:** Motorized door with position control.
-
 **Required characteristics:**
 
-| Characteristic | UUID | Format | Values | Writable |
-|----------------|------|--------|--------|----------|
-| CurrentPosition | 0x6D | uint8 | 0-100 (percentage) | No |
-| TargetPosition | 0x7C | uint8 | 0-100 (percentage) | Yes |
-| PositionState | 0x72 | uint8 | 0=GOING_TO_MIN, 1=GOING_TO_MAX, 2=STOPPED | No |
+| Characteristic | UUID | Format | Permissions | Range | Values | Itsyhome |
+|----------------|------|--------|-------------|-------|--------|----------|
+| Current Position | 0x6D | uint8 | read, notify | 0-100 | percentage | ✓ read |
+| Target Position | 0x7C | uint8 | read, write, notify | 0-100 | percentage | ✓ read/write |
+| Position State | 0x72 | uint8 | read, notify | 0-2 | 0=DECREASING, 1=INCREASING, 2=STOPPED | ✓ read |
 
 **Optional characteristics:**
 
-| Characteristic | UUID | Format | Values | Writable |
-|----------------|------|--------|--------|----------|
-| ObstructionDetected | 0x24 | bool | true/false | No |
-| Name | 0x23 | string | - | No |
-
-**Implementation notes:**
-- Position 0 = fully closed, 100 = fully open
-- Uses same characteristics as Window Covering but without tilt
+| Characteristic | UUID | Format | Permissions | Range | Itsyhome |
+|----------------|------|--------|-------------|-------|----------|
+| Hold Position | 0x6F | bool | write | — | ✗ |
+| Obstruction Detected | 0x24 | bool | read, notify | — | ✗ |
 
 ---
 
@@ -259,26 +197,20 @@ This document describes all HomeKit accessory types and their characteristics, o
 
 **UUID:** `0000008B-0000-1000-8000-0026BB765291`
 
-**Description:** Motorized window with position control.
-
 **Required characteristics:**
 
-| Characteristic | UUID | Format | Values | Writable |
-|----------------|------|--------|--------|----------|
-| CurrentPosition | 0x6D | uint8 | 0-100 (percentage) | No |
-| TargetPosition | 0x7C | uint8 | 0-100 (percentage) | Yes |
-| PositionState | 0x72 | uint8 | 0=GOING_TO_MIN, 1=GOING_TO_MAX, 2=STOPPED | No |
+| Characteristic | UUID | Format | Permissions | Range | Values | Itsyhome |
+|----------------|------|--------|-------------|-------|--------|----------|
+| Current Position | 0x6D | uint8 | read, notify | 0-100 | percentage | ✓ read |
+| Target Position | 0x7C | uint8 | read, write, notify | 0-100 | percentage | ✓ read/write |
+| Position State | 0x72 | uint8 | read, notify | 0-2 | 0=DECREASING, 1=INCREASING, 2=STOPPED | ✓ read |
 
 **Optional characteristics:**
 
-| Characteristic | UUID | Format | Values | Writable |
-|----------------|------|--------|--------|----------|
-| ObstructionDetected | 0x24 | bool | true/false | No |
-| Name | 0x23 | string | - | No |
-
-**Implementation notes:**
-- Position 0 = fully closed, 100 = fully open
-- Identical to Door service in characteristics
+| Characteristic | UUID | Format | Permissions | Range | Itsyhome |
+|----------------|------|--------|-------------|-------|----------|
+| Hold Position | 0x6F | bool | write | — | ✗ |
+| Obstruction Detected | 0x24 | bool | read, notify | — | ✗ |
 
 ---
 
@@ -286,23 +218,20 @@ This document describes all HomeKit accessory types and their characteristics, o
 
 **UUID:** `0000008A-0000-1000-8000-0026BB765291`
 
-**Description:** Reports ambient temperature.
-
 **Required characteristics:**
 
-| Characteristic | UUID | Format | Values | Writable |
-|----------------|------|--------|--------|----------|
-| CurrentTemperature | 0x11 | float | 0-100 (Celsius) | No |
+| Characteristic | UUID | Format | Permissions | Range | Itsyhome |
+|----------------|------|--------|-------------|-------|----------|
+| Current Temperature | 0x11 | float | read, notify | 0-100 | ✓ read |
 
 **Optional characteristics:**
 
-| Characteristic | UUID | Format | Values | Writable |
-|----------------|------|--------|--------|----------|
-| StatusActive | 0x75 | bool | true/false | No |
-| StatusFault | 0x77 | uint8 | 0=NO_FAULT, 1=GENERAL_FAULT | No |
-| StatusLowBattery | 0x79 | uint8 | 0=NORMAL, 1=LOW | No |
-| StatusTampered | 0x7A | uint8 | 0=NOT_TAMPERED, 1=TAMPERED | No |
-| Name | 0x23 | string | - | No |
+| Characteristic | UUID | Format | Permissions | Range | Itsyhome |
+|----------------|------|--------|-------------|-------|----------|
+| Status Active | 0x75 | bool | read, notify | — | ✗ |
+| Status Fault | 0x77 | uint8 | read, notify | 0-1 | ✗ |
+| Status Low Battery | 0x79 | uint8 | read, notify | 0-1 | ✗ |
+| Status Tampered | 0x7A | uint8 | read, notify | 0-1 | ✗ |
 
 ---
 
@@ -310,23 +239,20 @@ This document describes all HomeKit accessory types and their characteristics, o
 
 **UUID:** `00000082-0000-1000-8000-0026BB765291`
 
-**Description:** Reports ambient relative humidity.
-
 **Required characteristics:**
 
-| Characteristic | UUID | Format | Values | Writable |
-|----------------|------|--------|--------|----------|
-| CurrentRelativeHumidity | 0x10 | float | 0-100 (percentage) | No |
+| Characteristic | UUID | Format | Permissions | Range | Itsyhome |
+|----------------|------|--------|-------------|-------|----------|
+| Current Relative Humidity | 0x10 | float | read, notify | 0-100 | ✓ read |
 
 **Optional characteristics:**
 
-| Characteristic | UUID | Format | Values | Writable |
-|----------------|------|--------|--------|----------|
-| StatusActive | 0x75 | bool | true/false | No |
-| StatusFault | 0x77 | uint8 | 0=NO_FAULT, 1=GENERAL_FAULT | No |
-| StatusLowBattery | 0x79 | uint8 | 0=NORMAL, 1=LOW | No |
-| StatusTampered | 0x7A | uint8 | 0=NOT_TAMPERED, 1=TAMPERED | No |
-| Name | 0x23 | string | - | No |
+| Characteristic | UUID | Format | Permissions | Range | Itsyhome |
+|----------------|------|--------|-------------|-------|----------|
+| Status Active | 0x75 | bool | read, notify | — | ✗ |
+| Status Fault | 0x77 | uint8 | read, notify | 0-1 | ✗ |
+| Status Low Battery | 0x79 | uint8 | read, notify | 0-1 | ✗ |
+| Status Tampered | 0x7A | uint8 | read, notify | 0-1 | ✗ |
 
 ---
 
@@ -334,23 +260,20 @@ This document describes all HomeKit accessory types and their characteristics, o
 
 **UUID:** `00000085-0000-1000-8000-0026BB765291`
 
-**Description:** Detects motion/movement.
-
 **Required characteristics:**
 
-| Characteristic | UUID | Format | Values | Writable |
-|----------------|------|--------|--------|----------|
-| MotionDetected | 0x22 | bool | true/false | No |
+| Characteristic | UUID | Format | Permissions | Range | Itsyhome |
+|----------------|------|--------|-------------|-------|----------|
+| Motion Detected | 0x22 | bool | read, notify | — | ✓ read |
 
 **Optional characteristics:**
 
-| Characteristic | UUID | Format | Values | Writable |
-|----------------|------|--------|--------|----------|
-| StatusActive | 0x75 | bool | true/false | No |
-| StatusFault | 0x77 | uint8 | 0=NO_FAULT, 1=GENERAL_FAULT | No |
-| StatusLowBattery | 0x79 | uint8 | 0=NORMAL, 1=LOW | No |
-| StatusTampered | 0x7A | uint8 | 0=NOT_TAMPERED, 1=TAMPERED | No |
-| Name | 0x23 | string | - | No |
+| Characteristic | UUID | Format | Permissions | Range | Itsyhome |
+|----------------|------|--------|-------------|-------|----------|
+| Status Active | 0x75 | bool | read, notify | — | ✗ |
+| Status Fault | 0x77 | uint8 | read, notify | 0-1 | ✗ |
+| Status Low Battery | 0x79 | uint8 | read, notify | 0-1 | ✗ |
+| Status Tampered | 0x7A | uint8 | read, notify | 0-1 | ✗ |
 
 ---
 
@@ -358,27 +281,20 @@ This document describes all HomeKit accessory types and their characteristics, o
 
 **UUID:** `00000080-0000-1000-8000-0026BB765291`
 
-**Description:** Detects whether two surfaces are in contact (door/window open/closed).
-
 **Required characteristics:**
 
-| Characteristic | UUID | Format | Values | Writable |
-|----------------|------|--------|--------|----------|
-| ContactSensorState | 0x6A | uint8 | 0=DETECTED (closed), 1=NOT_DETECTED (open) | No |
+| Characteristic | UUID | Format | Permissions | Range | Values | Itsyhome |
+|----------------|------|--------|-------------|-------|--------|----------|
+| Contact Sensor State | 0x6A | uint8 | read, notify | 0-1 | 0=DETECTED, 1=NOT_DETECTED | ✓ read |
 
 **Optional characteristics:**
 
-| Characteristic | UUID | Format | Values | Writable |
-|----------------|------|--------|--------|----------|
-| StatusActive | 0x75 | bool | true/false | No |
-| StatusFault | 0x77 | uint8 | 0=NO_FAULT, 1=GENERAL_FAULT | No |
-| StatusLowBattery | 0x79 | uint8 | 0=NORMAL, 1=LOW | No |
-| StatusTampered | 0x7A | uint8 | 0=NOT_TAMPERED, 1=TAMPERED | No |
-| Name | 0x23 | string | - | No |
-
-**Implementation notes:**
-- DETECTED (0) means contact is detected, typically door/window closed
-- NOT_DETECTED (1) means no contact, typically door/window open
+| Characteristic | UUID | Format | Permissions | Range | Itsyhome |
+|----------------|------|--------|-------------|-------|----------|
+| Status Active | 0x75 | bool | read, notify | — | ✗ |
+| Status Fault | 0x77 | uint8 | read, notify | 0-1 | ✗ |
+| Status Low Battery | 0x79 | uint8 | read, notify | 0-1 | ✗ |
+| Status Tampered | 0x7A | uint8 | read, notify | 0-1 | ✗ |
 
 ---
 
@@ -386,25 +302,20 @@ This document describes all HomeKit accessory types and their characteristics, o
 
 **UUID:** `00000040-0000-1000-8000-0026BB765291`
 
-**Description:** Basic fan with on/off and optional speed control.
+Note: This is the legacy Fan service. Fan v2 (0xB7) is preferred.
 
 **Required characteristics:**
 
-| Characteristic | UUID | Format | Values | Writable |
-|----------------|------|--------|--------|----------|
-| On | 0x25 | bool | true/false | Yes |
+| Characteristic | UUID | Format | Permissions | Range | Itsyhome |
+|----------------|------|--------|-------------|-------|----------|
+| On | 0x25 | bool | read, write, notify | — | ✓ read/write |
 
 **Optional characteristics:**
 
-| Characteristic | UUID | Format | Values | Writable |
-|----------------|------|--------|--------|----------|
-| RotationSpeed | 0x29 | float | 0-100 (percentage) | Yes |
-| RotationDirection | 0x28 | int | 0=CLOCKWISE, 1=COUNTER_CLOCKWISE | Yes |
-| Name | 0x23 | string | - | No |
-
-**Implementation notes:**
-- Legacy fan service, Fan v2 is preferred for new implementations
-- RotationSpeed range may vary by device
+| Characteristic | UUID | Format | Permissions | Range | Itsyhome |
+|----------------|------|--------|-------------|-------|----------|
+| Rotation Speed | 0x29 | float | read, write, notify | 0-100 | ✓ read/write |
+| Rotation Direction | 0x28 | int | read, write, notify | 0-1 | ✓ read/write |
 
 ---
 
@@ -412,30 +323,22 @@ This document describes all HomeKit accessory types and their characteristics, o
 
 **UUID:** `000000B7-0000-1000-8000-0026BB765291`
 
-**Description:** Advanced fan with active state, speed, direction, and swing mode.
-
 **Required characteristics:**
 
-| Characteristic | UUID | Format | Values | Writable |
-|----------------|------|--------|--------|----------|
-| Active | 0xB0 | uint8 | 0=INACTIVE, 1=ACTIVE | Yes |
+| Characteristic | UUID | Format | Permissions | Range | Values | Itsyhome |
+|----------------|------|--------|-------------|-------|--------|----------|
+| Active | 0xB0 | uint8 | read, write, notify | 0-1 | 0=INACTIVE, 1=ACTIVE | ✓ read/write |
 
 **Optional characteristics:**
 
-| Characteristic | UUID | Format | Values | Writable |
-|----------------|------|--------|--------|----------|
-| CurrentFanState | 0xAF | uint8 | 0=INACTIVE, 1=IDLE, 2=BLOWING_AIR | No |
-| TargetFanState | 0xBF | uint8 | 0=MANUAL, 1=AUTO | Yes |
-| RotationSpeed | 0x29 | float | 0-100 (percentage) | Yes |
-| RotationDirection | 0x28 | int | 0=CLOCKWISE, 1=COUNTER_CLOCKWISE | Yes |
-| SwingMode | 0xB6 | uint8 | 0=DISABLED, 1=ENABLED | Yes |
-| Name | 0x23 | string | - | No |
-
-**Implementation notes:**
-- Active controls power on/off
-- CurrentFanState shows actual operation (IDLE when target speed reached but not blowing)
-- TargetFanState allows AUTO mode where fan adjusts speed automatically
-- SwingMode controls oscillation
+| Characteristic | UUID | Format | Permissions | Range | Values | Itsyhome |
+|----------------|------|--------|-------------|-------|--------|----------|
+| Current Fan State | 0xAF | uint8 | read, notify | 0-2 | 0=INACTIVE, 1=IDLE, 2=BLOWING_AIR | ✓ read |
+| Target Fan State | 0xBF | uint8 | read, write, notify | 0-1 | 0=MANUAL, 1=AUTO | ✓ read/write |
+| Rotation Speed | 0x29 | float | read, write, notify | 0-100 | — | ✓ read/write |
+| Rotation Direction | 0x28 | int | read, write, notify | 0-1 | 0=CLOCKWISE, 1=COUNTER_CLOCKWISE | ✓ read/write |
+| Swing Mode | 0xB6 | uint8 | read, write, notify | 0-1 | 0=DISABLED, 1=ENABLED | ✓ read/write |
+| Lock Physical Controls | 0xA7 | uint8 | read, write, notify | 0-1 | — | ✗ |
 
 ---
 
@@ -443,28 +346,20 @@ This document describes all HomeKit accessory types and their characteristics, o
 
 **UUID:** `00000041-0000-1000-8000-0026BB765291`
 
-**Description:** Motorized garage door with open/close control.
-
 **Required characteristics:**
 
-| Characteristic | UUID | Format | Values | Writable |
-|----------------|------|--------|--------|----------|
-| CurrentDoorState | 0x0E | uint8 | 0=OPEN, 1=CLOSED, 2=OPENING, 3=CLOSING, 4=STOPPED | No |
-| TargetDoorState | 0x32 | uint8 | 0=OPEN, 1=CLOSED | Yes |
-| ObstructionDetected | 0x24 | bool | true/false | No |
+| Characteristic | UUID | Format | Permissions | Range | Values | Itsyhome |
+|----------------|------|--------|-------------|-------|--------|----------|
+| Current Door State | 0x0E | uint8 | read, notify | 0-4 | 0=OPEN, 1=CLOSED, 2=OPENING, 3=CLOSING, 4=STOPPED | ✓ read |
+| Target Door State | 0x32 | uint8 | read, write, notify | 0-1 | 0=OPEN, 1=CLOSED | ✓ read/write |
+| Obstruction Detected | 0x24 | bool | read, notify | — | — | ✓ read |
 
 **Optional characteristics:**
 
-| Characteristic | UUID | Format | Values | Writable |
-|----------------|------|--------|--------|----------|
-| LockCurrentState | 0x1D | uint8 | 0=UNSECURED, 1=SECURED, 2=JAMMED, 3=UNKNOWN | No |
-| LockTargetState | 0x1E | uint8 | 0=UNSECURED, 1=SECURED | Yes |
-| Name | 0x23 | string | - | No |
-
-**Implementation notes:**
-- CurrentDoorState may be OPENING/CLOSING during transition
-- STOPPED indicates door stopped mid-travel (possibly due to obstruction)
-- ObstructionDetected triggers safety stop
+| Characteristic | UUID | Format | Permissions | Range | Itsyhome |
+|----------------|------|--------|-------------|-------|----------|
+| Lock Current State | 0x1D | uint8 | read, notify | 0-3 | ✗ |
+| Lock Target State | 0x1E | uint8 | read, write, notify | 0-1 | ✗ |
 
 ---
 
@@ -472,33 +367,39 @@ This document describes all HomeKit accessory types and their characteristics, o
 
 **UUID:** `000000BD-0000-1000-8000-0026BB765291`
 
-**Description:** Device that can add or remove moisture from air.
+This service can describe a humidifier, a dehumidifier, or a combo device that does both.
 
 **Required characteristics:**
 
-| Characteristic | UUID | Format | Values | Writable |
-|----------------|------|--------|--------|----------|
-| Active | 0xB0 | uint8 | 0=INACTIVE, 1=ACTIVE | Yes |
-| CurrentRelativeHumidity | 0x10 | float | 0-100 (percentage) | No |
-| CurrentHumidifierDehumidifierState | 0xB3 | uint8 | 0=INACTIVE, 1=IDLE, 2=HUMIDIFYING, 3=DEHUMIDIFYING | No |
-| TargetHumidifierDehumidifierState | 0xB4 | uint8 | 0=AUTO, 1=HUMIDIFIER, 2=DEHUMIDIFIER | Yes |
+| Characteristic | UUID | Format | Permissions | Range | Values | Itsyhome |
+|----------------|------|--------|-------------|-------|--------|----------|
+| Active | 0xB0 | uint8 | read, write, notify | 0-1 | 0=INACTIVE, 1=ACTIVE | ✓ read/write |
+| Current Relative Humidity | 0x10 | float | read, notify | 0-100 | percentage | ✓ read |
+| Current Humidifier Dehumidifier State | 0xB3 | uint8 | read, notify | 0-3 | 0=INACTIVE, 1=IDLE, 2=HUMIDIFYING, 3=DEHUMIDIFYING | ✓ read |
+| Target Humidifier Dehumidifier State | 0xB4 | uint8 | read, write, notify | 0-2 | 0=AUTO, 1=HUMIDIFIER, 2=DEHUMIDIFIER | ✓ read/write (1 and 2 only) |
 
 **Optional characteristics:**
 
-| Characteristic | UUID | Format | Values | Writable |
-|----------------|------|--------|--------|----------|
-| RelativeHumidityHumidifierThreshold | 0xCA | float | 0-100 (percentage) | Yes |
-| RelativeHumidityDehumidifierThreshold | 0xC9 | float | 0-100 (percentage) | Yes |
-| RotationSpeed | 0x29 | float | 0-100 (percentage) | Yes |
-| SwingMode | 0xB6 | uint8 | 0=DISABLED, 1=ENABLED | Yes |
-| WaterLevel | 0xB5 | float | 0-100 (percentage) | No |
-| Name | 0x23 | string | - | No |
+| Characteristic | UUID | Format | Permissions | Range | Itsyhome |
+|----------------|------|--------|-------------|-------|----------|
+| Relative Humidity Dehumidifier Threshold | 0xC9 | float | read, write, notify | 0-100 | ✓ read/write |
+| Relative Humidity Humidifier Threshold | 0xCA | float | read, write, notify | 0-100 | ✓ read/write |
+| Rotation Speed | 0x29 | float | read, write, notify | 0-100 | ✗ |
+| Swing Mode | 0xB6 | uint8 | read, write, notify | 0-1 | ✓ read/write |
+| Water Level | 0xB5 | float | read, notify | 0-100 | ✗ |
+| Lock Physical Controls | 0xA7 | uint8 | read, write, notify | 0-1 | ✗ |
 
-**Implementation notes:**
-- In HUMIDIFIER mode, runs until HumidifierThreshold is reached
-- In DEHUMIDIFIER mode, runs until DehumidifierThreshold is reached
-- In AUTO mode, maintains humidity between both thresholds
-- WaterLevel indicates tank level (low = needs refill for humidifier, needs emptying for dehumidifier)
+**Device type detection:**
+
+The presence of threshold characteristics determines the device type:
+- **Humidifier only:** Has Humidifier Threshold, no Dehumidifier Threshold
+- **Dehumidifier only:** Has Dehumidifier Threshold, no Humidifier Threshold
+- **Combo device:** Has both thresholds
+
+**Mode support:**
+
+- Value 0 (AUTO) is not supported. Per the HAP spec, AUTO mode is only valid for combo devices and requires both thresholds.
+- Itsyhome shows both Humid and Dry mode buttons, with unsupported modes disabled based on device type.
 
 ---
 
@@ -506,28 +407,21 @@ This document describes all HomeKit accessory types and their characteristics, o
 
 **UUID:** `000000BB-0000-1000-8000-0026BB765291`
 
-**Description:** Air filtration device.
-
 **Required characteristics:**
 
-| Characteristic | UUID | Format | Values | Writable |
-|----------------|------|--------|--------|----------|
-| Active | 0xB0 | uint8 | 0=INACTIVE, 1=ACTIVE | Yes |
-| CurrentAirPurifierState | 0xA9 | uint8 | 0=INACTIVE, 1=IDLE, 2=PURIFYING_AIR | No |
-| TargetAirPurifierState | 0xA8 | uint8 | 0=MANUAL, 1=AUTO | Yes |
+| Characteristic | UUID | Format | Permissions | Range | Values | Itsyhome |
+|----------------|------|--------|-------------|-------|--------|----------|
+| Active | 0xB0 | uint8 | read, write, notify | 0-1 | 0=INACTIVE, 1=ACTIVE | ✓ read/write |
+| Current Air Purifier State | 0xA9 | uint8 | read, notify | 0-2 | 0=INACTIVE, 1=IDLE, 2=PURIFYING_AIR | ✓ read |
+| Target Air Purifier State | 0xA8 | uint8 | read, write, notify | 0-1 | 0=MANUAL, 1=AUTO | ✓ read/write |
 
 **Optional characteristics:**
 
-| Characteristic | UUID | Format | Values | Writable |
-|----------------|------|--------|--------|----------|
-| RotationSpeed | 0x29 | float | 0-100 (percentage) | Yes |
-| SwingMode | 0xB6 | uint8 | 0=DISABLED, 1=ENABLED | Yes |
-| Name | 0x23 | string | - | No |
-
-**Implementation notes:**
-- In AUTO mode, purifier adjusts speed based on air quality sensors
-- In MANUAL mode, user controls speed directly
-- May have linked FilterMaintenance service for filter status
+| Characteristic | UUID | Format | Permissions | Range | Itsyhome |
+|----------------|------|--------|-------------|-------|----------|
+| Rotation Speed | 0x29 | float | read, write, notify | 0-100 | ✓ read/write |
+| Swing Mode | 0xB6 | uint8 | read, write, notify | 0-1 | ✓ read/write |
+| Lock Physical Controls | 0xA7 | uint8 | read, write, notify | 0-1 | ✗ |
 
 ---
 
@@ -535,30 +429,25 @@ This document describes all HomeKit accessory types and their characteristics, o
 
 **UUID:** `000000D0-0000-1000-8000-0026BB765291`
 
-**Description:** Water valve for irrigation or other water control applications.
-
 **Required characteristics:**
 
-| Characteristic | UUID | Format | Values | Writable |
-|----------------|------|--------|--------|----------|
-| Active | 0xB0 | uint8 | 0=INACTIVE, 1=ACTIVE | Yes |
-| InUse | 0xD2 | uint8 | 0=NOT_IN_USE, 1=IN_USE | No |
-| ValveType | 0xD5 | uint8 | 0=GENERIC, 1=IRRIGATION, 2=SHOWER_HEAD, 3=WATER_FAUCET | No |
+| Characteristic | UUID | Format | Permissions | Range | Values | Itsyhome |
+|----------------|------|--------|-------------|-------|--------|----------|
+| Active | 0xB0 | uint8 | read, write, notify | 0-1 | 0=INACTIVE, 1=ACTIVE | ✓ read/write |
+| In Use | 0xD2 | uint8 | read, notify | 0-1 | 0=NOT_IN_USE, 1=IN_USE | ✓ read |
+| Valve Type | 0xD5 | uint8 | read, notify | 0-3 | 0=GENERIC, 1=IRRIGATION, 2=SHOWER_HEAD, 3=WATER_FAUCET | ✓ read |
 
 **Optional characteristics:**
 
-| Characteristic | UUID | Format | Values | Writable |
-|----------------|------|--------|--------|----------|
-| SetDuration | 0xD3 | uint32 | 0-3600 (seconds) | Yes |
-| RemainingDuration | 0xD4 | uint32 | 0-3600 (seconds) | No |
-| IsConfigured | 0xD6 | uint8 | 0=NOT_CONFIGURED, 1=CONFIGURED | No |
-| StatusFault | 0x77 | uint8 | 0=NO_FAULT, 1=GENERAL_FAULT | No |
-| Name | 0x23 | string | - | No |
+| Characteristic | UUID | Format | Permissions | Range | Itsyhome |
+|----------------|------|--------|-------------|-------|----------|
+| Set Duration | 0xD3 | uint32 | read, write, notify | 0-3600 | ✗ |
+| Remaining Duration | 0xD4 | uint32 | read, notify | 0-3600 | ✗ |
+| Is Configured | 0xD6 | uint8 | read, write, notify | 0-1 | ✗ |
+| Service Label Index | 0xCB | uint8 | read | 1+ | ✗ |
+| Status Fault | 0x77 | uint8 | read, notify | 0-1 | ✗ |
 
-**Implementation notes:**
-- Active=1 opens the valve, InUse=1 means water is actually flowing
-- SetDuration allows timed operation
-- RemainingDuration counts down during timed operation
+**Gap:** Set Duration and Remaining Duration are available but not implemented in Itsyhome. This would allow timed watering.
 
 ---
 
@@ -566,24 +455,17 @@ This document describes all HomeKit accessory types and their characteristics, o
 
 **UUID:** `000000D7-0000-1000-8000-0026BB765291`
 
-**Description:** Water faucet control.
-
 **Required characteristics:**
 
-| Characteristic | UUID | Format | Values | Writable |
-|----------------|------|--------|--------|----------|
-| Active | 0xB0 | uint8 | 0=INACTIVE, 1=ACTIVE | Yes |
+| Characteristic | UUID | Format | Permissions | Range | Values | Itsyhome |
+|----------------|------|--------|-------------|-------|--------|----------|
+| Active | 0xB0 | uint8 | read, write, notify | 0-1 | 0=INACTIVE, 1=ACTIVE | ✓ read/write |
 
 **Optional characteristics:**
 
-| Characteristic | UUID | Format | Values | Writable |
-|----------------|------|--------|--------|----------|
-| StatusFault | 0x77 | uint8 | 0=NO_FAULT, 1=GENERAL_FAULT | No |
-| Name | 0x23 | string | - | No |
-
-**Implementation notes:**
-- May have linked Valve services for hot/cold water control
-- Simpler than Valve service, primarily for basic on/off control
+| Characteristic | UUID | Format | Permissions | Range | Itsyhome |
+|----------------|------|--------|-------------|-------|----------|
+| Status Fault | 0x77 | uint8 | read, notify | 0-1 | ✗ |
 
 ---
 
@@ -591,28 +473,20 @@ This document describes all HomeKit accessory types and their characteristics, o
 
 **UUID:** `000000B9-0000-1000-8000-0026BB765291`
 
-**Description:** Adjustable slats/louvers for light and airflow control.
-
 **Required characteristics:**
 
-| Characteristic | UUID | Format | Values | Writable |
-|----------------|------|--------|--------|----------|
-| CurrentSlatState | 0xAA | uint8 | 0=FIXED, 1=JAMMED, 2=SWINGING | No |
-| SlatType | 0xC0 | uint8 | 0=HORIZONTAL, 1=VERTICAL | No |
+| Characteristic | UUID | Format | Permissions | Range | Values | Itsyhome |
+|----------------|------|--------|-------------|-------|--------|----------|
+| Current Slat State | 0xAA | uint8 | read, notify | 0-2 | 0=FIXED, 1=JAMMED, 2=SWINGING | ✓ read |
+| Slat Type | 0xC0 | uint8 | read | 0-1 | 0=HORIZONTAL, 1=VERTICAL | ✓ read |
 
 **Optional characteristics:**
 
-| Characteristic | UUID | Format | Values | Writable |
-|----------------|------|--------|--------|----------|
-| CurrentTiltAngle | 0xC1 | int | -90 to 90 (degrees) | No |
-| TargetTiltAngle | 0xC2 | int | -90 to 90 (degrees) | Yes |
-| SwingMode | 0xB6 | uint8 | 0=DISABLED, 1=ENABLED | Yes |
-| Name | 0x23 | string | - | No |
-
-**Implementation notes:**
-- SlatType indicates orientation (horizontal slats like blinds, or vertical like louvers)
-- Tilt angle of 0 is typically neutral/closed position
-- SwingMode allows automatic oscillation
+| Characteristic | UUID | Format | Permissions | Range | Itsyhome |
+|----------------|------|--------|-------------|-------|----------|
+| Current Tilt Angle | 0xC1 | int | read, notify | -90 to 90 | ✓ read |
+| Target Tilt Angle | 0xC2 | int | read, write, notify | -90 to 90 | ✓ read/write |
+| Swing Mode | 0xB6 | uint8 | read, write, notify | 0-1 | ✓ read/write |
 
 ---
 
@@ -620,35 +494,33 @@ This document describes all HomeKit accessory types and their characteristics, o
 
 **UUID:** `0000007E-0000-1000-8000-0026BB765291`
 
-**Description:** Home security alarm system.
-
 **Required characteristics:**
 
-| Characteristic | UUID | Format | Values | Writable |
-|----------------|------|--------|--------|----------|
-| SecuritySystemCurrentState | 0x66 | uint8 | 0=STAY_ARM, 1=AWAY_ARM, 2=NIGHT_ARM, 3=DISARMED, 4=ALARM_TRIGGERED | No |
-| SecuritySystemTargetState | 0x67 | uint8 | 0=STAY_ARM, 1=AWAY_ARM, 2=NIGHT_ARM, 3=DISARM | Yes |
+| Characteristic | UUID | Format | Permissions | Range | Values | Itsyhome |
+|----------------|------|--------|-------------|-------|--------|----------|
+| Security System Current State | 0x66 | uint8 | read, notify | 0-4 | 0=STAY_ARM, 1=AWAY_ARM, 2=NIGHT_ARM, 3=DISARMED, 4=ALARM_TRIGGERED | ✓ read |
+| Security System Target State | 0x67 | uint8 | read, write, notify | 0-3 | 0=STAY_ARM, 1=AWAY_ARM, 2=NIGHT_ARM, 3=DISARM | ✓ read/write |
 
 **Optional characteristics:**
 
-| Characteristic | UUID | Format | Values | Writable |
-|----------------|------|--------|--------|----------|
-| StatusFault | 0x77 | uint8 | 0=NO_FAULT, 1=GENERAL_FAULT | No |
-| StatusTampered | 0x7A | uint8 | 0=NOT_TAMPERED, 1=TAMPERED | No |
-| SecuritySystemAlarmType | 0x8E | uint8 | 0=UNKNOWN, 1=INTRUSION | No |
-| Name | 0x23 | string | - | No |
+| Characteristic | UUID | Format | Permissions | Range | Itsyhome |
+|----------------|------|--------|-------------|-------|----------|
+| Security System Alarm Type | 0x8E | uint8 | read, notify | 0-1 | ✗ |
+| Status Fault | 0x77 | uint8 | read, notify | 0-1 | ✗ |
+| Status Tampered | 0x7A | uint8 | read, notify | 0-1 | ✗ |
 
-**Implementation notes:**
-- STAY_ARM: Armed for when occupants are home (perimeter only)
-- AWAY_ARM: Fully armed when home is empty
-- NIGHT_ARM: Armed for nighttime (partial)
-- ALARM_TRIGGERED (4) is read-only and indicates active alarm
+---
+
+## Itsyhome gaps summary
+
+| Accessory | Missing characteristic | HAP permissions | Impact |
+|-----------|----------------------|-----------------|--------|
+| Valve | Set Duration | read, write, notify | Cannot set auto-shutoff timer |
+| Valve | Remaining Duration | read, notify | Cannot see time remaining |
 
 ---
 
 ## Future implementation
-
-The following accessories are not yet supported but may be added in future versions.
 
 | Hex | Service |
 |-----|---------|
@@ -669,43 +541,19 @@ The following accessories are not yet supported but may be added in future versi
 
 **UUID:** `000000CF-0000-1000-8000-0026BB765291`
 
-**Description:** Master controller for irrigation with multiple linked Valve services. Provides top-level Active control across all valves.
-
 **Required characteristics:**
 
-| Characteristic | UUID | Format | Values | Writable |
-|----------------|------|--------|--------|----------|
-| Active | 0xB0 | uint8 | 0=INACTIVE, 1=ACTIVE | Yes |
-| ProgramMode | 0xD1 | uint8 | 0=NONE, 1=SCHEDULED, 2=SCHEDULE_OVERRIDEN | No |
-| InUse | 0xD2 | uint8 | 0=NOT_IN_USE, 1=IN_USE | No |
+| Characteristic | UUID | Format | Permissions | Range | Values |
+|----------------|------|--------|-------------|-------|--------|
+| Active | 0xB0 | uint8 | read, write, notify | 0-1 | 0=INACTIVE, 1=ACTIVE |
+| Program Mode | 0xD1 | uint8 | read, notify | 0-2 | 0=NO_PROGRAM, 1=SCHEDULED, 2=SCHEDULED_MANUAL |
+| In Use | 0xD2 | uint8 | read, notify | 0-1 | 0=NOT_IN_USE, 1=IN_USE |
 
 **Optional characteristics:**
 
-| Characteristic | UUID | Format | Values | Writable |
-|----------------|------|--------|--------|----------|
-| RemainingDuration | 0xD4 | uint32 | 0-3600 seconds | No |
-| StatusFault | 0x77 | uint8 | 0=NO_FAULT, 1=GENERAL_FAULT | No |
-| Name | 0x23 | string | - | No |
+| Characteristic | UUID | Format | Permissions | Range |
+|----------------|------|--------|-------------|-------|
+| Remaining Duration | 0xD4 | uint32 | read, notify | 0-3600 |
+| Status Fault | 0x77 | uint8 | read, notify | 0-1 |
 
-**Linked services:**
-- One or more Valve services (required)
-- ServiceLabel for zone naming
-
-**Implementation notes:**
-- Active=1 enables the system, InUse=1 means water is flowing
-- ProgramMode shows schedule status (read-only)
-- RemainingDuration shows time left on current watering
-- Apple Home doesn't allow scheduling water devices
-- Each linked Valve has its own Active, InUse, SetDuration, RemainingDuration
-- Could show as expandable with child Valve controls
-
----
-
-## Sources
-
-- [Apple HomeKitADK - HAPServiceTypes.h](https://github.com/apple/HomeKitADK/blob/master/HAP/HAPServiceTypes.h)
-- [Apple HomeKitADK - HAPCharacteristicTypes.h](https://github.com/apple/HomeKitADK/blob/master/HAP/HAPCharacteristicTypes.h)
-- [NRCHKB Wiki - Service Types](https://nrchkb.github.io/wiki/service/)
-- [esp-homekit-devices Wiki - Service Types](https://github.com/ravensystem/esp-homekit-devices/wiki/Service-Types)
-- [Apple HMCharacteristicType Documentation](https://developer.apple.com/documentation/homekit/hmcharacteristictype)
-- [Homebridge HAP-NodeJS](https://developers.homebridge.io/HAP-NodeJS/classes/Service.html)
+**Linked services:** One or more Valve services (required), ServiceLabel for zone naming.
