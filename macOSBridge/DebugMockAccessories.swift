@@ -9,7 +9,7 @@
 import AppKit
 
 /// Set to true to show mock accessories in the menu for UI testing.
-let DebugShowMockAccessories = true
+let DebugShowMockAccessories = false
 
 enum DebugMockups {
 

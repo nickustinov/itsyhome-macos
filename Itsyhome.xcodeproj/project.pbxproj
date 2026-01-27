@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 54;
+	objectVersion = 77;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -1721,6 +1721,7 @@
 		87037F0B503C4EA9855C096B /* PreferencesManager+Pinned.swift in Sources */ = {isa = PBXBuildFile; fileRef = 113E78ECB1A5FF5BCF3830FF /* PreferencesManager+Pinned.swift */; };
 		874A311DF0D311BD252A5F4C /* SceneMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3AD56C9EA919B09E7896B55 /* SceneMenuItem.swift */; };
 		874B5F9A250FC9E886EA1876 /* IconResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1005C3571FA4A68D8F35429 /* IconResolver.swift */; };
+		874E81D53AA0FC8CD8E987EA /* SlatMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28152E4867E889D98BD69E5A /* SlatMenuItem.swift */; };
 		879BFAC7A415E435182F8190 /* ph.airplane.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = D307793189DCFF6E836437DB /* ph.airplane.fill.svg */; };
 		87A6E8F0F4270328413712BD /* ph.heart-straight-break.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 7C5BAA72649D60999DDB13E4 /* ph.heart-straight-break.fill.svg */; };
 		87B3FC8721587DC8F5D56D74 /* ph.package.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = E3D50A8001BEB4C8329B2196 /* ph.package.fill.svg */; };
@@ -2036,6 +2037,7 @@
 		9F45697C0B2C207C47D9F0F1 /* ph.floppy-disk.svg in Resources */ = {isa = PBXBuildFile; fileRef = 770E3FD34C2FAD684800C6EE /* ph.floppy-disk.svg */; };
 		9F4BA5938EDC1E7D04715B94 /* ph.battery-full.svg in Resources */ = {isa = PBXBuildFile; fileRef = 24EDE23279141D79E26DA65F /* ph.battery-full.svg */; };
 		9F685ED09898E4EF2F953ED9 /* ph.images-square.svg in Resources */ = {isa = PBXBuildFile; fileRef = D62FE6F59A4938F5205AE18A /* ph.images-square.svg */; };
+		9F6ADB69D964B6EDECD22CF9 /* SlatMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28152E4867E889D98BD69E5A /* SlatMenuItem.swift */; };
 		9F8927761A3C887E5AE1BD56 /* ph.clipboard.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = AADE53875D833F6CCAFC6C09 /* ph.clipboard.fill.svg */; };
 		9F9843A3C960074A0849B87B /* ph.speaker-simple-slash.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 6D535E79113900F18DD6153C /* ph.speaker-simple-slash.fill.svg */; };
 		9FA2CCFFEC8C13C189D199B9 /* ph.high-definition.svg in Resources */ = {isa = PBXBuildFile; fileRef = 98341E0EC24B0FF462ABB32F /* ph.high-definition.svg */; };
@@ -3705,6 +3707,7 @@
 		27BF945079F70BCEE14B6297 /* ph.calendar-plus.fill.svg */ = {isa = PBXFileReference; path = "ph.calendar-plus.fill.svg"; sourceTree = "<group>"; };
 		27E54535E59CC4328A2DCF58 /* CameraSnapshotCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraSnapshotCell.swift; sourceTree = "<group>"; };
 		27F89C0A62661147EA0EA93B /* ph.square-half-bottom.svg */ = {isa = PBXFileReference; path = "ph.square-half-bottom.svg"; sourceTree = "<group>"; };
+		28152E4867E889D98BD69E5A /* SlatMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlatMenuItem.swift; sourceTree = "<group>"; };
 		2825953E34ABEB63ECE9D093 /* ph.arrow-circle-up.fill.svg */ = {isa = PBXFileReference; path = "ph.arrow-circle-up.fill.svg"; sourceTree = "<group>"; };
 		2851C16C2C89070277432BC0 /* ph.recycle.fill.svg */ = {isa = PBXFileReference; path = ph.recycle.fill.svg; sourceTree = "<group>"; };
 		285812AB16817B782C229F3B /* ph.pencil-line.fill.svg */ = {isa = PBXFileReference; path = "ph.pencil-line.fill.svg"; sourceTree = "<group>"; };
@@ -9752,6 +9755,7 @@
 				A3AD56C9EA919B09E7896B55 /* SceneMenuItem.swift */,
 				FBD57CCBF703A5861D8AEFB0 /* SecuritySystemMenuItem.swift */,
 				117549B5BED7ADDFB473C53C /* SensorSummaryMenuItem.swift */,
+				28152E4867E889D98BD69E5A /* SlatMenuItem.swift */,
 				51B74BF9E1E02D2CF34C9F37 /* SwitchMenuItem.swift */,
 				86C440D0DF207C3DF9F3A5AD /* ThermostatMenuItem.swift */,
 				4E64829BF9C061EB52A28437 /* ValveMenuItem.swift */,
@@ -9852,7 +9856,7 @@
 			);
 			mainGroup = E4D0AC95AB41872138D6349D;
 			minimizedProjectReferenceProxies = 1;
-			preferredProjectObjectVersion = 54;
+			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -13016,6 +13020,7 @@
 				703DBF83A3BBDD5C6A6DB225 /* SettingsView.swift in Sources */,
 				21F39E80DC3F5C5543037DD6 /* SettingsWindowController.swift in Sources */,
 				EBD10F700CEFAA9D8C99229F /* ShortcutButton.swift in Sources */,
+				874E81D53AA0FC8CD8E987EA /* SlatMenuItem.swift in Sources */,
 				CAFADC7AC3708C1CF63E3E15 /* SwitchMenuItem.swift in Sources */,
 				85A7FA1BF8285A1BF44CEA0E /* TemperatureFormatter.swift in Sources */,
 				08D8F3C60170681EF3187BCE /* ThermostatMenuItem.swift in Sources */,
@@ -13102,6 +13107,7 @@
 				0D1340AA633BF40EC7B797C4 /* SecuritySystemMenuItem.swift in Sources */,
 				02A44E3CB567D2F45BD9E9AD /* SecuritySystemMenuItemTests.swift in Sources */,
 				4DE21C1DE370423C77BB118D /* SensorSummaryMenuItem.swift in Sources */,
+				9F6ADB69D964B6EDECD22CF9 /* SlatMenuItem.swift in Sources */,
 				4959FC69F1F23C3ABA0365A1 /* SwitchMenuItem.swift in Sources */,
 				9FBEDE4F029FFD689286563C /* SwitchMenuItemTests.swift in Sources */,
 				F5FCABEBCF642BE8C3921A78 /* TemperatureFormatter.swift in Sources */,
