@@ -16,21 +16,21 @@ The `hap-spec.py` script queries service and characteristic definitions from the
 
 ```bash
 # Look up a service definition (chapter 8)
-./docs-homekit/hap-spec.py --service Lightbulb      # Handles "Light Bulb" variation
-./docs-homekit/hap-spec.py --service Thermostat
-./docs-homekit/hap-spec.py --service Faucet
+./hap-spec.py --service Lightbulb      # Handles "Light Bulb" variation
+./hap-spec.py --service Thermostat
+./hap-spec.py --service Faucet
 
 # Look up a characteristic definition (chapter 9)
-./docs-homekit/hap-spec.py --char Brightness
-./docs-homekit/hap-spec.py --char On
-./docs-homekit/hap-spec.py --char "Target Temperature"
+./hap-spec.py --char Brightness
+./hap-spec.py --char On
+./hap-spec.py --char "Target Temperature"
 
 # List all services or characteristics
-./docs-homekit/hap-spec.py --list-services
-./docs-homekit/hap-spec.py --list-characteristics
+./hap-spec.py --list-services
+./hap-spec.py --list-characteristics
 
 # General search
-./docs-homekit/hap-spec.py "Active"
+./hap-spec.py "Active"
 ```
 
 ### Output
@@ -51,7 +51,7 @@ For characteristics, output includes:
 ### Example
 
 ```bash
-$ ./docs-homekit/hap-spec.py --service Thermostat
+$ ./hap-spec.py --service Thermostat
 ```
 
 ```
