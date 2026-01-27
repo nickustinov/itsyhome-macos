@@ -106,7 +106,7 @@ class AirPurifierMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRe
         if swingModeId != nil {
             let swingY = (collapsedHeight - 18) / 2
             let swingGroup = ModeButtonGroup(frame: NSRect(x: swingGroupX, y: swingY, width: swingGroupWidth, height: 18))
-            swingButton = swingGroup.addButton(icon: "wind", color: DS.Colors.sliderFan)
+            swingButton = swingGroup.addButton(icon: "angle", color: DS.Colors.sliderFan)
             containerView.addSubview(swingGroup)
             swingButtonGroup = swingGroup
         }

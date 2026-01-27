@@ -11,7 +11,7 @@ extension GroupMenuItem {
 
     func setupControl(height: CGFloat, labelX: CGFloat) {
         switch commonType {
-        case ServiceTypes.windowCovering:
+        case ServiceTypes.windowCovering, ServiceTypes.door, ServiceTypes.window:
             setupBlindsControl(height: height, labelX: labelX)
 
         case ServiceTypes.lightbulb:

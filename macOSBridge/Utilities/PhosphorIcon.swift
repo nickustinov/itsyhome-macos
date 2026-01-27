@@ -199,6 +199,18 @@ extension PhosphorIcon {
             suggestedIcons: ["arrows-out-line-vertical", "caret-up-down", "list"]
         ),
 
+        // Doors (motorized)
+        ServiceTypes.door: AccessoryIconConfig(
+            defaultIcon: "door-open",
+            suggestedIcons: ["door-open", "door", "arrows-out-line-vertical"]
+        ),
+
+        // Windows (motorized)
+        ServiceTypes.window: AccessoryIconConfig(
+            defaultIcon: "browser",
+            suggestedIcons: ["browser", "frame-corners", "arrows-out-line-vertical"]
+        ),
+
         // Garage Doors
         ServiceTypes.garageDoorOpener: AccessoryIconConfig(
             defaultIcon: "garage",

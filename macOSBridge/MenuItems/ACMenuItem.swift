@@ -127,14 +127,14 @@ class ACMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable
         if swingModeId != nil {
             let swingY = (collapsedHeight - 18) / 2
             let swingGroup = ModeButtonGroup(frame: NSRect(x: swingGroupX, y: swingY, width: swingGroupWidth, height: 18))
-            swingButton = swingGroup.addButton(icon: "wind", color: DS.Colors.sliderFan)
+            swingButton = swingGroup.addButton(icon: "angle", color: DS.Colors.sliderFan)
             containerView.addSubview(swingGroup)
             swingButtonGroup = swingGroup
         }
 
         // Current temp
         tempLabel = NSTextField(labelWithString: "--°")
-        tempLabel.frame = NSRect(x: tempX, y: labelY, width: tempWidth, height: 17)
+        tempLabel.frame = NSRect(x: tempX, y: labelY - 2, width: tempWidth, height: 17)
         tempLabel.font = DS.Typography.labelSmall
         tempLabel.textColor = .secondaryLabelColor
         tempLabel.alignment = .right
@@ -341,7 +341,7 @@ class ACMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable
         let switchY = topAreaY + (collapsedHeight - DS.ControlSize.switchHeight) / 2
         iconView.frame.origin.y = iconY
         nameLabel.frame.origin.y = labelY
-        tempLabel.frame.origin.y = labelY
+        tempLabel.frame.origin.y = labelY - 2
         powerToggle.frame.origin.y = switchY
         if let swingGroup = swingButtonGroup {
             swingGroup.frame.origin.y = topAreaY + (collapsedHeight - 18) / 2

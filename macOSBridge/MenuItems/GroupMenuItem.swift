@@ -133,8 +133,10 @@ class GroupMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
         containerView.closesMenuOnAction = false
         containerView.onAction = { [weak self] in
             guard let self else { return }
-            if self.commonType == ServiceTypes.windowCovering {
-                // Blinds group: toggle between 0/100
+            if self.commonType == ServiceTypes.windowCovering ||
+               self.commonType == ServiceTypes.door ||
+               self.commonType == ServiceTypes.window {
+                // Blinds/door/window group: toggle between 0/100
                 let avgPosition = self.positionStates.values.reduce(0, +) / max(self.positionStates.count, 1)
                 let newPosition = avgPosition > 50 ? 0 : 100
                 self.positionSlider?.doubleValue = Double(newPosition)
@@ -189,7 +191,9 @@ class GroupMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
         if PreferencesManager.shared.customIcon(for: group.id) != nil {
             // Use custom icon with filled based on state
             let filled: Bool
-            if commonType == ServiceTypes.windowCovering {
+            if commonType == ServiceTypes.windowCovering ||
+               commonType == ServiceTypes.door ||
+               commonType == ServiceTypes.window {
                 let avgPosition = positionStates.isEmpty ? 0 : positionStates.values.reduce(0, +) / positionStates.count
                 filled = avgPosition > 0
             } else {
@@ -198,8 +202,8 @@ class GroupMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
             iconView.image = IconResolver.icon(for: group, filled: filled)
         } else {
             switch commonType {
-            case ServiceTypes.windowCovering:
-                // For blinds, use position states
+            case ServiceTypes.windowCovering, ServiceTypes.door, ServiceTypes.window:
+                // For blinds/door/window, use position states
                 let avgPosition = positionStates.isEmpty ? 0 : positionStates.values.reduce(0, +) / positionStates.count
                 updateBlindsIcon(position: avgPosition)
             case ServiceTypes.lightbulb:

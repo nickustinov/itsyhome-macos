@@ -138,7 +138,7 @@ class FanMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshabl
                 directionButton = modeContainer.addButton(icon: "arrow.clockwise", color: DS.Colors.sliderFan)
             }
             if swingModeId != nil {
-                swingButton = modeContainer.addButton(icon: "wind", color: DS.Colors.sliderFan)
+                swingButton = modeContainer.addButton(icon: "angle", color: DS.Colors.sliderFan)
             }
 
             modeContainer.isHidden = true

@@ -12,8 +12,10 @@ extension GroupMenuItem {
     func initializeDeviceStates() {
         let services = group.resolveServices(in: menuData)
         for service in services {
-            // For blinds: track position
-            if service.serviceType == ServiceTypes.windowCovering {
+            // For blinds/door/window: track position
+            if service.serviceType == ServiceTypes.windowCovering ||
+               service.serviceType == ServiceTypes.door ||
+               service.serviceType == ServiceTypes.window {
                 if let currentIdString = service.currentPositionId,
                    let currentId = UUID(uuidString: currentIdString) {
                     // Use cached value if available

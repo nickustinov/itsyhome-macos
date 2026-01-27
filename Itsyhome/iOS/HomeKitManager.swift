@@ -102,6 +102,8 @@ class HomeKitManager: NSObject, Mac2iOS, HMHomeManagerDelegate {
             HMServiceTypeHeaterCooler,
             HMServiceTypeLockMechanism,
             HMServiceTypeWindowCovering,
+            ServiceTypes.door,
+            ServiceTypes.window,
             HMServiceTypeTemperatureSensor,
             HMServiceTypeHumiditySensor,
             HMServiceTypeFan,

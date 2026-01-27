@@ -115,7 +115,7 @@ class HumidifierMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
 
         // Current humidity
         humidityLabel = NSTextField(labelWithString: "--%")
-        humidityLabel.frame = NSRect(x: humidityX, y: labelY, width: humidityWidth, height: 17)
+        humidityLabel.frame = NSRect(x: humidityX, y: labelY - 2, width: humidityWidth, height: 17)
         humidityLabel.font = DS.Typography.labelSmall
         humidityLabel.textColor = .secondaryLabelColor
         humidityLabel.alignment = .right
@@ -125,7 +125,7 @@ class HumidifierMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
         if swingModeId != nil {
             let swingY = (collapsedHeight - 18) / 2
             let swingGroup = ModeButtonGroup(frame: NSRect(x: swingGroupX, y: swingY, width: swingGroupWidth, height: 18))
-            swingButton = swingGroup.addButton(icon: "wind", color: DS.Colors.sliderFan)
+            swingButton = swingGroup.addButton(icon: "angle", color: DS.Colors.sliderFan)
             containerView.addSubview(swingGroup)
             swingButtonGroup = swingGroup
         }
@@ -294,7 +294,7 @@ class HumidifierMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
         let switchY = topAreaY + (collapsedHeight - DS.ControlSize.switchHeight) / 2
         iconView.frame.origin.y = iconY
         nameLabel.frame.origin.y = labelY
-        humidityLabel.frame.origin.y = labelY
+        humidityLabel.frame.origin.y = labelY - 2
         powerToggle.frame.origin.y = switchY
         if let swingGroup = swingButtonGroup {
             swingGroup.frame.origin.y = topAreaY + (collapsedHeight - 18) / 2

@@ -413,6 +413,8 @@ public protocol iOS2Mac: NSObjectProtocol {
     @objc public static let heaterCooler = "000000BC-0000-1000-8000-0026BB765291"
     @objc public static let lock = "00000045-0000-1000-8000-0026BB765291"
     @objc public static let windowCovering = "0000008C-0000-1000-8000-0026BB765291"
+    @objc public static let door = "00000081-0000-1000-8000-0026BB765291"
+    @objc public static let window = "0000008B-0000-1000-8000-0026BB765291"
     @objc public static let temperatureSensor = "0000008A-0000-1000-8000-0026BB765291"
     @objc public static let humiditySensor = "00000082-0000-1000-8000-0026BB765291"
     @objc public static let motionSensor = "00000085-0000-1000-8000-0026BB765291"

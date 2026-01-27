@@ -19,7 +19,7 @@ extension PinnedStatusItem {
             return thermostatStatus(for: service)
         case ServiceTypes.humidifierDehumidifier:
             return humidifierStatus(for: service)
-        case ServiceTypes.windowCovering:
+        case ServiceTypes.windowCovering, ServiceTypes.door, ServiceTypes.window:
             return windowCoveringStatus(for: service)
         case ServiceTypes.lock:
             return lockStatus(for: service)

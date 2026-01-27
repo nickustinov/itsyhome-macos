@@ -118,7 +118,7 @@ class ThermostatMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
 
         // Current temp
         tempLabel = NSTextField(labelWithString: "--°")
-        tempLabel.frame = NSRect(x: tempX, y: labelY, width: tempWidth, height: 17)
+        tempLabel.frame = NSRect(x: tempX, y: labelY - 2, width: tempWidth, height: 17)
         tempLabel.font = DS.Typography.labelSmall
         tempLabel.textColor = .secondaryLabelColor
         tempLabel.alignment = .right
@@ -313,7 +313,7 @@ class ThermostatMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
         let switchY = topAreaY + (collapsedHeight - DS.ControlSize.switchHeight) / 2
         iconView.frame.origin.y = iconY
         nameLabel.frame.origin.y = labelY
-        tempLabel.frame.origin.y = labelY
+        tempLabel.frame.origin.y = labelY - 2
         powerToggle.frame.origin.y = switchY
 
         // Show range control in Auto mode with thresholds, single control otherwise

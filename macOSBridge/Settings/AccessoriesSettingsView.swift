@@ -91,7 +91,7 @@ class AccessoriesSettingsView: NSView {
 
     let typeOrder = [ServiceTypes.lightbulb, ServiceTypes.switch, ServiceTypes.outlet, ServiceTypes.fan, ServiceTypes.fanV2,
                      ServiceTypes.heaterCooler, ServiceTypes.thermostat, ServiceTypes.windowCovering,
-                     ServiceTypes.lock, ServiceTypes.garageDoorOpener]
+                     ServiceTypes.door, ServiceTypes.window, ServiceTypes.lock, ServiceTypes.garageDoorOpener]
 
     // MARK: - Initialization
 

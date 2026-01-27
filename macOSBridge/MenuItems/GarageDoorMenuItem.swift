@@ -76,7 +76,7 @@ class GarageDoorMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
 
         // Status label
         statusLabel = NSTextField(labelWithString: "Closed")
-        statusLabel.frame = NSRect(x: statusX, y: labelY, width: statusWidth, height: 17)
+        statusLabel.frame = NSRect(x: statusX, y: labelY - 1, width: statusWidth, height: 17)
         statusLabel.font = DS.Typography.labelSmall
         statusLabel.textColor = .secondaryLabelColor
         statusLabel.alignment = .right

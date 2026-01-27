@@ -263,6 +263,8 @@ class MenuBuilder {
             ServiceTypes.humidifierDehumidifier,
             ServiceTypes.airPurifier,
             ServiceTypes.windowCovering,
+            ServiceTypes.door,
+            ServiceTypes.window,
             ServiceTypes.lock,
             ServiceTypes.garageDoorOpener,
             ServiceTypes.valve,
@@ -399,7 +401,7 @@ class MenuBuilder {
         case ServiceTypes.lock:
             menuItem = LockMenuItem(serviceData: service, bridge: bridge)
 
-        case ServiceTypes.windowCovering:
+        case ServiceTypes.windowCovering, ServiceTypes.door, ServiceTypes.window:
             menuItem = BlindMenuItem(serviceData: service, bridge: bridge)
 
         case ServiceTypes.fan, ServiceTypes.fanV2:

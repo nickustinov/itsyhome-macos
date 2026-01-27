@@ -725,6 +725,8 @@ final class WebhookServer {
         case ServiceTypes.thermostat: return "thermostat"
         case ServiceTypes.heaterCooler: return "heater-cooler"
         case ServiceTypes.windowCovering: return "blinds"
+        case ServiceTypes.door: return "door"
+        case ServiceTypes.window: return "window"
         case ServiceTypes.lock: return "lock"
         case ServiceTypes.garageDoorOpener: return "garage-door"
         case ServiceTypes.temperatureSensor: return "temperature-sensor"
