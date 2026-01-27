@@ -243,6 +243,12 @@ extension PhosphorIcon {
             suggestedIcons: ["drop", "drop-half", "pipe", "shower"]
         ),
 
+        // Slats
+        ServiceTypes.slat: AccessoryIconConfig(
+            defaultIcon: "list",
+            suggestedIcons: ["list", "equals", "rows", "caret-up-down"]
+        ),
+
         // Security Systems
         ServiceTypes.securitySystem: AccessoryIconConfig(
             defaultIcon: "shield",

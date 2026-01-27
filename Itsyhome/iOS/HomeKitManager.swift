@@ -113,6 +113,7 @@ class HomeKitManager: NSObject, Mac2iOS, HMHomeManagerDelegate {
             ServiceTypes.airPurifier,
             ServiceTypes.valve,
             ServiceTypes.faucet,
+            ServiceTypes.slat,
             ServiceTypes.securitySystem
         ]
 
@@ -608,6 +609,10 @@ class HomeKitManager: NSObject, Mac2iOS, HMHomeManagerDelegate {
         let valveTypeChar = findChar(CharacteristicTypes.valveType)
         let valveTypeValue = valveTypeChar?.value as? Int
 
+        // Get slat type value (stored directly, not as characteristic ID)
+        let slatTypeChar = findChar(CharacteristicTypes.slatType)
+        let slatTypeValue = slatTypeChar?.value as? Int
+
         return ServiceData(
             uniqueIdentifier: svc.uniqueIdentifier,
             name: svc.name,
@@ -674,7 +679,12 @@ class HomeKitManager: NSObject, Mac2iOS, HMHomeManagerDelegate {
             remainingDurationId: charId(CharacteristicTypes.remainingDuration),
             // Security System characteristics
             securitySystemCurrentStateId: charId(CharacteristicTypes.securitySystemCurrentState),
-            securitySystemTargetStateId: charId(CharacteristicTypes.securitySystemTargetState)
+            securitySystemTargetStateId: charId(CharacteristicTypes.securitySystemTargetState),
+            // Slat characteristics
+            currentTiltAngleId: charId(CharacteristicTypes.currentTiltAngle),
+            targetTiltAngleId: charId(CharacteristicTypes.targetTiltAngle),
+            slatTypeValue: slatTypeValue,
+            currentSlatStateId: charId(CharacteristicTypes.currentSlatState)
         )
     }
 

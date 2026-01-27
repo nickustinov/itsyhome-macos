@@ -100,6 +100,11 @@ public struct ServiceData: Codable {
     // Security System characteristics
     public let securitySystemCurrentStateId: String?
     public let securitySystemTargetStateId: String?
+    // Slat characteristics
+    public let currentTiltAngleId: String?      // Slat tilt (-90 to 90)
+    public let targetTiltAngleId: String?       // Slat tilt (-90 to 90)
+    public let slatTypeValue: Int?              // 0=HORIZONTAL, 1=VERTICAL
+    public let currentSlatStateId: String?      // 0=FIXED, 1=JAMMED, 2=SWINGING
 
     public init(
         uniqueIdentifier: UUID,
@@ -163,7 +168,12 @@ public struct ServiceData: Codable {
         remainingDurationId: UUID? = nil,
         // Security System
         securitySystemCurrentStateId: UUID? = nil,
-        securitySystemTargetStateId: UUID? = nil
+        securitySystemTargetStateId: UUID? = nil,
+        // Slat
+        currentTiltAngleId: UUID? = nil,
+        targetTiltAngleId: UUID? = nil,
+        slatTypeValue: Int? = nil,
+        currentSlatStateId: UUID? = nil
     ) {
         self.uniqueIdentifier = uniqueIdentifier.uuidString
         self.name = name
@@ -227,6 +237,11 @@ public struct ServiceData: Codable {
         // Security System
         self.securitySystemCurrentStateId = securitySystemCurrentStateId?.uuidString
         self.securitySystemTargetStateId = securitySystemTargetStateId?.uuidString
+        // Slat
+        self.currentTiltAngleId = currentTiltAngleId?.uuidString
+        self.targetTiltAngleId = targetTiltAngleId?.uuidString
+        self.slatTypeValue = slatTypeValue
+        self.currentSlatStateId = currentSlatStateId?.uuidString
     }
 }
 
@@ -426,6 +441,7 @@ public protocol iOS2Mac: NSObjectProtocol {
     @objc public static let airPurifier = "000000BB-0000-1000-8000-0026BB765291"
     @objc public static let valve = "000000D0-0000-1000-8000-0026BB765291"
     @objc public static let faucet = "000000D7-0000-1000-8000-0026BB765291"
+    @objc public static let slat = "000000B9-0000-1000-8000-0026BB765291"
     @objc public static let securitySystem = "0000007E-0000-1000-8000-0026BB765291"
 }
 
@@ -488,4 +504,9 @@ public protocol iOS2Mac: NSObjectProtocol {
     // Security System characteristics
     @objc public static let securitySystemCurrentState = "00000066-0000-1000-8000-0026BB765291"
     @objc public static let securitySystemTargetState = "00000067-0000-1000-8000-0026BB765291"
+    // Slat characteristics
+    @objc public static let currentTiltAngle = "000000C1-0000-1000-8000-0026BB765291"
+    @objc public static let targetTiltAngle = "000000C2-0000-1000-8000-0026BB765291"
+    @objc public static let slatType = "000000C0-0000-1000-8000-0026BB765291"
+    @objc public static let currentSlatState = "000000AA-0000-1000-8000-0026BB765291"
 }

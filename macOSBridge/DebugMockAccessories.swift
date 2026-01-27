@@ -262,6 +262,29 @@ enum DebugMockups {
                 activeId: UUID(),
                 inUseId: UUID()
             ),
+            ServiceData(
+                uniqueIdentifier: UUID(),
+                name: "Mock Slat",
+                serviceType: ServiceTypes.slat,
+                accessoryName: "Mock",
+                roomIdentifier: nil,
+                currentTiltAngleId: UUID(),
+                targetTiltAngleId: UUID(),
+                slatTypeValue: 0,
+                currentSlatStateId: UUID()
+            ),
+            ServiceData(
+                uniqueIdentifier: UUID(),
+                name: "Mock Slat (Swing)",
+                serviceType: ServiceTypes.slat,
+                accessoryName: "Mock",
+                roomIdentifier: nil,
+                swingModeId: UUID(),
+                currentTiltAngleId: UUID(),
+                targetTiltAngleId: UUID(),
+                slatTypeValue: 1,
+                currentSlatStateId: UUID()
+            ),
         ]
     }
 }

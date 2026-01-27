@@ -269,6 +269,7 @@ class MenuBuilder {
             ServiceTypes.garageDoorOpener,
             ServiceTypes.valve,
             ServiceTypes.faucet,
+            ServiceTypes.slat,
             ServiceTypes.securitySystem
         ]
 
@@ -422,6 +423,9 @@ class MenuBuilder {
 
         case ServiceTypes.securitySystem:
             menuItem = SecuritySystemMenuItem(serviceData: service, bridge: bridge)
+
+        case ServiceTypes.slat:
+            menuItem = SlatMenuItem(serviceData: service, bridge: bridge)
 
         default:
             let item = NSMenuItem(title: service.name, action: nil, keyEquivalent: "")
