@@ -109,7 +109,7 @@ class ACMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable
         let swingGroupX = switchX - (swingModeId != nil ? swingGroupWidth + DS.Spacing.sm : 0)
 
         // Current temp position (before swing button or toggle)
-        let tempWidth: CGFloat = 25
+        let tempWidth: CGFloat = 31
         let tempX = (swingModeId != nil ? swingGroupX : switchX) - tempWidth - DS.Spacing.sm
 
         // Name label (fills space up to temp label)

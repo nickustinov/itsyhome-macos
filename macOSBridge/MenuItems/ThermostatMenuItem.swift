@@ -102,7 +102,7 @@ class ThermostatMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
         let switchX = DS.ControlSize.menuItemWidth - DS.Spacing.md - DS.ControlSize.switchWidth
 
         // Current temp position (right-aligned before toggle)
-        let tempWidth: CGFloat = 25
+        let tempWidth: CGFloat = 31
         let tempX = switchX - tempWidth - DS.Spacing.sm
 
         // Name label (fills space up to temp label)

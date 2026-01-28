@@ -31,7 +31,7 @@ enum DebugMockups {
 
                 if let thermostatItem = item as? ThermostatMenuItem {
                     if let id = service.currentTemperatureId.flatMap({ UUID(uuidString: $0) }) {
-                        thermostatItem.updateValue(for: id, value: 21.5)
+                        thermostatItem.updateValue(for: id, value: 88.8)  // Widest digits for testing
                     }
                     if let id = service.heatingThresholdTemperatureId.flatMap({ UUID(uuidString: $0) }) {
                         thermostatItem.updateValue(for: id, value: 18.0)
@@ -43,7 +43,7 @@ enum DebugMockups {
 
                 if let acItem = item as? ACMenuItem {
                     if let id = service.currentTemperatureId.flatMap({ UUID(uuidString: $0) }) {
-                        acItem.updateValue(for: id, value: 23.0)
+                        acItem.updateValue(for: id, value: 88.8)  // Widest digits for testing
                     }
                     if let id = service.heatingThresholdTemperatureId.flatMap({ UUID(uuidString: $0) }) {
                         acItem.updateValue(for: id, value: 20.0)
