@@ -166,16 +166,20 @@ Control your HomeKit devices directly from an Elgato Stream Deck using the [Itsy
 
 | Action | Description |
 |--------|-------------|
-| Toggle device | Toggle any device on/off with device-type-aware icons |
+| Switch/Outlet | Toggle a switch or outlet on/off |
 | Execute scene | Trigger a HomeKit scene |
-| Set brightness | Set a light to a specific brightness level |
+| Light | Toggle a light on/off with optional target brightness |
+| Fan | Toggle a fan on/off with speed display |
+| Humidifier | Toggle a humidifier/dehumidifier on/off with humidity display |
 | Lock | Lock/unlock with optimistic feedback |
 | AC | Toggle thermostat/AC with mode-aware icons (heat/cool/auto) |
 | Status | Display temperature or humidity readings |
 | Blinds | Open/close blinds with position display |
 | Garage door | Open/close garage door with state feedback |
+| Security system | Arm/disarm a security system with mode selection |
+| Group | Turn on/off a device group with partial count display |
 
-Features include color-coded icons per device type, live state polling, optimistic updates for slow devices (locks, garage doors), and optional labels for multi-button setups.
+Features include color-coded icons per device type, dynamic state display, live state polling, optimistic updates for slow devices (locks, garage doors), custom on/off colors, and optional labels for multi-button setups.
 
 See [itsyhome-streamdeck](https://github.com/nickustinov/itsyhome-streamdeck) for setup and development.
 
