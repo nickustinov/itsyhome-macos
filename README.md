@@ -319,7 +319,7 @@ MIT License © 2026 Nick Ustinov - see [LICENSE](LICENSE) for details.
 ## Author
 
 **Nick Ustinov**
-- Email: nickustinov@gmail.com
+- Email: nick@ustinov.cc
 - Website: [itsyhome.app](https://itsyhome.app)
 - GitHub: [@nickustinov](https://github.com/nickustinov)
 
