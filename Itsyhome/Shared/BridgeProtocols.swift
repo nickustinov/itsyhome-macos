@@ -421,6 +421,7 @@ public protocol iOS2Mac: NSObjectProtocol {
     func executeCommand(_ command: String) -> Bool
     func configureCameraPanel()
     func resizeCameraPanel(width: CGFloat, height: CGFloat, animated: Bool)
+    func setCameraPanelPinned(_ pinned: Bool)
 }
 
 // MARK: - Service type constants

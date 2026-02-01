@@ -23,6 +23,7 @@ class CameraViewController: UIViewController {
     var streamCameraView: HMCameraView!
     var streamSpinner: UIActivityIndicatorView!
     var backButton: UIButton!
+    var pinButton: UIButton!
     var streamOverlayStack: UIStackView!
 
     // Audio controls
@@ -57,6 +58,7 @@ class CameraViewController: UIViewController {
     var snapshotTimer: Timer?
     var timestampTimer: Timer?
     var snapshotTimestamps: [UUID: Date] = [:]
+    var isPinned = false
     var hasLoadedInitialData = false
 
     /// Resolved overlay data per camera: [cameraUUID: [(characteristic, service name, service type)]]
@@ -243,6 +245,20 @@ class CameraViewController: UIViewController {
             backButton.leadingAnchor.constraint(equalTo: streamContainerView.leadingAnchor, constant: 8)
         ])
 
+        pinButton = UIButton(type: .custom)
+        pinButton.setImage(UIImage(systemName: "pin")?.withTintColor(.white, renderingMode: .alwaysOriginal), for: .normal)
+        pinButton.backgroundColor = UIColor(white: 0, alpha: 0.5)
+        pinButton.layer.cornerRadius = 14
+        pinButton.contentEdgeInsets = UIEdgeInsets(top: 6, left: 8, bottom: 6, right: 8)
+        pinButton.translatesAutoresizingMaskIntoConstraints = false
+        pinButton.addTarget(self, action: #selector(togglePin), for: .touchUpInside)
+        streamContainerView.addSubview(pinButton)
+
+        NSLayoutConstraint.activate([
+            pinButton.topAnchor.constraint(equalTo: streamContainerView.topAnchor, constant: 8),
+            pinButton.trailingAnchor.constraint(equalTo: streamContainerView.trailingAnchor, constant: -8)
+        ])
+
         // Stream overlay stack (bottom-left, horizontal pills)
         streamOverlayStack = UIStackView()
         streamOverlayStack.axis = .horizontal
@@ -298,6 +314,13 @@ class CameraViewController: UIViewController {
         activeStreamControl = nil
         activeStreamAccessory = nil
         stopSnapshotTimer()
+    }
+
+    @objc func togglePin() {
+        isPinned.toggle()
+        let iconName = isPinned ? "pin.fill" : "pin"
+        pinButton.setImage(UIImage(systemName: iconName)?.withTintColor(.white, renderingMode: .alwaysOriginal), for: .normal)
+        macOSController?.setCameraPanelPinned(isPinned)
     }
 }
 

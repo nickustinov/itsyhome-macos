@@ -231,6 +231,12 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate {
         }
     }
 
+    @objc public func setCameraPanelPinned(_ pinned: Bool) {
+        DispatchQueue.main.async { [weak self] in
+            self?.cameraPanelManager.setCameraPinned(pinned)
+        }
+    }
+
     private func showProRequiredAlert() {
         let alert = NSAlert()
         alert.messageText = "Itsyhome Pro required"

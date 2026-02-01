@@ -64,6 +64,12 @@ extension CameraViewController {
     }
 
     @objc func backToGrid() {
+        if isPinned {
+            isPinned = false
+            pinButton.setImage(UIImage(systemName: "pin")?.withTintColor(.white, renderingMode: .alwaysOriginal), for: .normal)
+            macOSController?.setCameraPanelPinned(false)
+        }
+
         activeStreamControl?.stopStream()
         activeStreamControl = nil
         activeStreamAccessory = nil

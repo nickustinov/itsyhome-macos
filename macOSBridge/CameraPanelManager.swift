@@ -25,6 +25,7 @@ final class CameraPanelManager {
     private var localClickMonitor: Any?
     private var cameraPanelPollTimer: DispatchSourceTimer?
     private var cameraWindowObserver: NSObjectProtocol?
+    private(set) var isPinned = false
 
     weak var delegate: CameraPanelManagerDelegate?
 
@@ -58,10 +59,26 @@ final class CameraPanelManager {
     }
 
     func dismissCameraPanel() {
+        isPinned = false
         removeClickOutsideMonitor()
         cameraPanelWindow?.orderOut(nil)
         delegate?.cameraPanelManagerSetCameraWindowHidden(self, hidden: true)
         cameraStatusItem?.button?.highlight(false)
+    }
+
+    func setCameraPinned(_ pinned: Bool) {
+        isPinned = pinned
+        guard let window = cameraPanelWindow else { return }
+
+        if pinned {
+            removeClickOutsideMonitor()
+            window.level = .floating
+        } else {
+            window.level = .popUpMenu
+            if window.isVisible {
+                setupClickOutsideMonitor()
+            }
+        }
     }
 
     var isPanelVisible: Bool {
@@ -83,11 +100,18 @@ final class CameraPanelManager {
             window.maxSize = NSSize(width: 1200, height: 675)
             window.aspectRatio = NSSize(width: 16, height: 9)
         } else {
+            if isPinned {
+                isPinned = false
+                window.level = .popUpMenu
+            }
             window.styleMask.remove(.resizable)
             window.isMovable = false
             window.isMovableByWindowBackground = false
             window.minSize = NSSize(width: width, height: height)
             window.maxSize = NSSize(width: width, height: height)
+            if window.isVisible {
+                setupClickOutsideMonitor()
+            }
         }
 
         guard window.isVisible else { return }
