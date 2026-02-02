@@ -26,7 +26,7 @@ extension CameraViewController {
 
         let ratio = cameraAspectRatios[accessory.uniqueIdentifier] ?? Self.defaultAspectRatio
         let streamHeight = Self.streamWidth / ratio
-        updatePanelSize(width: Self.streamWidth, height: streamHeight, aspectRatio: ratio, cameraId: accessory.uniqueIdentifier.uuidString, animated: false)
+        updatePanelSize(width: Self.streamWidth, height: streamHeight, aspectRatio: ratio, animated: false)
         updateStreamOverlays(for: accessory)
         updateAudioControls(for: accessory)
 
@@ -65,6 +65,20 @@ extension CameraViewController {
         }
     }
 
+    @objc func toggleStreamZoom() {
+        guard activeStreamControl != nil,
+              let accessory = activeStreamAccessory else { return }
+
+        isStreamZoomed.toggle()
+        let iconName = isStreamZoomed ? "minus.magnifyingglass" : "plus.magnifyingglass"
+        zoomButton.setImage(UIImage(systemName: iconName)?.withTintColor(.white, renderingMode: .alwaysOriginal), for: .normal)
+
+        let ratio = cameraAspectRatios[accessory.uniqueIdentifier] ?? Self.defaultAspectRatio
+        let width = isStreamZoomed ? Self.streamWidth * 2 : Self.streamWidth
+        let height = width / ratio
+        updatePanelSize(width: width, height: height, aspectRatio: ratio, animated: true)
+    }
+
     @objc func backToGrid() {
         if isPinned {
             isPinned = false
@@ -72,6 +86,7 @@ extension CameraViewController {
             macOSController?.setCameraPanelPinned(false)
         }
 
+        isStreamZoomed = false
         activeStreamControl?.stopStream()
         activeStreamControl = nil
         activeStreamAccessory = nil

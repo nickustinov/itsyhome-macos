@@ -225,9 +225,9 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate {
         // No longer used — macOS side polls instead
     }
 
-    @objc public func resizeCameraPanel(width: CGFloat, height: CGFloat, aspectRatio: CGFloat, cameraId: String, animated: Bool) {
+    @objc public func resizeCameraPanel(width: CGFloat, height: CGFloat, aspectRatio: CGFloat, animated: Bool) {
         DispatchQueue.main.async { [weak self] in
-            self?.cameraPanelManager.resizeCameraPanel(width: width, height: height, aspectRatio: aspectRatio, cameraId: cameraId, animated: animated)
+            self?.cameraPanelManager.resizeCameraPanel(width: width, height: height, aspectRatio: aspectRatio, animated: animated)
         }
     }
 

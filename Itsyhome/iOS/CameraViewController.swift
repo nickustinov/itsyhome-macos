@@ -25,6 +25,7 @@ class CameraViewController: UIViewController {
     var streamSpinner: UIActivityIndicatorView!
     var backButton: UIButton!
     var pinButton: UIButton!
+    var zoomButton: UIButton!
     var streamOverlayStack: UIStackView!
 
     // Audio controls
@@ -61,6 +62,7 @@ class CameraViewController: UIViewController {
     var snapshotTimestamps: [UUID: Date] = [:]
     var cameraAspectRatios: [UUID: CGFloat] = [:]
     var isPinned = false
+    var isStreamZoomed = false
     var hasLoadedInitialData = false
 
     /// Resolved overlay data per camera: [cameraUUID: [(characteristic, service name, service type)]]
@@ -293,12 +295,26 @@ class CameraViewController: UIViewController {
             streamOverlayStack.bottomAnchor.constraint(equalTo: streamContainerView.bottomAnchor, constant: -8)
         ])
 
+        zoomButton = UIButton(type: .custom)
+        zoomButton.setImage(UIImage(systemName: "plus.magnifyingglass")?.withTintColor(.white, renderingMode: .alwaysOriginal), for: .normal)
+        zoomButton.backgroundColor = UIColor(white: 0, alpha: 0.5)
+        zoomButton.layer.cornerRadius = 14
+        zoomButton.contentEdgeInsets = UIEdgeInsets(top: 6, left: 8, bottom: 6, right: 8)
+        zoomButton.translatesAutoresizingMaskIntoConstraints = false
+        zoomButton.addTarget(self, action: #selector(toggleStreamZoom), for: .touchUpInside)
+        streamContainerView.addSubview(zoomButton)
+
+        NSLayoutConstraint.activate([
+            zoomButton.topAnchor.constraint(equalTo: streamContainerView.topAnchor, constant: 8),
+            zoomButton.trailingAnchor.constraint(equalTo: pinButton.leadingAnchor, constant: -6)
+        ])
+
         setupAudioControls()
     }
 
     // MARK: - Panel size
 
-    func updatePanelSize(width: CGFloat, height: CGFloat, aspectRatio: CGFloat = 16.0 / 9.0, cameraId: String = "", animated: Bool) {
+    func updatePanelSize(width: CGFloat, height: CGFloat, aspectRatio: CGFloat = 16.0 / 9.0, animated: Bool) {
         #if targetEnvironment(macCatalyst)
         if let windowScene = view.window?.windowScene {
             let isStreamMode = width > 400
@@ -313,7 +329,7 @@ class CameraViewController: UIViewController {
             }
         }
         #endif
-        macOSController?.resizeCameraPanel(width: width, height: height, aspectRatio: aspectRatio, cameraId: cameraId, animated: animated)
+        macOSController?.resizeCameraPanel(width: width, height: height, aspectRatio: aspectRatio, animated: animated)
     }
 
     func computeGridHeight() -> CGFloat {

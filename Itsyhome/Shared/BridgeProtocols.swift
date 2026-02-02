@@ -429,7 +429,7 @@ public protocol iOS2Mac: NSObjectProtocol {
     func showError(message: String)
     func executeCommand(_ command: String) -> Bool
     func configureCameraPanel()
-    func resizeCameraPanel(width: CGFloat, height: CGFloat, aspectRatio: CGFloat, cameraId: String, animated: Bool)
+    func resizeCameraPanel(width: CGFloat, height: CGFloat, aspectRatio: CGFloat, animated: Bool)
     func setCameraPanelPinned(_ pinned: Bool)
 }
 

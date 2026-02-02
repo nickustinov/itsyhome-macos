@@ -67,7 +67,7 @@ extension CameraViewController: HMCameraStreamControlDelegate {
                     if !hadRatio, let ratio = self.cameraAspectRatios[uuid],
                        abs(ratio - Self.defaultAspectRatio) > 0.05 {
                         let streamHeight = Self.streamWidth / ratio
-                        self.updatePanelSize(width: Self.streamWidth, height: streamHeight, aspectRatio: ratio, cameraId: uuid.uuidString, animated: true)
+                        self.updatePanelSize(width: Self.streamWidth, height: streamHeight, aspectRatio: ratio, animated: true)
                     }
                 }
             }
