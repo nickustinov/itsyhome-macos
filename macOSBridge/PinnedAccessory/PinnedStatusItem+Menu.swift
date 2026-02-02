@@ -135,9 +135,9 @@ extension PinnedStatusItem {
         // Wrap services as AccessoryData for the menu builder
         services.map { service in
             AccessoryData(
-                uniqueIdentifier: UUID(uuidString: service.uniqueIdentifier)!,
+                uniqueIdentifier: service.uniqueIdentifier,
                 name: service.accessoryName,
-                roomIdentifier: service.roomIdentifier?.uuid,
+                roomIdentifier: service.roomIdentifier,
                 services: [service],
                 isReachable: service.isReachable
             )

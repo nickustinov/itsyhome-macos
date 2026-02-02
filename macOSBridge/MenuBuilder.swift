@@ -449,9 +449,9 @@ class MenuBuilder {
                 !preferences.isHidden(serviceId: service.uniqueIdentifier)
             }
             return AccessoryData(
-                uniqueIdentifier: UUID(uuidString: accessory.uniqueIdentifier)!,
+                uniqueIdentifier: accessory.uniqueIdentifier,
                 name: accessory.name,
-                roomIdentifier: accessory.roomIdentifier?.uuid,
+                roomIdentifier: accessory.roomIdentifier,
                 services: filteredServices,
                 isReachable: accessory.isReachable
             )

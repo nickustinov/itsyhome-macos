@@ -38,7 +38,7 @@ extension CameraViewController {
         resolveOverlayData(homeId: homeId)
 
         let height = computeGridHeight()
-        macOSController?.resizeCameraPanel(width: Self.gridWidth, height: height, animated: false)
+        macOSController?.resizeCameraPanel(width: Self.gridWidth, height: height, aspectRatio: Self.defaultAspectRatio, cameraId: "", animated: false)
     }
 
     func resolveOverlayData(homeId: String) {

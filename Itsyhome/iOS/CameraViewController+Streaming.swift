@@ -24,7 +24,9 @@ extension CameraViewController {
         collectionView.isHidden = true
         stopSnapshotTimer()
 
-        updatePanelSize(width: Self.streamWidth, height: Self.streamHeight, animated: false)
+        let ratio = cameraAspectRatios[accessory.uniqueIdentifier] ?? Self.defaultAspectRatio
+        let streamHeight = Self.streamWidth / ratio
+        updatePanelSize(width: Self.streamWidth, height: streamHeight, aspectRatio: ratio, cameraId: accessory.uniqueIdentifier.uuidString, animated: false)
         updateStreamOverlays(for: accessory)
         updateAudioControls(for: accessory)
 

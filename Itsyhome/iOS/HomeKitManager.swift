@@ -47,6 +47,7 @@ class HomeKitManager: NSObject, Mac2iOS, HMHomeManagerDelegate {
                 UserDefaults.standard.removeObject(forKey: Self.selectedHomeKey)
             }
             fetchDataAndReloadMenu()
+            NotificationCenter.default.post(name: .homeDidChange, object: nil)
         }
     }
 

@@ -65,7 +65,7 @@ class AboutSection: SettingsCard {
         linksStack.spacing = 16
 
         let websiteButton = createLinkButton(title: "Website", url: "https://itsyhome.app")
-        let githubButton = createLinkButton(title: "GitHub", url: "https://github.com/nickustinov/itsyhome")
+        let githubButton = createLinkButton(title: "GitHub", url: "https://github.com/nickustinov/itsyhome-macos")
 
         linksStack.addArrangedSubview(websiteButton)
         linksStack.addArrangedSubview(githubButton)

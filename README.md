@@ -16,8 +16,8 @@ A native macOS menu bar app for controlling your HomeKit smart home devices.
 - **Favourites** - Pin frequently used devices, scenes, and groups to the top of the menu
 - **Multi-home support** - Switch between multiple HomeKit homes
 - **Native experience** - Built with AppKit for a true macOS look and feel
+- **Menu bar pinning** - Pin rooms, devices, scenes, or groups as separate menu bar items with optional keyboard shortcuts
 - **Device groups** - Create custom groups to control multiple devices at once *(Pro)*
-- **Menu bar pinning** - Pin rooms, devices, scenes, or groups as separate menu bar items with optional keyboard shortcuts *(Pro)*
 - **iCloud sync** - Sync favourites, groups, and settings across your Macs *(Pro)*
 - **Deeplinks** - Control devices from Shortcuts, Alfred, Raycast, Stream Deck *(Pro)*
 - **Cameras** - Live video feed with overlay action buttons to control nearby accessories *(Pro)*

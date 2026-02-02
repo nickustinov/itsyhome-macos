@@ -283,6 +283,15 @@ public struct AccessoryData: Codable {
         self.services = services
         self.isReachable = isReachable
     }
+
+    /// String-based initializer for when data is already serialized (avoids String→UUID→String roundtrip)
+    public init(uniqueIdentifier: String, name: String, roomIdentifier: String?, services: [ServiceData], isReachable: Bool) {
+        self.uniqueIdentifier = uniqueIdentifier
+        self.name = name
+        self.roomIdentifier = roomIdentifier
+        self.services = services
+        self.isReachable = isReachable
+    }
 }
 
 public struct CameraData: Codable {
@@ -420,7 +429,7 @@ public protocol iOS2Mac: NSObjectProtocol {
     func showError(message: String)
     func executeCommand(_ command: String) -> Bool
     func configureCameraPanel()
-    func resizeCameraPanel(width: CGFloat, height: CGFloat, animated: Bool)
+    func resizeCameraPanel(width: CGFloat, height: CGFloat, aspectRatio: CGFloat, cameraId: String, animated: Bool)
     func setCameraPanelPinned(_ pinned: Bool)
 }
 

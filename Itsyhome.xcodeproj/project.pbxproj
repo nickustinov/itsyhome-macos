@@ -1438,6 +1438,7 @@
 		70447D3A7016E811F0242D50 /* ph.club.svg in Resources */ = {isa = PBXBuildFile; fileRef = 833335B01322AD4364C85BDF /* ph.club.svg */; };
 		70674344740A68262787D4AC /* ph.brandy.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = BDBDA15003339E6804DE82B6 /* ph.brandy.fill.svg */; };
 		708DD18AC8963FF7BD7E7D6D /* ph.gear.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = D864FD1235DC5FC2507C8D9B /* ph.gear.fill.svg */; };
+		709C7837FECA7EA292E553EC /* CameraViewController+AspectRatio.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A5EE6C62B93F1F874BFBA53 /* CameraViewController+AspectRatio.swift */; };
 		70A7F1D08629A4AF7244B70F /* ph.phone-slash.svg in Resources */ = {isa = PBXBuildFile; fileRef = F0BE52EE9CD9D91CDE1D41C8 /* ph.phone-slash.svg */; };
 		70AA805E89B46510CBEE081B /* ph.dropbox-logo.svg in Resources */ = {isa = PBXBuildFile; fileRef = 940B60616EFD472B1AEA4FFC /* ph.dropbox-logo.svg */; };
 		70AEDC6F21024E04C6700125 /* ph.hourglass-simple-medium.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 238E527A2E51592AE838573C /* ph.hourglass-simple-medium.fill.svg */; };
@@ -4558,6 +4559,7 @@
 		6A2D8FAEBEC0054ADF62C7F6 /* ph.radioactive.fill.svg */ = {isa = PBXFileReference; path = ph.radioactive.fill.svg; sourceTree = "<group>"; };
 		6A2E98692B043E97671C5B1A /* PinnedStatusItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinnedStatusItem.swift; sourceTree = "<group>"; };
 		6A5BCC47B00603ED2682B2B5 /* ph.map-pin.svg */ = {isa = PBXFileReference; path = "ph.map-pin.svg"; sourceTree = "<group>"; };
+		6A5EE6C62B93F1F874BFBA53 /* CameraViewController+AspectRatio.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CameraViewController+AspectRatio.swift"; sourceTree = "<group>"; };
 		6A69F85860DC29873E86B7CC /* ph.arrow-u-left-up.svg */ = {isa = PBXFileReference; path = "ph.arrow-u-left-up.svg"; sourceTree = "<group>"; };
 		6A75722F28BCAF9438952237 /* ph.arrow-square-out.fill.svg */ = {isa = PBXFileReference; path = "ph.arrow-square-out.fill.svg"; sourceTree = "<group>"; };
 		6A932A435498B9144C564DE9 /* ph.wine.svg */ = {isa = PBXFileReference; path = ph.wine.svg; sourceTree = "<group>"; };
@@ -6566,6 +6568,7 @@
 				EF4C9E2A9610BD23BE84E2F9 /* CameraSceneDelegate.swift */,
 				27E54535E59CC4328A2DCF58 /* CameraSnapshotCell.swift */,
 				0407B252FDFC384E196876DD /* CameraViewController.swift */,
+				6A5EE6C62B93F1F874BFBA53 /* CameraViewController+AspectRatio.swift */,
 				BDF6041C9E962ED63D2709FD /* CameraViewController+Audio.swift */,
 				8E38D91D9B55FBEBB1C7D33B /* CameraViewController+CollectionView.swift */,
 				374C2EC1F7A56B4ECE04924A /* CameraViewController+Data.swift */,
@@ -12964,6 +12967,7 @@
 				52BED706E1E2183D364BA285 /* BridgeProtocols.swift in Sources */,
 				76BD3DDF71BC336FC74CB2D3 /* CameraSceneDelegate.swift in Sources */,
 				B7D6F7258AD7EE41FD484A9B /* CameraSnapshotCell.swift in Sources */,
+				709C7837FECA7EA292E553EC /* CameraViewController+AspectRatio.swift in Sources */,
 				EA2BD76D206D991EBDA7FE4C /* CameraViewController+Audio.swift in Sources */,
 				1E6C7F244DAA12026DED3B53 /* CameraViewController+CollectionView.swift in Sources */,
 				05A1DB037EB7709B7048A05F /* CameraViewController+Data.swift in Sources */,

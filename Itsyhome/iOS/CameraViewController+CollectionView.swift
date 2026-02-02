@@ -50,7 +50,9 @@ extension CameraViewController: UICollectionViewDelegateFlowLayout {
 
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         let width = CameraViewController.gridWidth - CameraViewController.sectionSide * 2
-        let height = width * 9.0 / 16.0 + CameraViewController.labelHeight
+        let uuid = cameraAccessories[indexPath.item].uniqueIdentifier
+        let ratio = cameraAspectRatios[uuid] ?? CameraViewController.defaultAspectRatio
+        let height = width / ratio + CameraViewController.labelHeight
         return CGSize(width: width, height: height)
     }
 }

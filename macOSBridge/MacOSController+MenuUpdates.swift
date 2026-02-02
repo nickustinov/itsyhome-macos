@@ -55,7 +55,8 @@ extension MacOSController {
     func updateReachabilityRecursively(in menu: NSMenu, serviceIds: Set<UUID>, isReachable: Bool) {
         for item in menu.items {
             if let reachabilityItem = item as? ReachabilityUpdatable,
-               serviceIds.contains(reachabilityItem.serviceIdentifier) {
+               let id = reachabilityItem.serviceIdentifier,
+               serviceIds.contains(id) {
                 reachabilityItem.setReachable(isReachable)
             }
             if let submenu = item.submenu {

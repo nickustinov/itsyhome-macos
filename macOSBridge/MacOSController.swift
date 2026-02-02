@@ -225,9 +225,9 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate {
         // No longer used — macOS side polls instead
     }
 
-    @objc public func resizeCameraPanel(width: CGFloat, height: CGFloat, animated: Bool) {
+    @objc public func resizeCameraPanel(width: CGFloat, height: CGFloat, aspectRatio: CGFloat, cameraId: String, animated: Bool) {
         DispatchQueue.main.async { [weak self] in
-            self?.cameraPanelManager.resizeCameraPanel(width: width, height: height, animated: animated)
+            self?.cameraPanelManager.resizeCameraPanel(width: width, height: height, aspectRatio: aspectRatio, cameraId: cameraId, animated: animated)
         }
     }
 
@@ -358,7 +358,7 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate {
     public func menuWillOpen(_ menu: NSMenu) {
         if menu == mainMenu {
             menuIsOpen = true
-            if cameraPanelManager.isPanelVisible {
+            if cameraPanelManager.isPanelVisible && !cameraPanelManager.isPinned {
                 cameraPanelManager.dismissCameraPanel()
             }
             // Close any open thermostat popovers

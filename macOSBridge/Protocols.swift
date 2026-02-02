@@ -18,7 +18,7 @@ protocol CharacteristicRefreshable {
 }
 
 protocol ReachabilityUpdatable {
-    var serviceIdentifier: UUID { get }
+    var serviceIdentifier: UUID? { get }
     func setReachable(_ isReachable: Bool)
 }
 

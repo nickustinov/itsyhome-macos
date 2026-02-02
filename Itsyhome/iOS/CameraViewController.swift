@@ -11,6 +11,7 @@ import HomeKit
 extension Notification.Name {
     static let cameraPanelDidShow = Notification.Name("cameraPanelDidShow")
     static let cameraPanelDidHide = Notification.Name("cameraPanelDidHide")
+    static let homeDidChange = Notification.Name("homeDidChange")
 }
 
 class CameraViewController: UIViewController {
@@ -35,7 +36,7 @@ class CameraViewController: UIViewController {
 
     static let gridWidth: CGFloat = 300
     static let streamWidth: CGFloat = 530
-    static let streamHeight: CGFloat = 298 // 16:9
+    static let defaultAspectRatio: CGFloat = 16.0 / 9.0
 
     static let sectionTop: CGFloat = 15
     static let sectionBottom: CGFloat = 15
@@ -58,6 +59,7 @@ class CameraViewController: UIViewController {
     var snapshotTimer: Timer?
     var timestampTimer: Timer?
     var snapshotTimestamps: [UUID: Date] = [:]
+    var cameraAspectRatios: [UUID: CGFloat] = [:]
     var isPinned = false
     var hasLoadedInitialData = false
 
@@ -100,10 +102,29 @@ class CameraViewController: UIViewController {
             name: .cameraPanelDidHide,
             object: nil
         )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(homeDidChange),
+            name: .homeDidChange,
+            object: nil
+        )
     }
 
     @objc private func preferencesDidChange() {
         guard activeStreamControl == nil else { return }
+        loadCameras()
+        emptyLabel.isHidden = !cameraAccessories.isEmpty
+        collectionView.isHidden = cameraAccessories.isEmpty
+        collectionView.reloadData()
+
+        let height = computeGridHeight()
+        updatePanelSize(width: Self.gridWidth, height: height, animated: false)
+    }
+
+    @objc private func homeDidChange() {
+        if activeStreamControl != nil {
+            backToGrid()
+        }
         loadCameras()
         emptyLabel.isHidden = !cameraAccessories.isEmpty
         collectionView.isHidden = cameraAccessories.isEmpty
@@ -277,20 +298,22 @@ class CameraViewController: UIViewController {
 
     // MARK: - Panel size
 
-    func updatePanelSize(width: CGFloat, height: CGFloat, animated: Bool) {
+    func updatePanelSize(width: CGFloat, height: CGFloat, aspectRatio: CGFloat = 16.0 / 9.0, cameraId: String = "", animated: Bool) {
         #if targetEnvironment(macCatalyst)
         if let windowScene = view.window?.windowScene {
             let isStreamMode = width > 400
             if isStreamMode {
-                windowScene.sizeRestrictions?.minimumSize = CGSize(width: 400, height: 225)
-                windowScene.sizeRestrictions?.maximumSize = CGSize(width: 1200, height: 675)
+                let minWidth: CGFloat = 400
+                let maxWidth: CGFloat = 1200
+                windowScene.sizeRestrictions?.minimumSize = CGSize(width: minWidth, height: minWidth / aspectRatio)
+                windowScene.sizeRestrictions?.maximumSize = CGSize(width: maxWidth, height: maxWidth / aspectRatio)
             } else {
                 windowScene.sizeRestrictions?.minimumSize = CGSize(width: width, height: height)
                 windowScene.sizeRestrictions?.maximumSize = CGSize(width: width, height: height)
             }
         }
         #endif
-        macOSController?.resizeCameraPanel(width: width, height: height, animated: animated)
+        macOSController?.resizeCameraPanel(width: width, height: height, aspectRatio: aspectRatio, cameraId: cameraId, animated: animated)
     }
 
     func computeGridHeight() -> CGFloat {
@@ -298,12 +321,22 @@ class CameraViewController: UIViewController {
         guard count > 0 else { return 150 }
 
         let cellWidth = Self.gridWidth - Self.sectionSide * 2
-        let cellHeight = cellWidth * 9.0 / 16.0 + Self.labelHeight
+
+        // Compute individual cell heights based on detected aspect ratios
+        var cellHeights: [CGFloat] = []
+        for accessory in cameraAccessories {
+            let ratio = cameraAspectRatios[accessory.uniqueIdentifier] ?? Self.defaultAspectRatio
+            cellHeights.append(cellWidth / ratio + Self.labelHeight)
+        }
 
         if count <= 3 {
-            return Self.sectionTop + CGFloat(count) * cellHeight + CGFloat(count - 1) * Self.lineSpacing + Self.sectionBottom
+            let totalCells = cellHeights.reduce(0, +)
+            return Self.sectionTop + totalCells + CGFloat(count - 1) * Self.lineSpacing + Self.sectionBottom
         } else {
-            return Self.sectionTop + 3 * cellHeight + 2 * Self.lineSpacing + Self.lineSpacing + cellHeight * 0.5
+            // Show first 3 cells plus half of the 4th to hint at scrollability
+            let firstThree = cellHeights.prefix(3).reduce(0, +)
+            let fourth = cellHeights.count > 3 ? cellHeights[3] : cellHeights.last!
+            return Self.sectionTop + firstThree + 2 * Self.lineSpacing + Self.lineSpacing + fourth * 0.5
         }
     }
 

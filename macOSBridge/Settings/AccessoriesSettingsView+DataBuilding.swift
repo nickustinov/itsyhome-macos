@@ -54,23 +54,28 @@ extension AccessoriesSettingsView {
         }
 
         let preferences = PreferencesManager.shared
-        let excludedTypes: Set<String> = [ServiceTypes.temperatureSensor, ServiceTypes.humiditySensor]
+        let sensorTypes: Set<String> = [ServiceTypes.temperatureSensor, ServiceTypes.humiditySensor]
 
         servicesByRoom = [:]
         noRoomServices = []
+        var roomsWithAnyService: Set<String> = []
 
         for accessory in data.accessories {
-            for service in accessory.services where !excludedTypes.contains(service.serviceType) {
+            for service in accessory.services {
                 if let roomId = service.roomIdentifier {
-                    servicesByRoom[roomId, default: []].append(service)
-                } else {
+                    roomsWithAnyService.insert(roomId)
+                    if !sensorTypes.contains(service.serviceType) {
+                        servicesByRoom[roomId, default: []].append(service)
+                    }
+                } else if !sensorTypes.contains(service.serviceType) {
                     noRoomServices.append(service)
                 }
             }
         }
 
         // Order rooms by saved order, with unseen rooms appended at end
-        let roomsWithServices = data.rooms.filter { servicesByRoom[$0.uniqueIdentifier] != nil }
+        // Include rooms that have any services (including sensor-only rooms) so they can be hidden
+        let roomsWithServices = data.rooms.filter { roomsWithAnyService.contains($0.uniqueIdentifier) }
         let savedOrder = preferences.roomOrder
         var ordered: [RoomData] = []
         for roomId in savedOrder {

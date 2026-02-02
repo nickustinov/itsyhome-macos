@@ -25,7 +25,11 @@ final class CameraPanelManager {
     private var localClickMonitor: Any?
     private var cameraPanelPollTimer: DispatchSourceTimer?
     private var cameraWindowObserver: NSObjectProtocol?
+    private var streamFrameObservers: [NSObjectProtocol] = []
     private(set) var isPinned = false
+    private var activeStreamCameraId: String = ""
+
+    private static let streamFrameKeyPrefix = "cameraStreamFrame_"
 
     weak var delegate: CameraPanelManagerDelegate?
 
@@ -85,21 +89,27 @@ final class CameraPanelManager {
         cameraPanelWindow?.isVisible == true
     }
 
-    func resizeCameraPanel(width: CGFloat, height: CGFloat, animated: Bool) {
+    func resizeCameraPanel(width: CGFloat, height: CGFloat, aspectRatio: CGFloat, cameraId: String, animated: Bool) {
         cameraPanelSize = NSSize(width: width, height: height)
         guard let window = cameraPanelWindow else { return }
 
         // Enable resizing and moving only in stream mode (wider than grid)
         let isStreamMode = width > 400
         if isStreamMode {
+            activeStreamCameraId = cameraId
             window.styleMask.insert(.resizable)
             window.isMovable = true
             window.isMovableByWindowBackground = true
-            // 16:9 aspect ratio constraints
-            window.minSize = NSSize(width: 400, height: 225)
-            window.maxSize = NSSize(width: 1200, height: 675)
-            window.aspectRatio = NSSize(width: 16, height: 9)
+            // Use the camera's detected aspect ratio for window constraints
+            let minWidth: CGFloat = 400
+            let maxWidth: CGFloat = 1200
+            window.minSize = NSSize(width: minWidth, height: minWidth / aspectRatio)
+            window.maxSize = NSSize(width: maxWidth, height: maxWidth / aspectRatio)
+            window.aspectRatio = NSSize(width: aspectRatio, height: 1)
+            addStreamFrameObservers(for: window)
         } else {
+            activeStreamCameraId = ""
+            removeStreamFrameObservers()
             if isPinned {
                 isPinned = false
                 window.level = .popUpMenu
@@ -107,6 +117,7 @@ final class CameraPanelManager {
             window.styleMask.remove(.resizable)
             window.isMovable = false
             window.isMovableByWindowBackground = false
+            window.aspectRatio = NSSize(width: 0, height: 0)
             window.minSize = NSSize(width: width, height: height)
             window.maxSize = NSSize(width: width, height: height)
             if window.isVisible {
@@ -115,7 +126,13 @@ final class CameraPanelManager {
         }
 
         guard window.isVisible else { return }
-        positionCameraPanelWithSize(window, width: width, height: height, animate: animated)
+
+        if isStreamMode, !cameraId.isEmpty, let savedFrame = savedStreamFrame(for: cameraId), fitsOnScreen(savedFrame),
+           savedFrame.height > 0 && abs(savedFrame.width / savedFrame.height - aspectRatio) < 0.1 {
+            window.setFrame(savedFrame, display: true, animate: animated)
+        } else {
+            positionCameraPanelWithSize(window, width: width, height: height, animate: animated)
+        }
     }
 
     // MARK: - Status Item Action
@@ -256,6 +273,62 @@ final class CameraPanelManager {
         x = max(minX, min(x, maxX))
 
         window.setFrame(NSRect(x: x, y: y, width: width, height: height), display: true, animate: animate)
+    }
+
+    // MARK: - Stream frame persistence
+
+    private func addStreamFrameObservers(for window: NSWindow) {
+        removeStreamFrameObservers()
+
+        let handler: (Notification) -> Void = { [weak self] _ in
+            self?.saveStreamFrame()
+        }
+
+        let resizeObserver = NotificationCenter.default.addObserver(
+            forName: NSWindow.didEndLiveResizeNotification,
+            object: window,
+            queue: .main,
+            using: handler
+        )
+        let moveObserver = NotificationCenter.default.addObserver(
+            forName: NSWindow.didMoveNotification,
+            object: window,
+            queue: .main,
+            using: handler
+        )
+        streamFrameObservers = [resizeObserver, moveObserver]
+    }
+
+    private func removeStreamFrameObservers() {
+        for observer in streamFrameObservers {
+            NotificationCenter.default.removeObserver(observer)
+        }
+        streamFrameObservers.removeAll()
+    }
+
+    private func saveStreamFrame() {
+        guard !activeStreamCameraId.isEmpty,
+              let frame = cameraPanelWindow?.frame else { return }
+        let dict: [String: Double] = [
+            "x": Double(frame.origin.x),
+            "y": Double(frame.origin.y),
+            "width": Double(frame.size.width),
+            "height": Double(frame.size.height)
+        ]
+        UserDefaults.standard.set(dict, forKey: Self.streamFrameKeyPrefix + activeStreamCameraId)
+    }
+
+    private func savedStreamFrame(for cameraId: String) -> NSRect? {
+        guard let dict = UserDefaults.standard.dictionary(forKey: Self.streamFrameKeyPrefix + cameraId),
+              let x = dict["x"] as? Double,
+              let y = dict["y"] as? Double,
+              let width = dict["width"] as? Double,
+              let height = dict["height"] as? Double else { return nil }
+        return NSRect(x: x, y: y, width: width, height: height)
+    }
+
+    private func fitsOnScreen(_ frame: NSRect) -> Bool {
+        NSScreen.screens.contains { $0.visibleFrame.intersects(frame) }
     }
 
     // MARK: - Click Outside Monitor

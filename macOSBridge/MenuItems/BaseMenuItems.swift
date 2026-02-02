@@ -30,8 +30,8 @@ protocol ReachabilityUpdatableMenuItem: ReachabilityUpdatable, NSMenuItem {
 }
 
 extension ReachabilityUpdatableMenuItem {
-    var serviceIdentifier: UUID {
-        UUID(uuidString: serviceData.uniqueIdentifier)!
+    var serviceIdentifier: UUID? {
+        UUID(uuidString: serviceData.uniqueIdentifier)
     }
 
     func setReachable(_ isReachable: Bool) {
