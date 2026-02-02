@@ -33,7 +33,7 @@ public struct RoomData: Codable {
 
 public struct ServiceData: Codable {
     public let uniqueIdentifier: String
-    public let name: String
+    public var name: String
     public let serviceType: String
     public let accessoryName: String
     public let roomIdentifier: String?
@@ -242,6 +242,19 @@ public struct ServiceData: Codable {
         self.targetTiltAngleId = targetTiltAngleId?.uuidString
         self.slatTypeValue = slatTypeValue
         self.currentSlatStateId = currentSlatStateId?.uuidString
+    }
+
+    func strippingRoomName(_ roomName: String) -> ServiceData {
+        var copy = self
+        let trimmed = copy.name.trimmingCharacters(in: .whitespaces)
+        let roomPrefix = roomName.trimmingCharacters(in: .whitespaces)
+        if trimmed.lowercased().hasPrefix(roomPrefix.lowercased()) {
+            let remainder = trimmed.dropFirst(roomPrefix.count).trimmingCharacters(in: .whitespaces)
+            if !remainder.isEmpty {
+                copy.name = remainder
+            }
+        }
+        return copy
     }
 }
 

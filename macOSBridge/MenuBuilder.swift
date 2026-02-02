@@ -207,7 +207,7 @@ class MenuBuilder {
                 }
             }
 
-            addServicesGroupedByType(to: submenu, accessories: roomAccessories)
+            addServicesGroupedByType(to: submenu, accessories: roomAccessories, roomName: room.name)
             roomItem.submenu = submenu
             menu.addItem(roomItem)
         }
@@ -223,7 +223,7 @@ class MenuBuilder {
         }
     }
 
-    func addServicesGroupedByType(to menu: NSMenu, accessories: [AccessoryData]) {
+    func addServicesGroupedByType(to menu: NSMenu, accessories: [AccessoryData], roomName: String? = nil) {
         var servicesByType: [String: [ServiceData]] = [:]
         var temperatureSensors: [ServiceData] = []
         var humiditySensors: [ServiceData] = []
@@ -291,7 +291,11 @@ class MenuBuilder {
             let sortedServices = services.sorted { $0.name < $1.name }
 
             for service in sortedServices {
-                if let item = createMenuItemForService(service) {
+                var displayService = service
+                if let roomName = roomName {
+                    displayService = service.strippingRoomName(roomName)
+                }
+                if let item = createMenuItemForService(displayService) {
                     menu.addItem(item)
                 }
             }
