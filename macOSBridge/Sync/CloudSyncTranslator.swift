@@ -45,7 +45,7 @@ struct CloudSyncTranslator {
         sceneIdToName.removeAll()
         sceneNameToId.removeAll()
         roomIdToName = roomLookup
-        roomNameToId = Dictionary(uniqueKeysWithValues: data.rooms.map { ($0.name, $0.uniqueIdentifier) })
+        roomNameToId = Dictionary(data.rooms.map { ($0.name, $0.uniqueIdentifier) }, uniquingKeysWith: { first, _ in first })
 
         for accessory in data.accessories {
             let roomName = accessory.roomIdentifier.flatMap { roomLookup[$0] } ?? "Unknown"

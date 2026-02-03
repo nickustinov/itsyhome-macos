@@ -43,13 +43,17 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate {
 
     @objc public required override init() {
         super.init()
+        StartupLogger.log("MacOSController init start")
         menuBuilder = MenuBuilder(bridge: nil)
         actionEngine = ActionEngine(bridge: nil)
         cameraPanelManager.delegate = self
         setupStatusItem()
+        StartupLogger.log("Status item created")
         setupMenu()
+        StartupLogger.log("Initial menu set up")
         setupNotifications()
         Task { @MainActor in _ = ProManager.shared }
+        StartupLogger.log("MacOSController init complete")
     }
 
     private func setupNotifications() {
@@ -151,33 +155,33 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate {
     // MARK: - iOS2Mac Protocol
 
     @objc public func reloadMenuWithJSON(_ jsonString: String) {
-        print("Received JSON (\(jsonString.count) chars)")
+        StartupLogger.log("Received JSON (\(jsonString.count) chars)")
         guard let jsonData = jsonString.data(using: .utf8) else {
-            print("Failed to convert JSON string to data")
+            StartupLogger.error("Failed to convert JSON string to data")
             return
         }
 
         do {
             let menuData = try JSONDecoder().decode(MenuData.self, from: jsonData)
-            print("Decoded: \(menuData.homes.count) homes, \(menuData.rooms.count) rooms, \(menuData.accessories.count) accessories")
+            StartupLogger.log("Decoded: \(menuData.homes.count) homes, \(menuData.rooms.count) rooms, \(menuData.accessories.count) accessories, \(menuData.scenes.count) scenes")
             DispatchQueue.main.async {
                 self.rebuildMenu(with: menuData)
             }
         } catch let decodingError as DecodingError {
             switch decodingError {
             case .keyNotFound(let key, let context):
-                print("Key '\(key.stringValue)' not found: \(context.debugDescription)")
+                StartupLogger.error("Key '\(key.stringValue)' not found: \(context.debugDescription)")
             case .typeMismatch(let type, let context):
-                print("Type mismatch for \(type): \(context.debugDescription)")
+                StartupLogger.error("Type mismatch for \(type): \(context.debugDescription)")
             case .valueNotFound(let type, let context):
-                print("Value not found for \(type): \(context.debugDescription)")
+                StartupLogger.error("Value not found for \(type): \(context.debugDescription)")
             case .dataCorrupted(let context):
-                print("Data corrupted: \(context.debugDescription)")
+                StartupLogger.error("Data corrupted: \(context.debugDescription)")
             @unknown default:
-                print("Unknown decoding error: \(decodingError)")
+                StartupLogger.error("Unknown decoding error: \(decodingError)")
             }
         } catch {
-            print("Failed to decode menu JSON: \(error)")
+            StartupLogger.error("Failed to decode menu JSON: \(error)")
         }
     }
 
@@ -194,6 +198,7 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate {
     }
 
     @objc public func showError(message: String) {
+        StartupLogger.error("showError called: \(message)")
         DispatchQueue.main.async {
             let alert = NSAlert()
             alert.messageText = "Itsyhome error"
@@ -254,6 +259,7 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate {
     // MARK: - Menu Building
 
     func rebuildMenu(with data: MenuData) {
+        StartupLogger.log("rebuildMenu start — \(data.rooms.count) rooms, \(data.accessories.count) accessories, \(data.scenes.count) scenes")
         currentMenuData = data
         mainMenu.removeAllItems()
 
@@ -263,7 +269,9 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate {
         HotkeyManager.shared.registerShortcuts()
 
         menuBuilder.bridge = iOSBridge
+        StartupLogger.log("Building menu items...")
         menuBuilder.buildMenu(into: mainMenu, with: data)
+        StartupLogger.log("Menu items built — \(mainMenu.items.count) items")
 
         actionEngine.bridge = iOSBridge
         actionEngine.updateMenuData(data)
@@ -275,12 +283,15 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate {
         cameraPanelManager.setupCameraStatusItem(hasCameras: shouldShow)
 
         // Update pinned status items
+        StartupLogger.log("Syncing pinned status items...")
         syncPinnedStatusItems()
+        StartupLogger.log("Pinned items synced — \(pinnedStatusItems.count) items")
 
         mainMenu.addItem(NSMenuItem.separator())
         addFooterItems()
 
         refreshCharacteristics()
+        StartupLogger.log("rebuildMenu complete")
     }
 
     private func addFooterItems() {

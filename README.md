@@ -340,6 +340,14 @@ Test coverage includes:
 | `IconResolverTests` | Device icon resolution |
 | `ProStatusCacheTests` | Pro status caching |
 
+## Debugging
+
+Startup diagnostics logging can be enabled by setting `StartupLogger.enabled = true` in `macOSBridge/Utilities/StartupLogger.swift`. Logs are emitted via `os_log` with subsystem `com.nickustinov.itsyhome` and category `Startup`, viewable in Console.app or via:
+
+```bash
+log stream --predicate 'subsystem == "com.nickustinov.itsyhome"' --level info
+```
+
 ## HomeKit entitlement
 
 This app requires the HomeKit entitlement. You'll need to:

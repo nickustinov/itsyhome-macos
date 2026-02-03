@@ -944,6 +944,7 @@
 		49406DD27C23D95AC0A1041C /* ph.vector-two.svg in Resources */ = {isa = PBXBuildFile; fileRef = 9C9B154ADBB21EFAEF18EF40 /* ph.vector-two.svg */; };
 		4950212A34B266CABD2FFEDA /* ph.phone-pause.svg in Resources */ = {isa = PBXBuildFile; fileRef = 56F662CCE1B9DA7DE4E6BDDF /* ph.phone-pause.svg */; };
 		4959FC69F1F23C3ABA0365A1 /* SwitchMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51B74BF9E1E02D2CF34C9F37 /* SwitchMenuItem.swift */; };
+		49776CBF087EF86859BA5713 /* StartupLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 968843684EBF155D2DE30957 /* StartupLogger.swift */; };
 		497F5FF60E56CE7C68BE867D /* ph.battery-plus.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = E666DFE4099D1F38AD25ED4A /* ph.battery-plus.fill.svg */; };
 		49813733635DEAAA296B8FED /* ph.gitlab-logo-simple.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 66B42B89CC88142CEE04E331 /* ph.gitlab-logo-simple.fill.svg */; };
 		49CE30268B6C3AAF91B85717 /* ph.question-mark.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = DE605FDA3E642D2DE44D95BB /* ph.question-mark.fill.svg */; };
@@ -1959,6 +1960,7 @@
 		98F3C2CD6C08CCBB01997CFF /* ph.align-center-horizontal-simple.svg in Resources */ = {isa = PBXBuildFile; fileRef = CC59E21EE452639587AB909A /* ph.align-center-horizontal-simple.svg */; };
 		98F783AA77C8DA2CF5D5A923 /* ModernSlider.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA517D9CAF4A470166D8C402 /* ModernSlider.swift */; };
 		98FFE946141FC0C44C325174 /* ph.x-circle.svg in Resources */ = {isa = PBXBuildFile; fileRef = 9272ECADFA90FBD364A4425B /* ph.x-circle.svg */; };
+		9907F04B32E92E6D358D63FD /* StartupLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 968843684EBF155D2DE30957 /* StartupLogger.swift */; };
 		99148A04ACE124D94096ADE4 /* ph.invoice.svg in Resources */ = {isa = PBXBuildFile; fileRef = B163ABEFAF252F33B8C35824 /* ph.invoice.svg */; };
 		9915CE7D02FB2F7873CD52AF /* ph.file-zip.svg in Resources */ = {isa = PBXBuildFile; fileRef = 829024C3611FAC16E9B79B50 /* ph.file-zip.svg */; };
 		991D41FB76028C4D7DCF7471 /* ph.arrow-line-up-right.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = E2BB72CE815F52084B2F7194 /* ph.arrow-line-up-right.fill.svg */; };
@@ -5121,6 +5123,7 @@
 		960EFB7DEEB1546E3EAEC8A7 /* ph.office-chair.svg */ = {isa = PBXFileReference; path = "ph.office-chair.svg"; sourceTree = "<group>"; };
 		96148C9F3C692D5AFEA05F54 /* ph.open-ai-logo.fill.svg */ = {isa = PBXFileReference; path = "ph.open-ai-logo.fill.svg"; sourceTree = "<group>"; };
 		96351BADA3B8FDDB12F2E3DC /* ph.waveform.svg */ = {isa = PBXFileReference; path = ph.waveform.svg; sourceTree = "<group>"; };
+		968843684EBF155D2DE30957 /* StartupLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StartupLogger.swift; sourceTree = "<group>"; };
 		96982E4498841CA4154561EA /* ph.dice-three.fill.svg */ = {isa = PBXFileReference; path = "ph.dice-three.fill.svg"; sourceTree = "<group>"; };
 		969ADECEBC8D55A1B08144AD /* ColorPickerViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorPickerViews.swift; sourceTree = "<group>"; };
 		96A37CAE7C0D66A60011430F /* ph.arrows-out-simple.fill.svg */ = {isa = PBXFileReference; path = "ph.arrows-out-simple.fill.svg"; sourceTree = "<group>"; };
@@ -6456,6 +6459,7 @@
 				D7001522F49F44848A26EC3E /* IconMapping.swift */,
 				E1005C3571FA4A68D8F35429 /* IconResolver.swift */,
 				71F198924CC917731F11F541 /* PhosphorIcon.swift */,
+				968843684EBF155D2DE30957 /* StartupLogger.swift */,
 				377DE1391A6CCD59734552A7 /* TemperatureFormatter.swift */,
 			);
 			path = Utilities;
@@ -13071,6 +13075,7 @@
 				21F39E80DC3F5C5543037DD6 /* SettingsWindowController.swift in Sources */,
 				EBD10F700CEFAA9D8C99229F /* ShortcutButton.swift in Sources */,
 				874E81D53AA0FC8CD8E987EA /* SlatMenuItem.swift in Sources */,
+				49776CBF087EF86859BA5713 /* StartupLogger.swift in Sources */,
 				CAFADC7AC3708C1CF63E3E15 /* SwitchMenuItem.swift in Sources */,
 				85A7FA1BF8285A1BF44CEA0E /* TemperatureFormatter.swift in Sources */,
 				08D8F3C60170681EF3187BCE /* ThermostatMenuItem.swift in Sources */,
@@ -13162,6 +13167,7 @@
 				02A44E3CB567D2F45BD9E9AD /* SecuritySystemMenuItemTests.swift in Sources */,
 				4DE21C1DE370423C77BB118D /* SensorSummaryMenuItem.swift in Sources */,
 				9F6ADB69D964B6EDECD22CF9 /* SlatMenuItem.swift in Sources */,
+				9907F04B32E92E6D358D63FD /* StartupLogger.swift in Sources */,
 				4959FC69F1F23C3ABA0365A1 /* SwitchMenuItem.swift in Sources */,
 				9FBEDE4F029FFD689286563C /* SwitchMenuItemTests.swift in Sources */,
 				F5FCABEBCF642BE8C3921A78 /* TemperatureFormatter.swift in Sources */,
@@ -13204,7 +13210,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_MAC_ICON_IN_CATALYST_APP = YES;
 				CODE_SIGN_ENTITLEMENTS = Itsyhome/Itsyhome.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 118;
+				CURRENT_PROJECT_VERSION = 120;
 				DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER = NO;
 				INFOPLIST_FILE = Itsyhome/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Itsyhome;
@@ -13332,7 +13338,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_MAC_ICON_IN_CATALYST_APP = YES;
 				CODE_SIGN_ENTITLEMENTS = Itsyhome/Itsyhome.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 118;
+				CURRENT_PROJECT_VERSION = 120;
 				DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER = NO;
 				INFOPLIST_FILE = Itsyhome/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Itsyhome;

@@ -113,7 +113,7 @@ extension WebhookServer {
         case "groups":
             var groups = PreferencesManager.shared.deviceGroups
             let roomLookup = data.roomLookup()
-            let roomIdLookup = Dictionary(uniqueKeysWithValues: data.rooms.map { ($0.name.lowercased(), $0.uniqueIdentifier) })
+            let roomIdLookup = Dictionary(data.rooms.map { ($0.name.lowercased(), $0.uniqueIdentifier) }, uniquingKeysWith: { first, _ in first })
 
             // Filter by room if specified
             if let filterRoom = room?.removingPercentEncoding {
