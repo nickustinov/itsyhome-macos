@@ -9,6 +9,7 @@
 - **Strip room name from accessories in rooms** — accessories displayed in room submenus have the room name prefix removed (e.g. "Living Room AC" shows as "AC" in the Living Room submenu)
 
 ### Bug fixes
+- **Fix pinned scenes not updating state** — pinned scenes now receive real-time characteristic updates, so activating one scene correctly deactivates others without needing to reopen the menu
 - **Fix crash on launch with Home permission** — removed force-unwrapped UUID conversions in menu building that caused a crash when processing HomeKit data, preventing the menu bar icon from ever appearing
 - **Fix sensor-only rooms missing from settings** — rooms containing only temperature/humidity sensors now appear in the settings room list so they can be hidden
 - **Fix GitHub link in about section** — pointed to incorrect repository URL

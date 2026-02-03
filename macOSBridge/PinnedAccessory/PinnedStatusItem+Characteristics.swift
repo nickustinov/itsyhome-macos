@@ -17,8 +17,10 @@ extension PinnedStatusItem {
             return extractCharacteristicIds(from: service)
         case .room(_, let services):
             return services.flatMap { extractCharacteristicIds(from: $0) }
-        case .scene, .scenesSection:
-            return []  // Scenes don't have characteristics to monitor
+        case .scene(let scene):
+            return scene.actions.compactMap { UUID(uuidString: $0.characteristicId) }
+        case .scenesSection(let scenes):
+            return scenes.flatMap { $0.actions.compactMap { UUID(uuidString: $0.characteristicId) } }
         case .group(_, let services):
             return services.flatMap { extractCharacteristicIds(from: $0) }
         }
