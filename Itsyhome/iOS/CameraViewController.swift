@@ -61,6 +61,7 @@ class CameraViewController: UIViewController {
     var timestampTimer: Timer?
     var snapshotTimestamps: [UUID: Date] = [:]
     var cameraAspectRatios: [UUID: CGFloat] = [:]
+    var streamConfirmedRatios: Set<UUID> = []
     var isPinned = false
     var isStreamZoomed = false
     var hasLoadedInitialData = false
@@ -81,6 +82,7 @@ class CameraViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = UIColor(white: 0.12, alpha: 1.0)
+        loadPersistedAspectRatios()
         setupCollectionView()
         setupEmptyState()
         setupStreamView()
@@ -308,6 +310,10 @@ class CameraViewController: UIViewController {
             zoomButton.topAnchor.constraint(equalTo: streamContainerView.topAnchor, constant: 8),
             zoomButton.trailingAnchor.constraint(equalTo: pinButton.leadingAnchor, constant: -6)
         ])
+
+        let doubleTap = UITapGestureRecognizer(target: self, action: #selector(toggleStreamZoom))
+        doubleTap.numberOfTapsRequired = 2
+        streamContainerView.addGestureRecognizer(doubleTap)
 
         setupAudioControls()
     }

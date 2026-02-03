@@ -97,6 +97,7 @@ extension CameraViewController {
         streamOverlayStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
         resetAudioState()
         collectionView.isHidden = cameraAccessories.isEmpty
+        collectionView.collectionViewLayout.invalidateLayout()
         collectionView.setContentOffset(.zero, animated: false)
 
         let height = computeGridHeight()

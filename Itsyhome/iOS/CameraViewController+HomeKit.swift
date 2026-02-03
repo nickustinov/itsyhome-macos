@@ -13,23 +13,15 @@ import HomeKit
 extension CameraViewController: HMCameraSnapshotControlDelegate {
 
     func cameraSnapshotControl(_ cameraSnapshotControl: HMCameraSnapshotControl, didTake snapshot: HMCameraSnapshot?, error: Error?) {
-        guard error == nil else { return }
+        guard error == nil, let snapshot = snapshot else { return }
         for (index, accessory) in cameraAccessories.enumerated() {
             if snapshotControls[accessory.uniqueIdentifier] === cameraSnapshotControl {
                 let uuid = accessory.uniqueIdentifier
                 DispatchQueue.main.async {
+                    self.cacheAspectRatio(from: snapshot, for: uuid)
                     self.snapshotTimestamps[uuid] = Date()
                     let indexPath = IndexPath(item: index, section: 0)
                     self.collectionView.reloadItems(at: [indexPath])
-
-                    // Detect aspect ratio from the snapshot cell if not already known
-                    if self.cameraAspectRatios[uuid] == nil {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-                            guard let self = self,
-                                  let cell = self.collectionView.cellForItem(at: indexPath) as? CameraSnapshotCell else { return }
-                            self.detectAspectRatio(from: cell.cameraView, for: uuid)
-                        }
-                    }
                 }
                 break
             }
@@ -55,20 +47,17 @@ extension CameraViewController: HMCameraStreamControlDelegate {
             self.streamCameraView.isHidden = false
             self.streamCameraView.cameraSource = cameraStreamControl.cameraStream
 
-            // Detect aspect ratio from the stream view
-            if let uuid = self.activeStreamAccessory?.uniqueIdentifier {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
-                    guard let self = self,
-                          self.activeStreamControl != nil else { return }
-                    let hadRatio = self.cameraAspectRatios[uuid] != nil
-                    self.detectAspectRatio(from: self.streamCameraView, for: uuid)
+            // Read aspect ratio from the stream source (authoritative)
+            if let uuid = self.activeStreamAccessory?.uniqueIdentifier,
+               let stream = cameraStreamControl.cameraStream {
+                let oldRatio = self.cameraAspectRatios[uuid]
+                self.cacheAspectRatio(from: stream, for: uuid, fromStream: true)
+                let newRatio = self.cameraAspectRatios[uuid]
 
-                    // Only resize if a new non-default ratio was just detected
-                    if !hadRatio, let ratio = self.cameraAspectRatios[uuid],
-                       abs(ratio - Self.defaultAspectRatio) > 0.05 {
-                        let streamHeight = Self.streamWidth / ratio
-                        self.updatePanelSize(width: Self.streamWidth, height: streamHeight, aspectRatio: ratio, animated: true)
-                    }
+                if let ratio = newRatio, oldRatio != newRatio {
+                    let width = self.isStreamZoomed ? Self.streamWidth * 2 : Self.streamWidth
+                    let streamHeight = width / ratio
+                    self.updatePanelSize(width: width, height: streamHeight, aspectRatio: ratio, animated: true)
                 }
             }
         }
