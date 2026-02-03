@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.2.0
 
 ### New features
 - **Per-camera aspect ratios** — cameras with non-16:9 native ratios (4:3, 1:1, vertical, etc.) are detected automatically and rendered without black bars in both grid and stream views
@@ -16,3 +16,8 @@
 - **Fix sensor-only rooms missing from settings** — rooms containing only temperature/humidity sensors now appear in the settings room list so they can be hidden
 - **Fix GitHub link in about section** — pointed to incorrect repository URL
 - **Fix cameras not updating on home switch** — camera panel now reloads when switching between homes, stopping any active stream and showing the new home's cameras
+- **Fix crash with duplicate room names** — homes with identically named rooms no longer crash on launch
+
+## 1.1.0
+
+Initial release.
