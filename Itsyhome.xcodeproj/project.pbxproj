@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 54;
+	objectVersion = 77;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -1442,6 +1442,7 @@
 		70A7F1D08629A4AF7244B70F /* ph.phone-slash.svg in Resources */ = {isa = PBXBuildFile; fileRef = F0BE52EE9CD9D91CDE1D41C8 /* ph.phone-slash.svg */; };
 		70AA805E89B46510CBEE081B /* ph.dropbox-logo.svg in Resources */ = {isa = PBXBuildFile; fileRef = 940B60616EFD472B1AEA4FFC /* ph.dropbox-logo.svg */; };
 		70AEDC6F21024E04C6700125 /* ph.hourglass-simple-medium.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 238E527A2E51592AE838573C /* ph.hourglass-simple-medium.fill.svg */; };
+		70C45E577C1BD38FFD1AC412 /* ItsytvSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FE4F034B6941A4D32654933 /* ItsytvSection.swift */; };
 		70CED5B65D4C6FDF6ACE02D7 /* ph.arrow-bend-double-up-left.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = FC5048FCF187A95F3AC079A6 /* ph.arrow-bend-double-up-left.fill.svg */; };
 		70EE911120B182805D4E2AAB /* ph.taxi.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 2C747CA77DD0DCD5C7653556 /* ph.taxi.fill.svg */; };
 		71077741546FC56A9CB694DE /* ACMenuItemTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4645448B313F9D7E3EDB0D5 /* ACMenuItemTests.swift */; };
@@ -4017,6 +4018,7 @@
 		3F8C15A0F0024E3121BFBF32 /* ph.shapes.svg */ = {isa = PBXFileReference; path = ph.shapes.svg; sourceTree = "<group>"; };
 		3FAA5BE535E749BB5A72F10B /* ph.sneaker-move.fill.svg */ = {isa = PBXFileReference; path = "ph.sneaker-move.fill.svg"; sourceTree = "<group>"; };
 		3FCE60E7EF48F22D2D2EE14E /* ph.folder-simple-plus.fill.svg */ = {isa = PBXFileReference; path = "ph.folder-simple-plus.fill.svg"; sourceTree = "<group>"; };
+		3FE4F034B6941A4D32654933 /* ItsytvSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItsytvSection.swift; sourceTree = "<group>"; };
 		400A1C8305A5DE21C23D465D /* ph.couch.fill.svg */ = {isa = PBXFileReference; path = ph.couch.fill.svg; sourceTree = "<group>"; };
 		401A5A397CB9F6BCAC4FC2EE /* ph.bluetooth-x.fill.svg */ = {isa = PBXFileReference; path = "ph.bluetooth-x.fill.svg"; sourceTree = "<group>"; };
 		401C18579C9B8F7A9D22BFFA /* ph.user-circle-gear.fill.svg */ = {isa = PBXFileReference; path = "ph.user-circle-gear.fill.svg"; sourceTree = "<group>"; };
@@ -6516,6 +6518,7 @@
 				2015876131A8AE52D26618FC /* DeeplinksSection.swift */,
 				62AD62C3749331FE2DA3CA6B /* GeneralSection.swift */,
 				45ADAE5712E4621056FF217C /* GroupEditorPanel.swift */,
+				3FE4F034B6941A4D32654933 /* ItsytvSection.swift */,
 				9C1443A561323B39B108F71E /* WebhooksSection.swift */,
 			);
 			path = Sections;
@@ -9893,7 +9896,7 @@
 			);
 			mainGroup = E4D0AC95AB41872138D6349D;
 			minimizedProjectReferenceProxies = 1;
-			preferredProjectObjectVersion = 54;
+			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -13032,6 +13035,7 @@
 				243C3F0D744EDDE9D9608B3C /* IconMapping.swift in Sources */,
 				221FC579B7EF3E2FD175FDBE /* IconPickerPopover.swift in Sources */,
 				874B5F9A250FC9E886EA1876 /* IconResolver.swift in Sources */,
+				70C45E577C1BD38FFD1AC412 /* ItsytvSection.swift in Sources */,
 				4436CFEA7BA3F99DBA1BF890 /* LightMenuItem.swift in Sources */,
 				806CCEC2325035CD0F9D0690 /* LockMenuItem.swift in Sources */,
 				B016C10CFF63BD01A1571C3D /* MacOSController+MenuUpdates.swift in Sources */,

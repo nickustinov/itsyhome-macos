@@ -70,6 +70,7 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
         case cameras
         case deeplinks
         case webhooks
+        case itsytv
         case about
 
         var title: String {
@@ -79,6 +80,7 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
             case .cameras: return "Cameras"
             case .deeplinks: return "Deeplinks"
             case .webhooks: return "Webhooks/CLI"
+            case .itsytv: return "Apple TV remote"
             case .about: return "About"
             }
         }
@@ -90,6 +92,7 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
             case .cameras: return "security-camera"
             case .deeplinks: return "link"
             case .webhooks: return "globe"
+            case .itsytv: return "television"
             case .about: return "info"
             }
         }
@@ -108,6 +111,7 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
     private var camerasSection: CamerasSection?
     private var deeplinksSection: DeeplinksSection?
     private var webhooksSection: WebhooksSection?
+    private var itsytvSection: ItsytvSection?
     private var aboutSection: AboutSection?
     private var cancellables = Set<AnyCancellable>()
 
@@ -273,6 +277,12 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
                 webhooksSection = WebhooksSection()
             }
             contentView = webhooksSection!
+
+        case .itsytv:
+            if itsytvSection == nil {
+                itsytvSection = ItsytvSection()
+            }
+            contentView = itsytvSection!
 
         case .about:
             if aboutSection == nil {
