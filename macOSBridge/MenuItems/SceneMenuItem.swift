@@ -88,19 +88,7 @@ class SceneMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
                 }
             } else {
                 self.reverseScene()
-                for action in self.sceneData.actions {
-                    if let charId = UUID(uuidString: action.characteristicId),
-                       Self.reversibleTypes.contains(action.characteristicType) {
-                        let oppositeValue = self.calculateOppositeValue(for: action)
-                        if let doubleValue = oppositeValue as? Double {
-                            self.currentValues[charId] = doubleValue
-                        } else if let intValue = oppositeValue as? Int {
-                            self.currentValues[charId] = Double(intValue)
-                        } else if let boolValue = oppositeValue as? Bool {
-                            self.currentValues[charId] = boolValue ? 1.0 : 0.0
-                        }
-                    }
-                }
+                self.cacheOffValues()
             }
             self.updateUI()
         }
@@ -179,20 +167,7 @@ class SceneMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
             isActive = true
         } else {
             reverseScene()
-            // Optimistically update cached values to opposite
-            for action in sceneData.actions {
-                if let charId = UUID(uuidString: action.characteristicId),
-                   Self.reversibleTypes.contains(action.characteristicType) {
-                    let oppositeValue = calculateOppositeValue(for: action)
-                    if let doubleValue = oppositeValue as? Double {
-                        currentValues[charId] = doubleValue
-                    } else if let intValue = oppositeValue as? Int {
-                        currentValues[charId] = Double(intValue)
-                    } else if let boolValue = oppositeValue as? Bool {
-                        currentValues[charId] = boolValue ? 1.0 : 0.0
-                    }
-                }
-            }
+            cacheOffValues()
             isActive = false
         }
         updateUI()
@@ -203,32 +178,62 @@ class SceneMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
         bridge?.executeScene(identifier: uuid)
     }
 
+    /// Deactivate a scene by turning off only things the scene turned on.
+    /// Matches Apple Home behaviour: deactivating a scene never turns on lights,
+    /// unlocks doors, or opens garage doors.
     private func reverseScene() {
         for action in sceneData.actions {
             guard let charId = UUID(uuidString: action.characteristicId),
-                  Self.reversibleTypes.contains(action.characteristicType) else {
+                  Self.reversibleTypes.contains(action.characteristicType),
+                  let offValue = Self.offValue(for: action) else {
                 continue
             }
-            let oppositeValue = calculateOppositeValue(for: action)
-            bridge?.writeCharacteristic(identifier: charId, value: oppositeValue)
+            bridge?.writeCharacteristic(identifier: charId, value: offValue)
         }
     }
 
-    private func calculateOppositeValue(for action: SceneActionData) -> Any {
+    /// Optimistically cache the off values for all reversible actions.
+    private func cacheOffValues() {
+        for action in sceneData.actions {
+            guard let charId = UUID(uuidString: action.characteristicId),
+                  Self.reversibleTypes.contains(action.characteristicType),
+                  let offValue = Self.offValue(for: action) else {
+                continue
+            }
+            if let doubleValue = offValue as? Double {
+                currentValues[charId] = doubleValue
+            } else if let intValue = offValue as? Int {
+                currentValues[charId] = Double(intValue)
+            } else if let boolValue = offValue as? Bool {
+                currentValues[charId] = boolValue ? 1.0 : 0.0
+            }
+        }
+    }
+
+    /// Returns the "off" value for an action if the scene turned the device on,
+    /// or nil if the scene already set the device to its off state (no action needed).
+    static func offValue(for action: SceneActionData) -> Any? {
         let charType = action.characteristicType
-        let targetValue = action.targetValue
+        let target = action.targetValue
 
         switch charType {
         case CharacteristicTypes.powerState, CharacteristicTypes.active:
-            return targetValue > 0.5 ? false : true
+            // Only turn off if the scene turned it on
+            return target > 0.5 ? false : nil
         case CharacteristicTypes.brightness, CharacteristicTypes.rotationSpeed:
-            return 0
+            // Only set to 0 if the scene set a non-zero value
+            return target > 0.5 ? 0 : nil
         case CharacteristicTypes.targetPosition:
-            return targetValue > 50 ? 0 : 100
-        case CharacteristicTypes.lockTargetState, CharacteristicTypes.targetDoorState:
-            return targetValue > 0.5 ? 0 : 1
+            // Only close if the scene opened (position > 50 means open)
+            return target > 50 ? 0 : nil
+        case CharacteristicTypes.lockTargetState:
+            // Lock target: 1 = secured, 0 = unsecured. Never unlock.
+            return nil
+        case CharacteristicTypes.targetDoorState:
+            // Door target: 0 = open, 1 = closed. Only close if the scene opened.
+            return target < 0.5 ? 1 : nil
         default:
-            return targetValue > 0.5 ? 0 : 1
+            return target > 0.5 ? 0 : nil
         }
     }
 

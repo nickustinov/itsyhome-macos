@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -633,6 +633,7 @@
 		2FDA9CD9D1A1F932C0BA102E /* ph.newspaper-clipping.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 092157C1BA3A4A4462A188EA /* ph.newspaper-clipping.fill.svg */; };
 		2FEEAD379C118058C102B7F3 /* ph.invoice.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 88DA3E896358B58290AD7D15 /* ph.invoice.fill.svg */; };
 		2FEFCA7773D6B41301057608 /* ph.acorn.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 6D9D6A8BBD542FC662F551CF /* ph.acorn.fill.svg */; };
+		3041F591E28C5E4DCEEF5759 /* SceneMenuItemTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FA15C35EE0393A2B3CB900A /* SceneMenuItemTests.swift */; };
 		30549C4EF0E08AB27830B26A /* ph.trash-simple.svg in Resources */ = {isa = PBXBuildFile; fileRef = C43BA38E65A3B45A625B45AE /* ph.trash-simple.svg */; };
 		307A52DBAB65B94228A63AAA /* ph.arrows-in-cardinal.svg in Resources */ = {isa = PBXBuildFile; fileRef = 78E172F72DC9936B6CD4A16C /* ph.arrows-in-cardinal.svg */; };
 		3086DC5771BD9887932111DB /* ph.text-a-underline.svg in Resources */ = {isa = PBXBuildFile; fileRef = 9FF3671E565381A70CC1566E /* ph.text-a-underline.svg */; };
@@ -4635,6 +4636,7 @@
 		6F59EB0FDC84D154B52CB28E /* ph.devices.svg */ = {isa = PBXFileReference; path = ph.devices.svg; sourceTree = "<group>"; };
 		6F5B4CD3C53C5938B9B8ADEC /* ph.funnel-simple.svg */ = {isa = PBXFileReference; path = "ph.funnel-simple.svg"; sourceTree = "<group>"; };
 		6F98A63E0825AAD3EC1FB1A4 /* ph.battery-medium.svg */ = {isa = PBXFileReference; path = "ph.battery-medium.svg"; sourceTree = "<group>"; };
+		6FA15C35EE0393A2B3CB900A /* SceneMenuItemTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneMenuItemTests.swift; sourceTree = "<group>"; };
 		6FC63A7EAFF9918E7CDE3DA4 /* ph.chair.svg */ = {isa = PBXFileReference; path = ph.chair.svg; sourceTree = "<group>"; };
 		6FD62572499A6F81224C98F7 /* ph.bezier-curve.svg */ = {isa = PBXFileReference; path = "ph.bezier-curve.svg"; sourceTree = "<group>"; };
 		6FDB218BB99EC850D875A5B1 /* ph.pencil-simple-slash.fill.svg */ = {isa = PBXFileReference; path = "ph.pencil-simple-slash.fill.svg"; sourceTree = "<group>"; };
@@ -9725,6 +9727,7 @@
 				B1E8111658D6791710247D20 /* LockMenuItemTests.swift */,
 				3AD1C9F5AE818158EA2137D6 /* PreferencesManagerTests.swift */,
 				8D6209D5D4AF8B8C8228A9CB /* ProStatusCacheTests.swift */,
+				6FA15C35EE0393A2B3CB900A /* SceneMenuItemTests.swift */,
 				BBD728ACD46FED845464BDCA /* SecuritySystemMenuItemTests.swift */,
 				2F34BC0FC06EE9C93C6BC637 /* SwitchMenuItemTests.swift */,
 				A4588D4410C203F9FB823FC5 /* ThermostatMenuItemTests.swift */,
@@ -9900,7 +9903,7 @@
 			);
 			mainGroup = E4D0AC95AB41872138D6349D;
 			minimizedProjectReferenceProxies = 1;
-			preferredProjectObjectVersion = 77;
+			preferredProjectObjectVersion = 54;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -13163,6 +13166,7 @@
 				68F393A22B7CEFA4BC9A0867 /* ProStatusCacheTests.swift in Sources */,
 				D6E99C5EF38C95797107C163 /* Protocols.swift in Sources */,
 				874A311DF0D311BD252A5F4C /* SceneMenuItem.swift in Sources */,
+				3041F591E28C5E4DCEEF5759 /* SceneMenuItemTests.swift in Sources */,
 				0D1340AA633BF40EC7B797C4 /* SecuritySystemMenuItem.swift in Sources */,
 				02A44E3CB567D2F45BD9E9AD /* SecuritySystemMenuItemTests.swift in Sources */,
 				4DE21C1DE370423C77BB118D /* SensorSummaryMenuItem.swift in Sources */,
@@ -13210,7 +13214,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_MAC_ICON_IN_CATALYST_APP = YES;
 				CODE_SIGN_ENTITLEMENTS = Itsyhome/Itsyhome.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 120;
+				CURRENT_PROJECT_VERSION = 122;
 				DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER = NO;
 				INFOPLIST_FILE = Itsyhome/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Itsyhome;
@@ -13338,7 +13342,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_MAC_ICON_IN_CATALYST_APP = YES;
 				CODE_SIGN_ENTITLEMENTS = Itsyhome/Itsyhome.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 120;
+				CURRENT_PROJECT_VERSION = 122;
 				DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER = NO;
 				INFOPLIST_FILE = Itsyhome/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Itsyhome;

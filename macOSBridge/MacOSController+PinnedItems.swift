@@ -23,10 +23,11 @@ extension MacOSController {
         let sceneLookup = Dictionary(uniqueKeysWithValues: data.scenes.map { ($0.uniqueIdentifier, $0) })
         let deviceGroups = PreferencesManager.shared.deviceGroups
 
-        // Build services by room
+        // Build services by room, filtering out hidden services
+        let hiddenServiceIds = PreferencesManager.shared.hiddenServiceIds
         var servicesByRoom: [String: [ServiceData]] = [:]
         for service in allServices {
-            if let roomId = service.roomIdentifier {
+            if let roomId = service.roomIdentifier, !hiddenServiceIds.contains(service.uniqueIdentifier) {
                 servicesByRoom[roomId, default: []].append(service)
             }
         }
@@ -63,7 +64,7 @@ extension MacOSController {
                 }
             } else {
                 // Service pin
-                if let service = serviceLookup[pinId] {
+                if let service = serviceLookup[pinId], !hiddenServiceIds.contains(pinId) {
                     validPinnedItems[pinId] = .service(service)
                 }
             }
