@@ -348,6 +348,24 @@ Startup diagnostics logging can be enabled by setting `StartupLogger.enabled = t
 log stream --predicate 'subsystem == "com.nickustinov.itsyhome"' --level info
 ```
 
+### Webhook debug endpoints
+
+When the webhook server is running, three debug endpoints are available to inspect raw HomeKit data:
+
+| Endpoint | Description |
+|---|---|
+| `GET /debug/<name>` | Returns characteristics, service type, limits, room, and reachability for a specific device or service matched by name |
+| `GET /debug/all` | Dumps all accessories with their services, rooms count, and scenes count |
+| `GET /debug/complete` | Returns the complete raw HomeKit data dump from the iOS bridge |
+
+Example using curl:
+
+```bash
+curl http://localhost:<port>/debug/all
+curl http://localhost:<port>/debug/Living%20Room%20Light
+curl http://localhost:<port>/debug/complete
+```
+
 ## HomeKit entitlement
 
 This app requires the HomeKit entitlement. You'll need to:
