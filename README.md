@@ -1,5 +1,7 @@
 # Itsyhome
 
+[![Download on the Mac App Store](https://developer.apple.com/app-store/marketing/guidelines/images/badge-download-on-the-mac-app-store.svg)](https://apps.apple.com/app/itsyhome/id6758070650)
+
 [![Tests](https://github.com/nickustinov/itsyhome-macos/actions/workflows/test.yml/badge.svg)](https://github.com/nickustinov/itsyhome-macos/actions/workflows/test.yml)
 
 ![Itsyhome app screenshot](itsyhome-screenshot.png)
@@ -22,6 +24,7 @@ A native macOS menu bar app for controlling your HomeKit smart home devices.
 - **Deeplinks** - Control devices from Shortcuts, Alfred, Raycast, Stream Deck *(Pro)*
 - **Cameras** - Live video feed with overlay action buttons to control nearby accessories *(Pro)*
 - **Webhooks/CLI** - Built-in HTTP server with a dedicated CLI tool *(Pro)*
+- **[Itsytv](https://itsytv.app)** - Free companion app for controlling Apple TV from your menu bar
 
 ## Supported devices
 
@@ -182,6 +185,33 @@ Control your HomeKit devices directly from an Elgato Stream Deck using the [Itsy
 Features include color-coded icons per device type, dynamic state display, live state polling, optimistic updates for slow devices (locks, garage doors), custom on/off colors, and optional labels for multi-button setups.
 
 See [itsyhome-streamdeck](https://github.com/nickustinov/itsyhome-streamdeck) for setup and development.
+
+## Itsytv — the perfect companion
+
+<table>
+<tr>
+<td width="340">
+<img src="https://itsytv.app/itsytv-hero.png" alt="Itsytv app screenshot" width="320">
+</td>
+<td>
+
+**[Itsytv](https://itsytv.app)** is a free, open-source macOS menu bar app for controlling Apple TV — the missing remote app for your Mac.
+
+- Full D-pad and playback remote
+- Now playing widget with live progress
+- Browse and launch Apple TV apps
+- Keyboard shortcuts for quick control
+- Text input for searches and passwords
+- Multi-device support
+- End-to-end encrypted, no tracking
+
+Built with Swift and SwiftUI. Free forever, MIT licensed.
+
+**[itsytv.app](https://itsytv.app)** · [GitHub](https://github.com/nickustinov/itsytv-macos)
+
+</td>
+</tr>
+</table>
 
 ## Requirements
 
