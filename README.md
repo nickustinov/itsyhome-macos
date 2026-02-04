@@ -356,14 +356,14 @@ When the webhook server is running, three debug endpoints are available to inspe
 |---|---|
 | `GET /debug/<name>` | Returns characteristics, service type, limits, room, and reachability for a specific device or service matched by name |
 | `GET /debug/all` | Dumps all accessories with their services, rooms count, and scenes count |
-| `GET /debug/complete` | Returns the complete raw HomeKit data dump from the iOS bridge |
+| `GET /debug/raw` | Returns the complete raw HomeKit data dump from the iOS bridge including service groups, zones, action sets, and triggers |
 
 Example using curl:
 
 ```bash
 curl http://localhost:<port>/debug/all
 curl http://localhost:<port>/debug/Living%20Room%20Light
-curl http://localhost:<port>/debug/complete
+curl http://localhost:<port>/debug/raw
 ```
 
 ## HomeKit entitlement

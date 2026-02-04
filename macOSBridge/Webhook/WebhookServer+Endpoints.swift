@@ -34,8 +34,8 @@ extension WebhookServer {
         case "debug":
             let rest = path.dropFirst(6) // drop "debug/"
             let decoded = String(rest).removingPercentEncoding ?? String(rest)
-            if decoded == "complete" {
-                handleDebugComplete(connection: connection, engine: engine)
+            if decoded == "raw" {
+                handleDebugRaw(connection: connection, engine: engine)
             } else if decoded == "all" {
                 handleDebugAll(connection: connection, engine: engine)
             } else {
@@ -237,7 +237,7 @@ extension WebhookServer {
         sendResponse(connection: connection, status: 200, body: encode(response))
     }
 
-    private func handleDebugComplete(connection: NWConnection, engine: ActionEngine) {
+    private func handleDebugRaw(connection: NWConnection, engine: ActionEngine) {
         guard let bridge = engine.bridge else {
             sendResponse(connection: connection, status: 500, body: encode(APIResponse.error("Bridge unavailable")))
             return

@@ -85,8 +85,77 @@ extension HomeKitManager {
         result["accessories"] = accessoriesArray
         result["accessoryCount"] = home.accessories.count
 
-        // Also include rooms
+        // Rooms
         result["rooms"] = home.rooms.map { ["name": $0.name, "id": $0.uniqueIdentifier.uuidString] }
+
+        // Zones
+        result["zones"] = home.zones.map { zone -> [String: Any] in
+            [
+                "name": zone.name,
+                "id": zone.uniqueIdentifier.uuidString,
+                "rooms": zone.rooms.map { ["name": $0.name, "id": $0.uniqueIdentifier.uuidString] }
+            ]
+        }
+
+        // Service groups
+        result["serviceGroups"] = home.serviceGroups.map { group -> [String: Any] in
+            [
+                "name": group.name,
+                "id": group.uniqueIdentifier.uuidString,
+                "services": group.services.map { service -> [String: Any] in
+                    [
+                        "name": service.name,
+                        "type": service.serviceType,
+                        "id": service.uniqueIdentifier.uuidString,
+                        "accessoryName": service.accessory?.name ?? "Unknown"
+                    ]
+                }
+            ]
+        }
+
+        // Action sets (scenes)
+        result["actionSets"] = home.actionSets.map { actionSet -> [String: Any] in
+            var dict: [String: Any] = [
+                "name": actionSet.name,
+                "id": actionSet.uniqueIdentifier.uuidString,
+                "actionSetType": actionSet.actionSetType,
+                "isExecuting": actionSet.isExecuting
+            ]
+            let actions = actionSet.actions.compactMap { action -> [String: Any]? in
+                guard let charAction = action as? HMCharacteristicWriteAction<NSCopying> else { return nil }
+                var actionDict: [String: Any] = [
+                    "characteristicType": charAction.characteristic.characteristicType,
+                    "characteristicId": charAction.characteristic.uniqueIdentifier.uuidString,
+                    "serviceName": charAction.characteristic.service?.name ?? "Unknown"
+                ]
+                actionDict = addSerializableValue(charAction.targetValue, to: actionDict)
+                return actionDict
+            }
+            dict["actions"] = actions
+            return dict
+        }
+
+        // Triggers
+        result["triggers"] = home.triggers.map { trigger -> [String: Any] in
+            var dict: [String: Any] = [
+                "name": trigger.name,
+                "id": trigger.uniqueIdentifier.uuidString,
+                "isEnabled": trigger.isEnabled,
+                "lastFireDate": trigger.lastFireDate?.description ?? "never"
+            ]
+            if let eventTrigger = trigger as? HMEventTrigger {
+                dict["triggerType"] = "event"
+                dict["events"] = eventTrigger.events.map { String(describing: $0) }
+            } else if let timerTrigger = trigger as? HMTimerTrigger {
+                dict["triggerType"] = "timer"
+                dict["fireDate"] = timerTrigger.fireDate.description
+            }
+            dict["actionSets"] = trigger.actionSets.map { ["name": $0.name, "id": $0.uniqueIdentifier.uuidString] }
+            return dict
+        }
+
+        // Current user
+        result["currentUser"] = ["name": home.currentUser.name]
 
         do {
             let jsonData = try JSONSerialization.data(withJSONObject: result, options: [.sortedKeys])
