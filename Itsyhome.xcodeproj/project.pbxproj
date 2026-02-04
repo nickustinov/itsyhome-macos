@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 54;
+	objectVersion = 77;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -2312,6 +2312,7 @@
 		B4095892ACE7F3D8CF11B58A /* ph.arrows-horizontal.svg in Resources */ = {isa = PBXBuildFile; fileRef = 01012634A0EE8DB124DB88BE /* ph.arrows-horizontal.svg */; };
 		B40FD7001DB56872F88F5A09 /* ph.newspaper.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = B87F80764192C1B62B3BA709 /* ph.newspaper.fill.svg */; };
 		B4251DD0AAD0144A05810070 /* ph.cloud-arrow-down.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 4DDC630ED9AC2DA153B1D58C /* ph.cloud-arrow-down.fill.svg */; };
+		B42AB1095DC27511CB7EABCF /* HomeKitManager+Doorbell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D415D82ADA7CEF78A9A4A52 /* HomeKitManager+Doorbell.swift */; };
 		B42E19BED6C4B973937CF8E3 /* ph.shrimp.svg in Resources */ = {isa = PBXBuildFile; fileRef = 7D376772C81EC5CE52B0AB9A /* ph.shrimp.svg */; };
 		B42FA1EB386061FFFD0B4DA0 /* ph.cloud-slash.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 054F44D71B2C2197BC01D751 /* ph.cloud-slash.fill.svg */; };
 		B4E3ED7A0F97D0078014614C /* ph.escalator-up.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = BB3EF11770A04E67C0B0691E /* ph.escalator-up.fill.svg */; };
@@ -3983,6 +3984,7 @@
 		3D2E0FC1896F2A8C0379844F /* ph.funnel.fill.svg */ = {isa = PBXFileReference; path = ph.funnel.fill.svg; sourceTree = "<group>"; };
 		3D3BFD9F2C015FA0B83BA5C0 /* ph.lightning-a.fill.svg */ = {isa = PBXFileReference; path = "ph.lightning-a.fill.svg"; sourceTree = "<group>"; };
 		3D4039CAFA3DAD69B74F0A65 /* ph.map-pin-plus.fill.svg */ = {isa = PBXFileReference; path = "ph.map-pin-plus.fill.svg"; sourceTree = "<group>"; };
+		3D415D82ADA7CEF78A9A4A52 /* HomeKitManager+Doorbell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HomeKitManager+Doorbell.swift"; sourceTree = "<group>"; };
 		3D63FB94253FDC5406D9B40C /* ph.kanban.fill.svg */ = {isa = PBXFileReference; path = ph.kanban.fill.svg; sourceTree = "<group>"; };
 		3D763B648A32B42C2BF4C6B0 /* ph.barbell.svg */ = {isa = PBXFileReference; path = ph.barbell.svg; sourceTree = "<group>"; };
 		3D8CED98D2F528778A8D8758 /* ph.faders-horizontal.fill.svg */ = {isa = PBXFileReference; path = "ph.faders-horizontal.fill.svg"; sourceTree = "<group>"; };
@@ -6589,6 +6591,7 @@
 				EEF2D6AE841E9309235D15BF /* HomeKitManager+Commands.swift */,
 				17B4F37C745C5889F78BE0FC /* HomeKitManager+DataFetching.swift */,
 				CCB59CFDF054B2B301179CF8 /* HomeKitManager+Debug.swift */,
+				3D415D82ADA7CEF78A9A4A52 /* HomeKitManager+Doorbell.swift */,
 				DF9768D90F7845161252A3AB /* HomeKitTypeNames.swift */,
 				B10754E8AB01F87A12A293A7 /* SceneDelegate.swift */,
 			);
@@ -9903,7 +9906,7 @@
 			);
 			mainGroup = E4D0AC95AB41872138D6349D;
 			minimizedProjectReferenceProxies = 1;
-			preferredProjectObjectVersion = 54;
+			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -12989,6 +12992,7 @@
 				BE7EE8B24CBC96E586681210 /* HomeKitManager+Commands.swift in Sources */,
 				5FBB76C77E1F919AA5784860 /* HomeKitManager+DataFetching.swift in Sources */,
 				C600FF97ABA87C766E842738 /* HomeKitManager+Debug.swift in Sources */,
+				B42AB1095DC27511CB7EABCF /* HomeKitManager+Doorbell.swift in Sources */,
 				F2A340D41E3B57E9F7FEE940 /* HomeKitManager.swift in Sources */,
 				473BEC2B501485C7A3242B2B /* HomeKitTypeNames.swift in Sources */,
 				A453BEC6F07575A955C9EF4E /* SceneDelegate.swift in Sources */,
@@ -13214,7 +13218,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_MAC_ICON_IN_CATALYST_APP = YES;
 				CODE_SIGN_ENTITLEMENTS = Itsyhome/Itsyhome.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 122;
+				CURRENT_PROJECT_VERSION = 130;
 				DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER = NO;
 				INFOPLIST_FILE = Itsyhome/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Itsyhome;
@@ -13223,7 +13227,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.2.0;
+				MARKETING_VERSION = 1.3.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.nickustinov.itsyhome;
 				PRODUCT_NAME = Itsyhome;
 				SDKROOT = iphoneos;
@@ -13342,7 +13346,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_MAC_ICON_IN_CATALYST_APP = YES;
 				CODE_SIGN_ENTITLEMENTS = Itsyhome/Itsyhome.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 122;
+				CURRENT_PROJECT_VERSION = 130;
 				DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER = NO;
 				INFOPLIST_FILE = Itsyhome/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Itsyhome;
@@ -13351,7 +13355,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.2.0;
+				MARKETING_VERSION = 1.3.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.nickustinov.itsyhome;
 				PRODUCT_NAME = Itsyhome;
 				SDKROOT = iphoneos;

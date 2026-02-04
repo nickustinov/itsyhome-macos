@@ -108,6 +108,9 @@ extension HomeKitManager {
             accessory.delegate = self
         }
 
+        // Subscribe to doorbell events
+        subscribeToDoorbellEvents()
+
         // Serialize to JSON for safe cross-module transfer
         sendMenuDataAsJSON()
     }

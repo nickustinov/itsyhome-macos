@@ -242,6 +242,21 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate {
         }
     }
 
+    @objc public func dismissCameraPanel() {
+        DispatchQueue.main.async { [weak self] in
+            self?.cameraPanelManager.dismissCameraPanel()
+        }
+    }
+
+    @objc public func showCameraPanelForDoorbell(cameraIdentifier: UUID) {
+        DispatchQueue.main.async { [weak self] in
+            guard let self,
+                  ProStatusCache.shared.isPro,
+                  PreferencesManager.shared.camerasEnabled else { return }
+            self.cameraPanelManager.showForDoorbell()
+        }
+    }
+
     private func showProRequiredAlert() {
         let alert = NSAlert()
         alert.messageText = "Itsyhome Pro required"

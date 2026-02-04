@@ -21,11 +21,14 @@ final class CameraPanelManager {
     private var cameraPanelSize: NSSize = NSSize(width: 300, height: 300)
     private var isCameraPanelOpening = false
     private var pendingCameraPanelShow = false
+    private var pendingDoorbellShow = false
+    private var pendingDoorbellReveal = false
     private var clickOutsideMonitor: Any?
     private var localClickMonitor: Any?
     private var cameraPanelPollTimer: DispatchSourceTimer?
     private var cameraWindowObserver: NSObjectProtocol?
     private(set) var isPinned = false
+    private var isDoorbellMode = false
 
     weak var delegate: CameraPanelManagerDelegate?
 
@@ -60,6 +63,8 @@ final class CameraPanelManager {
 
     func dismissCameraPanel() {
         isPinned = false
+        isDoorbellMode = false
+        pendingDoorbellReveal = false
         removeClickOutsideMonitor()
         cameraPanelWindow?.orderOut(nil)
         delegate?.cameraPanelManagerSetCameraWindowHidden(self, hidden: true)
@@ -85,12 +90,41 @@ final class CameraPanelManager {
         cameraPanelWindow?.isVisible == true
     }
 
+    func showForDoorbell() {
+        isDoorbellMode = true
+
+        if let existing = cameraPanelWindow, existing.isVisible {
+            // Panel already visible — just pin it and reposition
+            setCameraPinned(true)
+            positionCameraPanelTopRight(existing, width: cameraPanelSize.width, height: cameraPanelSize.height)
+            return
+        }
+
+        if cameraPanelWindow != nil {
+            // Window exists but hidden — unhide iOS content, wait for stream resize to reveal
+            delegate?.cameraPanelManagerSetCameraWindowHidden(self, hidden: false)
+            pendingDoorbellReveal = true
+            return
+        }
+
+        if isCameraPanelOpening { return }
+
+        isCameraPanelOpening = true
+        pendingDoorbellShow = true
+        delegate?.cameraPanelManagerOpenCameraWindow(self)
+        setupCameraPanelWindow()
+    }
+
     func resizeCameraPanel(width: CGFloat, height: CGFloat, aspectRatio: CGFloat, animated: Bool) {
+        // Ignore grid-sized resize while in doorbell mode — the stream dimensions are authoritative
+        let isStreamMode = width > 400
+        if isDoorbellMode && !isStreamMode {
+            return
+        }
         cameraPanelSize = NSSize(width: width, height: height)
         guard let window = cameraPanelWindow else { return }
 
         // Enable resizing and moving only in stream mode (wider than grid)
-        let isStreamMode = width > 400
         if isStreamMode {
             window.styleMask.insert(.resizable)
             window.isMovable = true
@@ -102,6 +136,7 @@ final class CameraPanelManager {
             window.maxSize = NSSize(width: maxWidth, height: maxWidth / aspectRatio)
             window.aspectRatio = NSSize(width: aspectRatio, height: 1)
         } else {
+            isDoorbellMode = false
             if isPinned {
                 isPinned = false
                 window.level = .popUpMenu
@@ -117,8 +152,23 @@ final class CameraPanelManager {
             }
         }
 
+        if pendingDoorbellReveal && isStreamMode {
+            pendingDoorbellReveal = false
+            setCameraPinned(true)
+            positionCameraPanelTopRight(window, width: width, height: height)
+            window.alphaValue = 1.0
+            window.makeKeyAndOrderFront(nil)
+            setupClickOutsideMonitor()
+            cameraStatusItem?.button?.highlight(true)
+            return
+        }
+
         guard window.isVisible else { return }
-        positionCameraPanelWithSize(window, width: width, height: height, animate: animated)
+        if isDoorbellMode {
+            positionCameraPanelTopRight(window, width: width, height: height)
+        } else {
+            positionCameraPanelWithSize(window, width: width, height: height, animate: animated)
+        }
     }
 
     // MARK: - Status Item Action
@@ -233,7 +283,14 @@ final class CameraPanelManager {
 
         // Window stays hidden — will be shown by showCameraPanel() on user click
         isCameraPanelOpening = false
-        if pendingCameraPanelShow {
+        if pendingDoorbellShow {
+            pendingDoorbellShow = false
+            pendingCameraPanelShow = false
+            // Don't show yet — keep hidden until stream resize arrives with correct dimensions.
+            // Unhide the iOS content so the view controller lifecycle runs (panelDidShow → startStream).
+            delegate?.cameraPanelManagerSetCameraWindowHidden(self, hidden: false)
+            pendingDoorbellReveal = true
+        } else if pendingCameraPanelShow {
             pendingCameraPanelShow = false
             showCameraPanel()
         }
@@ -259,6 +316,15 @@ final class CameraPanelManager {
         x = max(minX, min(x, maxX))
 
         window.setFrame(NSRect(x: x, y: y, width: width, height: height), display: true, animate: animate)
+    }
+
+    private func positionCameraPanelTopRight(_ window: NSWindow, width: CGFloat, height: CGFloat) {
+        guard let screen = NSScreen.main else { return }
+        let visibleFrame = screen.visibleFrame
+        let padding: CGFloat = 16
+        let x = visibleFrame.maxX - width - padding
+        let y = visibleFrame.maxY - height - padding
+        window.setFrame(NSRect(x: x, y: y, width: width, height: height), display: true)
     }
 
     // MARK: - Click Outside Monitor

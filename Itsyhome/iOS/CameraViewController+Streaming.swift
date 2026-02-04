@@ -80,6 +80,26 @@ extension CameraViewController {
     }
 
     @objc func backToGrid() {
+        if isDoorbellMode {
+            isDoorbellMode = false
+            isPinned = false
+            isStreamZoomed = false
+            resetDoorbellButtonState()
+            activeStreamControl?.stopStream()
+            activeStreamControl = nil
+            activeStreamAccessory = nil
+            streamCameraView.cameraSource = nil
+            streamCameraView.isHidden = false
+            streamSpinner.stopAnimating()
+            streamContainerView.isHidden = true
+            streamOverlayStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
+            resetAudioState()
+            collectionView.isHidden = cameraAccessories.isEmpty
+            macOSController?.setCameraPanelPinned(false)
+            macOSController?.dismissCameraPanel()
+            return
+        }
+
         if isPinned {
             isPinned = false
             pinButton.setImage(UIImage(systemName: "pin")?.withTintColor(.white, renderingMode: .alwaysOriginal), for: .normal)
@@ -103,5 +123,10 @@ extension CameraViewController {
         let height = computeGridHeight()
         updatePanelSize(width: Self.gridWidth, height: height, animated: false)
         startSnapshotTimer()
+    }
+
+    private func resetDoorbellButtonState() {
+        backButton.setImage(UIImage(systemName: "chevron.left")?.withTintColor(.white, renderingMode: .alwaysOriginal), for: .normal)
+        backButton.setTitle(" Back", for: .normal)
     }
 }

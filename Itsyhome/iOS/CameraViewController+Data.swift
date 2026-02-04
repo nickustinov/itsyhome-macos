@@ -37,8 +37,10 @@ extension CameraViewController {
 
         resolveOverlayData(homeId: homeId)
 
-        let height = computeGridHeight()
-        macOSController?.resizeCameraPanel(width: Self.gridWidth, height: height, aspectRatio: Self.defaultAspectRatio, animated: false)
+        if activeStreamControl == nil && homeKitManager?.pendingDoorbellCameraId == nil {
+            let height = computeGridHeight()
+            macOSController?.resizeCameraPanel(width: Self.gridWidth, height: height, aspectRatio: Self.defaultAspectRatio, animated: false)
+        }
     }
 
     func resolveOverlayData(homeId: String) {

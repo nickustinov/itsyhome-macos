@@ -64,6 +64,7 @@ class CameraViewController: UIViewController {
     var streamConfirmedRatios: Set<UUID> = []
     var isPinned = false
     var isStreamZoomed = false
+    var isDoorbellMode = false
     var hasLoadedInitialData = false
 
     /// Resolved overlay data per camera: [cameraUUID: [(characteristic, service name, service type)]]
@@ -112,6 +113,12 @@ class CameraViewController: UIViewController {
             name: .homeDidChange,
             object: nil
         )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleDoorbellRang(_:)),
+            name: .doorbellRang,
+            object: nil
+        )
     }
 
     @objc private func preferencesDidChange() {
@@ -139,6 +146,12 @@ class CameraViewController: UIViewController {
     }
 
     @objc private func panelDidShow() {
+        if let doorbellId = homeKitManager?.pendingDoorbellCameraId {
+            homeKitManager?.pendingDoorbellCameraId = nil
+            streamDoorbellCamera(id: doorbellId)
+            return
+        }
+        guard activeStreamControl == nil else { return }
         takeAllSnapshots()
         let height = computeGridHeight()
         updatePanelSize(width: Self.gridWidth, height: height, animated: false)
@@ -147,6 +160,50 @@ class CameraViewController: UIViewController {
     @objc private func panelDidHide() {
         if activeStreamControl != nil {
             backToGrid()
+        }
+    }
+
+    @objc private func handleDoorbellRang(_ notification: Notification) {
+        guard let cameraId = notification.userInfo?["cameraIdentifier"] as? UUID else { return }
+        homeKitManager?.pendingDoorbellCameraId = nil
+        streamDoorbellCamera(id: cameraId)
+    }
+
+    private func streamDoorbellCamera(id cameraId: UUID) {
+        isDoorbellMode = true
+        backButton.setImage(UIImage(systemName: "xmark")?.withTintColor(.white, renderingMode: .alwaysOriginal), for: .normal)
+        backButton.setTitle(" Close", for: .normal)
+
+        // If already streaming this camera, just ensure pinned
+        if activeStreamAccessory?.uniqueIdentifier == cameraId {
+            if !isPinned {
+                isPinned = true
+                pinButton.setImage(UIImage(systemName: "pin.fill")?.withTintColor(.white, renderingMode: .alwaysOriginal), for: .normal)
+                macOSController?.setCameraPanelPinned(true)
+            }
+            return
+        }
+
+        // If streaming another camera, stop it first
+        if activeStreamControl != nil {
+            activeStreamControl?.stopStream()
+            activeStreamControl = nil
+            activeStreamAccessory = nil
+            streamCameraView.cameraSource = nil
+        }
+
+        // Find the doorbell camera accessory
+        guard let accessory = homeKitManager?.cameraAccessories.first(where: {
+            $0.uniqueIdentifier == cameraId
+        }) else { return }
+
+        startStream(for: accessory)
+
+        // Auto-pin the panel
+        if !isPinned {
+            isPinned = true
+            pinButton.setImage(UIImage(systemName: "pin.fill")?.withTintColor(.white, renderingMode: .alwaysOriginal), for: .normal)
+            macOSController?.setCameraPanelPinned(true)
         }
     }
 
@@ -160,6 +217,16 @@ class CameraViewController: UIViewController {
             collectionView.reloadData()
             takeAllSnapshots()
         }
+
+        // Check for pending doorbell camera (scene just activated for doorbell)
+        if let doorbellId = homeKitManager?.pendingDoorbellCameraId {
+            homeKitManager?.pendingDoorbellCameraId = nil
+            streamDoorbellCamera(id: doorbellId)
+            return
+        }
+
+        // Don't reset to grid if a stream is already active (e.g. doorbell triggered from panelDidShow)
+        guard activeStreamControl == nil else { return }
 
         let height = computeGridHeight()
         updatePanelSize(width: Self.gridWidth, height: height, animated: false)

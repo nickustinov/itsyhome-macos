@@ -28,6 +28,9 @@ class HomeKitManager: NSObject, Mac2iOS, HMHomeManagerDelegate {
     var accessories: [AccessoryInfo] = []
     var scenes: [SceneInfo] = []
 
+    /// Set when a doorbell rings; consumed by CameraViewController to auto-stream
+    var pendingDoorbellCameraId: UUID?
+
     var selectedHome: HMHome? { currentHome }
 
     var cameraAccessories: [HMAccessory] {
@@ -167,6 +170,10 @@ extension HomeKitManager: HMAccessoryDelegate {
     }
 
     func accessory(_ accessory: HMAccessory, service: HMService, didUpdateValueFor characteristic: HMCharacteristic) {
+        if handleDoorbellEventIfNeeded(accessory: accessory, service: service, characteristic: characteristic) {
+            return
+        }
+
         if let value = characteristic.value {
             macOSDelegate?.updateCharacteristic(identifier: characteristic.uniqueIdentifier, value: value)
         }

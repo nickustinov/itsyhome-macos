@@ -444,6 +444,8 @@ public protocol iOS2Mac: NSObjectProtocol {
     func configureCameraPanel()
     func resizeCameraPanel(width: CGFloat, height: CGFloat, aspectRatio: CGFloat, animated: Bool)
     func setCameraPanelPinned(_ pinned: Bool)
+    func showCameraPanelForDoorbell(cameraIdentifier: UUID)
+    func dismissCameraPanel()
 }
 
 // MARK: - Service type constants
