@@ -253,6 +253,12 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate {
             guard let self,
                   ProStatusCache.shared.isPro,
                   PreferencesManager.shared.camerasEnabled else { return }
+
+            if PreferencesManager.shared.doorbellSound {
+                NSSound(named: "Glass")?.play()
+            }
+
+            guard PreferencesManager.shared.doorbellNotifications else { return }
             self.cameraPanelManager.showForDoorbell()
         }
     }

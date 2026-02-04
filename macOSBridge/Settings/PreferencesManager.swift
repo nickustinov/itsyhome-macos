@@ -24,6 +24,8 @@ final class PreferencesManager {
         // Global settings
         static let launchAtLogin = "launchAtLogin"
         static let camerasEnabled = "camerasEnabled"
+        static let doorbellNotifications = "doorbellNotifications"
+        static let doorbellSound = "doorbellSound"
 
         // Per-home settings (use with homeKey helper)
         static let orderedFavouriteIds = "orderedFavouriteIds"
@@ -52,7 +54,9 @@ final class PreferencesManager {
     private init() {
         // Register defaults
         defaults.register(defaults: [
-            Keys.launchAtLogin: false
+            Keys.launchAtLogin: false,
+            Keys.doorbellNotifications: true,
+            Keys.doorbellSound: true
         ])
 
         // Sync launch at login state with system on init
@@ -112,6 +116,24 @@ final class PreferencesManager {
         get { defaults.bool(forKey: Keys.camerasEnabled) }
         set {
             defaults.set(newValue, forKey: Keys.camerasEnabled)
+            postNotification()
+        }
+    }
+
+    // MARK: - Doorbell notifications (global)
+
+    var doorbellNotifications: Bool {
+        get { defaults.bool(forKey: Keys.doorbellNotifications) }
+        set {
+            defaults.set(newValue, forKey: Keys.doorbellNotifications)
+            postNotification()
+        }
+    }
+
+    var doorbellSound: Bool {
+        get { defaults.bool(forKey: Keys.doorbellSound) }
+        set {
+            defaults.set(newValue, forKey: Keys.doorbellSound)
             postNotification()
         }
     }

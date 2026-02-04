@@ -23,6 +23,7 @@ A native macOS menu bar app for controlling your HomeKit smart home devices.
 - **iCloud sync** - Sync favourites, groups, and settings across your Macs *(Pro)*
 - **Deeplinks** - Control devices from Shortcuts, Alfred, Raycast, Stream Deck *(Pro)*
 - **Cameras** - Live video feed with overlay action buttons to control nearby accessories *(Pro)*
+- **Doorbell notifications** - Automatic camera view with live stream when a doorbell rings *(Pro)*
 - **Webhooks/CLI** - Built-in HTTP server with a dedicated CLI tool *(Pro)*
 - **[Itsytv](https://itsytv.app)** - Free companion app for controlling Apple TV from your menu bar
 
@@ -43,6 +44,7 @@ A native macOS menu bar app for controlling your HomeKit smart home devices.
 | Valves | Open/close toggle, in-use indicator (irrigation, shower, faucet types) |
 | Security systems | Off/Stay/Away/Night modes, triggered state indicator |
 | Cameras | Live video feed with overlay action buttons to control nearby accessories *(Pro)* |
+| Doorbells | Automatic camera view on ring with live stream and configurable chime sound *(Pro)* |
 | Temperature & Humidity sensors | Summary display per room with ranges |
 
 ## Itsyhome Pro
@@ -58,6 +60,10 @@ Create custom groups of devices to control multiple devices at once. Groups can 
 ### Cameras
 
 View live video feeds from your HomeKit cameras directly in the menu bar. Overlay action buttons let you control nearby accessories without leaving the camera view — toggle lights and outlets, open garage doors and gates, or lock and unlock doors.
+
+### Doorbell notifications
+
+When a HomeKit doorbell rings, the camera panel automatically opens in the top-right corner of the screen with a pinned live stream of the doorbell camera. A configurable chime sound plays on ring. Both the automatic camera display and the sound can be independently toggled in Settings → Cameras.
 
 ### iCloud sync
 

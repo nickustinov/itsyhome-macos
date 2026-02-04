@@ -66,6 +66,18 @@ final class CameraPanelManager {
         isDoorbellMode = false
         pendingDoorbellReveal = false
         removeClickOutsideMonitor()
+        // Reset window size/position before hiding to avoid slide animation on next open
+        if let window = cameraPanelWindow {
+            cameraPanelSize = NSSize(width: 300, height: 300)
+            window.styleMask.remove(.resizable)
+            window.isMovable = false
+            window.isMovableByWindowBackground = false
+            window.aspectRatio = NSSize(width: 0, height: 0)
+            window.minSize = cameraPanelSize
+            window.maxSize = cameraPanelSize
+            window.level = .popUpMenu
+            positionCameraPanelWithSize(window, width: cameraPanelSize.width, height: cameraPanelSize.height)
+        }
         cameraPanelWindow?.orderOut(nil)
         delegate?.cameraPanelManagerSetCameraWindowHidden(self, hidden: true)
         cameraStatusItem?.button?.highlight(false)

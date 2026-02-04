@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.3.0
+
+### New features
+- **Doorbell notifications** — when a HomeKit doorbell rings, the camera panel automatically opens in the top-right corner with a live stream of the doorbell camera, pinned to the desktop
+- **Doorbell sound** — plays a chime sound when a doorbell rings (configurable in Settings → Cameras)
+- **Doorbell settings** — new toggles in Settings → Cameras to control automatic camera display and sound on doorbell rings
+
 ## 1.2.0
 
 ### New features

@@ -16,6 +16,8 @@ class CamerasSection: NSView {
 
     private let stackView = NSStackView()
     private let cameraSwitch = NSSwitch()
+    private let doorbellSwitch = NSSwitch()
+    private let doorbellSoundSwitch = NSSwitch()
     private(set) var camerasTableView: NSTableView?
     private var menuData: MenuData?
     private(set) var cameras: [CameraData] = []
@@ -102,6 +104,65 @@ class CamerasSection: NSView {
 
         stackView.addArrangedSubview(box)
         box.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
+
+        addSpacer(height: 8)
+
+        // Doorbell toggles
+        let doorbellBox = CardBoxView()
+        doorbellBox.translatesAutoresizingMaskIntoConstraints = false
+
+        let doorbellStack = NSStackView()
+        doorbellStack.orientation = .vertical
+        doorbellStack.spacing = 0
+        doorbellStack.alignment = .leading
+        doorbellStack.translatesAutoresizingMaskIntoConstraints = false
+
+        let camerasOn = PreferencesManager.shared.camerasEnabled
+
+        doorbellSwitch.controlSize = .mini
+        doorbellSwitch.target = self
+        doorbellSwitch.action = #selector(doorbellSwitchChanged)
+        doorbellSwitch.isEnabled = isPro && camerasOn
+        doorbellSwitch.state = PreferencesManager.shared.doorbellNotifications ? .on : .off
+
+        let doorbellRow = createSettingRow(
+            label: "Show doorbell camera on ring",
+            subtitle: "Automatically display the camera feed when a doorbell rings.",
+            control: doorbellSwitch
+        )
+        doorbellStack.addArrangedSubview(doorbellRow)
+        doorbellRow.widthAnchor.constraint(equalTo: doorbellStack.widthAnchor).isActive = true
+
+        let separator = NSBox()
+        separator.boxType = .separator
+        separator.translatesAutoresizingMaskIntoConstraints = false
+        doorbellStack.addArrangedSubview(separator)
+        separator.widthAnchor.constraint(equalTo: doorbellStack.widthAnchor).isActive = true
+
+        doorbellSoundSwitch.controlSize = .mini
+        doorbellSoundSwitch.target = self
+        doorbellSoundSwitch.action = #selector(doorbellSoundSwitchChanged)
+        doorbellSoundSwitch.isEnabled = isPro && camerasOn
+        doorbellSoundSwitch.state = PreferencesManager.shared.doorbellSound ? .on : .off
+
+        let soundRow = createSettingRow(
+            label: "Play doorbell sound",
+            subtitle: "Play a chime sound when a doorbell rings.",
+            control: doorbellSoundSwitch
+        )
+        doorbellStack.addArrangedSubview(soundRow)
+        soundRow.widthAnchor.constraint(equalTo: doorbellStack.widthAnchor).isActive = true
+
+        doorbellBox.addSubview(doorbellStack)
+        NSLayoutConstraint.activate([
+            doorbellStack.topAnchor.constraint(equalTo: doorbellBox.topAnchor, constant: 4),
+            doorbellStack.leadingAnchor.constraint(equalTo: doorbellBox.leadingAnchor, constant: 12),
+            doorbellStack.trailingAnchor.constraint(equalTo: doorbellBox.trailingAnchor, constant: -12),
+            doorbellStack.bottomAnchor.constraint(equalTo: doorbellBox.bottomAnchor, constant: -4)
+        ])
+
+        stackView.addArrangedSubview(doorbellBox)
+        doorbellBox.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
 
         addSpacer(height: 16)
 
@@ -359,6 +420,15 @@ class CamerasSection: NSView {
 
     @objc private func cameraSwitchChanged(_ sender: NSSwitch) {
         PreferencesManager.shared.camerasEnabled = sender.state == .on
+        rebuildContent()
+    }
+
+    @objc private func doorbellSwitchChanged(_ sender: NSSwitch) {
+        PreferencesManager.shared.doorbellNotifications = sender.state == .on
+    }
+
+    @objc private func doorbellSoundSwitchChanged(_ sender: NSSwitch) {
+        PreferencesManager.shared.doorbellSound = sender.state == .on
     }
 
     @objc private func eyeTapped(_ sender: NSButton) {
