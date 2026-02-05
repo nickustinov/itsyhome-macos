@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -538,6 +538,7 @@
 		27EA0A2974B831F6CEB7FEA8 /* ph.currency-gbp.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 7DBAB385EEA39F3A97DA0B7D /* ph.currency-gbp.fill.svg */; };
 		27F82D6C6E7560509228EBA4 /* ph.align-right.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 0C7729F6AEBD5B4D428AB296 /* ph.align-right.fill.svg */; };
 		27FC3479736EE81BDB5FBCC0 /* CameraViewController+Snapshots.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0F7D45A6094C8C996325854 /* CameraViewController+Snapshots.swift */; };
+		2801F3F8FB21111BA410C0CC /* HAValveMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A85376AB0564966326FE2C2 /* HAValveMenuItem.swift */; };
 		280C74C7265950C9756B365E /* MacOSController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29D500F71D0EA63DEF283D8B /* MacOSController.swift */; };
 		281CF1178925EFA613FD02DA /* ph.person-simple-snowboard.svg in Resources */ = {isa = PBXBuildFile; fileRef = D47EE1E93E45DE6A955DD409 /* ph.person-simple-snowboard.svg */; };
 		28229FDBD7D13838ECCD50D3 /* ph.currency-krw.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 2A3548F98511B8C86DDA6DD5 /* ph.currency-krw.fill.svg */; };
@@ -2662,6 +2663,7 @@
 		CCE1D82D9C4DDBC9CE974DED /* ph.rug.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 2205882A1E56A088A781BBED /* ph.rug.fill.svg */; };
 		CCE3C35B19ED70C1F268ACED /* ph.playlist.svg in Resources */ = {isa = PBXBuildFile; fileRef = 60B99D217558742B111F7795 /* ph.playlist.svg */; };
 		CCEEFB32C0693AC889BAFE87 /* ph.high-definition.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 3D12FF519B0CE7D16D988CDD /* ph.high-definition.fill.svg */; };
+		CCF08A0E6FB126A9A8862063 /* HAValveMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A85376AB0564966326FE2C2 /* HAValveMenuItem.swift */; };
 		CCF205A6AF6B634B4964A3E3 /* ph.ranking.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 57B720778478FC8CBB622277 /* ph.ranking.fill.svg */; };
 		CCFB8C68628CB06195CD5CBB /* ValveMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E64829BF9C061EB52A28437 /* ValveMenuItem.swift */; };
 		CD30C25BDE1F98347C0A6F38 /* ph.list-bullets.svg in Resources */ = {isa = PBXBuildFile; fileRef = B7527B1B8537E38D02934907 /* ph.list-bullets.svg */; };
@@ -4425,6 +4427,7 @@
 		5A58E0C74DE577876BB14B91 /* ph.chat-circle-slash.fill.svg */ = {isa = PBXFileReference; path = "ph.chat-circle-slash.fill.svg"; sourceTree = "<group>"; };
 		5A663000F224CF348FC05ECE /* ph.pipe.svg */ = {isa = PBXFileReference; path = ph.pipe.svg; sourceTree = "<group>"; };
 		5A84B2293A3EC2243A8DAC06 /* ph.currency-btc.fill.svg */ = {isa = PBXFileReference; path = "ph.currency-btc.fill.svg"; sourceTree = "<group>"; };
+		5A85376AB0564966326FE2C2 /* HAValveMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HAValveMenuItem.swift; sourceTree = "<group>"; };
 		5A90868F16E17CB11F7707D5 /* ph.bomb.fill.svg */ = {isa = PBXFileReference; path = ph.bomb.fill.svg; sourceTree = "<group>"; };
 		5B07C5C5A71A090EA0D89C19 /* ph.scroll.fill.svg */ = {isa = PBXFileReference; path = ph.scroll.fill.svg; sourceTree = "<group>"; };
 		5B18E854F3623E5CCA232A1B /* ph.syringe.fill.svg */ = {isa = PBXFileReference; path = ph.syringe.fill.svg; sourceTree = "<group>"; };
@@ -9961,6 +9964,7 @@
 				3E57AE0BD4C19D3F0C5ED7DE /* HALightMenuItem.swift */,
 				313125F042B7666BDE0981C5 /* HALockMenuItem.swift */,
 				70038C0D1E53DC9E374A2E5B /* HASecuritySystemMenuItem.swift */,
+				5A85376AB0564966326FE2C2 /* HAValveMenuItem.swift */,
 				2203CC92AE39248AE04E2480 /* HumidifierMenuItem.swift */,
 				73072FCFE16311A3C25C1C2C /* LightMenuItem.swift */,
 				4374C26148C6FEAAFD207413 /* LockMenuItem.swift */,
@@ -10068,7 +10072,7 @@
 			);
 			mainGroup = E4D0AC95AB41872138D6349D;
 			minimizedProjectReferenceProxies = 1;
-			preferredProjectObjectVersion = 77;
+			preferredProjectObjectVersion = 54;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -13235,6 +13239,7 @@
 				6A08A1E13F3F2DEB3D28188C /* HALockMenuItem.swift in Sources */,
 				D3C658BC3BB56C1E309511C1 /* HAModels.swift in Sources */,
 				E36468EF65BF34164C05B424 /* HASecuritySystemMenuItem.swift in Sources */,
+				2801F3F8FB21111BA410C0CC /* HAValveMenuItem.swift in Sources */,
 				823ABDFECC4D6E3E63AC3E02 /* HighlightingMenuItemView.swift in Sources */,
 				01B676F539725570858F7D87 /* HomeAssistantBridge.swift in Sources */,
 				1B1D970956A5CA2EA213611C /* HomeAssistantClient.swift in Sources */,
@@ -13355,6 +13360,7 @@
 				8FFE17F91B99FCB47BCB29D0 /* HAModels.swift in Sources */,
 				DF2EA2565247431E445B32EE /* HAModelsTests.swift in Sources */,
 				BAD9A04129591C3A9C0E47AB /* HASecuritySystemMenuItem.swift in Sources */,
+				CCF08A0E6FB126A9A8862063 /* HAValveMenuItem.swift in Sources */,
 				610C502AF5144D05B01A8278 /* HighlightingMenuItemView.swift in Sources */,
 				D85E315C4BE8D60A17874DBA /* HomeAssistantBridge.swift in Sources */,
 				E28EC416F60B714C4171B585 /* HomeAssistantClient.swift in Sources */,

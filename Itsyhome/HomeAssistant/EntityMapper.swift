@@ -56,7 +56,7 @@ final class EntityMapper {
             "tilt", "target_tilt", "door_state", "target_door",
             "speed", "oscillating", "direction", "alarm_state", "alarm_target",
             "target_temp_high", "target_temp_low", "humidity", "target_humidity",
-            "hum_action", "hum_mode", "active", "swing_mode"
+            "hum_action", "hum_mode", "active", "swing_mode", "valve_state"
         ]
 
         for entityId in entityStates.keys {
@@ -259,12 +259,11 @@ final class EntityMapper {
             // Lock characteristics
             lockCurrentStateId: state.domain == "lock" ? characteristicUUID(state.entityId, "lock_state") : nil,
             lockTargetStateId: state.domain == "lock" ? characteristicUUID(state.entityId, "lock_target") : nil,
-            // Cover characteristics
-            // SET_POSITION is bit 4, SET_TILT_POSITION is bit 128
-            // Always create position ID for covers (needed for slider UI)
-            currentPositionId: state.domain == "cover" ? characteristicUUID(state.entityId, "position") : nil,
-            // Show slider for covers with SET_POSITION or SET_TILT_POSITION (tilt-only shows slider that controls tilt)
-            targetPositionId: state.domain == "cover" && ((state.supportedFeatures & 4) != 0 || (state.supportedFeatures & 128) != 0) ? characteristicUUID(state.entityId, "target_position") : nil,
+            // Cover/Valve position characteristics
+            // SET_POSITION is bit 4 for both covers and valves, SET_TILT_POSITION is bit 128 (covers only)
+            // Always create position ID for covers (needed for slider UI); for valves only when SET_POSITION supported
+            currentPositionId: state.domain == "cover" || (state.domain == "valve" && (state.supportedFeatures & 4) != 0) ? characteristicUUID(state.entityId, "position") : nil,
+            targetPositionId: (state.domain == "cover" && ((state.supportedFeatures & 4) != 0 || (state.supportedFeatures & 128) != 0)) || (state.domain == "valve" && (state.supportedFeatures & 4) != 0) ? characteristicUUID(state.entityId, "target_position") : nil,
             // Tilt slider only for covers that have BOTH position AND tilt (not tilt-only)
             currentHorizontalTiltId: state.currentTiltPosition != nil && !isTiltOnlyCover(state) ? characteristicUUID(state.entityId, "tilt") : nil,
             targetHorizontalTiltId: state.currentTiltPosition != nil && !isTiltOnlyCover(state) ? characteristicUUID(state.entityId, "target_tilt") : nil,
@@ -290,6 +289,7 @@ final class EntityMapper {
             humidifierThresholdId: state.targetHumidity != nil ? characteristicUUID(state.entityId, "target_humidity") : nil,
             // Valve characteristics
             inUseId: nil,  // HA doesn't have InUse
+            valveStateId: state.domain == "valve" ? characteristicUUID(state.entityId, "valve_state") : nil,
             // Security system characteristics
             securitySystemCurrentStateId: state.domain == "alarm_control_panel" ? characteristicUUID(state.entityId, "alarm_state") : nil,
             securitySystemTargetStateId: state.domain == "alarm_control_panel" ? characteristicUUID(state.entityId, "alarm_target") : nil,
@@ -543,6 +543,16 @@ final class EntityMapper {
             }
         }
 
+        // Valve values
+        if state.domain == "valve" {
+            values[characteristicUUID(entityId, "valve_state")] = state.state
+            values[characteristicUUID(entityId, "active")] = state.isOpen ? 1 : 0
+            if let position = state.valvePosition {
+                values[characteristicUUID(entityId, "position")] = position
+                values[characteristicUUID(entityId, "target_position")] = position
+            }
+        }
+
         // Security system values
         if state.domain == "alarm_control_panel" {
             values[characteristicUUID(entityId, "alarm_state")] = mapAlarmStateToHomeKit(state.state)
@@ -650,7 +660,7 @@ final class EntityMapper {
             "tilt", "target_tilt", "door_state", "target_door",
             "speed", "oscillating", "direction", "alarm_state", "alarm_target",
             "target_temp_high", "target_temp_low", "humidity", "target_humidity",
-            "hum_action", "hum_mode", "active", "swing_mode"
+            "hum_action", "hum_mode", "active", "swing_mode", "valve_state"
         ]
 
         for charType in possibleTypes {

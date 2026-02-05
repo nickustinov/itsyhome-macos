@@ -99,6 +99,7 @@ public struct ServiceData: Codable {
     public let valveTypeValue: Int?  // Store actual value, not characteristic ID
     public let setDurationId: String?
     public let remainingDurationId: String?
+    public let valveStateId: String?           // HA only: raw state string (open/closed/opening/closing)
     // Security System characteristics
     public let securitySystemCurrentStateId: String?
     public let securitySystemTargetStateId: String?
@@ -174,6 +175,7 @@ public struct ServiceData: Codable {
         valveTypeValue: Int? = nil,
         setDurationId: UUID? = nil,
         remainingDurationId: UUID? = nil,
+        valveStateId: UUID? = nil,
         // Security System
         securitySystemCurrentStateId: UUID? = nil,
         securitySystemTargetStateId: UUID? = nil,
@@ -248,6 +250,7 @@ public struct ServiceData: Codable {
         self.valveTypeValue = valveTypeValue
         self.setDurationId = setDurationId?.uuidString
         self.remainingDurationId = remainingDurationId?.uuidString
+        self.valveStateId = valveStateId?.uuidString
         // Security System
         self.securitySystemCurrentStateId = securitySystemCurrentStateId?.uuidString
         self.securitySystemTargetStateId = securitySystemTargetStateId?.uuidString

@@ -236,13 +236,7 @@ final class HomeAssistantPlatform: SmartHomePlatform {
             try await writeHumidifierValue(client: client, entityId: entityId, characteristicUUID: characteristicUUID, value: value)
 
         case "valve":
-            if let isActive = value as? Bool {
-                try await client.callService(
-                    domain: "valve",
-                    service: isActive ? "open_valve" : "close_valve",
-                    target: ["entity_id": entityId]
-                )
-            }
+            try await writeValveValue(client: client, entityId: entityId, characteristicUUID: characteristicUUID, value: value)
 
         case "alarm_control_panel":
             try await writeAlarmValue(client: client, entityId: entityId, value: value)
@@ -590,6 +584,49 @@ final class HomeAssistantPlatform: SmartHomePlatform {
                 service: targetDoor == 0 ? "open_cover" : "close_cover",
                 target: ["entity_id": entityId]
             )
+        }
+    }
+
+    private func writeValveValue(client: HomeAssistantClient, entityId: String, characteristicUUID: UUID, value: Any) async throws {
+        let characteristicType = mapper.getCharacteristicType(for: characteristicUUID, entityId: entityId)
+
+        switch characteristicType {
+        case "active":
+            if let isActive = value as? Bool {
+                try await client.callService(
+                    domain: "valve",
+                    service: isActive ? "open_valve" : "close_valve",
+                    target: ["entity_id": entityId]
+                )
+            } else if let intValue = value as? Int {
+                try await client.callService(
+                    domain: "valve",
+                    service: intValue == 1 ? "open_valve" : "close_valve",
+                    target: ["entity_id": entityId]
+                )
+            }
+
+        case "target_position":
+            if let position = value as? Int {
+                if position == -1 {
+                    // Stop command
+                    try await client.callService(
+                        domain: "valve",
+                        service: "stop_valve",
+                        target: ["entity_id": entityId]
+                    )
+                } else {
+                    try await client.callService(
+                        domain: "valve",
+                        service: "set_valve_position",
+                        serviceData: ["position": max(0, min(100, position))],
+                        target: ["entity_id": entityId]
+                    )
+                }
+            }
+
+        default:
+            logger.warning("Unknown valve characteristic type: \(characteristicType)")
         }
     }
 

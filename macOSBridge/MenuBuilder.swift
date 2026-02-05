@@ -447,7 +447,11 @@ class MenuBuilder {
             menuItem = AirPurifierMenuItem(serviceData: service, bridge: bridge)
 
         case ServiceTypes.valve, ServiceTypes.faucet:
-            menuItem = ValveMenuItem(serviceData: service, bridge: bridge)
+            if PlatformManager.shared.selectedPlatform == .homeAssistant {
+                menuItem = HAValveMenuItem(serviceData: service, bridge: bridge)
+            } else {
+                menuItem = ValveMenuItem(serviceData: service, bridge: bridge)
+            }
 
         case ServiceTypes.securitySystem:
             if PlatformManager.shared.selectedPlatform == .homeAssistant {

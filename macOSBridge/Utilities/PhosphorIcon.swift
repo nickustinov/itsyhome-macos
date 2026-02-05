@@ -234,7 +234,8 @@ extension PhosphorIcon {
         // Valves
         ServiceTypes.valve: AccessoryIconConfig(
             defaultIcon: "pipe",
-            suggestedIcons: ["pipe", "shower", "drop"]
+            suggestedIcons: ["pipe", "shower", "drop"],
+            modeIcons: ["open": "pipe", "closed": "pipe"]
         ),
 
         // Faucets
