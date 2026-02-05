@@ -201,12 +201,17 @@ final class EntityMapper {
     // MARK: - Camera generation
 
     private func generateCameras() -> [CameraData] {
-        return entityStates.values
-            .filter { $0.domain == "camera" }
+        let cameraEntities = entityStates.values.filter { $0.domain == "camera" }
+        NSLog("[CameraDebug] EntityMapper: found %d camera entities out of %d total", cameraEntities.count, entityStates.count)
+        for entity in cameraEntities {
+            NSLog("[CameraDebug] EntityMapper: camera entity_id=%@ name=%@", entity.entityId, entity.friendlyName)
+        }
+        return cameraEntities
             .map { state in
                 CameraData(
                     uniqueIdentifier: deterministicUUID(for: state.entityId),
-                    name: state.friendlyName
+                    name: state.friendlyName,
+                    entityId: state.entityId
                 )
             }
             .sorted { $0.name < $1.name }

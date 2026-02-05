@@ -31,6 +31,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Load macOS plugin on Catalyst
         #if targetEnvironment(macCatalyst)
         loadMacOSPlugin()
+        setupCameraWindowNotifications()
         #endif
 
         return true
@@ -100,4 +101,92 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
         return UISceneConfiguration(name: "Default Configuration", sessionRole: connectingSceneSession.role)
     }
+
+    // MARK: - Camera window notifications (HA bridge)
+
+    #if targetEnvironment(macCatalyst)
+    private func setupCameraWindowNotifications() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleRequestOpenCameraWindow),
+            name: .requestOpenCameraWindow,
+            object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleRequestCloseCameraWindow),
+            name: .requestCloseCameraWindow,
+            object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleRequestSetCameraWindowHidden(_:)),
+            name: .requestSetCameraWindowHidden,
+            object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleHACameraDataUpdated(_:)),
+            name: NSNotification.Name("HACameraDataUpdated"),
+            object: nil
+        )
+    }
+
+    @objc private func handleHACameraDataUpdated(_ notification: Notification) {
+        guard let jsonData = notification.userInfo?["camerasJSON"] as? Data,
+              let cameras = try? JSONDecoder().decode([CameraData].self, from: jsonData) else {
+            NSLog("[CameraDebug] AppDelegate: failed to decode cameras from notification")
+            return
+        }
+        NSLog("[CameraDebug] AppDelegate: cached %d HA cameras", cameras.count)
+        CameraViewController.cachedHACameras = cameras
+    }
+
+    @objc private func handleRequestOpenCameraWindow() {
+        let activityType = "com.nickustinov.itsyhome.camera"
+        let existingSession = UIApplication.shared.openSessions.first { session in
+            session.configuration.name == "Camera Configuration"
+        }
+
+        let activity = NSUserActivity(activityType: activityType)
+        activity.title = "Cameras"
+
+        UIApplication.shared.requestSceneSessionActivation(
+            existingSession,
+            userActivity: activity,
+            options: nil,
+            errorHandler: { error in
+                print("[CameraPanel] HA scene activation error: \(error.localizedDescription)")
+            }
+        )
+    }
+
+    @objc private func handleRequestCloseCameraWindow() {
+        guard let session = UIApplication.shared.openSessions.first(where: {
+            $0.configuration.name == "Camera Configuration"
+        }) else { return }
+        UIApplication.shared.requestSceneSessionDestruction(session, options: nil, errorHandler: nil)
+    }
+
+    @objc private func handleRequestSetCameraWindowHidden(_ notification: Notification) {
+        let hidden = notification.userInfo?["hidden"] as? Bool ?? true
+        let cameraScenes = UIApplication.shared.connectedScenes.compactMap { scene -> UIWindowScene? in
+            guard let windowScene = scene as? UIWindowScene else { return nil }
+            guard windowScene.session.configuration.name == "Camera Configuration" else { return nil }
+            return windowScene
+        }
+
+        for windowScene in cameraScenes {
+            for window in windowScene.windows {
+                window.isHidden = hidden
+            }
+        }
+
+        if hidden {
+            NotificationCenter.default.post(name: .cameraPanelDidHide, object: nil)
+        } else {
+            NotificationCenter.default.post(name: .cameraPanelDidShow, object: nil)
+        }
+    }
+    #endif
 }

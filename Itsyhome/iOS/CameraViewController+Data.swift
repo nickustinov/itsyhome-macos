@@ -13,6 +13,12 @@ extension CameraViewController {
     // MARK: - Camera loading
 
     func loadCameras() {
+        NSLog("[CameraDebug] loadCameras: isHomeAssistant=%d", isHomeAssistant ? 1 : 0)
+        if isHomeAssistant {
+            loadHACameras()
+            return
+        }
+
         guard let manager = homeKitManager else { return }
 
         let allCameras = manager.cameraAccessories

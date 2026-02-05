@@ -331,10 +331,12 @@ public struct AccessoryData: Codable {
 public struct CameraData: Codable {
     public let uniqueIdentifier: String
     public let name: String
+    public let entityId: String?  // HA only: e.g. "camera.front_door"
 
-    public init(uniqueIdentifier: UUID, name: String) {
+    public init(uniqueIdentifier: UUID, name: String, entityId: String? = nil) {
         self.uniqueIdentifier = uniqueIdentifier.uuidString
         self.name = name
+        self.entityId = entityId
     }
 }
 
@@ -560,6 +562,14 @@ public protocol iOS2Mac: NSObjectProtocol {
     @objc public static let targetTiltAngle = "000000C2-0000-1000-8000-0026BB765291"
     @objc public static let slatType = "000000C0-0000-1000-8000-0026BB765291"
     @objc public static let currentSlatState = "000000AA-0000-1000-8000-0026BB765291"
+}
+
+// MARK: - Camera window notifications (HA: macOSBridge → Catalyst bridge)
+
+public extension Notification.Name {
+    static let requestOpenCameraWindow = Notification.Name("com.itsyhome.requestOpenCameraWindow")
+    static let requestCloseCameraWindow = Notification.Name("com.itsyhome.requestCloseCameraWindow")
+    static let requestSetCameraWindowHidden = Notification.Name("com.itsyhome.requestSetCameraWindowHidden")
 }
 
 // MARK: - String UUID conversion

@@ -542,6 +542,7 @@
 		280C74C7265950C9756B365E /* MacOSController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29D500F71D0EA63DEF283D8B /* MacOSController.swift */; };
 		281CF1178925EFA613FD02DA /* ph.person-simple-snowboard.svg in Resources */ = {isa = PBXBuildFile; fileRef = D47EE1E93E45DE6A955DD409 /* ph.person-simple-snowboard.svg */; };
 		28229FDBD7D13838ECCD50D3 /* ph.currency-krw.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 2A3548F98511B8C86DDA6DD5 /* ph.currency-krw.fill.svg */; };
+		2823F092B25FC13CA5CC120F /* LiveKitWebRTC in Frameworks */ = {isa = PBXBuildFile; productRef = C891028440C5C0E1AB9180F5 /* LiveKitWebRTC */; };
 		28475307F8EC741CA86FC686 /* ph.subtitles-slash.svg in Resources */ = {isa = PBXBuildFile; fileRef = 5C13FBCF40062A0787ECD723 /* ph.subtitles-slash.svg */; };
 		284996E72151F211162975A3 /* ph.coin-vertical.svg in Resources */ = {isa = PBXBuildFile; fileRef = D5EBB8C864B6AD32C741D2CF /* ph.coin-vertical.svg */; };
 		2896F5D0D0F69605587009A1 /* ph.music-note.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = C57E13734C4516932FD35169 /* ph.music-note.fill.svg */; };
@@ -981,6 +982,7 @@
 		4ABFEB3C04E6425C22289907 /* ph.calendar-x.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = E710FBD5F32D0F7CAFADF3AA /* ph.calendar-x.fill.svg */; };
 		4AFDC43F30ED76B63BFF14A4 /* ph.grains-slash.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = F2B85C529AD6481D7F63F119 /* ph.grains-slash.fill.svg */; };
 		4B0E145611A371F822735022 /* ph.onigiri.svg in Resources */ = {isa = PBXBuildFile; fileRef = E8F4CD244E8E0C222C424262 /* ph.onigiri.svg */; };
+		4B1A6AAAAC505B2541975282 /* WebRTCStreamClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F2F71B5A8EA5B3176D9922D /* WebRTCStreamClient.swift */; };
 		4B22A3D91F3F1C216A4FAD71 /* ph.thermometer-hot.svg in Resources */ = {isa = PBXBuildFile; fileRef = A7E42B8D3974DD75B0FA5828 /* ph.thermometer-hot.svg */; };
 		4B2C3E07FD7C7DA6411A1E61 /* ph.paint-brush-broad.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 6ED6080DACDCBB0ACA1654FF /* ph.paint-brush-broad.fill.svg */; };
 		4B3442002ACD9E720DE2C16F /* ph.parachute.svg in Resources */ = {isa = PBXBuildFile; fileRef = 873EFA3F02A826587247FAB4 /* ph.parachute.svg */; };
@@ -1555,6 +1557,7 @@
 		77B50866B1696665543529BB /* ph.headset.svg in Resources */ = {isa = PBXBuildFile; fileRef = 1A829838A0BB701F66811431 /* ph.headset.svg */; };
 		77CCBB32BC145F5B6AA9ACCE /* ph.git-diff.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = E9BF0D2231EEC412117FF454 /* ph.git-diff.fill.svg */; };
 		77DDE94D8749274D23549839 /* ph.queue.svg in Resources */ = {isa = PBXBuildFile; fileRef = 1E2C6F7EBDF90207DA5C8A83 /* ph.queue.svg */; };
+		77E8C4DB47AD888CE17F4543 /* CameraViewController+HomeAssistant.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0A71F23392EA429CFBB9E34 /* CameraViewController+HomeAssistant.swift */; };
 		77FACF87A949680DB591505A /* ph.wave-sine.svg in Resources */ = {isa = PBXBuildFile; fileRef = 8C29E5EF669E26F2DDCD491C /* ph.wave-sine.svg */; };
 		7837936F459E0E7F5D749F2A /* ph.microphone-stage.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 6F07DFC415A88DD9F04994BA /* ph.microphone-stage.fill.svg */; };
 		783AB54C88234530F55F350C /* ph.seal-question.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = C508BD4D75BA7398BB6F0E24 /* ph.seal-question.fill.svg */; };
@@ -3145,6 +3148,7 @@
 		F508C5715B563AD60501B872 /* ph.prohibit.svg in Resources */ = {isa = PBXBuildFile; fileRef = 08511F3EE8953A2E397E864F /* ph.prohibit.svg */; };
 		F517025BBEBF189D88858456 /* ph.buildings.svg in Resources */ = {isa = PBXBuildFile; fileRef = 62A94045B0ED0D7A9F215A81 /* ph.buildings.svg */; };
 		F51EAE1427C72D02069E59B4 /* PreferencesManager+Icons.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDA2774BA8D6C05CE372039D /* PreferencesManager+Icons.swift */; };
+		F527A9CA3DF4F60CCE3FFF4E /* HACameraSignaling.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70056C596CC06C370C528E5F /* HACameraSignaling.swift */; };
 		F540B9C61AA1F32587403CBE /* ph.briefcase.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = A5512355E0EB1F8E45EE468D /* ph.briefcase.fill.svg */; };
 		F54448F96801FD6EF0F2FF0E /* ph.pencil-slash.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = D7323EB893DEDEDB08EAE992 /* ph.pencil-slash.fill.svg */; };
 		F548A2D77D0E41BBA7231FF1 /* ph.file-dashed.svg in Resources */ = {isa = PBXBuildFile; fileRef = 7AF67AF0BA20D69614107EA1 /* ph.file-dashed.svg */; };
@@ -4090,6 +4094,7 @@
 		3EF6C7BFFE90D50940F301BB /* ph.swatches.svg */ = {isa = PBXFileReference; path = ph.swatches.svg; sourceTree = "<group>"; };
 		3F001F6CC421ACC8649D9A80 /* ph.standard-definition.fill.svg */ = {isa = PBXFileReference; path = "ph.standard-definition.fill.svg"; sourceTree = "<group>"; };
 		3F02F8809BAFAFCDE4DCC8B6 /* ph.smiley.fill.svg */ = {isa = PBXFileReference; path = ph.smiley.fill.svg; sourceTree = "<group>"; };
+		3F2F71B5A8EA5B3176D9922D /* WebRTCStreamClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebRTCStreamClient.swift; sourceTree = "<group>"; };
 		3F45D8489C647618E6D97C09 /* ph.file-arrow-up.svg */ = {isa = PBXFileReference; path = "ph.file-arrow-up.svg"; sourceTree = "<group>"; };
 		3F4E09DCFA7441592DCC7533 /* ph.union.fill.svg */ = {isa = PBXFileReference; path = ph.union.fill.svg; sourceTree = "<group>"; };
 		3F7082F795BA2C9AA55C64A0 /* ACMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ACMenuItem.swift; sourceTree = "<group>"; };
@@ -4727,6 +4732,7 @@
 		6FEF35B751AD020D455FDD86 /* ph.users-four.svg */ = {isa = PBXFileReference; path = "ph.users-four.svg"; sourceTree = "<group>"; };
 		6FF30AAB74DD7797531BE940 /* ph.shuffle-simple.fill.svg */ = {isa = PBXFileReference; path = "ph.shuffle-simple.fill.svg"; sourceTree = "<group>"; };
 		70038C0D1E53DC9E374A2E5B /* HASecuritySystemMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HASecuritySystemMenuItem.swift; sourceTree = "<group>"; };
+		70056C596CC06C370C528E5F /* HACameraSignaling.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HACameraSignaling.swift; sourceTree = "<group>"; };
 		7034F7070D18D894F3FFD003 /* ph.bridge.fill.svg */ = {isa = PBXFileReference; path = ph.bridge.fill.svg; sourceTree = "<group>"; };
 		704D6DC4B595E3B966DB4274 /* ph.share-network.fill.svg */ = {isa = PBXFileReference; path = "ph.share-network.fill.svg"; sourceTree = "<group>"; };
 		708E00FD307D9F4BF5F0047B /* ph.youtube-logo.fill.svg */ = {isa = PBXFileReference; path = "ph.youtube-logo.fill.svg"; sourceTree = "<group>"; };
@@ -5332,6 +5338,7 @@
 		A050AF0AEF69A9D9C7EBC325 /* ph.arrow-line-down.fill.svg */ = {isa = PBXFileReference; path = "ph.arrow-line-down.fill.svg"; sourceTree = "<group>"; };
 		A05A30B733EA3065D49C31D2 /* ph.circle-dashed.svg */ = {isa = PBXFileReference; path = "ph.circle-dashed.svg"; sourceTree = "<group>"; };
 		A08BD281D5FEA6DAE47AF4B3 /* ph.globe-x.fill.svg */ = {isa = PBXFileReference; path = "ph.globe-x.fill.svg"; sourceTree = "<group>"; };
+		A0A71F23392EA429CFBB9E34 /* CameraViewController+HomeAssistant.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CameraViewController+HomeAssistant.swift"; sourceTree = "<group>"; };
 		A0BE01D4BEA7AD285B4C4611 /* ph.selection.fill.svg */ = {isa = PBXFileReference; path = ph.selection.fill.svg; sourceTree = "<group>"; };
 		A0D6EC1D6BA90E4C8275802E /* ph.split-vertical.fill.svg */ = {isa = PBXFileReference; path = "ph.split-vertical.fill.svg"; sourceTree = "<group>"; };
 		A0F6E6C3A10C8953AD414328 /* ph.chat-circle-dots.svg */ = {isa = PBXFileReference; path = "ph.chat-circle-dots.svg"; sourceTree = "<group>"; };
@@ -6535,6 +6542,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				0AE9FFB43AE2BAEE112BEE83 /* HomeKit.framework in Frameworks */,
+				2823F092B25FC13CA5CC120F /* LiveKitWebRTC in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -6703,10 +6711,12 @@
 				BDF6041C9E962ED63D2709FD /* CameraViewController+Audio.swift */,
 				8E38D91D9B55FBEBB1C7D33B /* CameraViewController+CollectionView.swift */,
 				374C2EC1F7A56B4ECE04924A /* CameraViewController+Data.swift */,
+				A0A71F23392EA429CFBB9E34 /* CameraViewController+HomeAssistant.swift */,
 				3DFABEDCE616EA991243B06A /* CameraViewController+HomeKit.swift */,
 				97019F49E19F08ED22A6720B /* CameraViewController+Overlays.swift */,
 				A0F7D45A6094C8C996325854 /* CameraViewController+Snapshots.swift */,
 				914A41E0AA9D87F86AA5935F /* CameraViewController+Streaming.swift */,
+				70056C596CC06C370C528E5F /* HACameraSignaling.swift */,
 				81F296FBD051BAC5B51F5322 /* HomeKitManager.swift */,
 				EEF2D6AE841E9309235D15BF /* HomeKitManager+Commands.swift */,
 				17B4F37C745C5889F78BE0FC /* HomeKitManager+DataFetching.swift */,
@@ -6714,6 +6724,7 @@
 				3D415D82ADA7CEF78A9A4A52 /* HomeKitManager+Doorbell.swift */,
 				DF9768D90F7845161252A3AB /* HomeKitTypeNames.swift */,
 				B10754E8AB01F87A12A293A7 /* SceneDelegate.swift */,
+				3F2F71B5A8EA5B3176D9922D /* WebRTCStreamClient.swift */,
 			);
 			name = iOS;
 			path = Itsyhome/iOS;
@@ -10016,6 +10027,7 @@
 			);
 			name = Itsyhome;
 			packageProductDependencies = (
+				C891028440C5C0E1AB9180F5 /* LiveKitWebRTC */,
 			);
 			productName = Itsyhome;
 			productReference = D0E47D2FA39B625CC3FA0E66 /* Itsyhome.app */;
@@ -10072,6 +10084,9 @@
 			);
 			mainGroup = E4D0AC95AB41872138D6349D;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				4B83A3AD3D02B152E08700AF /* XCRemoteSwiftPackageReference "webrtc-xcframework" */,
+			);
 			preferredProjectObjectVersion = 54;
 			projectDirPath = "";
 			projectRoot = "";
@@ -13167,6 +13182,7 @@
 				EA2BD76D206D991EBDA7FE4C /* CameraViewController+Audio.swift in Sources */,
 				1E6C7F244DAA12026DED3B53 /* CameraViewController+CollectionView.swift in Sources */,
 				05A1DB037EB7709B7048A05F /* CameraViewController+Data.swift in Sources */,
+				77E8C4DB47AD888CE17F4543 /* CameraViewController+HomeAssistant.swift in Sources */,
 				7F4F0B9C698512C72037CB9C /* CameraViewController+HomeKit.swift in Sources */,
 				6BE051EBFED016414C5D8F08 /* CameraViewController+Overlays.swift in Sources */,
 				27FC3479736EE81BDB5FBCC0 /* CameraViewController+Snapshots.swift in Sources */,
@@ -13174,6 +13190,7 @@
 				1E24EAA5BFD6BC5B18ED2796 /* CameraViewController.swift in Sources */,
 				9E40413770BD4F3504096E3C /* EntityMapper.swift in Sources */,
 				4000C8545AD1515E23242CF0 /* HAAuthManager.swift in Sources */,
+				F527A9CA3DF4F60CCE3FFF4E /* HACameraSignaling.swift in Sources */,
 				DCCB0A4D899D1A138FBE3521 /* HAModels.swift in Sources */,
 				2E7414CE3ECC6928D2A6702E /* HomeAssistantClient.swift in Sources */,
 				22DA94E1CBA65A849CC6E62F /* HomeAssistantPlatform.swift in Sources */,
@@ -13187,6 +13204,7 @@
 				A453BEC6F07575A955C9EF4E /* SceneDelegate.swift in Sources */,
 				B5DE9D8A4A55D9DB6F8D05F9 /* SmartHomePlatform.swift in Sources */,
 				8EC542FB9144F2B0695D7D4A /* URLSchemeHandler.swift in Sources */,
+				4B1A6AAAAC505B2541975282 /* WebRTCStreamClient.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -13729,6 +13747,25 @@
 			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		4B83A3AD3D02B152E08700AF /* XCRemoteSwiftPackageReference "webrtc-xcframework" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/livekit/webrtc-xcframework.git";
+			requirement = {
+				kind = exactVersion;
+				version = 137.7151.12;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		C891028440C5C0E1AB9180F5 /* LiveKitWebRTC */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4B83A3AD3D02B152E08700AF /* XCRemoteSwiftPackageReference "webrtc-xcframework" */;
+			productName = LiveKitWebRTC;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = B4A588E4EFB6287F5D24BFA7 /* Project object */;
 }

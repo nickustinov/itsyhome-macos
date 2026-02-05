@@ -52,6 +52,35 @@ class CameraViewController: UIViewController {
     var activeStreamControl: HMCameraStreamControl?
     var activeStreamAccessory: HMAccessory?
 
+    // HA camera state
+    var haCameras: [CameraData] = []
+    var haSnapshotImages: [UUID: UIImage] = [:]
+    var haSnapshotTimer: Timer?
+
+    var isHomeAssistant: Bool {
+        PlatformManager.shared.selectedPlatform == .homeAssistant
+    }
+
+    var cameraCount: Int {
+        isHomeAssistant ? haCameras.count : cameraAccessories.count
+    }
+
+    func cameraUUID(at index: Int) -> UUID {
+        if isHomeAssistant {
+            return UUID(uuidString: haCameras[index].uniqueIdentifier)!
+        } else {
+            return cameraAccessories[index].uniqueIdentifier
+        }
+    }
+
+    func cameraName(at index: Int) -> String {
+        if isHomeAssistant {
+            return haCameras[index].name
+        } else {
+            return cameraAccessories[index].name
+        }
+    }
+
     // Audio state
     var isMuted: Bool = false
     var isTalking: Bool = false
@@ -66,6 +95,12 @@ class CameraViewController: UIViewController {
     var isStreamZoomed = false
     var isDoorbellMode = false
     var hasLoadedInitialData = false
+
+    // HA WebRTC streaming state
+    var webrtcClient: WebRTCStreamClient?
+    var haSignaling: HACameraSignaling?
+    var activeHACameraId: UUID?
+    var activeHAEntityId: String?
 
     /// Resolved overlay data per camera: [cameraUUID: [(characteristic, service name, service type)]]
     var overlayData: [UUID: [(characteristic: HMCharacteristic, name: String, serviceType: String)]] = [:]
@@ -82,12 +117,14 @@ class CameraViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        NSLog("[CameraDebug] CameraVC viewDidLoad: isHomeAssistant=%d cachedHACameras=%d", isHomeAssistant ? 1 : 0, Self.cachedHACameras.count)
         view.backgroundColor = UIColor(white: 0.12, alpha: 1.0)
         loadPersistedAspectRatios()
         setupCollectionView()
         setupEmptyState()
         setupStreamView()
         loadCameras()
+        NSLog("[CameraDebug] CameraVC viewDidLoad: after loadCameras, cameraCount=%d", cameraCount)
 
         NotificationCenter.default.addObserver(
             self,
@@ -119,13 +156,19 @@ class CameraViewController: UIViewController {
             name: .doorbellRang,
             object: nil
         )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleHACameraDataUpdated(_:)),
+            name: NSNotification.Name("HACameraDataUpdated"),
+            object: nil
+        )
     }
 
     @objc private func preferencesDidChange() {
-        guard activeStreamControl == nil else { return }
+        guard activeStreamControl == nil && webrtcClient == nil else { return }
         loadCameras()
-        emptyLabel.isHidden = !cameraAccessories.isEmpty
-        collectionView.isHidden = cameraAccessories.isEmpty
+        emptyLabel.isHidden = cameraCount > 0
+        collectionView.isHidden = cameraCount == 0
         collectionView.reloadData()
 
         let height = computeGridHeight()
@@ -133,12 +176,12 @@ class CameraViewController: UIViewController {
     }
 
     @objc private func homeDidChange() {
-        if activeStreamControl != nil {
+        if activeStreamControl != nil || webrtcClient != nil {
             backToGrid()
         }
         loadCameras()
-        emptyLabel.isHidden = !cameraAccessories.isEmpty
-        collectionView.isHidden = cameraAccessories.isEmpty
+        emptyLabel.isHidden = cameraCount > 0
+        collectionView.isHidden = cameraCount == 0
         collectionView.reloadData()
 
         let height = computeGridHeight()
@@ -146,19 +189,19 @@ class CameraViewController: UIViewController {
     }
 
     @objc private func panelDidShow() {
-        if let doorbellId = homeKitManager?.pendingDoorbellCameraId {
+        if !isHomeAssistant, let doorbellId = homeKitManager?.pendingDoorbellCameraId {
             homeKitManager?.pendingDoorbellCameraId = nil
             streamDoorbellCamera(id: doorbellId)
             return
         }
-        guard activeStreamControl == nil else { return }
+        guard activeStreamControl == nil && webrtcClient == nil else { return }
         takeAllSnapshots()
         let height = computeGridHeight()
         updatePanelSize(width: Self.gridWidth, height: height, animated: false)
     }
 
     @objc private func panelDidHide() {
-        if activeStreamControl != nil {
+        if activeStreamControl != nil || webrtcClient != nil {
             backToGrid()
         }
     }
@@ -169,64 +212,101 @@ class CameraViewController: UIViewController {
         streamDoorbellCamera(id: cameraId)
     }
 
+    @objc private func handleHACameraDataUpdated(_ notification: Notification) {
+        guard let jsonData = notification.userInfo?["camerasJSON"] as? Data,
+              let cameras = try? JSONDecoder().decode([CameraData].self, from: jsonData) else {
+            NSLog("[CameraDebug] CameraVC: failed to decode cameras from notification")
+            return
+        }
+        NSLog("[CameraDebug] CameraVC: received %d cameras, isHomeAssistant=%d", cameras.count, isHomeAssistant ? 1 : 0)
+        Self.cachedHACameras = cameras
+        if isHomeAssistant {
+            loadCameras()
+            NSLog("[CameraDebug] CameraVC: after loadCameras, cameraCount=%d, haCameras=%d", cameraCount, haCameras.count)
+            emptyLabel.isHidden = cameraCount > 0
+            collectionView.isHidden = cameraCount == 0
+            collectionView.reloadData()
+        }
+    }
+
     private func streamDoorbellCamera(id cameraId: UUID) {
         isDoorbellMode = true
         backButton.setImage(UIImage(systemName: "xmark")?.withTintColor(.white, renderingMode: .alwaysOriginal), for: .normal)
         backButton.setTitle(" Close", for: .normal)
 
-        // If already streaming this camera, just ensure pinned
-        if activeStreamAccessory?.uniqueIdentifier == cameraId {
-            if !isPinned {
-                isPinned = true
-                pinButton.setImage(UIImage(systemName: "pin.fill")?.withTintColor(.white, renderingMode: .alwaysOriginal), for: .normal)
-                macOSController?.setCameraPanelPinned(true)
+        if isHomeAssistant {
+            // If already streaming this camera, just ensure pinned
+            if activeHACameraId == cameraId {
+                ensurePinned()
+                return
             }
-            return
+
+            // If streaming another camera, stop it first
+            if webrtcClient != nil {
+                webrtcClient?.disconnect()
+                webrtcClient = nil
+                haSignaling?.disconnect()
+                haSignaling = nil
+            }
+
+            // Find the doorbell camera entity
+            guard let camera = haCameras.first(where: { $0.uniqueIdentifier == cameraId.uuidString }),
+                  let entityId = camera.entityId else { return }
+
+            startHAStream(cameraId: cameraId, entityId: entityId)
+            ensurePinned()
+        } else {
+            // If already streaming this camera, just ensure pinned
+            if activeStreamAccessory?.uniqueIdentifier == cameraId {
+                ensurePinned()
+                return
+            }
+
+            // If streaming another camera, stop it first
+            if activeStreamControl != nil {
+                activeStreamControl?.stopStream()
+                activeStreamControl = nil
+                activeStreamAccessory = nil
+                streamCameraView.cameraSource = nil
+            }
+
+            // Find the doorbell camera accessory
+            guard let accessory = homeKitManager?.cameraAccessories.first(where: {
+                $0.uniqueIdentifier == cameraId
+            }) else { return }
+
+            startStream(for: accessory)
+            ensurePinned()
         }
+    }
 
-        // If streaming another camera, stop it first
-        if activeStreamControl != nil {
-            activeStreamControl?.stopStream()
-            activeStreamControl = nil
-            activeStreamAccessory = nil
-            streamCameraView.cameraSource = nil
-        }
-
-        // Find the doorbell camera accessory
-        guard let accessory = homeKitManager?.cameraAccessories.first(where: {
-            $0.uniqueIdentifier == cameraId
-        }) else { return }
-
-        startStream(for: accessory)
-
-        // Auto-pin the panel
-        if !isPinned {
-            isPinned = true
-            pinButton.setImage(UIImage(systemName: "pin.fill")?.withTintColor(.white, renderingMode: .alwaysOriginal), for: .normal)
-            macOSController?.setCameraPanelPinned(true)
-        }
+    private func ensurePinned() {
+        guard !isPinned else { return }
+        isPinned = true
+        pinButton.setImage(UIImage(systemName: "pin.fill")?.withTintColor(.white, renderingMode: .alwaysOriginal), for: .normal)
+        macOSController?.setCameraPanelPinned(true)
     }
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
 
-        if !hasLoadedInitialData && !cameraAccessories.isEmpty {
+        if !hasLoadedInitialData && cameraCount > 0 {
             hasLoadedInitialData = true
-            emptyLabel.isHidden = !cameraAccessories.isEmpty
-            collectionView.isHidden = cameraAccessories.isEmpty
+            emptyLabel.isHidden = cameraCount > 0
+            collectionView.isHidden = cameraCount == 0
             collectionView.reloadData()
             takeAllSnapshots()
         }
 
         // Check for pending doorbell camera (scene just activated for doorbell)
-        if let doorbellId = homeKitManager?.pendingDoorbellCameraId {
+        if !isHomeAssistant, let doorbellId = homeKitManager?.pendingDoorbellCameraId {
             homeKitManager?.pendingDoorbellCameraId = nil
             streamDoorbellCamera(id: doorbellId)
             return
         }
 
         // Don't reset to grid if a stream is already active (e.g. doorbell triggered from panelDidShow)
-        guard activeStreamControl == nil else { return }
+        guard activeStreamControl == nil && webrtcClient == nil else { return }
 
         let height = computeGridHeight()
         updatePanelSize(width: Self.gridWidth, height: height, animated: false)
@@ -406,15 +486,16 @@ class CameraViewController: UIViewController {
     }
 
     func computeGridHeight() -> CGFloat {
-        let count = cameraAccessories.count
+        let count = cameraCount
         guard count > 0 else { return 150 }
 
         let cellWidth = Self.gridWidth - Self.sectionSide * 2
 
         // Compute individual cell heights based on detected aspect ratios
         var cellHeights: [CGFloat] = []
-        for accessory in cameraAccessories {
-            let ratio = cameraAspectRatios[accessory.uniqueIdentifier] ?? Self.defaultAspectRatio
+        for i in 0..<count {
+            let uuid = cameraUUID(at: i)
+            let ratio = cameraAspectRatios[uuid] ?? Self.defaultAspectRatio
             cellHeights.append(cellWidth / ratio + Self.labelHeight)
         }
 
@@ -435,6 +516,12 @@ class CameraViewController: UIViewController {
         activeStreamControl?.stopStream()
         activeStreamControl = nil
         activeStreamAccessory = nil
+        webrtcClient?.disconnect()
+        webrtcClient = nil
+        haSignaling?.disconnect()
+        haSignaling = nil
+        activeHACameraId = nil
+        activeHAEntityId = nil
         stopSnapshotTimer()
     }
 

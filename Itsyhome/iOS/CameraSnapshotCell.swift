@@ -13,6 +13,7 @@ class CameraSnapshotCell: UICollectionViewCell {
     static let reuseId = "CameraSnapshotCell"
 
     let cameraView = HMCameraView()
+    let snapshotImageView = UIImageView()
     private let nameLabel = UILabel()
     private let timestampLabel = UILabel()
     private var overlayStack: UIStackView!
@@ -34,6 +35,12 @@ class CameraSnapshotCell: UICollectionViewCell {
         cameraView.translatesAutoresizingMaskIntoConstraints = false
         cameraView.isUserInteractionEnabled = false
         contentView.addSubview(cameraView)
+
+        snapshotImageView.translatesAutoresizingMaskIntoConstraints = false
+        snapshotImageView.contentMode = .scaleAspectFill
+        snapshotImageView.clipsToBounds = true
+        snapshotImageView.isHidden = true
+        contentView.addSubview(snapshotImageView)
 
         nameLabel.translatesAutoresizingMaskIntoConstraints = false
         nameLabel.font = .systemFont(ofSize: 10, weight: .medium)
@@ -67,6 +74,11 @@ class CameraSnapshotCell: UICollectionViewCell {
             cameraView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
             cameraView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
 
+            snapshotImageView.topAnchor.constraint(equalTo: contentView.topAnchor),
+            snapshotImageView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+            snapshotImageView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+            snapshotImageView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
+
             nameLabel.topAnchor.constraint(equalTo: cameraView.topAnchor, constant: 4),
             nameLabel.leadingAnchor.constraint(equalTo: cameraView.leadingAnchor, constant: 6),
 
@@ -80,6 +92,18 @@ class CameraSnapshotCell: UICollectionViewCell {
 
     func configure(name: String) {
         nameLabel.text = name
+    }
+
+    func configureForHA(image: UIImage?) {
+        cameraView.isHidden = true
+        snapshotImageView.isHidden = false
+        snapshotImageView.image = image
+    }
+
+    func configureForHomeKit() {
+        cameraView.isHidden = false
+        snapshotImageView.isHidden = true
+        snapshotImageView.image = nil
     }
 
     func updateTimestamp(since date: Date?) {
@@ -201,6 +225,9 @@ class CameraSnapshotCell: UICollectionViewCell {
     override func prepareForReuse() {
         super.prepareForReuse()
         cameraView.cameraSource = nil
+        cameraView.isHidden = false
+        snapshotImageView.image = nil
+        snapshotImageView.isHidden = true
         nameLabel.text = nil
         timestampLabel.text = nil
         overlayStack.arrangedSubviews.forEach { $0.removeFromSuperview() }

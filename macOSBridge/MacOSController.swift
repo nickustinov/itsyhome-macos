@@ -529,6 +529,23 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
         let shouldShow = data.hasCameras && camerasEnabled && isPro
         cameraPanelManager.setupCameraStatusItem(hasCameras: shouldShow)
 
+        // Broadcast camera data for CameraViewController (HA mode)
+        NSLog("[CameraDebug] MacOSController: platform=%@ cameras=%d hasCameras=%d camerasEnabled=%d isPro=%d shouldShow=%d",
+              PlatformManager.shared.selectedPlatform == .homeAssistant ? "HA" : "HK",
+              data.cameras.count, data.hasCameras ? 1 : 0, camerasEnabled ? 1 : 0, isPro ? 1 : 0, shouldShow ? 1 : 0)
+        if PlatformManager.shared.selectedPlatform == .homeAssistant && !data.cameras.isEmpty {
+            NSLog("[CameraDebug] MacOSController: posting HACameraDataUpdated with %d cameras", data.cameras.count)
+
+            // Encode as JSON — CameraData is compiled into separate modules so direct type casting won't work
+            if let jsonData = try? JSONEncoder().encode(data.cameras) {
+                NotificationCenter.default.post(
+                    name: NSNotification.Name("HACameraDataUpdated"),
+                    object: nil,
+                    userInfo: ["camerasJSON": jsonData]
+                )
+            }
+        }
+
         // Update pinned status items
         StartupLogger.log("Syncing pinned status items...")
         syncPinnedStatusItems()
@@ -667,10 +684,10 @@ extension MacOSController: PinnedStatusItemDelegate {
 
 extension MacOSController: CameraPanelManagerDelegate {
     func cameraPanelManagerOpenCameraWindow(_ manager: CameraPanelManager) {
-        iOSBridge?.openCameraWindow()
+        activeBridge?.openCameraWindow()
     }
 
     func cameraPanelManagerSetCameraWindowHidden(_ manager: CameraPanelManager, hidden: Bool) {
-        iOSBridge?.setCameraWindowHidden(hidden)
+        activeBridge?.setCameraWindowHidden(hidden)
     }
 }

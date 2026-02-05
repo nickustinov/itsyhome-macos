@@ -13,6 +13,11 @@ extension CameraViewController {
     // MARK: - Snapshots
 
     func takeAllSnapshots() {
+        if isHomeAssistant {
+            takeAllHASnapshots()
+            return
+        }
+
         for accessory in cameraAccessories {
             guard let profile = accessory.cameraProfiles?.first,
                   let snapshotControl = profile.snapshotControl else { continue }
@@ -24,6 +29,10 @@ extension CameraViewController {
     }
 
     func startSnapshotTimer() {
+        if isHomeAssistant {
+            startHASnapshotTimer()
+            return
+        }
         snapshotTimer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in
             self?.takeAllSnapshots()
         }
@@ -32,6 +41,8 @@ extension CameraViewController {
     func stopSnapshotTimer() {
         snapshotTimer?.invalidate()
         snapshotTimer = nil
+        haSnapshotTimer?.invalidate()
+        haSnapshotTimer = nil
     }
 
     func startTimestampTimer() {
@@ -49,8 +60,8 @@ extension CameraViewController {
         for cell in collectionView.visibleCells {
             guard let snapshotCell = cell as? CameraSnapshotCell,
                   let indexPath = collectionView.indexPath(for: cell),
-                  indexPath.item < cameraAccessories.count else { continue }
-            let uuid = cameraAccessories[indexPath.item].uniqueIdentifier
+                  indexPath.item < cameraCount else { continue }
+            let uuid = cameraUUID(at: indexPath.item)
             snapshotCell.updateTimestamp(since: snapshotTimestamps[uuid])
         }
     }

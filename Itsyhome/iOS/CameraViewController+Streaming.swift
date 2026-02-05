@@ -10,7 +10,7 @@ import HomeKit
 
 extension CameraViewController {
 
-    // MARK: - Streaming
+    // MARK: - HomeKit streaming
 
     func startStream(for accessory: HMAccessory) {
         guard let profile = accessory.cameraProfiles?.first,
@@ -66,14 +66,23 @@ extension CameraViewController {
     }
 
     @objc func toggleStreamZoom() {
-        guard activeStreamControl != nil,
-              let accessory = activeStreamAccessory else { return }
+        let isHAStreaming = webrtcClient != nil
+        let isHKStreaming = activeStreamControl != nil
+
+        guard isHAStreaming || isHKStreaming else { return }
 
         isStreamZoomed.toggle()
         let iconName = isStreamZoomed ? "minus.magnifyingglass" : "plus.magnifyingglass"
         zoomButton.setImage(UIImage(systemName: iconName)?.withTintColor(.white, renderingMode: .alwaysOriginal), for: .normal)
 
-        let ratio = cameraAspectRatios[accessory.uniqueIdentifier] ?? Self.defaultAspectRatio
+        let cameraId: UUID?
+        if isHAStreaming {
+            cameraId = activeHACameraId
+        } else {
+            cameraId = activeStreamAccessory?.uniqueIdentifier
+        }
+
+        let ratio = cameraId.flatMap { cameraAspectRatios[$0] } ?? Self.defaultAspectRatio
         let width = isStreamZoomed ? Self.streamWidth * 2 : Self.streamWidth
         let height = width / ratio
         updatePanelSize(width: width, height: height, aspectRatio: ratio, animated: true)
@@ -85,16 +94,8 @@ extension CameraViewController {
             isPinned = false
             isStreamZoomed = false
             resetDoorbellButtonState()
-            activeStreamControl?.stopStream()
-            activeStreamControl = nil
-            activeStreamAccessory = nil
-            streamCameraView.cameraSource = nil
-            streamCameraView.isHidden = false
-            streamSpinner.stopAnimating()
-            streamContainerView.isHidden = true
-            streamOverlayStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
-            resetAudioState()
-            collectionView.isHidden = cameraAccessories.isEmpty
+            cleanupActiveStream()
+            collectionView.isHidden = cameraCount == 0
             macOSController?.setCameraPanelPinned(false)
             macOSController?.dismissCameraPanel()
             return
@@ -107,22 +108,40 @@ extension CameraViewController {
         }
 
         isStreamZoomed = false
-        activeStreamControl?.stopStream()
-        activeStreamControl = nil
-        activeStreamAccessory = nil
-        streamCameraView.cameraSource = nil
-        streamCameraView.isHidden = false
-        streamSpinner.stopAnimating()
-        streamContainerView.isHidden = true
-        streamOverlayStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
-        resetAudioState()
-        collectionView.isHidden = cameraAccessories.isEmpty
+        cleanupActiveStream()
+        collectionView.isHidden = cameraCount == 0
         collectionView.collectionViewLayout.invalidateLayout()
         collectionView.setContentOffset(.zero, animated: false)
 
         let height = computeGridHeight()
         updatePanelSize(width: Self.gridWidth, height: height, animated: false)
         startSnapshotTimer()
+    }
+
+    /// Clean up both HK and HA streams
+    private func cleanupActiveStream() {
+        // HK cleanup
+        activeStreamControl?.stopStream()
+        activeStreamControl = nil
+        activeStreamAccessory = nil
+        streamCameraView.cameraSource = nil
+        streamCameraView.isHidden = false
+
+        // HA WebRTC cleanup
+        if let videoView = webrtcClient?.videoView {
+            videoView.removeFromSuperview()
+        }
+        webrtcClient?.disconnect()
+        webrtcClient = nil
+        haSignaling?.disconnect()
+        haSignaling = nil
+        activeHACameraId = nil
+        activeHAEntityId = nil
+
+        streamSpinner.stopAnimating()
+        streamContainerView.isHidden = true
+        streamOverlayStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        resetAudioState()
     }
 
     private func resetDoorbellButtonState() {

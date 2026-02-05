@@ -37,6 +37,8 @@ class CameraSceneDelegate: UIResponder, UIWindowSceneDelegate {
         }
         #endif
 
+        NSLog("[CameraDebug] CameraSceneDelegate: creating CameraViewController, cachedHACameras=%d", CameraViewController.cachedHACameras.count)
+
         let window = UIWindow(windowScene: windowScene)
         window.rootViewController = CameraViewController()
         window.isHidden = true
@@ -58,7 +60,12 @@ class CameraSceneDelegate: UIResponder, UIWindowSceneDelegate {
         let labelHeight: CGFloat = 28
 
         let appDelegate = UIApplication.shared.delegate as? AppDelegate
-        let count = appDelegate?.homeKitManager?.cameraAccessories.count ?? 0
+        let count: Int
+        if PlatformManager.shared.selectedPlatform == .homeAssistant {
+            count = CameraViewController.cachedHACameras.count
+        } else {
+            count = appDelegate?.homeKitManager?.cameraAccessories.count ?? 0
+        }
         guard count > 0 else { return 150 }
 
         let cellWidth = gridWidth - sectionSide * 2

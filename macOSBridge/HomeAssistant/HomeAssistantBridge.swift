@@ -56,15 +56,15 @@ class HomeAssistantBridge: NSObject, Mac2iOS {
     }
 
     func openCameraWindow() {
-        // TODO: Implement camera support for HA
+        NotificationCenter.default.post(name: .requestOpenCameraWindow, object: nil)
     }
 
     func closeCameraWindow() {
-        // TODO: Implement camera support for HA
+        NotificationCenter.default.post(name: .requestCloseCameraWindow, object: nil)
     }
 
     func setCameraWindowHidden(_ hidden: Bool) {
-        // TODO: Implement camera support for HA
+        NotificationCenter.default.post(name: .requestSetCameraWindowHidden, object: nil, userInfo: ["hidden": hidden])
     }
 
     func getRawHomeKitDump() -> String? {

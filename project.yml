@@ -6,6 +6,11 @@ options:
   xcodeVersion: "15.0"
   generateEmptyDirectories: true
 
+packages:
+  LiveKitWebRTC:
+    url: https://github.com/livekit/webrtc-xcframework.git
+    exactVersion: "137.7151.12"
+
 settings:
   base:
     SWIFT_VERSION: "5.9"
@@ -61,6 +66,7 @@ targets:
           destination: plugins
       - sdk: HomeKit.framework
         embed: false
+      - package: LiveKitWebRTC
 
   # macOS plugin bundle for menu bar
   macOSBridge:

@@ -88,6 +88,15 @@ extension CameraViewController {
     }
 
     @objc private func muteButtonTapped() {
+        // HA WebRTC audio muting
+        if let webrtcClient = webrtcClient {
+            isMuted.toggle()
+            webrtcClient.setAudioEnabled(!isMuted)
+            updateMuteButtonState()
+            return
+        }
+
+        // HK stream audio muting
         guard let stream = activeStreamControl?.cameraStream else { return }
 
         let newMuteState = !isMuted

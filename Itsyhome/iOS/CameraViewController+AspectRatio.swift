@@ -31,6 +31,22 @@ extension CameraViewController {
         UserDefaults.standard.set(dict, forKey: Self.persistedRatiosKey)
     }
 
+    /// Caches aspect ratio from a UIImage (used for HA camera snapshots).
+    func cacheAspectRatio(from image: UIImage, for uuid: UUID) {
+        let ratio = image.size.width / image.size.height
+        guard ratio > 0.3, ratio < 4.0 else { return }
+
+        if let existing = cameraAspectRatios[uuid], abs(existing - ratio) < 0.05 { return }
+
+        cameraAspectRatios[uuid] = ratio
+
+        if activeStreamControl == nil && webrtcClient == nil {
+            collectionView.collectionViewLayout.invalidateLayout()
+            let height = computeGridHeight()
+            updatePanelSize(width: Self.gridWidth, height: height, animated: false)
+        }
+    }
+
     /// Reads the aspect ratio from a camera source and caches it.
     /// When `fromStream` is true, the ratio is treated as authoritative and
     /// snapshots will not overwrite it.
@@ -58,7 +74,7 @@ extension CameraViewController {
         NSLog("[Itsyhome] Camera \"%@\" cached ratio=%.2f stream=%d", name, ratio, fromStream ? 1 : 0)
 
         // Reload grid layout if we're in grid mode (not streaming)
-        if activeStreamControl == nil {
+        if activeStreamControl == nil && webrtcClient == nil {
             collectionView.collectionViewLayout.invalidateLayout()
             let height = computeGridHeight()
             updatePanelSize(width: Self.gridWidth, height: height, animated: false)
