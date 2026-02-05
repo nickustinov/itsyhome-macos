@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.1
+
+### Bug fixes
+- **Fix camera-only rooms missing from settings** — rooms containing only cameras or unsupported sensors now appear in settings so they can be hidden
+
 ## 1.3.0
 
 ### New features

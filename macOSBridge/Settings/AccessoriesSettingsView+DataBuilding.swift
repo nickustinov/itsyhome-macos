@@ -58,12 +58,10 @@ extension AccessoriesSettingsView {
 
         servicesByRoom = [:]
         noRoomServices = []
-        var roomsWithAnyService: Set<String> = []
 
         for accessory in data.accessories {
             for service in accessory.services {
                 if let roomId = service.roomIdentifier {
-                    roomsWithAnyService.insert(roomId)
                     if !sensorTypes.contains(service.serviceType) {
                         servicesByRoom[roomId, default: []].append(service)
                     }
@@ -74,8 +72,8 @@ extension AccessoriesSettingsView {
         }
 
         // Order rooms by saved order, with unseen rooms appended at end
-        // Include rooms that have any services (including sensor-only rooms) so they can be hidden
-        let roomsWithServices = data.rooms.filter { roomsWithAnyService.contains($0.uniqueIdentifier) }
+        // Show all rooms so users can hide rooms that only have cameras or unsupported sensors
+        let roomsWithServices = data.rooms
         let savedOrder = preferences.roomOrder
         var ordered: [RoomData] = []
         for roomId in savedOrder {
