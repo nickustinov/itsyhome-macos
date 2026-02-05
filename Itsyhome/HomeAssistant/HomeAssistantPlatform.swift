@@ -594,33 +594,50 @@ final class HomeAssistantPlatform: SmartHomePlatform {
     }
 
     private func writeFanValue(client: HomeAssistantClient, entityId: String, characteristicUUID: UUID, value: Any) async throws {
-        if let isOn = value as? Bool {
-            try await client.callService(
-                domain: "fan",
-                service: isOn ? "turn_on" : "turn_off",
-                target: ["entity_id": entityId]
-            )
-        } else if let speed = value as? Int {
-            try await client.callService(
-                domain: "fan",
-                service: "set_percentage",
-                serviceData: ["percentage": speed],
-                target: ["entity_id": entityId]
-            )
-        } else if let oscillating = value as? Int {
-            try await client.callService(
-                domain: "fan",
-                service: "oscillate",
-                serviceData: ["oscillating": oscillating == 1],
-                target: ["entity_id": entityId]
-            )
-        } else if let direction = value as? Int {
-            try await client.callService(
-                domain: "fan",
-                service: "set_direction",
-                serviceData: ["direction": direction == 0 ? "forward" : "reverse"],
-                target: ["entity_id": entityId]
-            )
+        let characteristicType = mapper.getCharacteristicType(for: characteristicUUID, entityId: entityId)
+
+        switch characteristicType {
+        case "power":
+            if let isOn = value as? Bool {
+                try await client.callService(
+                    domain: "fan",
+                    service: isOn ? "turn_on" : "turn_off",
+                    target: ["entity_id": entityId]
+                )
+            }
+
+        case "speed":
+            if let speed = value as? Int {
+                try await client.callService(
+                    domain: "fan",
+                    service: "set_percentage",
+                    serviceData: ["percentage": speed],
+                    target: ["entity_id": entityId]
+                )
+            }
+
+        case "oscillating", "swing_mode":
+            if let oscillating = value as? Int {
+                try await client.callService(
+                    domain: "fan",
+                    service: "oscillate",
+                    serviceData: ["oscillating": oscillating == 1],
+                    target: ["entity_id": entityId]
+                )
+            }
+
+        case "direction":
+            if let direction = value as? Int {
+                try await client.callService(
+                    domain: "fan",
+                    service: "set_direction",
+                    serviceData: ["direction": direction == 0 ? "forward" : "reverse"],
+                    target: ["entity_id": entityId]
+                )
+            }
+
+        default:
+            logger.warning("Unknown fan characteristic type: \(characteristicType)")
         }
     }
 

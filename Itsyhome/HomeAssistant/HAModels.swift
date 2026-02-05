@@ -262,8 +262,9 @@ extension HAEntityState {
     }
 
     /// Whether light supports color temperature
+    /// Note: "rgbww" lights have warm+cold white LEDs and can do color temp
     var supportsColorTemp: Bool {
-        supportedColorModes.contains("color_temp")
+        supportedColorModes.contains("color_temp") || supportedColorModes.contains("rgbww")
     }
 
     /// Whether light supports brightness
