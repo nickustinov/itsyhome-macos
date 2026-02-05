@@ -243,6 +243,34 @@ extension HAEntityState {
     var maxColorTempKelvin: Int? {
         attributes["max_color_temp_kelvin"] as? Int
     }
+
+    /// Supported color modes (authoritative source for light capabilities)
+    /// Values: onoff, brightness, color_temp, hs, xy, rgb, rgbw, rgbww, white
+    var supportedColorModes: [String] {
+        attributes["supported_color_modes"] as? [String] ?? []
+    }
+
+    /// Color mode currently in use
+    var colorMode: String? {
+        attributes["color_mode"] as? String
+    }
+
+    /// Whether light supports color (hs, xy, rgb, rgbw, rgbww)
+    var supportsColor: Bool {
+        let colorModes: Set<String> = ["hs", "xy", "rgb", "rgbw", "rgbww"]
+        return !supportedColorModes.filter { colorModes.contains($0) }.isEmpty
+    }
+
+    /// Whether light supports color temperature
+    var supportsColorTemp: Bool {
+        supportedColorModes.contains("color_temp")
+    }
+
+    /// Whether light supports brightness
+    var supportsBrightness: Bool {
+        // All modes except "onoff" support brightness
+        return !supportedColorModes.isEmpty && supportedColorModes != ["onoff"]
+    }
 }
 
 // MARK: - Climate attributes

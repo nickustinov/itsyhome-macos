@@ -52,6 +52,7 @@ public struct ServiceData: Codable {
     public let targetTemperatureId: String?    // Thermostats
     public let heatingCoolingStateId: String?  // Thermostats (current mode)
     public let targetHeatingCoolingStateId: String? // Thermostats (target mode)
+    public let availableHVACModes: [String]?  // HA only: available HVAC modes for dynamic UI
     public let lockCurrentStateId: String?     // Locks
     public let lockTargetStateId: String?      // Locks
     public let currentPositionId: String?      // Blinds/window coverings
@@ -125,6 +126,7 @@ public struct ServiceData: Codable {
         targetTemperatureId: UUID? = nil,
         heatingCoolingStateId: UUID? = nil,
         targetHeatingCoolingStateId: UUID? = nil,
+        availableHVACModes: [String]? = nil,
         lockCurrentStateId: UUID? = nil,
         lockTargetStateId: UUID? = nil,
         currentPositionId: UUID? = nil,
@@ -193,6 +195,7 @@ public struct ServiceData: Codable {
         self.targetTemperatureId = targetTemperatureId?.uuidString
         self.heatingCoolingStateId = heatingCoolingStateId?.uuidString
         self.targetHeatingCoolingStateId = targetHeatingCoolingStateId?.uuidString
+        self.availableHVACModes = availableHVACModes
         self.lockCurrentStateId = lockCurrentStateId?.uuidString
         self.lockTargetStateId = lockTargetStateId?.uuidString
         self.currentPositionId = currentPositionId?.uuidString

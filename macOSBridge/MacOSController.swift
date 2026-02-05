@@ -136,6 +136,13 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
             object: nil
         )
 
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handlePlatformDidChange),
+            name: .platformDidChange,
+            object: nil
+        )
+
         HotkeyManager.shared.onHotkeyTriggered = { [weak self] favouriteId in
             self?.handleHotkeyForFavourite(favouriteId)
         }
@@ -161,6 +168,11 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
         } else {
             disconnectFromHomeAssistant()
         }
+    }
+
+    @objc private func handlePlatformDidChange() {
+        updateStatusItemIcon()
+        setupMenu()  // Refresh menu for the new platform
     }
 
     private func connectToHomeAssistant() {
@@ -296,17 +308,24 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
 
     private func setupStatusItem() {
         statusItem.autosaveName = "com.itsyhome.main"
-        if let button = statusItem.button {
-            let pluginBundle = Bundle(for: MacOSController.self)
-            if let icon = pluginBundle.image(forResource: "MenuBarIcon") {
-                icon.isTemplate = true
-                button.image = icon
-            } else {
-                button.image = PhosphorIcon.fill("house")
-            }
-        }
+        updateStatusItemIcon()
         statusItem.menu = mainMenu
         mainMenu.delegate = self
+    }
+
+    private func updateStatusItemIcon() {
+        guard let button = statusItem.button else { return }
+        let pluginBundle = Bundle(for: MacOSController.self)
+
+        // Use HA icon when Home Assistant is selected, otherwise use HomeKit icon
+        let iconName = PlatformManager.shared.selectedPlatform == .homeAssistant ? "HAMenuBarIcon" : "MenuBarIcon"
+
+        if let icon = pluginBundle.image(forResource: iconName) {
+            icon.isTemplate = true
+            button.image = icon
+        } else {
+            button.image = PhosphorIcon.fill("house")
+        }
     }
 
     private func setupMenu() {

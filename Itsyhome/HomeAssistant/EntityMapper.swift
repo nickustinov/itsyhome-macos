@@ -19,6 +19,10 @@ final class EntityMapper {
     private var devices: [String: HADevice] = [:]
     private var areas: [String: HAArea] = [:]
 
+    // Reverse lookup caches for O(1) characteristic lookups
+    private var characteristicToEntity: [UUID: String] = [:]
+    private var serviceToEntity: [UUID: String] = [:]
+
     // MARK: - Data loading
 
     func loadData(states: [HAEntityState],
@@ -30,11 +34,42 @@ final class EntityMapper {
         self.devices = Dictionary(uniqueKeysWithValues: devices.map { ($0.id, $0) })
         self.areas = Dictionary(uniqueKeysWithValues: areas.map { ($0.areaId, $0) })
 
+        // Build reverse lookup caches
+        buildCharacteristicCache()
+
         logger.info("Loaded \(states.count) states, \(entities.count) entities, \(devices.count) devices, \(areas.count) areas")
     }
 
     func updateState(_ state: HAEntityState) {
         entityStates[state.entityId] = state
+    }
+
+    /// Build reverse lookup caches for fast UUID → entityId lookups
+    private func buildCharacteristicCache() {
+        characteristicToEntity.removeAll()
+        serviceToEntity.removeAll()
+
+        let characteristicTypes = [
+            "power", "brightness", "hue", "saturation", "color_temp",
+            "current_temp", "target_temp", "hvac_action", "hvac_mode",
+            "lock_state", "lock_target", "position", "target_position",
+            "tilt", "target_tilt", "door_state", "target_door",
+            "speed", "oscillating", "direction", "alarm_state", "alarm_target",
+            "target_temp_high", "target_temp_low", "humidity", "target_humidity",
+            "hum_action", "hum_mode", "active"
+        ]
+
+        for entityId in entityStates.keys {
+            // Cache service UUID
+            serviceToEntity[deterministicUUID(for: entityId)] = entityId
+
+            // Cache all characteristic UUIDs
+            for charType in characteristicTypes {
+                characteristicToEntity[characteristicUUID(entityId, charType)] = entityId
+            }
+        }
+
+        logger.debug("Built characteristic cache: \(self.characteristicToEntity.count) characteristics, \(self.serviceToEntity.count) services")
     }
 
     // MARK: - Menu data generation
@@ -177,6 +212,11 @@ final class EntityMapper {
         let serviceType = mapDomainToServiceType(state.domain, deviceClass: state.deviceClass)
         guard let serviceType = serviceType else { return nil }
 
+        // Debug logging for light capabilities
+        if state.domain == "light" {
+            logger.info("Light '\(state.friendlyName)' (\(state.entityId)): supported_color_modes=\(state.supportedColorModes), supportsColor=\(state.supportsColor), supportsBrightness=\(state.supportsBrightness), supportsColorTemp=\(state.supportsColorTemp)")
+        }
+
         let areaId = resolveAreaId(for: state, deviceId: entityRegistry[state.entityId]?.deviceId)
         let roomUUID = areaId.flatMap { UUID(uuidString: $0) ?? deterministicUUID(for: $0) }
 
@@ -190,12 +230,12 @@ final class EntityMapper {
             accessoryName: state.friendlyName,
             roomIdentifier: roomUUID,
             isReachable: state.state != "unavailable",
-            // Light characteristics
+            // Light characteristics - use supported_color_modes for capability detection
             powerStateId: hasPowerState(state) ? characteristicUUID(state.entityId, "power") : nil,
-            brightnessId: state.brightness != nil ? characteristicUUID(state.entityId, "brightness") : nil,
-            hueId: state.hsColor != nil ? characteristicUUID(state.entityId, "hue") : nil,
-            saturationId: state.hsColor != nil ? characteristicUUID(state.entityId, "saturation") : nil,
-            colorTemperatureId: state.colorTempKelvin != nil ? characteristicUUID(state.entityId, "color_temp") : nil,
+            brightnessId: state.supportsBrightness ? characteristicUUID(state.entityId, "brightness") : nil,
+            hueId: state.supportsColor ? characteristicUUID(state.entityId, "hue") : nil,
+            saturationId: state.supportsColor ? characteristicUUID(state.entityId, "saturation") : nil,
+            colorTemperatureId: state.supportsColorTemp ? characteristicUUID(state.entityId, "color_temp") : nil,
             colorTemperatureMin: state.minColorTempKelvin.flatMap { Double(1_000_000 / $0) },
             colorTemperatureMax: state.maxColorTempKelvin.flatMap { Double(1_000_000 / $0) },
             // Climate characteristics
@@ -203,6 +243,7 @@ final class EntityMapper {
             targetTemperatureId: state.targetTemperature != nil ? characteristicUUID(state.entityId, "target_temp") : nil,
             heatingCoolingStateId: state.hvacAction != nil ? characteristicUUID(state.entityId, "hvac_action") : nil,
             targetHeatingCoolingStateId: state.domain == "climate" ? characteristicUUID(state.entityId, "hvac_mode") : nil,
+            availableHVACModes: state.domain == "climate" ? state.hvacModes : nil,
             // Lock characteristics
             lockCurrentStateId: state.domain == "lock" ? characteristicUUID(state.entityId, "lock_state") : nil,
             lockTargetStateId: state.domain == "lock" ? characteristicUUID(state.entityId, "lock_target") : nil,
@@ -351,7 +392,7 @@ final class EntityMapper {
     }
 
     /// Generate deterministic UUID for a characteristic
-    private func characteristicUUID(_ entityId: String, _ characteristicName: String) -> UUID {
+    func characteristicUUID(_ entityId: String, _ characteristicName: String) -> UUID {
         return deterministicUUID(for: "\(entityId).\(characteristicName)")
     }
 
@@ -386,6 +427,12 @@ final class EntityMapper {
         }
         if let targetTemp = state.targetTemperature {
             values[characteristicUUID(entityId, "target_temp")] = targetTemp
+        }
+        if let targetTempHigh = state.targetTempHigh {
+            values[characteristicUUID(entityId, "target_temp_high")] = targetTempHigh
+        }
+        if let targetTempLow = state.targetTempLow {
+            values[characteristicUUID(entityId, "target_temp_low")] = targetTempLow
         }
         if let hvacAction = state.hvacAction {
             values[characteristicUUID(entityId, "hvac_action")] = mapHVACActionToHomeKit(hvacAction)
@@ -446,11 +493,17 @@ final class EntityMapper {
     }
 
     private func mapHVACModeToHomeKit(_ mode: String) -> Int {
+        // Extended mapping to support HA-specific modes
+        // Standard HomeKit: 0=off, 1=heat, 2=cool, 3=heat_cool
+        // Extended for HA: 4=dry, 5=fan_only, 6=auto (AI/schedule)
         switch mode {
         case "off": return 0
         case "heat": return 1
         case "cool": return 2
-        case "heat_cool", "auto": return 3
+        case "heat_cool": return 3
+        case "dry": return 4
+        case "fan_only": return 5
+        case "auto": return 6
         default: return 0
         }
     }
@@ -537,37 +590,13 @@ final class EntityMapper {
 
     // MARK: - Entity ID lookup
 
-    /// Get entity ID from service UUID
+    /// Get entity ID from service UUID - O(1) via cache
     func getEntityId(for serviceUUID: UUID) -> String? {
-        // Reverse lookup - find entity whose UUID matches
-        for (entityId, _) in entityStates {
-            if deterministicUUID(for: entityId) == serviceUUID {
-                return entityId
-            }
-        }
-        return nil
+        return serviceToEntity[serviceUUID]
     }
 
-    /// Get entity ID from characteristic UUID
+    /// Get entity ID from characteristic UUID - O(1) via cache
     func getEntityIdFromCharacteristic(_ characteristicUUID: UUID) -> String? {
-        // This is trickier - we need to check all possible characteristic UUIDs
-        for (entityId, _) in entityStates {
-            let possibleCharacteristics = [
-                "power", "brightness", "hue", "saturation", "color_temp",
-                "current_temp", "target_temp", "hvac_action", "hvac_mode",
-                "lock_state", "lock_target", "position", "target_position",
-                "tilt", "target_tilt", "door_state", "target_door",
-                "speed", "oscillating", "direction", "alarm_state", "alarm_target",
-                "target_temp_high", "target_temp_low", "humidity", "target_humidity",
-                "hum_action", "hum_mode", "active"
-            ]
-
-            for char in possibleCharacteristics {
-                if self.characteristicUUID(entityId, char) == characteristicUUID {
-                    return entityId
-                }
-            }
-        }
-        return nil
+        return characteristicToEntity[characteristicUUID]
     }
 }

@@ -18,6 +18,12 @@ public enum SelectedPlatform: String, Codable {
     case homeAssistant = "homeassistant"
 }
 
+// MARK: - Notifications
+
+public extension Notification.Name {
+    static let platformDidChange = Notification.Name("com.itsyhome.platformDidChange")
+}
+
 // MARK: - Platform manager
 
 public final class PlatformManager {
@@ -89,6 +95,7 @@ public final class PlatformManager {
         selectedPlatform = .homeKit
         hasCompletedOnboarding = true
         logger.info("HomeKit selected")
+        NotificationCenter.default.post(name: .platformDidChange, object: nil)
     }
 
     /// Select Home Assistant as the platform
@@ -96,6 +103,7 @@ public final class PlatformManager {
         selectedPlatform = .homeAssistant
         hasCompletedOnboarding = true
         logger.info("Home Assistant selected")
+        NotificationCenter.default.post(name: .platformDidChange, object: nil)
     }
 
     /// Reset platform selection (for testing/settings)
@@ -104,6 +112,7 @@ public final class PlatformManager {
         hasCompletedOnboarding = false
         // Note: HA credentials are cleared separately via HAAuthManager when available
         logger.info("Platform reset")
+        NotificationCenter.default.post(name: .platformDidChange, object: nil)
     }
 
     /// Clear Home Assistant credentials (called from code that has access to HAAuthManager)

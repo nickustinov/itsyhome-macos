@@ -246,17 +246,29 @@ final class HomeAssistantPlatform: SmartHomePlatform {
     }
 
     private func writeLightValue(client: HomeAssistantClient, entityId: String, characteristicUUID: UUID, value: Any) async throws {
-        // Determine what type of value we're writing based on the characteristic
-        let charIdString = characteristicUUID.uuidString.lowercased()
+        let characteristicType = mapper.getCharacteristicType(for: characteristicUUID, entityId: entityId)
+        logger.info("Writing light characteristic '\(characteristicType)' = \(String(describing: value)) for \(entityId)")
 
-        if let isOn = value as? Bool {
-            try await client.callService(
-                domain: "light",
-                service: isOn ? "turn_on" : "turn_off",
-                target: ["entity_id": entityId]
-            )
-        } else if let brightness = value as? Int {
+        switch characteristicType {
+        case "power":
+            if let isOn = value as? Bool {
+                try await client.callService(
+                    domain: "light",
+                    service: isOn ? "turn_on" : "turn_off",
+                    target: ["entity_id": entityId]
+                )
+            }
+
+        case "brightness":
             // Convert from 0-100 to 0-255
+            let brightness: Int
+            if let b = value as? Int {
+                brightness = b
+            } else if let b = value as? Double {
+                brightness = Int(b)
+            } else {
+                return
+            }
             let haBrightness = Int(Double(brightness) * 2.55)
             try await client.callService(
                 domain: "light",
@@ -264,8 +276,62 @@ final class HomeAssistantPlatform: SmartHomePlatform {
                 serviceData: ["brightness": haBrightness],
                 target: ["entity_id": entityId]
             )
-        } else if let mireds = value as? Int {
+
+        case "hue":
+            // Get current saturation to send with hue
+            let currentValues = mapper.getCharacteristicValues(for: entityId)
+            let satUUID = mapper.characteristicUUID(entityId, "saturation")
+            let currentSaturation = (currentValues[satUUID] as? Double) ?? 100.0
+
+            let hue: Double
+            if let h = value as? Double {
+                hue = h
+            } else if let h = value as? Int {
+                hue = Double(h)
+            } else {
+                return
+            }
+
+            // HA expects hs_color as [hue (0-360), saturation (0-100)]
+            try await client.callService(
+                domain: "light",
+                service: "turn_on",
+                serviceData: ["hs_color": [hue, currentSaturation]],
+                target: ["entity_id": entityId]
+            )
+
+        case "saturation":
+            // Get current hue to send with saturation
+            let currentValues = mapper.getCharacteristicValues(for: entityId)
+            let hueUUID = mapper.characteristicUUID(entityId, "hue")
+            let currentHue = (currentValues[hueUUID] as? Double) ?? 0.0
+
+            let saturation: Double
+            if let s = value as? Double {
+                saturation = s
+            } else if let s = value as? Int {
+                saturation = Double(s)
+            } else {
+                return
+            }
+
+            try await client.callService(
+                domain: "light",
+                service: "turn_on",
+                serviceData: ["hs_color": [currentHue, saturation]],
+                target: ["entity_id": entityId]
+            )
+
+        case "color_temp":
             // Convert mireds to kelvin
+            let mireds: Int
+            if let m = value as? Int {
+                mireds = m
+            } else if let m = value as? Double {
+                mireds = Int(m)
+            } else {
+                return
+            }
             let kelvin = 1_000_000 / mireds
             try await client.callService(
                 domain: "light",
@@ -273,6 +339,9 @@ final class HomeAssistantPlatform: SmartHomePlatform {
                 serviceData: ["color_temp_kelvin": kelvin],
                 target: ["entity_id": entityId]
             )
+
+        default:
+            logger.warning("Unknown light characteristic type: \(characteristicType)")
         }
     }
 
@@ -282,55 +351,59 @@ final class HomeAssistantPlatform: SmartHomePlatform {
 
         switch characteristicType {
         case "hvac_mode":
-            guard let mode = value as? Int else { return }
             // Get available HVAC modes for this entity
             let availableModes = mapper.getAvailableHVACModes(for: entityId)
 
-            // HomeKit mode: 0=off, 1=heat, 2=cool, 3=auto
-            // Map to best available HA mode
             let hvacMode: String
-            switch mode {
-            case 0:
-                hvacMode = "off"
-            case 1:
-                // Heat mode - fallback to heat_cool or auto if heat not available
-                if availableModes.contains("heat") {
-                    hvacMode = "heat"
-                } else if availableModes.contains("heat_cool") {
-                    hvacMode = "heat_cool"
-                } else if availableModes.contains("auto") {
-                    hvacMode = "auto"
+
+            // Handle direct string mode (HA dynamic modes like dry, fan_only)
+            if let modeString = value as? String {
+                if availableModes.contains(modeString) {
+                    hvacMode = modeString
                 } else {
-                    logger.warning("No heating mode available for \(entityId)")
+                    logger.warning("Mode '\(modeString)' not available for \(entityId). Available: \(availableModes)")
                     return
                 }
-            case 2:
-                // Cool mode - fallback to heat_cool or auto if cool not available
-                if availableModes.contains("cool") {
-                    hvacMode = "cool"
-                } else if availableModes.contains("heat_cool") {
-                    hvacMode = "heat_cool"
-                } else if availableModes.contains("auto") {
-                    hvacMode = "auto"
-                } else {
-                    logger.warning("No cooling mode available for \(entityId)")
-                    return
+            } else if let mode = value as? Int {
+                // HomeKit-style integer mode: 0=off, 1=heat, 2=cool, 3=auto
+                switch mode {
+                case 0:
+                    hvacMode = "off"
+                case 1:
+                    // Heat mode - must have actual heat support
+                    if availableModes.contains("heat") {
+                        hvacMode = "heat"
+                    } else {
+                        logger.warning("Heat mode not available for \(entityId). Available: \(availableModes)")
+                        return
+                    }
+                case 2:
+                    // Cool mode
+                    if availableModes.contains("cool") {
+                        hvacMode = "cool"
+                    } else {
+                        logger.warning("Cool mode not available for \(entityId). Available: \(availableModes)")
+                        return
+                    }
+                case 3:
+                    // Auto mode - try heat_cool first, then auto
+                    if availableModes.contains("heat_cool") {
+                        hvacMode = "heat_cool"
+                    } else if availableModes.contains("auto") {
+                        hvacMode = "auto"
+                    } else {
+                        logger.warning("No auto mode available for \(entityId)")
+                        return
+                    }
+                default:
+                    hvacMode = "off"
                 }
-            case 3:
-                // Auto mode - try heat_cool first, then auto
-                if availableModes.contains("heat_cool") {
-                    hvacMode = "heat_cool"
-                } else if availableModes.contains("auto") {
-                    hvacMode = "auto"
-                } else {
-                    logger.warning("No auto mode available for \(entityId)")
-                    return
-                }
-            default:
-                hvacMode = "off"
+            } else {
+                logger.warning("Invalid HVAC mode value type: \(type(of: value))")
+                return
             }
 
-            logger.info("Setting HVAC mode to '\(hvacMode)' (requested: \(mode), available: \(availableModes))")
+            logger.info("Setting HVAC mode to '\(hvacMode)' (available: \(availableModes))")
 
             try await client.callService(
                 domain: "climate",
@@ -346,25 +419,39 @@ final class HomeAssistantPlatform: SmartHomePlatform {
                 temp = d
             } else if let i = value as? Int {
                 temp = Double(i)
+            } else if let f = value as? Float {
+                temp = Double(f)
             } else {
                 return
             }
 
-            if characteristicType == "target_temp_high" {
+            if characteristicType == "target_temp_high" || characteristicType == "target_temp_low" {
+                // HA requires both temps sent together for dual setpoint
+                // Get current values from mapper
+                let currentValues = mapper.getCharacteristicValues(for: entityId)
+                let highUUID = mapper.characteristicUUID(entityId, "target_temp_high")
+                let lowUUID = mapper.characteristicUUID(entityId, "target_temp_low")
+
+                var currentHigh = (currentValues[highUUID] as? Double) ?? 24.0
+                var currentLow = (currentValues[lowUUID] as? Double) ?? 18.0
+
+                // Update the one being changed
+                if characteristicType == "target_temp_high" {
+                    currentHigh = temp
+                } else {
+                    currentLow = temp
+                }
+
+                logger.info("Setting temperature range: low=\(currentLow), high=\(currentHigh)")
+
                 try await client.callService(
                     domain: "climate",
                     service: "set_temperature",
-                    serviceData: ["target_temp_high": temp],
-                    target: ["entity_id": entityId]
-                )
-            } else if characteristicType == "target_temp_low" {
-                try await client.callService(
-                    domain: "climate",
-                    service: "set_temperature",
-                    serviceData: ["target_temp_low": temp],
+                    serviceData: ["target_temp_low": currentLow, "target_temp_high": currentHigh],
                     target: ["entity_id": entityId]
                 )
             } else {
+                // Single temperature setpoint
                 try await client.callService(
                     domain: "climate",
                     service: "set_temperature",
