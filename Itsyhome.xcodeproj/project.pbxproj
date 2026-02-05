@@ -85,6 +85,7 @@
 		05A1DB037EB7709B7048A05F /* CameraViewController+Data.swift in Sources */ = {isa = PBXBuildFile; fileRef = 374C2EC1F7A56B4ECE04924A /* CameraViewController+Data.swift */; };
 		05AC81741269691E8082CCDF /* ph.calendar-dots.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 70B69A9FC72AE97F9D70F698 /* ph.calendar-dots.fill.svg */; };
 		05D8C439FF0C92D078A0B407 /* ph.text-h-six.svg in Resources */ = {isa = PBXBuildFile; fileRef = E3B048B1F0F2407644CE79EE /* ph.text-h-six.svg */; };
+		05E99E399EE268E72ACB2952 /* HALightMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E57AE0BD4C19D3F0C5ED7DE /* HALightMenuItem.swift */; };
 		05F0222A716C62C8574CD80F /* ph.wave-square.svg in Resources */ = {isa = PBXBuildFile; fileRef = 715D8D8A6BB4646002FA958A /* ph.wave-square.svg */; };
 		05F500B5C1682C89F59B2CCB /* ph.train-simple.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 603A597C3F500BE7431EDCB2 /* ph.train-simple.fill.svg */; };
 		0614CAD3EBA19625AF0ACB5A /* ph.sign-in.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 5568403E2983DD8201F73DB2 /* ph.sign-in.fill.svg */; };
@@ -457,6 +458,7 @@
 		2187F189A0D26F9BB1635E5C /* ph.lock-open.svg in Resources */ = {isa = PBXBuildFile; fileRef = 548D297A72112F1273C88F94 /* ph.lock-open.svg */; };
 		219699F1269BA7DF5D11E2A5 /* ph.path.svg in Resources */ = {isa = PBXBuildFile; fileRef = D20E4D5F1861F6EE403233E8 /* ph.path.svg */; };
 		2198742429353C3AF483DDF6 /* ph.clock-user.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 15E8D4D92F935F8201629513 /* ph.clock-user.fill.svg */; };
+		21A0ED9BFF5C51EC562180AC /* HALightMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E57AE0BD4C19D3F0C5ED7DE /* HALightMenuItem.swift */; };
 		21BFC5665E60E5E85EE2FF20 /* ph.tram.svg in Resources */ = {isa = PBXBuildFile; fileRef = 5760403912AF6FFBF0F7CA48 /* ph.tram.svg */; };
 		21C5F5629759D2CFE6C64F2E /* ph.approximate-equals.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 08F43CF14A8574E24AC49E8F /* ph.approximate-equals.fill.svg */; };
 		21E1F6CE76E069D99FB6F811 /* ValveMenuItemTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16C85B3C4A8FDF2ACD4001F3 /* ValveMenuItemTests.swift */; };
@@ -4062,6 +4064,7 @@
 		3E27E79CCB6B681EE00B59F4 /* ph.battery-vertical-low.fill.svg */ = {isa = PBXFileReference; path = "ph.battery-vertical-low.fill.svg"; sourceTree = "<group>"; };
 		3E3AAF619BD3BFF7016E58B5 /* ph.subway.svg */ = {isa = PBXFileReference; path = ph.subway.svg; sourceTree = "<group>"; };
 		3E55ED34F6A1AFDB33A8FEC0 /* ph.guitar.svg */ = {isa = PBXFileReference; path = ph.guitar.svg; sourceTree = "<group>"; };
+		3E57AE0BD4C19D3F0C5ED7DE /* HALightMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HALightMenuItem.swift; sourceTree = "<group>"; };
 		3E57FB827660D2CB3FE3EC09 /* ph.warehouse.svg */ = {isa = PBXFileReference; path = ph.warehouse.svg; sourceTree = "<group>"; };
 		3E6FD20F8E7EE6A8EEA35956 /* ph.sphere.svg */ = {isa = PBXFileReference; path = ph.sphere.svg; sourceTree = "<group>"; };
 		3E78A1B8FF75FD04B745CE60 /* ph.office-chair.fill.svg */ = {isa = PBXFileReference; path = "ph.office-chair.fill.svg"; sourceTree = "<group>"; };
@@ -9948,6 +9951,7 @@
 				3CFE4029922DF6D70348EF11 /* GroupMenuItem+Actions.swift */,
 				7092D0C92D0FD903C128DBDA /* GroupMenuItem+Controls.swift */,
 				AAD260DB410DF9FBD0EEA918 /* GroupMenuItem+StateManagement.swift */,
+				3E57AE0BD4C19D3F0C5ED7DE /* HALightMenuItem.swift */,
 				70038C0D1E53DC9E374A2E5B /* HASecuritySystemMenuItem.swift */,
 				2203CC92AE39248AE04E2480 /* HumidifierMenuItem.swift */,
 				73072FCFE16311A3C25C1C2C /* LightMenuItem.swift */,
@@ -13218,6 +13222,7 @@
 				928B430CE987288FFB32D1C5 /* GroupMenuItem+StateManagement.swift in Sources */,
 				5400908F7EA3B99BACF94081 /* GroupMenuItem.swift in Sources */,
 				6CC1B53F8AF7ED858945EA51 /* HAAuthManager.swift in Sources */,
+				05E99E399EE268E72ACB2952 /* HALightMenuItem.swift in Sources */,
 				D3C658BC3BB56C1E309511C1 /* HAModels.swift in Sources */,
 				E36468EF65BF34164C05B424 /* HASecuritySystemMenuItem.swift in Sources */,
 				823ABDFECC4D6E3E63AC3E02 /* HighlightingMenuItemView.swift in Sources */,
@@ -13334,6 +13339,7 @@
 				D52FC9FF60F9BDCB530C7763 /* GroupMenuItem+StateManagement.swift in Sources */,
 				38F444AACFBC37487F3A5204 /* GroupMenuItem.swift in Sources */,
 				FBC578257BB524070875DEF8 /* HAAuthManager.swift in Sources */,
+				21A0ED9BFF5C51EC562180AC /* HALightMenuItem.swift in Sources */,
 				8FFE17F91B99FCB47BCB29D0 /* HAModels.swift in Sources */,
 				DF2EA2565247431E445B32EE /* HAModelsTests.swift in Sources */,
 				BAD9A04129591C3A9C0E47AB /* HASecuritySystemMenuItem.swift in Sources */,

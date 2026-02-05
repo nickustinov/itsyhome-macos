@@ -272,6 +272,17 @@ extension HAEntityState {
         // All modes except "onoff" support brightness
         return !supportedColorModes.isEmpty && supportedColorModes != ["onoff"]
     }
+
+    /// Whether light needs mode switching UI (separate color vs color_temp modes)
+    /// True for lights with hs/rgb/xy + color_temp as separate modes
+    /// False for rgbww/rgbw lights which control color AND white simultaneously
+    /// Note: hs+white lights are treated as regular RGB lights (no mode switching)
+    var needsColorModeSwitch: Bool {
+        let colorOnlyModes: Set<String> = ["hs", "xy", "rgb"]
+        let hasColorOnlyMode = !supportedColorModes.filter { colorOnlyModes.contains($0) }.isEmpty
+        let hasColorTemp = supportedColorModes.contains("color_temp")
+        return hasColorOnlyMode && hasColorTemp
+    }
 }
 
 // MARK: - Climate attributes

@@ -393,7 +393,13 @@ class MenuBuilder {
 
         switch service.serviceType {
         case ServiceTypes.lightbulb:
-            menuItem = LightMenuItem(serviceData: service, bridge: bridge)
+            // Use HALightMenuItem for HA lights that need mode switching (hs+white or hs+color_temp)
+            // rgbww/rgbw lights control color and white simultaneously, so they use regular LightMenuItem
+            if service.needsColorModeSwitch == true {
+                menuItem = HALightMenuItem(serviceData: service, bridge: bridge)
+            } else {
+                menuItem = LightMenuItem(serviceData: service, bridge: bridge)
+            }
 
         case ServiceTypes.switch, ServiceTypes.outlet:
             menuItem = SwitchMenuItem(serviceData: service, bridge: bridge)

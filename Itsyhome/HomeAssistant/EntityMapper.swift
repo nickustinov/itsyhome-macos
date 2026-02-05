@@ -249,6 +249,7 @@ final class EntityMapper {
             colorTemperatureId: state.supportsColorTemp ? characteristicUUID(state.entityId, "color_temp") : nil,
             colorTemperatureMin: state.minColorTempKelvin.flatMap { Double(1_000_000 / $0) },
             colorTemperatureMax: state.maxColorTempKelvin.flatMap { Double(1_000_000 / $0) },
+            needsColorModeSwitch: state.needsColorModeSwitch ? true : nil,
             // Climate characteristics
             currentTemperatureId: state.currentTemperature != nil ? characteristicUUID(state.entityId, "current_temp") : nil,
             targetTemperatureId: state.targetTemperature != nil ? characteristicUUID(state.entityId, "target_temp") : nil,

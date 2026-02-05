@@ -26,6 +26,10 @@ enum TemperatureFormatter {
     /// - Returns: Formatted string with degree symbol (e.g., "72°" or "22°")
     static func format(_ celsius: Double, decimals: Int = 0) -> String {
         let displayTemp = usesFahrenheit ? celsiusToFahrenheit(celsius) : celsius
+        if decimals == 0 {
+            // Use ceiling to avoid 19.5 and 20.5 both showing as 20
+            return "\(Int(ceil(displayTemp)))°"
+        }
         let format = "%.\(decimals)f°"
         return String(format: format, displayTemp)
     }
