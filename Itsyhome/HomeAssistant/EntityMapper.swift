@@ -251,7 +251,7 @@ final class EntityMapper {
             colorTemperatureMax: state.maxColorTempKelvin.flatMap { Double(1_000_000 / $0) },
             needsColorModeSwitch: state.needsColorModeSwitch ? true : nil,
             // Climate characteristics
-            currentTemperatureId: state.currentTemperature != nil ? characteristicUUID(state.entityId, "current_temp") : nil,
+            currentTemperatureId: (state.currentTemperature != nil || (state.domain == "sensor" && state.deviceClass == "temperature" && state.numericState != nil)) ? characteristicUUID(state.entityId, "current_temp") : nil,
             targetTemperatureId: state.targetTemperature != nil ? characteristicUUID(state.entityId, "target_temp") : nil,
             heatingCoolingStateId: state.hvacAction != nil ? characteristicUUID(state.entityId, "hvac_action") : nil,
             targetHeatingCoolingStateId: state.domain == "climate" ? characteristicUUID(state.entityId, "hvac_mode") : nil,
@@ -476,6 +476,16 @@ final class EntityMapper {
         // Humidity for climate entities
         if let humidity = state.currentHumidity {
             values[characteristicUUID(entityId, "humidity")] = humidity
+        }
+
+        // Sensor entities: temperature/humidity value is the state itself
+        if state.domain == "sensor" {
+            if state.deviceClass == "temperature", let temp = state.numericState {
+                values[characteristicUUID(entityId, "current_temp")] = temp
+            }
+            if state.deviceClass == "humidity", let humidity = state.numericState {
+                values[characteristicUUID(entityId, "humidity")] = humidity
+            }
         }
 
         // Lock values - send raw state string for HA (supports transitional states)
