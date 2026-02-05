@@ -15,6 +15,9 @@ class HighlightingMenuItemView: NSView {
     var onMouseExit: (() -> Void)?
     var closesMenuOnAction: Bool = true
 
+    /// Whether the menu item is currently highlighted (mouse inside)
+    private(set) var isHighlighted: Bool = false
+
     private var isMouseInside = false
     private var trackingArea: NSTrackingArea?
     private var originalTextColors: [ObjectIdentifier: NSColor] = [:]
@@ -48,6 +51,7 @@ class HighlightingMenuItemView: NSView {
 
     override func mouseEntered(with event: NSEvent) {
         isMouseInside = true
+        isHighlighted = true
         updateTextColors(highlighted: true)
         needsDisplay = true
         onMouseEnter?()
@@ -55,9 +59,23 @@ class HighlightingMenuItemView: NSView {
 
     override func mouseExited(with event: NSEvent) {
         isMouseInside = false
+        isHighlighted = false
         updateTextColors(highlighted: false)
         needsDisplay = true
         onMouseExit?()
+    }
+
+    /// Call this after updating text labels to re-apply highlight colors if needed
+    func refreshHighlightColors() {
+        if isHighlighted {
+            // First restore all colors to originals (so labels not touched by updateUI get restored)
+            updateTextColors(highlighted: false)
+            // Clear cached colors so they get re-captured with new values
+            originalTextColors.removeAll()
+            originalTintColors.removeAll()
+            // Re-apply highlighting with fresh captures
+            updateTextColors(highlighted: true)
+        }
     }
 
     private func updateTextColors(highlighted: Bool) {

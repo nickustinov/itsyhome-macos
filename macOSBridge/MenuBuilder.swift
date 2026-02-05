@@ -416,7 +416,11 @@ class MenuBuilder {
             menuItem = ACMenuItem(serviceData: service, bridge: bridge)
 
         case ServiceTypes.lock:
-            menuItem = LockMenuItem(serviceData: service, bridge: bridge)
+            if PlatformManager.shared.selectedPlatform == .homeAssistant {
+                menuItem = HALockMenuItem(serviceData: service, bridge: bridge)
+            } else {
+                menuItem = LockMenuItem(serviceData: service, bridge: bridge)
+            }
 
         case ServiceTypes.windowCovering, ServiceTypes.door, ServiceTypes.window:
             // Use CoverMenuItem for HA covers without position support
@@ -433,7 +437,11 @@ class MenuBuilder {
             menuItem = GarageDoorMenuItem(serviceData: service, bridge: bridge)
 
         case ServiceTypes.humidifierDehumidifier:
-            menuItem = HumidifierMenuItem(serviceData: service, bridge: bridge)
+            if PlatformManager.shared.selectedPlatform == .homeAssistant {
+                menuItem = HAHumidifierMenuItem(serviceData: service, bridge: bridge)
+            } else {
+                menuItem = HumidifierMenuItem(serviceData: service, bridge: bridge)
+            }
 
         case ServiceTypes.airPurifier:
             menuItem = AirPurifierMenuItem(serviceData: service, bridge: bridge)

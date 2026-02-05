@@ -642,19 +642,40 @@ final class HomeAssistantPlatform: SmartHomePlatform {
     }
 
     private func writeHumidifierValue(client: HomeAssistantClient, entityId: String, characteristicUUID: UUID, value: Any) async throws {
-        if let isOn = value as? Bool {
-            try await client.callService(
-                domain: "humidifier",
-                service: isOn ? "turn_on" : "turn_off",
-                target: ["entity_id": entityId]
-            )
-        } else if let humidity = value as? Int {
-            try await client.callService(
-                domain: "humidifier",
-                service: "set_humidity",
-                serviceData: ["humidity": humidity],
-                target: ["entity_id": entityId]
-            )
+        let characteristicType = mapper.getCharacteristicType(for: characteristicUUID, entityId: entityId)
+
+        switch characteristicType {
+        case "power":
+            if let isOn = value as? Bool {
+                try await client.callService(
+                    domain: "humidifier",
+                    service: isOn ? "turn_on" : "turn_off",
+                    target: ["entity_id": entityId]
+                )
+            }
+
+        case "target_humidity":
+            if let humidity = value as? Int {
+                try await client.callService(
+                    domain: "humidifier",
+                    service: "set_humidity",
+                    serviceData: ["humidity": humidity],
+                    target: ["entity_id": entityId]
+                )
+            }
+
+        case "hum_mode":
+            if let mode = value as? String {
+                try await client.callService(
+                    domain: "humidifier",
+                    service: "set_mode",
+                    serviceData: ["mode": mode],
+                    target: ["entity_id": entityId]
+                )
+            }
+
+        default:
+            logger.warning("Unknown humidifier characteristic type: \(characteristicType)")
         }
     }
 

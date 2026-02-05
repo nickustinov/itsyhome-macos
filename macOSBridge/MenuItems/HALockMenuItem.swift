@@ -1,20 +1,23 @@
 //
-//  LockMenuItem.swift
+//  HALockMenuItem.swift
 //  macOSBridge
 //
-//  Menu item for door locks with confirmation for unlock
+//  Menu item for Home Assistant locks with state-aware updating
+//  Handles transitional states (locking/unlocking) and jammed state
 //
 
 import AppKit
 
-class LockMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable, LocalChangeNotifiable, ReachabilityUpdatableMenuItem {
+class HALockMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable, LocalChangeNotifiable, ReachabilityUpdatableMenuItem {
 
     let serviceData: ServiceData
     weak var bridge: Mac2iOS?
 
-    private var lockStateCharacteristicId: UUID?
-    private var targetStateCharacteristicId: UUID?
-    private var isLocked: Bool = true
+    private var lockStateId: UUID?
+    private var targetStateId: UUID?
+
+    // HA lock states: locked, unlocked, locking, unlocking, jammed
+    private var currentState: String = "locked"
 
     private let containerView: HighlightingMenuItemView
     private let iconView: NSImageView
@@ -24,18 +27,30 @@ class LockMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshab
 
     var characteristicIdentifiers: [UUID] {
         var ids: [UUID] = []
-        if let id = lockStateCharacteristicId { ids.append(id) }
-        if let id = targetStateCharacteristicId { ids.append(id) }
+        if let id = lockStateId { ids.append(id) }
+        if let id = targetStateId { ids.append(id) }
         return ids
+    }
+
+    private var isLocked: Bool {
+        currentState == "locked" || currentState == "locking"
+    }
+
+    private var isTransitioning: Bool {
+        currentState == "locking" || currentState == "unlocking"
+    }
+
+    private var isJammed: Bool {
+        currentState == "jammed"
     }
 
     init(serviceData: ServiceData, bridge: Mac2iOS?) {
         self.serviceData = serviceData
         self.bridge = bridge
 
-        // Extract characteristic UUIDs from ServiceData
-        self.lockStateCharacteristicId = serviceData.lockCurrentStateId?.uuid
-        self.targetStateCharacteristicId = serviceData.lockTargetStateId?.uuid
+        // Extract characteristic UUIDs
+        self.lockStateId = serviceData.lockCurrentStateId?.uuid
+        self.targetStateId = serviceData.lockTargetStateId?.uuid
 
         let height = DS.ControlSize.menuItemHeight
 
@@ -50,14 +65,14 @@ class LockMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshab
         iconView.imageScaling = .scaleProportionallyUpOrDown
         containerView.addSubview(iconView)
 
-        // Toggle switch position (calculate first for alignment)
+        // Toggle switch position
         let switchX = DS.ControlSize.menuItemWidth - DS.ControlSize.switchWidth - DS.Spacing.md
 
-        // Status label position (right-aligned before toggle)
-        let statusWidth: CGFloat = 55
+        // Status label position
+        let statusWidth: CGFloat = 65
         let statusX = switchX - statusWidth - DS.Spacing.sm
 
-        // Name label (fills space up to status label)
+        // Name label
         let labelX = DS.Spacing.md + DS.ControlSize.iconMedium + DS.Spacing.sm
         let labelY = (height - 17) / 2
         let labelWidth = statusX - labelX - DS.Spacing.xs
@@ -76,7 +91,7 @@ class LockMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshab
         statusLabel.alignment = .right
         containerView.addSubview(statusLabel)
 
-        // Toggle switch (on = locked, off = unlocked)
+        // Toggle switch
         let switchY = (height - DS.ControlSize.switchHeight) / 2
         toggleSwitch = ToggleSwitch()
         toggleSwitch.frame = NSRect(x: switchX, y: switchY, width: DS.ControlSize.switchWidth, height: DS.ControlSize.switchHeight)
@@ -89,11 +104,10 @@ class LockMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshab
 
         containerView.closesMenuOnAction = false
         containerView.onAction = { [weak self] in
-            guard let self else { return }
+            guard let self, !self.isJammed, !self.isTransitioning else { return }
             self.setLockState(locked: !self.isLocked)
         }
 
-        // Set up action
         toggleSwitch.target = self
         toggleSwitch.action = #selector(toggleLock(_:))
     }
@@ -103,9 +117,19 @@ class LockMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshab
     }
 
     func updateValue(for characteristicId: UUID, value: Any, isLocalChange: Bool = false) {
-        if characteristicId == lockStateCharacteristicId {
-            if let state = ValueConversion.toInt(value) {
-                isLocked = state == 1
+        if characteristicId == lockStateId {
+            // HA sends state as string or int
+            if let stateString = value as? String {
+                currentState = stateString
+                updateUI()
+            } else if let stateInt = ValueConversion.toInt(value) {
+                // HomeKit-style: 0=unsecured, 1=secured, 2=jammed, 3=unknown
+                switch stateInt {
+                case 0: currentState = "unlocked"
+                case 1: currentState = "locked"
+                case 2: currentState = "jammed"
+                default: currentState = "locked"
+                }
                 updateUI()
             }
         }
@@ -116,23 +140,62 @@ class LockMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshab
         let mode = isLocked ? "locked" : "unlocked"
         iconView.image = PhosphorIcon.modeIcon(for: serviceData.serviceType, mode: mode, filled: isLocked)
             ?? IconResolver.icon(for: serviceData, filled: isLocked)
-        statusLabel.stringValue = isLocked ? "Locked" : "Unlocked"
+
+        // Update status label text and base color
+        switch currentState {
+        case "locked":
+            statusLabel.stringValue = "Locked"
+            statusLabel.textColor = .secondaryLabelColor
+        case "unlocked":
+            statusLabel.stringValue = "Unlocked"
+            statusLabel.textColor = .secondaryLabelColor
+        case "locking":
+            statusLabel.stringValue = "Locking..."
+            statusLabel.textColor = DS.Colors.warning
+        case "unlocking":
+            statusLabel.stringValue = "Unlocking..."
+            statusLabel.textColor = DS.Colors.warning
+        case "jammed":
+            statusLabel.stringValue = "Jammed"
+            statusLabel.textColor = .systemRed
+        default:
+            statusLabel.stringValue = currentState.capitalized
+            statusLabel.textColor = .secondaryLabelColor
+        }
+
+        // Update toggle
         toggleSwitch.setOn(isLocked, animated: false)
+        toggleSwitch.isEnabled = !isJammed
+
+        // Orange tint during transitional states
+        if isTransitioning {
+            toggleSwitch.onTintColor = DS.Colors.warning
+        } else {
+            toggleSwitch.onTintColor = DS.Colors.switchOn
+        }
     }
 
     @objc private func toggleLock(_ sender: ToggleSwitch) {
+        guard !isJammed, !isTransitioning else {
+            // Revert switch to current state
+            sender.setOn(isLocked, animated: true)
+            return
+        }
         setLockState(locked: sender.isOn)
     }
 
     private func setLockState(locked: Bool) {
-        if let id = targetStateCharacteristicId {
-            bridge?.writeCharacteristic(identifier: id, value: locked ? 1 : 0)
-            isLocked = locked
-            updateUI()
-            // Notify with current state ID so other copies update
-            if let currentId = lockStateCharacteristicId {
-                notifyLocalChange(characteristicId: currentId, value: locked ? 1 : 0)
-            }
+        guard let id = targetStateId else { return }
+
+        // Optimistic update to transitional state
+        currentState = locked ? "locking" : "unlocking"
+        updateUI()
+
+        bridge?.writeCharacteristic(identifier: id, value: locked ? 1 : 0)
+
+        // Notify with current state ID so other copies update
+        if let currentId = lockStateId {
+            notifyLocalChange(characteristicId: currentId, value: locked ? 1 : 0)
         }
     }
 }

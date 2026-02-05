@@ -268,8 +268,8 @@ final class EntityMapper {
             // Tilt slider only for covers that have BOTH position AND tilt (not tilt-only)
             currentHorizontalTiltId: state.currentTiltPosition != nil && !isTiltOnlyCover(state) ? characteristicUUID(state.entityId, "tilt") : nil,
             targetHorizontalTiltId: state.currentTiltPosition != nil && !isTiltOnlyCover(state) ? characteristicUUID(state.entityId, "target_tilt") : nil,
-            // Sensor characteristics (humidity also for climate entities)
-            humidityId: state.deviceClass == "humidity" || (state.domain == "climate" && state.currentHumidity != nil) ? characteristicUUID(state.entityId, "humidity") : nil,
+            // Sensor characteristics (humidity for sensors, climate, and humidifier entities)
+            humidityId: state.deviceClass == "humidity" || ((state.domain == "climate" || state.domain == "humidifier") && state.currentHumidity != nil) ? characteristicUUID(state.entityId, "humidity") : nil,
             // HeaterCooler characteristics
             activeId: state.domain == "valve" || state.domain == "climate" ? characteristicUUID(state.entityId, "active") : nil,
             coolingThresholdTemperatureId: state.targetTempHigh != nil ? characteristicUUID(state.entityId, "target_temp_high") : nil,
@@ -286,7 +286,7 @@ final class EntityMapper {
             targetDoorStateId: state.deviceClass == "garage" ? characteristicUUID(state.entityId, "target_door") : nil,
             // Humidifier characteristics
             currentHumidifierDehumidifierStateId: state.humidifierAction != nil ? characteristicUUID(state.entityId, "hum_action") : nil,
-            targetHumidifierDehumidifierStateId: state.domain == "humidifier" ? characteristicUUID(state.entityId, "hum_mode") : nil,
+            targetHumidifierDehumidifierStateId: state.domain == "humidifier" && !state.availableModes.isEmpty ? characteristicUUID(state.entityId, "hum_mode") : nil,
             humidifierThresholdId: state.targetHumidity != nil ? characteristicUUID(state.entityId, "target_humidity") : nil,
             // Valve characteristics
             inUseId: nil,  // HA doesn't have InUse
@@ -294,7 +294,9 @@ final class EntityMapper {
             securitySystemCurrentStateId: state.domain == "alarm_control_panel" ? characteristicUUID(state.entityId, "alarm_state") : nil,
             securitySystemTargetStateId: state.domain == "alarm_control_panel" ? characteristicUUID(state.entityId, "alarm_target") : nil,
             alarmSupportedModes: state.domain == "alarm_control_panel" ? state.alarmSupportedModes : nil,
-            alarmRequiresCode: state.domain == "alarm_control_panel" ? state.codeArmRequired : nil
+            alarmRequiresCode: state.domain == "alarm_control_panel" ? state.codeArmRequired : nil,
+            // HA Humidifier
+            humidifierAvailableModes: state.domain == "humidifier" && !state.availableModes.isEmpty ? state.availableModes : nil
         )
     }
 
@@ -476,9 +478,9 @@ final class EntityMapper {
             values[characteristicUUID(entityId, "humidity")] = humidity
         }
 
-        // Lock values
+        // Lock values - send raw state string for HA (supports transitional states)
         if state.domain == "lock" {
-            values[characteristicUUID(entityId, "lock_state")] = mapLockStateToHomeKit(state.state)
+            values[characteristicUUID(entityId, "lock_state")] = state.state  // locked, unlocked, locking, unlocking, jammed
             values[characteristicUUID(entityId, "lock_target")] = state.isLocked ? 1 : 0
         }
 
@@ -518,6 +520,17 @@ final class EntityMapper {
         values[characteristicUUID(entityId, "oscillating")] = state.isOscillating ? 1 : 0
         if let direction = state.direction {
             values[characteristicUUID(entityId, "direction")] = direction == "forward" ? 0 : 1
+        }
+
+        // Humidifier values
+        if state.domain == "humidifier" {
+            values[characteristicUUID(entityId, "power")] = state.state == "on"
+            if let targetHumidity = state.targetHumidity {
+                values[characteristicUUID(entityId, "target_humidity")] = targetHumidity
+            }
+            if let mode = state.humidifierMode {
+                values[characteristicUUID(entityId, "hum_mode")] = mode
+            }
         }
 
         // Security system values

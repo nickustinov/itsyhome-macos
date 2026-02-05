@@ -870,6 +870,7 @@
 		41F0D41EFAA2EF6F643B2BC8 /* ph.link.svg in Resources */ = {isa = PBXBuildFile; fileRef = 7D5480706E997B6E3C64D1DE /* ph.link.svg */; };
 		41F5E1D253409CDCD86C0BA6 /* ph.not-member-of.svg in Resources */ = {isa = PBXBuildFile; fileRef = 06A4051A8C781ECF139126D5 /* ph.not-member-of.svg */; };
 		4221BB11BB08E5E656FE3088 /* ph.table.svg in Resources */ = {isa = PBXBuildFile; fileRef = 0C00C2DE9959B202DD545E92 /* ph.table.svg */; };
+		4290EE69DCA79702020E1CE9 /* HAHumidifierMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16194313CC7BC3B8F5EEE75F /* HAHumidifierMenuItem.swift */; };
 		42B11A103B8FE4DDF1B561E2 /* ph.arrows-in-line-vertical.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = C3B2CA0C5DA01DD15BD13812 /* ph.arrows-in-line-vertical.fill.svg */; };
 		42BD0F3B8702DC2C6347E788 /* ph.caret-up.svg in Resources */ = {isa = PBXBuildFile; fileRef = BBC4580DE02A65665DED8D19 /* ph.caret-up.svg */; };
 		42D279C5BC0685BE174BD553 /* ph.detective.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = A22EB7E47D5B9B0FA0052231 /* ph.detective.fill.svg */; };
@@ -1381,6 +1382,7 @@
 		69D722DC699EEBFACD40A1B7 /* ph.rss.svg in Resources */ = {isa = PBXBuildFile; fileRef = 8B96A88C0C2F883BC6862713 /* ph.rss.svg */; };
 		69E1CA5B2D71E4351DECE11D /* ph.mountains.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 1904034971598FC2E41D9A46 /* ph.mountains.fill.svg */; };
 		6A041D4529E7530C13BB1450 /* ph.yarn.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 495F6F366D5E81B4B823F45B /* ph.yarn.fill.svg */; };
+		6A08A1E13F3F2DEB3D28188C /* HALockMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 313125F042B7666BDE0981C5 /* HALockMenuItem.swift */; };
 		6A4F1B0871293C9AD2B41489 /* ph.bell-ringing.svg in Resources */ = {isa = PBXBuildFile; fileRef = B81F4453B2721AFB212E796A /* ph.bell-ringing.svg */; };
 		6A70538F50BFB81880613BB3 /* ph.pinwheel.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = B981CA5882A4B27DFF0D40C3 /* ph.pinwheel.fill.svg */; };
 		6A780D7E046211C901F85B4C /* ph.mask-sad.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = F718424AF71E7CF914247A70 /* ph.mask-sad.fill.svg */; };
@@ -2185,6 +2187,7 @@
 		A7BDCDD8670321974DB00B0B /* ph.pepper.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = B20BCE05979CBE082A5CBA57 /* ph.pepper.fill.svg */; };
 		A7D0FFF750BA87EEC6F830A9 /* ph.text-underline.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = A7C94DB3A0CCA944E15E0E73 /* ph.text-underline.fill.svg */; };
 		A7DE407960D16A57B07D5D6E /* ph.thumbs-up.svg in Resources */ = {isa = PBXBuildFile; fileRef = FC4B4BEE41E83FD185A0E5DE /* ph.thumbs-up.svg */; };
+		A7F39222155735925EC83103 /* HALockMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 313125F042B7666BDE0981C5 /* HALockMenuItem.swift */; };
 		A7F8EC56B3BC813943B7D123 /* ph.orange.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 819B2AF1FEDB9723A9068B48 /* ph.orange.fill.svg */; };
 		A819E963982B9CE828521B17 /* ph.battery-high.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = E519898D8D891151F4C07899 /* ph.battery-high.fill.svg */; };
 		A826E119A375E633D6E7E12D /* ph.chat-circle-slash.svg in Resources */ = {isa = PBXBuildFile; fileRef = 4AA953044EE43B78FCEDB333 /* ph.chat-circle-slash.svg */; };
@@ -2580,6 +2583,7 @@
 		C71758200F736938FDC3A1A4 /* ph.airplane-taxiing.svg in Resources */ = {isa = PBXBuildFile; fileRef = 73C5C90094909D3F9910BBFD /* ph.airplane-taxiing.svg */; };
 		C72F6D4852F6FDAE5F92B668 /* ph.arrow-down-right.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 0C5655FD87C683B0554ED6CB /* ph.arrow-down-right.fill.svg */; };
 		C7449CD137FF2398675F95B9 /* ph.vinyl-record.svg in Resources */ = {isa = PBXBuildFile; fileRef = 00F9F9F0BE8BFEBF349D59BA /* ph.vinyl-record.svg */; };
+		C75447EACE1D4BE50218DB35 /* HAHumidifierMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16194313CC7BC3B8F5EEE75F /* HAHumidifierMenuItem.swift */; };
 		C77243215B4DA1821A403A91 /* ph.alarm.svg in Resources */ = {isa = PBXBuildFile; fileRef = ECD42690E8EC37C58A4A593D /* ph.alarm.svg */; };
 		C775D7FF842A83FE2166B228 /* ph.building-office.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = D53C2B6EAF25B1AB3AC658CB /* ph.building-office.fill.svg */; };
 		C784BD14CC16A1E6AD3F4C6F /* ph.selection-all.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 70E5AEBE0AAE4DC9B598C5B0 /* ph.selection-all.fill.svg */; };
@@ -3584,6 +3588,7 @@
 		15C0C9E1DAE8AC7F5619D9FF /* ph.user-circle-dashed.fill.svg */ = {isa = PBXFileReference; path = "ph.user-circle-dashed.fill.svg"; sourceTree = "<group>"; };
 		15D75F4F0D6ED77B502FCA6B /* ph.list-dashes.svg */ = {isa = PBXFileReference; path = "ph.list-dashes.svg"; sourceTree = "<group>"; };
 		15E8D4D92F935F8201629513 /* ph.clock-user.fill.svg */ = {isa = PBXFileReference; path = "ph.clock-user.fill.svg"; sourceTree = "<group>"; };
+		16194313CC7BC3B8F5EEE75F /* HAHumidifierMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HAHumidifierMenuItem.swift; sourceTree = "<group>"; };
 		1637E1468C2771681C9F5A24 /* ph.arrow-left.fill.svg */ = {isa = PBXFileReference; path = "ph.arrow-left.fill.svg"; sourceTree = "<group>"; };
 		1638EDF9F9235F28A886D82C /* ph.fire-extinguisher.fill.svg */ = {isa = PBXFileReference; path = "ph.fire-extinguisher.fill.svg"; sourceTree = "<group>"; };
 		1648C95440A27E5805F7D015 /* ph.speaker-none.fill.svg */ = {isa = PBXFileReference; path = "ph.speaker-none.fill.svg"; sourceTree = "<group>"; };
@@ -3910,6 +3915,7 @@
 		3106C956EA8A1155EBB5CFE0 /* ph.cell-signal-medium.svg */ = {isa = PBXFileReference; path = "ph.cell-signal-medium.svg"; sourceTree = "<group>"; };
 		3119008B0AB463B6F32F50A9 /* ph.rainbow-cloud.svg */ = {isa = PBXFileReference; path = "ph.rainbow-cloud.svg"; sourceTree = "<group>"; };
 		311FCCB6545AD35BB876AF66 /* ph.music-note.svg */ = {isa = PBXFileReference; path = "ph.music-note.svg"; sourceTree = "<group>"; };
+		313125F042B7666BDE0981C5 /* HALockMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HALockMenuItem.swift; sourceTree = "<group>"; };
 		31424F5538F25580FF5C939B /* ph.baby.fill.svg */ = {isa = PBXFileReference; path = ph.baby.fill.svg; sourceTree = "<group>"; };
 		3143F881C0616F909D28944A /* ph.arrow-fat-left.svg */ = {isa = PBXFileReference; path = "ph.arrow-fat-left.svg"; sourceTree = "<group>"; };
 		31444F1E006D07DB11C40A2A /* ph.push-pin-slash.fill.svg */ = {isa = PBXFileReference; path = "ph.push-pin-slash.fill.svg"; sourceTree = "<group>"; };
@@ -9951,7 +9957,9 @@
 				3CFE4029922DF6D70348EF11 /* GroupMenuItem+Actions.swift */,
 				7092D0C92D0FD903C128DBDA /* GroupMenuItem+Controls.swift */,
 				AAD260DB410DF9FBD0EEA918 /* GroupMenuItem+StateManagement.swift */,
+				16194313CC7BC3B8F5EEE75F /* HAHumidifierMenuItem.swift */,
 				3E57AE0BD4C19D3F0C5ED7DE /* HALightMenuItem.swift */,
+				313125F042B7666BDE0981C5 /* HALockMenuItem.swift */,
 				70038C0D1E53DC9E374A2E5B /* HASecuritySystemMenuItem.swift */,
 				2203CC92AE39248AE04E2480 /* HumidifierMenuItem.swift */,
 				73072FCFE16311A3C25C1C2C /* LightMenuItem.swift */,
@@ -13222,7 +13230,9 @@
 				928B430CE987288FFB32D1C5 /* GroupMenuItem+StateManagement.swift in Sources */,
 				5400908F7EA3B99BACF94081 /* GroupMenuItem.swift in Sources */,
 				6CC1B53F8AF7ED858945EA51 /* HAAuthManager.swift in Sources */,
+				C75447EACE1D4BE50218DB35 /* HAHumidifierMenuItem.swift in Sources */,
 				05E99E399EE268E72ACB2952 /* HALightMenuItem.swift in Sources */,
+				6A08A1E13F3F2DEB3D28188C /* HALockMenuItem.swift in Sources */,
 				D3C658BC3BB56C1E309511C1 /* HAModels.swift in Sources */,
 				E36468EF65BF34164C05B424 /* HASecuritySystemMenuItem.swift in Sources */,
 				823ABDFECC4D6E3E63AC3E02 /* HighlightingMenuItemView.swift in Sources */,
@@ -13339,7 +13349,9 @@
 				D52FC9FF60F9BDCB530C7763 /* GroupMenuItem+StateManagement.swift in Sources */,
 				38F444AACFBC37487F3A5204 /* GroupMenuItem.swift in Sources */,
 				FBC578257BB524070875DEF8 /* HAAuthManager.swift in Sources */,
+				4290EE69DCA79702020E1CE9 /* HAHumidifierMenuItem.swift in Sources */,
 				21A0ED9BFF5C51EC562180AC /* HALightMenuItem.swift in Sources */,
+				A7F39222155735925EC83103 /* HALockMenuItem.swift in Sources */,
 				8FFE17F91B99FCB47BCB29D0 /* HAModels.swift in Sources */,
 				DF2EA2565247431E445B32EE /* HAModelsTests.swift in Sources */,
 				BAD9A04129591C3A9C0E47AB /* HASecuritySystemMenuItem.swift in Sources */,
