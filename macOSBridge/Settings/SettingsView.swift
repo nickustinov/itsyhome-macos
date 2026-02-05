@@ -66,6 +66,7 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
 
     private enum Section: Int, CaseIterable {
         case general
+        case homeAssistant
         case accessories
         case cameras
         case deeplinks
@@ -76,6 +77,7 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
         var title: String {
             switch self {
             case .general: return "General"
+            case .homeAssistant: return "Home Assistant"
             case .accessories: return "Home"
             case .cameras: return "Cameras"
             case .deeplinks: return "Deeplinks"
@@ -88,6 +90,7 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
         var icon: String {
             switch self {
             case .general: return "gear"
+            case .homeAssistant: return "plug"
             case .accessories: return "house"
             case .cameras: return "security-camera"
             case .deeplinks: return "link"
@@ -103,10 +106,30 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
             default: return false
             }
         }
+
+        /// Whether this section should be shown for the current platform
+        var isAvailableForCurrentPlatform: Bool {
+            let platform = PlatformManager.shared.selectedPlatform
+            switch self {
+            case .homeAssistant:
+                return platform == .homeAssistant
+            case .accessories:
+                // Show Home section for both platforms (different content)
+                return true
+            default:
+                return true
+            }
+        }
+
+        /// Sections filtered for the current platform
+        static var availableSections: [Section] {
+            allCases.filter { $0.isAvailableForCurrentPlatform }
+        }
     }
 
     // Content views (lazily created)
     private var generalSection: GeneralSection?
+    private var homeAssistantSection: HomeAssistantSection?
     private var accessoriesSection: AccessoriesSettingsView?
     private var camerasSection: CamerasSection?
     private var deeplinksSection: DeeplinksSection?
@@ -231,8 +254,8 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
 
         // Re-show current section if it's a Pro section
         let row = sidebarTableView.selectedRow
-        guard row >= 0, row < Section.allCases.count else { return }
-        let current = Section.allCases[row]
+        guard row >= 0, row < Section.availableSections.count else { return }
+        let current = Section.availableSections[row]
         if current.isProFeature {
             showSection(current)
         }
@@ -247,6 +270,12 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
                 generalSection = GeneralSection()
             }
             contentView = generalSection!
+
+        case .homeAssistant:
+            if homeAssistantSection == nil {
+                homeAssistantSection = HomeAssistantSection()
+            }
+            contentView = homeAssistantSection!
 
         case .accessories:
             if accessoriesSection == nil {
@@ -321,7 +350,7 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
     // MARK: - NSTableViewDataSource
 
     func numberOfRows(in tableView: NSTableView) -> Int {
-        Section.allCases.count
+        Section.availableSections.count
     }
 
     // MARK: - NSTableViewDelegate
@@ -331,7 +360,7 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
     }
 
     func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
-        let section = Section.allCases[row]
+        let section = Section.availableSections[row]
 
         // Create cell container
         let cell = NSView()
@@ -399,13 +428,13 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
 
     func tableViewSelectionDidChange(_ notification: Notification) {
         let row = sidebarTableView.selectedRow
-        guard row >= 0, row < Section.allCases.count else { return }
-        showSection(Section.allCases[row])
+        guard row >= 0, row < Section.availableSections.count else { return }
+        showSection(Section.availableSections[row])
     }
 
     func selectSection(at index: Int) {
-        guard index >= 0, index < Section.allCases.count else { return }
+        guard index >= 0, index < Section.availableSections.count else { return }
         sidebarTableView.selectRowIndexes(IndexSet(integer: index), byExtendingSelection: false)
-        showSection(Section.allCases[index])
+        showSection(Section.availableSections[index])
     }
 }

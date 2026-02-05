@@ -75,7 +75,7 @@ extension MacOSController {
         for item in menu.items {
             if let refreshable = item as? CharacteristicRefreshable {
                 for id in refreshable.characteristicIdentifiers {
-                    iOSBridge?.readCharacteristic(identifier: id)
+                    readCharacteristic(identifier: id)
                 }
             }
             if let submenu = item.submenu {

@@ -22,7 +22,7 @@ final class StayOpenMenu: NSMenu {
 }
 
 @objc(MacOSController)
-public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate {
+public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerDelegate, SmartHomePlatformDelegate {
 
     // MARK: - Properties
 
@@ -36,8 +36,19 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate {
     private var proStatusCancellable: AnyCancellable?
     var pinnedStatusItems: [String: PinnedStatusItem] = [:]
     private let cameraPanelManager = CameraPanelManager()
+    private var platformPickerController: PlatformPickerWindowController?
+    private var homeAssistantPlatform: HomeAssistantPlatform?
+    private var homeAssistantBridge: HomeAssistantBridge?
 
     @objc public weak var iOSBridge: Mac2iOS?
+
+    /// Returns the appropriate bridge based on the selected platform
+    var activeBridge: Mac2iOS? {
+        if PlatformManager.shared.selectedPlatform == .homeAssistant {
+            return homeAssistantBridge
+        }
+        return iOSBridge
+    }
 
     // MARK: - Initialization
 
@@ -54,6 +65,53 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate {
         setupNotifications()
         Task { @MainActor in _ = ProManager.shared }
         StartupLogger.log("MacOSController init complete")
+
+        // Show platform picker if needed
+        if PlatformManager.shared.needsOnboarding {
+            DispatchQueue.main.async { [weak self] in
+                self?.showPlatformPicker()
+            }
+        }
+    }
+
+    private func showPlatformPicker() {
+        platformPickerController = PlatformPickerWindowController()
+        platformPickerController?.delegate = self
+        platformPickerController?.showWindow(nil)
+    }
+
+    // MARK: - PlatformPickerDelegate
+
+    func platformPickerDidSelectHomeKit() {
+        StartupLogger.log("User selected HomeKit")
+        PlatformManager.shared.selectHomeKit()
+        platformPickerController = nil
+        // HomeKit will be initialized by the iOS side
+    }
+
+    func platformPickerDidSelectHomeAssistant() {
+        StartupLogger.log("User selected Home Assistant")
+        PlatformManager.shared.selectHomeAssistant()
+        platformPickerController = nil
+        // Show settings to configure Home Assistant, navigate to HA section
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+            self?.openSettings(nil)
+            // Navigate to Home Assistant section (index 1 when HA is selected)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                NotificationCenter.default.post(
+                    name: SettingsView.navigateToSectionNotification,
+                    object: nil,
+                    userInfo: ["index": 1]
+                )
+                // Focus the server URL field
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    NotificationCenter.default.post(
+                        name: NSNotification.Name("HomeAssistantSectionFocusServerURL"),
+                        object: nil
+                    )
+                }
+            }
+        }
     }
 
     private func setupNotifications() {
@@ -71,6 +129,13 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate {
             object: nil
         )
 
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleHomeAssistantCredentialsChanged),
+            name: NSNotification.Name("HomeAssistantCredentialsChanged"),
+            object: nil
+        )
+
         HotkeyManager.shared.onHotkeyTriggered = { [weak self] favouriteId in
             self?.handleHotkeyForFavourite(favouriteId)
         }
@@ -82,6 +147,109 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate {
                 .sink { [weak self] _ in
                     self?.updateCameraStatusVisibility()
                 }
+        }
+
+        // Connect to Home Assistant if already configured
+        if PlatformManager.shared.selectedPlatform == .homeAssistant && HAAuthManager.shared.isConfigured {
+            connectToHomeAssistant()
+        }
+    }
+
+    @objc private func handleHomeAssistantCredentialsChanged() {
+        if HAAuthManager.shared.isConfigured {
+            connectToHomeAssistant()
+        } else {
+            disconnectFromHomeAssistant()
+        }
+    }
+
+    private func connectToHomeAssistant() {
+        guard PlatformManager.shared.selectedPlatform == .homeAssistant else { return }
+        guard HAAuthManager.shared.isConfigured else { return }
+
+        StartupLogger.log("Connecting to Home Assistant...")
+
+        if homeAssistantPlatform == nil {
+            homeAssistantPlatform = HomeAssistantPlatform()
+            homeAssistantPlatform?.delegate = self
+            homeAssistantBridge = HomeAssistantBridge(platform: homeAssistantPlatform!)
+        }
+
+        Task {
+            do {
+                try await homeAssistantPlatform?.connect()
+                StartupLogger.log("Connected to Home Assistant")
+            } catch {
+                StartupLogger.error("Failed to connect to Home Assistant: \(error)")
+                await MainActor.run {
+                    showError(message: "Failed to connect to Home Assistant: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+
+    private func disconnectFromHomeAssistant() {
+        homeAssistantPlatform?.disconnect()
+        homeAssistantPlatform = nil
+        homeAssistantBridge = nil
+        StartupLogger.log("Disconnected from Home Assistant")
+    }
+
+    // MARK: - SmartHomePlatformDelegate
+
+    public func platformDidUpdateMenuData(_ platform: SmartHomePlatform, jsonString: String) {
+        StartupLogger.log("Received menu data from \(platform.platformType) (\(jsonString.count) chars)")
+        // Bypass the HomeKit check - this is from Home Assistant
+        processMenuJSON(jsonString)
+    }
+
+    public func platformDidUpdateCharacteristic(_ platform: SmartHomePlatform, identifier: UUID, value: Any) {
+        updateCharacteristic(identifier: identifier, value: value)
+    }
+
+    public func platformDidUpdateReachability(_ platform: SmartHomePlatform, accessoryIdentifier: UUID, isReachable: Bool) {
+        setReachability(accessoryIdentifier: accessoryIdentifier, isReachable: isReachable)
+    }
+
+    public func platformDidEncounterError(_ platform: SmartHomePlatform, message: String) {
+        showError(message: message)
+    }
+
+    public func platformDidReceiveDoorbellEvent(_ platform: SmartHomePlatform, cameraIdentifier: UUID) {
+        showCameraPanelForDoorbell(cameraIdentifier: cameraIdentifier)
+    }
+
+    // MARK: - Platform-agnostic action helpers
+
+    func executeScene(identifier: UUID) {
+        if PlatformManager.shared.selectedPlatform == .homeAssistant {
+            homeAssistantPlatform?.executeScene(identifier: identifier)
+        } else {
+            iOSBridge?.executeScene(identifier: identifier)
+        }
+    }
+
+    func readCharacteristic(identifier: UUID) {
+        if PlatformManager.shared.selectedPlatform == .homeAssistant {
+            homeAssistantPlatform?.readCharacteristic(identifier: identifier)
+        } else {
+            iOSBridge?.readCharacteristic(identifier: identifier)
+        }
+    }
+
+    func writeCharacteristic(identifier: UUID, value: Any) {
+        if PlatformManager.shared.selectedPlatform == .homeAssistant {
+            homeAssistantPlatform?.writeCharacteristic(identifier: identifier, value: value)
+        } else {
+            iOSBridge?.writeCharacteristic(identifier: identifier, value: value)
+        }
+    }
+
+    func getCharacteristicValue(identifier: UUID) -> Any? {
+        if PlatformManager.shared.selectedPlatform == .homeAssistant {
+            return homeAssistantPlatform?.getCharacteristicValue(identifier: identifier)
+        } else {
+            return iOSBridge?.getCharacteristicValue(identifier: identifier)
         }
     }
 
@@ -144,7 +312,17 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate {
     private func setupMenu() {
         mainMenu.removeAllItems()
 
-        let loadingItem = NSMenuItem(title: "Loading HomeKit...", action: nil, keyEquivalent: "")
+        let loadingText: String
+        switch PlatformManager.shared.selectedPlatform {
+        case .homeAssistant:
+            loadingText = "Loading Home Assistant..."
+        case .homeKit:
+            loadingText = "Loading HomeKit..."
+        case .none:
+            loadingText = "Select a platform in Settings..."
+        }
+
+        let loadingItem = NSMenuItem(title: loadingText, action: nil, keyEquivalent: "")
         loadingItem.isEnabled = false
         mainMenu.addItem(loadingItem)
 
@@ -155,7 +333,19 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate {
     // MARK: - iOS2Mac Protocol
 
     @objc public func reloadMenuWithJSON(_ jsonString: String) {
-        StartupLogger.log("Received JSON (\(jsonString.count) chars)")
+        // This method is called by HomeKit via iOS2Mac protocol
+        // Ignore HomeKit data if Home Assistant is selected
+        if PlatformManager.shared.selectedPlatform == .homeAssistant {
+            StartupLogger.log("Ignoring HomeKit JSON (\(jsonString.count) chars) - Home Assistant is selected")
+            return
+        }
+
+        StartupLogger.log("Received HomeKit JSON (\(jsonString.count) chars)")
+        processMenuJSON(jsonString)
+    }
+
+    /// Process menu JSON from either HomeKit or Home Assistant
+    private func processMenuJSON(_ jsonString: String) {
         guard let jsonData = jsonString.data(using: .utf8) else {
             StartupLogger.error("Failed to convert JSON string to data")
             return
@@ -289,12 +479,12 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate {
         CloudSyncManager.shared.updateMenuData(data)
         HotkeyManager.shared.registerShortcuts()
 
-        menuBuilder.bridge = iOSBridge
+        menuBuilder.bridge = activeBridge
         StartupLogger.log("Building menu items...")
         menuBuilder.buildMenu(into: mainMenu, with: data)
         StartupLogger.log("Menu items built — \(mainMenu.items.count) items")
 
-        actionEngine.bridge = iOSBridge
+        actionEngine.bridge = activeBridge
         actionEngine.updateMenuData(data)
 
         WebhookServer.shared.configure(actionEngine: actionEngine)
@@ -378,7 +568,11 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate {
     }
 
     @objc private func refreshHomeKit(_ sender: Any?) {
-        iOSBridge?.reloadHomeKit()
+        if PlatformManager.shared.selectedPlatform == .homeAssistant {
+            homeAssistantPlatform?.reloadData()
+        } else {
+            iOSBridge?.reloadHomeKit()
+        }
     }
 
     @objc private func quit(_ sender: Any?) {
@@ -425,11 +619,11 @@ extension MacOSController: PinnedStatusItemDelegate {
     }
 
     func pinnedStatusItem(_ item: PinnedStatusItem, readCharacteristic characteristicId: UUID) {
-        iOSBridge?.readCharacteristic(identifier: characteristicId)
+        readCharacteristic(identifier: characteristicId)
     }
 
     func pinnedStatusItem(_ item: PinnedStatusItem, getCachedValue characteristicId: UUID) -> Any? {
-        return iOSBridge?.getCharacteristicValue(identifier: characteristicId)
+        return getCharacteristicValue(identifier: characteristicId)
     }
 }
 

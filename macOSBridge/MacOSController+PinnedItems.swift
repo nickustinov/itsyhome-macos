@@ -103,7 +103,7 @@ extension MacOSController {
 
                 // Request fresh values for the characteristics
                 for charId in statusItem.characteristicIdentifiers {
-                    iOSBridge?.readCharacteristic(identifier: charId)
+                    readCharacteristic(identifier: charId)
                 }
             }
         }
@@ -114,7 +114,7 @@ extension MacOSController {
 
         if let scene = data.scenes.first(where: { $0.uniqueIdentifier == favouriteId }),
            let sceneUUID = UUID(uuidString: scene.uniqueIdentifier) {
-            iOSBridge?.executeScene(identifier: sceneUUID)
+            executeScene(identifier: sceneUUID)
             return
         }
 
@@ -137,50 +137,50 @@ extension MacOSController {
 
     func toggleService(_ service: ServiceData) {
         if let idString = service.powerStateId, let id = UUID(uuidString: idString) {
-            let current = iOSBridge?.getCharacteristicValue(identifier: id) as? Bool ?? false
-            iOSBridge?.writeCharacteristic(identifier: id, value: !current)
+            let current = getCharacteristicValue(identifier: id) as? Bool ?? false
+            writeCharacteristic(identifier: id, value: !current)
             return
         }
 
         if let idString = service.activeId, let id = UUID(uuidString: idString) {
-            let current = iOSBridge?.getCharacteristicValue(identifier: id) as? Int ?? 0
-            iOSBridge?.writeCharacteristic(identifier: id, value: current == 0 ? 1 : 0)
+            let current = getCharacteristicValue(identifier: id) as? Int ?? 0
+            writeCharacteristic(identifier: id, value: current == 0 ? 1 : 0)
             return
         }
 
         if let idString = service.lockTargetStateId, let id = UUID(uuidString: idString) {
-            let current = iOSBridge?.getCharacteristicValue(identifier: id) as? Int ?? 1
-            iOSBridge?.writeCharacteristic(identifier: id, value: current == 0 ? 1 : 0)
+            let current = getCharacteristicValue(identifier: id) as? Int ?? 1
+            writeCharacteristic(identifier: id, value: current == 0 ? 1 : 0)
             return
         }
 
         if let idString = service.targetPositionId, let id = UUID(uuidString: idString) {
-            let current = iOSBridge?.getCharacteristicValue(identifier: id) as? Int ?? 0
-            iOSBridge?.writeCharacteristic(identifier: id, value: current > 50 ? 0 : 100)
+            let current = getCharacteristicValue(identifier: id) as? Int ?? 0
+            writeCharacteristic(identifier: id, value: current > 50 ? 0 : 100)
             return
         }
 
         if let idString = service.targetDoorStateId, let id = UUID(uuidString: idString) {
-            let current = iOSBridge?.getCharacteristicValue(identifier: id) as? Int ?? 1
-            iOSBridge?.writeCharacteristic(identifier: id, value: current == 0 ? 1 : 0)
+            let current = getCharacteristicValue(identifier: id) as? Int ?? 1
+            writeCharacteristic(identifier: id, value: current == 0 ? 1 : 0)
             return
         }
 
         if let idString = service.targetHeatingCoolingStateId, let id = UUID(uuidString: idString) {
-            let current = iOSBridge?.getCharacteristicValue(identifier: id) as? Int ?? 0
-            iOSBridge?.writeCharacteristic(identifier: id, value: current == 0 ? 3 : 0)
+            let current = getCharacteristicValue(identifier: id) as? Int ?? 0
+            writeCharacteristic(identifier: id, value: current == 0 ? 3 : 0)
             return
         }
 
         if let idString = service.brightnessId, let id = UUID(uuidString: idString) {
-            let current = iOSBridge?.getCharacteristicValue(identifier: id) as? Int ?? 0
-            iOSBridge?.writeCharacteristic(identifier: id, value: current > 0 ? 0 : 100)
+            let current = getCharacteristicValue(identifier: id) as? Int ?? 0
+            writeCharacteristic(identifier: id, value: current > 0 ? 0 : 100)
             return
         }
 
         if let idString = service.securitySystemTargetStateId, let id = UUID(uuidString: idString) {
-            let current = iOSBridge?.getCharacteristicValue(identifier: id) as? Int ?? 3
-            iOSBridge?.writeCharacteristic(identifier: id, value: current == 3 ? 0 : 3)
+            let current = getCharacteristicValue(identifier: id) as? Int ?? 3
+            writeCharacteristic(identifier: id, value: current == 3 ? 0 : 3)
             return
         }
     }
