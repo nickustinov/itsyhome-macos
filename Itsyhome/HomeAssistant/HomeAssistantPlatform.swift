@@ -45,6 +45,13 @@ final class HomeAssistantPlatform: SmartHomePlatform {
 
     private var cachedMenuDataJSON: String?
 
+    /// Pending hue/saturation writes to handle race conditions
+    /// When hue and saturation are written in quick succession, we need to track pending values
+    /// so the second write uses the new value instead of stale cache
+    private var pendingHue: [String: Double] = [:]
+    private var pendingSaturation: [String: Double] = [:]
+    private let pendingColorLock = NSLock()
+
     // MARK: - Initialization
 
     init() {
@@ -278,47 +285,71 @@ final class HomeAssistantPlatform: SmartHomePlatform {
             )
 
         case "hue":
-            // Get current saturation to send with hue
-            let currentValues = mapper.getCharacteristicValues(for: entityId)
-            let satUUID = mapper.characteristicUUID(entityId, "saturation")
-            let currentSaturation = (currentValues[satUUID] as? Double) ?? 100.0
-
             let hue: Double
             if let h = value as? Double {
                 hue = h
             } else if let h = value as? Int {
                 hue = Double(h)
+            } else if let h = value as? Float {
+                hue = Double(h)
             } else {
                 return
+            }
+
+            // Thread-safe access to pending values
+            let saturation: Double = pendingColorLock.withLock {
+                // Store pending hue for subsequent saturation writes
+                pendingHue[entityId] = hue
+
+                // Get saturation: prefer pending value, then cached value
+                if let pendingSat = pendingSaturation[entityId] {
+                    return pendingSat
+                } else {
+                    let currentValues = mapper.getCharacteristicValues(for: entityId)
+                    let satUUID = mapper.characteristicUUID(entityId, "saturation")
+                    return (currentValues[satUUID] as? Double) ?? 100.0
+                }
             }
 
             // HA expects hs_color as [hue (0-360), saturation (0-100)]
             try await client.callService(
                 domain: "light",
                 service: "turn_on",
-                serviceData: ["hs_color": [hue, currentSaturation]],
+                serviceData: ["hs_color": [hue, saturation]],
                 target: ["entity_id": entityId]
             )
 
         case "saturation":
-            // Get current hue to send with saturation
-            let currentValues = mapper.getCharacteristicValues(for: entityId)
-            let hueUUID = mapper.characteristicUUID(entityId, "hue")
-            let currentHue = (currentValues[hueUUID] as? Double) ?? 0.0
-
             let saturation: Double
             if let s = value as? Double {
                 saturation = s
             } else if let s = value as? Int {
                 saturation = Double(s)
+            } else if let s = value as? Float {
+                saturation = Double(s)
             } else {
                 return
+            }
+
+            // Thread-safe access to pending values
+            let hue: Double = pendingColorLock.withLock {
+                // Store pending saturation for subsequent hue writes
+                pendingSaturation[entityId] = saturation
+
+                // Get hue: prefer pending value, then cached value
+                if let pendingH = pendingHue[entityId] {
+                    return pendingH
+                } else {
+                    let currentValues = mapper.getCharacteristicValues(for: entityId)
+                    let hueUUID = mapper.characteristicUUID(entityId, "hue")
+                    return (currentValues[hueUUID] as? Double) ?? 0.0
+                }
             }
 
             try await client.callService(
                 domain: "light",
                 service: "turn_on",
-                serviceData: ["hs_color": [currentHue, saturation]],
+                serviceData: ["hs_color": [hue, saturation]],
                 target: ["entity_id": entityId]
             )
 
@@ -479,6 +510,19 @@ final class HomeAssistantPlatform: SmartHomePlatform {
         let features = mapper.getCoverSupportedFeatures(for: entityId)
 
         if let position = value as? Int {
+            // Special value -1 means stop
+            if position == -1 {
+                // STOP is bit 8 (value 8) in supported_features
+                if features & 8 != 0 {
+                    try await client.callService(
+                        domain: "cover",
+                        service: "stop_cover",
+                        target: ["entity_id": entityId]
+                    )
+                }
+                return
+            }
+
             // Check if cover supports position setting (feature bit 4)
             if features & 4 != 0 {
                 try await client.callService(
@@ -488,10 +532,10 @@ final class HomeAssistantPlatform: SmartHomePlatform {
                     target: ["entity_id": entityId]
                 )
             } else {
-                // Fallback to open/close
+                // Fallback to open/close for covers without position support
                 try await client.callService(
                     domain: "cover",
-                    service: position > 50 ? "open_cover" : "close_cover",
+                    service: position >= 50 ? "open_cover" : "close_cover",
                     target: ["entity_id": entityId]
                 )
             }
@@ -682,6 +726,14 @@ extension HomeAssistantPlatform: HomeAssistantClientDelegate {
 
         // Update mapper
         mapper.updateState(newState)
+
+        // Clear pending color writes now that HA has confirmed
+        if newState.domain == "light" {
+            pendingColorLock.withLock {
+                pendingHue.removeValue(forKey: entityId)
+                pendingSaturation.removeValue(forKey: entityId)
+            }
+        }
 
         // Notify delegate of characteristic changes
         let values = mapper.getCharacteristicValues(for: entityId)

@@ -413,7 +413,12 @@ class MenuBuilder {
             menuItem = LockMenuItem(serviceData: service, bridge: bridge)
 
         case ServiceTypes.windowCovering, ServiceTypes.door, ServiceTypes.window:
-            menuItem = BlindMenuItem(serviceData: service, bridge: bridge)
+            // Use CoverMenuItem for HA covers without position support
+            if service.targetPositionId == nil {
+                menuItem = CoverMenuItem(serviceData: service, bridge: bridge)
+            } else {
+                menuItem = BlindMenuItem(serviceData: service, bridge: bridge)
+            }
 
         case ServiceTypes.fan, ServiceTypes.fanV2:
             menuItem = FanMenuItem(serviceData: service, bridge: bridge)

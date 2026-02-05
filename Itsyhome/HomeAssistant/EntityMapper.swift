@@ -136,7 +136,13 @@ final class EntityMapper {
             }
 
             let deviceId = entityRegistry[entityId]?.deviceId
-            deviceEntities[deviceId, default: []].append(state)
+            if let deviceId = deviceId {
+                // Group entities by device
+                deviceEntities[deviceId, default: []].append(state)
+            } else {
+                // Entities without device ID become their own accessory (use entityId as key)
+                deviceEntities[entityId, default: []].append(state)
+            }
         }
 
         logger.info("Grouped into \(deviceEntities.count) device groups")
@@ -217,8 +223,13 @@ final class EntityMapper {
             logger.info("Light '\(state.friendlyName)' (\(state.entityId)): supported_color_modes=\(state.supportedColorModes), supportsColor=\(state.supportsColor), supportsBrightness=\(state.supportsBrightness), supportsColorTemp=\(state.supportsColorTemp)")
         }
 
+        // Debug logging for fan capabilities
+        if state.domain == "fan" {
+            logger.info("Fan '\(state.friendlyName)' (\(state.entityId)): percentage=\(String(describing: state.percentage)), oscillating=\(state.isOscillating), direction=\(String(describing: state.direction))")
+        }
+
         let areaId = resolveAreaId(for: state, deviceId: entityRegistry[state.entityId]?.deviceId)
-        let roomUUID = areaId.flatMap { UUID(uuidString: $0) ?? deterministicUUID(for: $0) }
+        let roomUUID = areaId.flatMap { deterministicUUID(for: $0) }
 
         // Generate deterministic UUIDs for characteristic IDs
         let entityUUID = deterministicUUID(for: state.entityId)
@@ -248,8 +259,10 @@ final class EntityMapper {
             lockCurrentStateId: state.domain == "lock" ? characteristicUUID(state.entityId, "lock_state") : nil,
             lockTargetStateId: state.domain == "lock" ? characteristicUUID(state.entityId, "lock_target") : nil,
             // Cover characteristics
-            currentPositionId: state.currentPosition != nil ? characteristicUUID(state.entityId, "position") : nil,
-            targetPositionId: state.domain == "cover" ? characteristicUUID(state.entityId, "target_position") : nil,
+            // SET_POSITION is bit 4 (value 4) in supported_features
+            // Always create position ID for covers (used for open/close/stop commands even without position support)
+            currentPositionId: state.domain == "cover" ? characteristicUUID(state.entityId, "position") : nil,
+            targetPositionId: state.domain == "cover" && (state.supportedFeatures & 4) != 0 ? characteristicUUID(state.entityId, "target_position") : nil,
             currentHorizontalTiltId: state.currentTiltPosition != nil ? characteristicUUID(state.entityId, "tilt") : nil,
             targetHorizontalTiltId: state.currentTiltPosition != nil ? characteristicUUID(state.entityId, "target_tilt") : nil,
             // Sensor characteristics
@@ -258,8 +271,8 @@ final class EntityMapper {
             activeId: state.domain == "valve" || state.domain == "climate" ? characteristicUUID(state.entityId, "active") : nil,
             coolingThresholdTemperatureId: state.targetTempHigh != nil ? characteristicUUID(state.entityId, "target_temp_high") : nil,
             heatingThresholdTemperatureId: state.targetTempLow != nil ? characteristicUUID(state.entityId, "target_temp_low") : nil,
-            // Fan characteristics
-            rotationSpeedId: state.percentage != nil ? characteristicUUID(state.entityId, "speed") : nil,
+            // Fan characteristics - always provide speed for fans (percentage may be nil when off)
+            rotationSpeedId: state.domain == "fan" ? characteristicUUID(state.entityId, "speed") : nil,
             rotationSpeedMin: 0,
             rotationSpeedMax: 100,
             rotationDirectionId: state.direction != nil ? characteristicUUID(state.entityId, "direction") : nil,

@@ -39,6 +39,8 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
     private var platformPickerController: PlatformPickerWindowController?
     private var homeAssistantPlatform: HomeAssistantPlatform?
     private var homeAssistantBridge: HomeAssistantBridge?
+    private var lastErrorMessage: String?
+    private var lastErrorTime: Date?
 
     @objc public weak var iOSBridge: Mac2iOS?
 
@@ -408,6 +410,16 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
 
     @objc public func showError(message: String) {
         StartupLogger.error("showError called: \(message)")
+
+        // Rate-limit: don't show same error again within 60 seconds
+        let now = Date()
+        if let lastMsg = lastErrorMessage, let lastTime = lastErrorTime,
+           lastMsg == message, now.timeIntervalSince(lastTime) < 60 {
+            return
+        }
+        lastErrorMessage = message
+        lastErrorTime = now
+
         DispatchQueue.main.async {
             let alert = NSAlert()
             alert.messageText = "Itsyhome error"

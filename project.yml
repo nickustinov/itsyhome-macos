@@ -50,6 +50,7 @@ targets:
         com.apple.security.app-sandbox: true
         com.apple.developer.homekit: true
         com.apple.developer.ubiquity-kvstore-identifier: "$(TeamIdentifierPrefix)$(CFBundleIdentifier)"
+        com.apple.security.network.client: true
         com.apple.security.network.server: true
     dependencies:
       - target: macOSBridge
