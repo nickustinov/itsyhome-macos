@@ -514,6 +514,7 @@
 		265F71F60C58F504D05A271A /* ph.play-circle.svg in Resources */ = {isa = PBXBuildFile; fileRef = 018699C32A9AE46E34E7612F /* ph.play-circle.svg */; };
 		269191EA0F1E4F2B0FE1CD26 /* ph.campfire.svg in Resources */ = {isa = PBXBuildFile; fileRef = 6E47734CA43935AE9C4B5179 /* ph.campfire.svg */; };
 		26CD4F4618CB1B41C4DD425F /* ph.file-txt.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 475E348FA2AE643F6E18D2A1 /* ph.file-txt.fill.svg */; };
+		26D943BEAB9608C532009454 /* ClimateMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 973BB0B4CFF4D2DC04367284 /* ClimateMenuItem.swift */; };
 		26E0DF13A2F6BC88554702D6 /* ph.cake.svg in Resources */ = {isa = PBXBuildFile; fileRef = 5A3F87AE974556344CF9D448 /* ph.cake.svg */; };
 		26E836FC1FDA217B498F2EE8 /* ph.coffee-bean.svg in Resources */ = {isa = PBXBuildFile; fileRef = 4D9EBE624943A38C13952B3F /* ph.coffee-bean.svg */; };
 		26ED562142D6BB8AF9F36438 /* ph.rainbow.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = D03EC1AE301AB92944DF672A /* ph.rainbow.fill.svg */; };
@@ -2732,6 +2733,7 @@
 		D3D5679F6D67670A41AB0ABF /* ph.spinner-ball.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 086B61B3E3E4475D7AF51098 /* ph.spinner-ball.fill.svg */; };
 		D3E9F8BA0B3337199021BFE0 /* ph.sidebar-simple.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 55CCD6E564C40AC4A6199BE9 /* ph.sidebar-simple.fill.svg */; };
 		D4012DD98C97EC412E9C854E /* ph.arrow-bend-double-up-right.svg in Resources */ = {isa = PBXBuildFile; fileRef = 2DE4FCF1FCFCE4759457A91A /* ph.arrow-bend-double-up-right.svg */; };
+		D41110DFFAE3BB0B10E8B30C /* ClimateMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 973BB0B4CFF4D2DC04367284 /* ClimateMenuItem.swift */; };
 		D4209F100E2D5D05CDEA7720 /* ph.hands-clapping.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 54022347787F72E12410DE9D /* ph.hands-clapping.fill.svg */; };
 		D420EC49A20BDA45104F35F2 /* ph.smiley.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 3F02F8809BAFAFCDE4DCC8B6 /* ph.smiley.fill.svg */; };
 		D42612FC5BAC21B8F588AB8E /* ph.box-arrow-down.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 9238529DA6119C59E14DD97A /* ph.box-arrow-down.fill.svg */; };
@@ -5169,6 +5171,7 @@
 		96DCAD86A789C1376B559F62 /* ph.plugs.svg */ = {isa = PBXFileReference; path = ph.plugs.svg; sourceTree = "<group>"; };
 		97019F49E19F08ED22A6720B /* CameraViewController+Overlays.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CameraViewController+Overlays.swift"; sourceTree = "<group>"; };
 		97382B730B0364BB4283E377 /* ph.text-indent.svg */ = {isa = PBXFileReference; path = "ph.text-indent.svg"; sourceTree = "<group>"; };
+		973BB0B4CFF4D2DC04367284 /* ClimateMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClimateMenuItem.swift; sourceTree = "<group>"; };
 		97508043A70FE9B2CAF18EF3 /* ph.ping-pong.fill.svg */ = {isa = PBXFileReference; path = "ph.ping-pong.fill.svg"; sourceTree = "<group>"; };
 		975EB5C74F4F9FCA66B70C91 /* ph.not-subset-of.svg */ = {isa = PBXFileReference; path = "ph.not-subset-of.svg"; sourceTree = "<group>"; };
 		97613D7C2B978DBDB6FF9BC7 /* ph.paint-brush.svg */ = {isa = PBXFileReference; path = "ph.paint-brush.svg"; sourceTree = "<group>"; };
@@ -9867,6 +9870,7 @@
 				72F1F563C08E919FE1477C44 /* AirPurifierMenuItem.swift */,
 				6CFE6ECEB559109472BA360A /* BaseMenuItems.swift */,
 				9CDA7864F1CCF19AD70E1F96 /* BlindMenuItem.swift */,
+				973BB0B4CFF4D2DC04367284 /* ClimateMenuItem.swift */,
 				F3AE776817A51695FBA936B1 /* FanMenuItem.swift */,
 				AB0F3944EC8821BD1947AA8C /* GarageDoorMenuItem.swift */,
 				CC0737BC4060CFA7950A61F8 /* GroupMenuItem.swift */,
@@ -13106,6 +13110,7 @@
 				CD46DAC3D441849FF023CC5A /* CameraPanelManager.swift in Sources */,
 				35DD801A88C9D8C99F06889A /* CamerasSection+TableDelegate.swift in Sources */,
 				11112BE937E38F4684A4A67E /* CamerasSection.swift in Sources */,
+				26D943BEAB9608C532009454 /* ClimateMenuItem.swift in Sources */,
 				E53F247D68A3464066E31310 /* CloudSyncManager.swift in Sources */,
 				099D30F6620813668F633D46 /* CloudSyncTranslator.swift in Sources */,
 				CE60FBDD7DA3242E781072D4 /* ColorConversion.swift in Sources */,
@@ -13208,6 +13213,7 @@
 				851260AF14FDF357AD88C04F /* BlindMenuItem.swift in Sources */,
 				CB2495B718EDDDF5D1B94AC7 /* BlindMenuItemTests.swift in Sources */,
 				67926ADF4BFE82DCEF6BB9D1 /* BridgeProtocols.swift in Sources */,
+				D41110DFFAE3BB0B10E8B30C /* ClimateMenuItem.swift in Sources */,
 				53ECA3675440CD9BAC4279B3 /* CloudSyncManager.swift in Sources */,
 				985B67023A87C83880C511BE /* CloudSyncManagerTests.swift in Sources */,
 				111E21896B8031FB1B180CDD /* CloudSyncTranslator.swift in Sources */,

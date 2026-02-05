@@ -460,6 +460,16 @@ final class HomeAssistantPlatform: SmartHomePlatform {
                 )
             }
 
+        case "swing_mode":
+            // Toggle swing mode between "off" and "auto"
+            let swingMode = (value as? Int == 1) ? "auto" : "off"
+            try await client.callService(
+                domain: "climate",
+                service: "set_swing_mode",
+                serviceData: ["swing_mode": swingMode],
+                target: ["entity_id": entityId]
+            )
+
         default:
             logger.warning("Unknown climate characteristic type: \(characteristicType)")
         }

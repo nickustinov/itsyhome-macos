@@ -399,7 +399,12 @@ class MenuBuilder {
             menuItem = SwitchMenuItem(serviceData: service, bridge: bridge)
 
         case ServiceTypes.thermostat:
-            menuItem = ThermostatMenuItem(serviceData: service, bridge: bridge)
+            // Use ClimateMenuItem for HA (has availableHVACModes), ThermostatMenuItem for HomeKit
+            if service.availableHVACModes != nil {
+                menuItem = ClimateMenuItem(serviceData: service, bridge: bridge)
+            } else {
+                menuItem = ThermostatMenuItem(serviceData: service, bridge: bridge)
+            }
 
         case ServiceTypes.heaterCooler:
             menuItem = ACMenuItem(serviceData: service, bridge: bridge)

@@ -221,11 +221,28 @@ enum DS {
 enum StepperButton {
     enum Size {
         case regular  // 20x20
+        case small    // 16x16
         case mini     // 11x11
     }
 
     static func create(title: String, size: Size = .regular) -> NSButton {
-        let dimension: CGFloat = size == .regular ? 20 : 11
+        let dimension: CGFloat
+        let cornerRadius: CGFloat
+        let fontSize: CGFloat
+        switch size {
+        case .regular:
+            dimension = 20
+            cornerRadius = 4
+            fontSize = 12
+        case .small:
+            dimension = 16
+            cornerRadius = 3
+            fontSize = 10
+        case .mini:
+            dimension = 11
+            cornerRadius = 2
+            fontSize = 8
+        }
         let button = NSButton(frame: NSRect(x: 0, y: 0, width: dimension, height: dimension))
 
         button.isBordered = false
@@ -234,9 +251,8 @@ enum StepperButton {
         let isDark = NSApp.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
         let bgAlpha: CGFloat = isDark ? 0.2 : 0.08
         button.layer?.backgroundColor = NSColor.secondaryLabelColor.withAlphaComponent(bgAlpha).cgColor
-        button.layer?.cornerRadius = size == .regular ? 4 : 2
+        button.layer?.cornerRadius = cornerRadius
 
-        let fontSize: CGFloat = size == .regular ? 12 : 8
         let font = NSFont.systemFont(ofSize: fontSize, weight: .bold)
 
         if isDark {

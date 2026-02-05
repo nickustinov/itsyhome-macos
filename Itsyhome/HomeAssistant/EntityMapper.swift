@@ -56,7 +56,7 @@ final class EntityMapper {
             "tilt", "target_tilt", "door_state", "target_door",
             "speed", "oscillating", "direction", "alarm_state", "alarm_target",
             "target_temp_high", "target_temp_low", "humidity", "target_humidity",
-            "hum_action", "hum_mode", "active"
+            "hum_action", "hum_mode", "active", "swing_mode"
         ]
 
         for entityId in entityStates.keys {
@@ -263,7 +263,8 @@ final class EntityMapper {
             rotationSpeedMin: 0,
             rotationSpeedMax: 100,
             rotationDirectionId: state.direction != nil ? characteristicUUID(state.entityId, "direction") : nil,
-            swingModeId: state.isOscillating ? characteristicUUID(state.entityId, "oscillating") : nil,
+            swingModeId: state.swingMode != nil ? characteristicUUID(state.entityId, "swing_mode") :
+                         state.isOscillating ? characteristicUUID(state.entityId, "oscillating") : nil,
             // Garage door characteristics
             currentDoorStateId: state.deviceClass == "garage" ? characteristicUUID(state.entityId, "door_state") : nil,
             targetDoorStateId: state.deviceClass == "garage" ? characteristicUUID(state.entityId, "target_door") : nil,
@@ -438,6 +439,9 @@ final class EntityMapper {
             values[characteristicUUID(entityId, "hvac_action")] = mapHVACActionToHomeKit(hvacAction)
         }
         values[characteristicUUID(entityId, "hvac_mode")] = mapHVACModeToHomeKit(state.hvacMode)
+        if let swingMode = state.swingMode {
+            values[characteristicUUID(entityId, "swing_mode")] = swingMode == "off" ? 0 : 1
+        }
 
         // Lock values
         if state.domain == "lock" {
@@ -577,7 +581,7 @@ final class EntityMapper {
             "tilt", "target_tilt", "door_state", "target_door",
             "speed", "oscillating", "direction", "alarm_state", "alarm_target",
             "target_temp_high", "target_temp_low", "humidity", "target_humidity",
-            "hum_action", "hum_mode", "active"
+            "hum_action", "hum_mode", "active", "swing_mode"
         ]
 
         for charType in possibleTypes {
