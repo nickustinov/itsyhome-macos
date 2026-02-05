@@ -167,7 +167,7 @@ See [itsyhome-cli](https://github.com/nickustinov/itsyhome-cli) for full documen
 
 ### Stream Deck
 
-Control your HomeKit devices directly from an Elgato Stream Deck using the [Itsyhome Stream Deck plugin](https://github.com/nickustinov/itsyhome-streamdeck). Requires the webhook server to be enabled.
+Control your HomeKit devices directly from an Elgato Stream Deck using the [Itsyhome Stream Deck plugin](https://marketplace.elgato.com/product/itsyhome-c1aadf59-d8ef-4ac0-8af2-0e2e0bf950a2). Requires the webhook server to be enabled.
 
 [![Stream Deck](https://github.com/nickustinov/itsyhome-streamdeck/raw/main/itsyhome-streamdeck.png)](https://marketplace.elgato.com/product/itsyhome-c1aadf59-d8ef-4ac0-8af2-0e2e0bf950a2)
 
@@ -190,7 +190,7 @@ Control your HomeKit devices directly from an Elgato Stream Deck using the [Itsy
 
 Features include color-coded icons per device type, dynamic state display, live state polling, optimistic updates for slow devices (locks, garage doors), custom on/off colors, and optional labels for multi-button setups.
 
-See [itsyhome-streamdeck](https://github.com/nickustinov/itsyhome-streamdeck) for setup and development.
+Source code: [itsyhome-streamdeck](https://github.com/nickustinov/itsyhome-streamdeck)
 
 ## Itsytv — the perfect companion
 
