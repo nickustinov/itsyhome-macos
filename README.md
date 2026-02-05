@@ -169,7 +169,7 @@ See [itsyhome-cli](https://github.com/nickustinov/itsyhome-cli) for full documen
 
 Control your HomeKit devices directly from an Elgato Stream Deck using the [Itsyhome Stream Deck plugin](https://github.com/nickustinov/itsyhome-streamdeck). Requires the webhook server to be enabled.
 
-![Stream Deck](https://github.com/nickustinov/itsyhome-streamdeck/raw/main/itsyhome-streamdeck.png)
+[![Stream Deck](https://github.com/nickustinov/itsyhome-streamdeck/raw/main/itsyhome-streamdeck.png)](https://marketplace.elgato.com/product/itsyhome-c1aadf59-d8ef-4ac0-8af2-0e2e0bf950a2)
 
 **Actions:**
 
