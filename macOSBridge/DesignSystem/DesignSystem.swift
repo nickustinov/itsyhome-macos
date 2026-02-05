@@ -294,3 +294,47 @@ extension NSColor {
         resolvedColor().cgColor
     }
 }
+
+// MARK: - Borderless text field
+
+/// A text field with no border or background - blends into container
+class BorderlessTextField: NSTextField {
+    override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        configure()
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        configure()
+    }
+
+    private func configure() {
+        isBezeled = false
+        isBordered = false
+        drawsBackground = false
+        backgroundColor = .clear
+        focusRingType = .none
+
+        if let cell = self.cell as? NSTextFieldCell {
+            cell.isBezeled = false
+            cell.isBordered = false
+            cell.drawsBackground = false
+            cell.backgroundColor = .clear
+        }
+    }
+
+    // Override to customize the field editor (the NSTextView used when editing)
+    override func becomeFirstResponder() -> Bool {
+        let result = super.becomeFirstResponder()
+
+        // Get the field editor and make it transparent
+        if let fieldEditor = window?.fieldEditor(true, for: self) as? NSTextView {
+            fieldEditor.drawsBackground = false
+            fieldEditor.backgroundColor = .clear
+            fieldEditor.insertionPointColor = DS.Colors.foreground
+        }
+
+        return result
+    }
+}

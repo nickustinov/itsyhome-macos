@@ -85,6 +85,9 @@ targets:
       - path: macOSBridge/Resources/PhosphorIcons
         buildPhase: resources
         type: folder
+      - path: macOSBridge/Resources/SecurityIcons
+        buildPhase: resources
+        type: folder
 
   # Unit tests for macOSBridge
   macOSBridgeTests:

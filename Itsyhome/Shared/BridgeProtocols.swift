@@ -101,6 +101,8 @@ public struct ServiceData: Codable {
     // Security System characteristics
     public let securitySystemCurrentStateId: String?
     public let securitySystemTargetStateId: String?
+    public let alarmSupportedModes: [String]?  // HA only: available alarm modes
+    public let alarmRequiresCode: Bool?        // HA only: whether code is required
     // Slat characteristics
     public let currentTiltAngleId: String?      // Slat tilt (-90 to 90)
     public let targetTiltAngleId: String?       // Slat tilt (-90 to 90)
@@ -171,6 +173,8 @@ public struct ServiceData: Codable {
         // Security System
         securitySystemCurrentStateId: UUID? = nil,
         securitySystemTargetStateId: UUID? = nil,
+        alarmSupportedModes: [String]? = nil,
+        alarmRequiresCode: Bool? = nil,
         // Slat
         currentTiltAngleId: UUID? = nil,
         targetTiltAngleId: UUID? = nil,
@@ -240,6 +244,8 @@ public struct ServiceData: Codable {
         // Security System
         self.securitySystemCurrentStateId = securitySystemCurrentStateId?.uuidString
         self.securitySystemTargetStateId = securitySystemTargetStateId?.uuidString
+        self.alarmSupportedModes = alarmSupportedModes
+        self.alarmRequiresCode = alarmRequiresCode
         // Slat
         self.currentTiltAngleId = currentTiltAngleId?.uuidString
         self.targetTiltAngleId = targetTiltAngleId?.uuidString

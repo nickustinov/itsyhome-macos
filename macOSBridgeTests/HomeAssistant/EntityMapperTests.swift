@@ -528,4 +528,66 @@ final class EntityMapperTests: XCTestCase {
         // Should be 0-100 directly, not converted to angle
         XCTAssertEqual(values[tiltUUID] as? Int, 75)
     }
+
+    // MARK: - Alarm control panel mapping tests
+
+    func testAlarmControlPanelMapping() {
+        let state = createEntityState(
+            entityId: "alarm_control_panel.home",
+            state: "disarmed",
+            attributes: [
+                "friendly_name": "Home Alarm",
+                "supported_features": 55,  // All modes
+                "code_arm_required": true
+            ]
+        )
+        loadData(states: [state])
+
+        let menuData = mapper.generateMenuData()
+        let services = menuData.accessories.flatMap { $0.services }
+        XCTAssertEqual(services.count, 1)
+
+        let service = services.first!
+        XCTAssertEqual(service.name, "Home Alarm")
+        XCTAssertEqual(service.serviceType, ServiceTypes.securitySystem)
+        XCTAssertNotNil(service.alarmSupportedModes)
+        XCTAssertEqual(service.alarmSupportedModes?.count, 6)
+        XCTAssertTrue(service.alarmSupportedModes?.contains("disarmed") ?? false)
+        XCTAssertTrue(service.alarmSupportedModes?.contains("armed_home") ?? false)
+        XCTAssertTrue(service.alarmSupportedModes?.contains("armed_away") ?? false)
+        XCTAssertTrue(service.alarmRequiresCode ?? false)
+    }
+
+    func testAlarmControlPanelCodeNotRequired() {
+        let state = createEntityState(
+            entityId: "alarm_control_panel.office",
+            state: "armed_away",
+            attributes: [
+                "friendly_name": "Office Alarm",
+                "supported_features": 3,  // Just home + away
+                "code_arm_required": false
+            ]
+        )
+        loadData(states: [state])
+
+        let menuData = mapper.generateMenuData()
+        let service = menuData.accessories.flatMap { $0.services }.first!
+        XCTAssertEqual(service.alarmSupportedModes?.count, 3)  // disarmed + home + away
+        XCTAssertFalse(service.alarmRequiresCode ?? true)
+    }
+
+    func testAlarmControlPanelStateValues() {
+        let state = createEntityState(
+            entityId: "alarm_control_panel.home",
+            state: "armed_away",
+            attributes: ["supported_features": 3]
+        )
+        loadData(states: [state])
+
+        let values = mapper.getCharacteristicValues(for: "alarm_control_panel.home")
+        let targetUUID = mapper.characteristicUUID("alarm_control_panel.home", "alarm_target")
+
+        // armed_away should map to 1 (HomeKit away)
+        XCTAssertEqual(values[targetUUID] as? Int, 1)
+    }
 }

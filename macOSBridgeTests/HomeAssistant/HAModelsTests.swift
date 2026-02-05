@@ -363,4 +363,88 @@ final class HAModelsTests: XCTestCase {
         XCTAssertEqual(event?.data["entity_id"] as? String, "light.test")
         XCTAssertEqual(event?.origin, "LOCAL")
     }
+
+    // MARK: - Alarm control panel tests
+
+    func testAlarmSupportedModesAll() {
+        // All features enabled: ARM_HOME=1, ARM_AWAY=2, ARM_NIGHT=4, ARM_CUSTOM_BYPASS=16, ARM_VACATION=32
+        let json: [String: Any] = [
+            "entity_id": "alarm_control_panel.home",
+            "state": "disarmed",
+            "attributes": ["supported_features": 55]  // 1 + 2 + 4 + 16 + 32
+        ]
+
+        let state = HAEntityState(json: json)
+
+        XCTAssertNotNil(state)
+        let modes = state!.alarmSupportedModes
+        XCTAssertTrue(modes.contains("disarmed"))
+        XCTAssertTrue(modes.contains("armed_home"))
+        XCTAssertTrue(modes.contains("armed_away"))
+        XCTAssertTrue(modes.contains("armed_night"))
+        XCTAssertTrue(modes.contains("armed_custom_bypass"))
+        XCTAssertTrue(modes.contains("armed_vacation"))
+        XCTAssertEqual(modes.count, 6)
+    }
+
+    func testAlarmSupportedModesPartial() {
+        // Only ARM_HOME=1 and ARM_AWAY=2
+        let json: [String: Any] = [
+            "entity_id": "alarm_control_panel.home",
+            "state": "armed_away",
+            "attributes": ["supported_features": 3]  // 1 + 2
+        ]
+
+        let state = HAEntityState(json: json)
+
+        XCTAssertNotNil(state)
+        let modes = state!.alarmSupportedModes
+        XCTAssertTrue(modes.contains("disarmed"))
+        XCTAssertTrue(modes.contains("armed_home"))
+        XCTAssertTrue(modes.contains("armed_away"))
+        XCTAssertFalse(modes.contains("armed_night"))
+        XCTAssertFalse(modes.contains("armed_custom_bypass"))
+        XCTAssertFalse(modes.contains("armed_vacation"))
+        XCTAssertEqual(modes.count, 3)
+    }
+
+    func testAlarmCodeRequired() {
+        let json: [String: Any] = [
+            "entity_id": "alarm_control_panel.home",
+            "state": "disarmed",
+            "attributes": ["code_arm_required": true]
+        ]
+
+        let state = HAEntityState(json: json)
+
+        XCTAssertNotNil(state)
+        XCTAssertTrue(state!.codeArmRequired)
+    }
+
+    func testAlarmCodeNotRequired() {
+        let json: [String: Any] = [
+            "entity_id": "alarm_control_panel.home",
+            "state": "disarmed",
+            "attributes": ["code_arm_required": false]
+        ]
+
+        let state = HAEntityState(json: json)
+
+        XCTAssertNotNil(state)
+        XCTAssertFalse(state!.codeArmRequired)
+    }
+
+    func testAlarmCodeRequiredDefault() {
+        // When not specified, defaults to true
+        let json: [String: Any] = [
+            "entity_id": "alarm_control_panel.home",
+            "state": "disarmed",
+            "attributes": [:]
+        ]
+
+        let state = HAEntityState(json: json)
+
+        XCTAssertNotNil(state)
+        XCTAssertTrue(state!.codeArmRequired)
+    }
 }

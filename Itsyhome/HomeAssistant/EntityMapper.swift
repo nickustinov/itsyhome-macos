@@ -291,7 +291,9 @@ final class EntityMapper {
             inUseId: nil,  // HA doesn't have InUse
             // Security system characteristics
             securitySystemCurrentStateId: state.domain == "alarm_control_panel" ? characteristicUUID(state.entityId, "alarm_state") : nil,
-            securitySystemTargetStateId: state.domain == "alarm_control_panel" ? characteristicUUID(state.entityId, "alarm_target") : nil
+            securitySystemTargetStateId: state.domain == "alarm_control_panel" ? characteristicUUID(state.entityId, "alarm_target") : nil,
+            alarmSupportedModes: state.domain == "alarm_control_panel" ? state.alarmSupportedModes : nil,
+            alarmRequiresCode: state.domain == "alarm_control_panel" ? state.codeArmRequired : nil
         )
     }
 

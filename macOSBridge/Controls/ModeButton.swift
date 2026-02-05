@@ -35,6 +35,8 @@ class ModeButton: NSButton {
     }
 
     private var iconName: String?
+    private var usePhosphorIcon: Bool = false
+    private var customImage: NSImage?
 
     /// Create a text-based mode button
     init(title: String, color: NSColor = DS.Colors.success) {
@@ -52,6 +54,32 @@ class ModeButton: NSButton {
     init(icon: String, color: NSColor = DS.Colors.success) {
         self.selectedColor = color
         self.iconName = icon
+        super.init(frame: .zero)
+
+        self.title = ""
+        self.isBordered = false
+        self.bezelStyle = .inline
+        self.setButtonType(.momentaryChange)
+    }
+
+    /// Create an icon-based mode button using Phosphor icon
+    init(phosphorIcon: String, color: NSColor = DS.Colors.success) {
+        self.selectedColor = color
+        self.iconName = phosphorIcon
+        self.usePhosphorIcon = true
+        super.init(frame: .zero)
+
+        self.title = ""
+        self.isBordered = false
+        self.bezelStyle = .inline
+        self.setButtonType(.momentaryChange)
+    }
+
+    /// Create an icon-based mode button using custom image
+    init(image: NSImage, color: NSColor = DS.Colors.success) {
+        self.selectedColor = color
+        self.customImage = image
+        self.customImage?.isTemplate = true  // Enable tinting
         super.init(frame: .zero)
 
         self.title = ""
@@ -108,11 +136,46 @@ class ModeButton: NSButton {
                 : NSColor(white: 0.4, alpha: dimmedAlpha)
         }
 
-        if let iconName = iconName {
+        if let customImage = customImage {
+            // Draw custom image with tinting
+            let tintedImage = customImage.copy() as! NSImage
+            tintedImage.lockFocus()
+            contentColor.set()
+            NSRect(origin: .zero, size: tintedImage.size).fill(using: .sourceAtop)
+            tintedImage.unlockFocus()
+
+            // Scale to fit
+            let targetSize: CGFloat = 14
+            let scale = targetSize / max(tintedImage.size.width, tintedImage.size.height)
+            let scaledWidth = tintedImage.size.width * scale
+            let scaledHeight = tintedImage.size.height * scale
+
+            let imageRect = NSRect(
+                x: (bounds.width - scaledWidth) / 2,
+                y: (bounds.height - scaledHeight) / 2,
+                width: scaledWidth,
+                height: scaledHeight
+            )
+            tintedImage.draw(in: imageRect)
+        } else if let iconName = iconName {
             // Draw icon
-            if let image = NSImage(systemSymbolName: iconName, accessibilityDescription: nil) {
-                let config = NSImage.SymbolConfiguration(pointSize: 11, weight: .medium)
-                let configuredImage = image.withSymbolConfiguration(config) ?? image
+            let image: NSImage?
+            if usePhosphorIcon {
+                image = PhosphorIcon.regular(iconName)
+            } else {
+                image = NSImage(systemSymbolName: iconName, accessibilityDescription: nil)
+            }
+
+            if let baseImage = image {
+                let configuredImage: NSImage
+                if usePhosphorIcon {
+                    // Phosphor icons - resize to fit
+                    configuredImage = baseImage
+                } else {
+                    // SF Symbols - use symbol configuration
+                    let config = NSImage.SymbolConfiguration(pointSize: 11, weight: .medium)
+                    configuredImage = baseImage.withSymbolConfiguration(config) ?? baseImage
+                }
 
                 // Tint the image
                 let tintedImage = configuredImage.copy() as! NSImage
@@ -121,12 +184,17 @@ class ModeButton: NSButton {
                 NSRect(origin: .zero, size: tintedImage.size).fill(using: .sourceAtop)
                 tintedImage.unlockFocus()
 
-                let imageSize = tintedImage.size
+                // Scale for Phosphor icons
+                let targetSize: CGFloat = usePhosphorIcon ? 14 : tintedImage.size.width
+                let scale = targetSize / max(tintedImage.size.width, tintedImage.size.height)
+                let scaledWidth = tintedImage.size.width * scale
+                let scaledHeight = tintedImage.size.height * scale
+
                 let imageRect = NSRect(
-                    x: (bounds.width - imageSize.width) / 2,
-                    y: (bounds.height - imageSize.height) / 2,
-                    width: imageSize.width,
-                    height: imageSize.height
+                    x: (bounds.width - scaledWidth) / 2,
+                    y: (bounds.height - scaledHeight) / 2,
+                    width: scaledWidth,
+                    height: scaledHeight
                 )
                 tintedImage.draw(in: imageRect)
             }

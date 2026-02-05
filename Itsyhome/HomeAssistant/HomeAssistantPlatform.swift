@@ -641,30 +641,65 @@ final class HomeAssistantPlatform: SmartHomePlatform {
     }
 
     private func writeAlarmValue(client: HomeAssistantClient, entityId: String, value: Any) async throws {
-        guard let targetState = value as? Int else { return }
+        var service: String
+        var code: String?
 
-        let service: String
-        switch targetState {
-        case 0: service = "alarm_arm_home"
-        case 1: service = "alarm_arm_away"
-        case 2: service = "alarm_arm_night"
-        case 3: service = "alarm_disarm"
-        default: return
+        // Handle different value formats
+        if let dict = value as? [String: Any],
+           let mode = dict["mode"] as? String {
+            // HA format with mode string and optional code
+            code = dict["code"] as? String
+            switch mode {
+            case "armed_home": service = "alarm_arm_home"
+            case "armed_away": service = "alarm_arm_away"
+            case "armed_night": service = "alarm_arm_night"
+            case "armed_vacation": service = "alarm_arm_vacation"
+            case "armed_custom_bypass": service = "alarm_arm_custom_bypass"
+            case "disarmed": service = "alarm_disarm"
+            default: return
+            }
+        } else if let modeString = value as? String {
+            // Direct mode string
+            switch modeString {
+            case "armed_home": service = "alarm_arm_home"
+            case "armed_away": service = "alarm_arm_away"
+            case "armed_night": service = "alarm_arm_night"
+            case "armed_vacation": service = "alarm_arm_vacation"
+            case "armed_custom_bypass": service = "alarm_arm_custom_bypass"
+            case "disarmed": service = "alarm_disarm"
+            default: return
+            }
+        } else if let targetState = value as? Int {
+            // HomeKit-style integer
+            switch targetState {
+            case 0: service = "alarm_arm_home"
+            case 1: service = "alarm_arm_away"
+            case 2: service = "alarm_arm_night"
+            case 3: service = "alarm_disarm"
+            default: return
+            }
+        } else {
+            return
         }
 
-        // Check if alarm requires a code
+        // Check if alarm requires a code and we don't have one
         let requiresCode = mapper.alarmRequiresCode(for: entityId)
-        if requiresCode && targetState != 3 {
-            // Arming requires a code - we don't have one stored yet
-            // TODO: Add alarm code setting in preferences
+        if requiresCode && service != "alarm_disarm" && code == nil {
             logger.warning("Alarm panel requires a code to arm - skipping")
-            delegate?.platformDidEncounterError(self, message: "This alarm panel requires a code to arm. Code entry is not yet supported.")
+            delegate?.platformDidEncounterError(self, message: "This alarm panel requires a code to arm.")
             return
+        }
+
+        // Build service data
+        var serviceData: [String: Any] = [:]
+        if let code = code {
+            serviceData["code"] = code
         }
 
         try await client.callService(
             domain: "alarm_control_panel",
             service: service,
+            serviceData: serviceData.isEmpty ? nil : serviceData,
             target: ["entity_id": entityId]
         )
     }

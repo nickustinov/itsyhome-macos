@@ -51,9 +51,25 @@ class ModeButtonGroup: NSView {
         return btn
     }
 
-    /// Add an icon-based mode button
+    /// Add an icon-based mode button (SF Symbol)
     func addButton(icon: String, color: NSColor = DS.Colors.success, tag: Int = 0) -> ModeButton {
         let btn = ModeButton(icon: icon, color: color)
+        btn.tag = tag
+        addButtonInternal(btn)
+        return btn
+    }
+
+    /// Add an icon-based mode button (Phosphor icon)
+    func addButton(phosphorIcon: String, color: NSColor = DS.Colors.success, tag: Int = 0) -> ModeButton {
+        let btn = ModeButton(phosphorIcon: phosphorIcon, color: color)
+        btn.tag = tag
+        addButtonInternal(btn)
+        return btn
+    }
+
+    /// Add an icon-based mode button (custom image)
+    func addButton(image: NSImage, color: NSColor = DS.Colors.success, tag: Int = 0) -> ModeButton {
+        let btn = ModeButton(image: image, color: color)
         btn.tag = tag
         addButtonInternal(btn)
         return btn

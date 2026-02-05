@@ -436,7 +436,11 @@ class MenuBuilder {
             menuItem = ValveMenuItem(serviceData: service, bridge: bridge)
 
         case ServiceTypes.securitySystem:
-            menuItem = SecuritySystemMenuItem(serviceData: service, bridge: bridge)
+            if PlatformManager.shared.selectedPlatform == .homeAssistant {
+                menuItem = HASecuritySystemMenuItem(serviceData: service, bridge: bridge)
+            } else {
+                menuItem = SecuritySystemMenuItem(serviceData: service, bridge: bridge)
+            }
 
         case ServiceTypes.slat:
             menuItem = SlatMenuItem(serviceData: service, bridge: bridge)

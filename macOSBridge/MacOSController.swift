@@ -226,6 +226,11 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
     }
 
     public func platformDidEncounterError(_ platform: SmartHomePlatform, message: String) {
+        // Check for alarm code errors - notify UI to handle gracefully
+        if message.lowercased().contains("alarm code") || message.lowercased().contains("invalid") && message.lowercased().contains("code") {
+            NotificationCenter.default.post(name: .alarmCommandFailed, object: nil, userInfo: ["message": message])
+            return  // Don't show generic error dialog for alarm code issues
+        }
         showError(message: message)
     }
 

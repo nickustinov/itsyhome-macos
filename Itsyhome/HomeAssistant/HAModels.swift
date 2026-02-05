@@ -417,6 +417,19 @@ extension HAEntityState {
         attributes["code_arm_required"] as? Bool ?? true
     }
 
+    /// Alarm panel supported modes (from supported_features bitmask)
+    /// ARM_HOME=1, ARM_AWAY=2, ARM_NIGHT=4, TRIGGER=8, ARM_CUSTOM_BYPASS=16, ARM_VACATION=32
+    var alarmSupportedModes: [String] {
+        var modes: [String] = ["disarmed"]  // Always available
+        let features = supportedFeatures
+        if features & 1 != 0 { modes.append("armed_home") }
+        if features & 2 != 0 { modes.append("armed_away") }
+        if features & 4 != 0 { modes.append("armed_night") }
+        if features & 16 != 0 { modes.append("armed_custom_bypass") }
+        if features & 32 != 0 { modes.append("armed_vacation") }
+        return modes
+    }
+
     /// Code format (number, text, or nil)
     var codeFormat: String? {
         attributes["code_format"] as? String
