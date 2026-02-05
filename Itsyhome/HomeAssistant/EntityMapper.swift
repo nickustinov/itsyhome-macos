@@ -259,12 +259,14 @@ final class EntityMapper {
             lockCurrentStateId: state.domain == "lock" ? characteristicUUID(state.entityId, "lock_state") : nil,
             lockTargetStateId: state.domain == "lock" ? characteristicUUID(state.entityId, "lock_target") : nil,
             // Cover characteristics
-            // SET_POSITION is bit 4 (value 4) in supported_features
-            // Always create position ID for covers (used for open/close/stop commands even without position support)
+            // SET_POSITION is bit 4, SET_TILT_POSITION is bit 128
+            // Always create position ID for covers (needed for slider UI)
             currentPositionId: state.domain == "cover" ? characteristicUUID(state.entityId, "position") : nil,
-            targetPositionId: state.domain == "cover" && (state.supportedFeatures & 4) != 0 ? characteristicUUID(state.entityId, "target_position") : nil,
-            currentHorizontalTiltId: state.currentTiltPosition != nil ? characteristicUUID(state.entityId, "tilt") : nil,
-            targetHorizontalTiltId: state.currentTiltPosition != nil ? characteristicUUID(state.entityId, "target_tilt") : nil,
+            // Show slider for covers with SET_POSITION or SET_TILT_POSITION (tilt-only shows slider that controls tilt)
+            targetPositionId: state.domain == "cover" && ((state.supportedFeatures & 4) != 0 || (state.supportedFeatures & 128) != 0) ? characteristicUUID(state.entityId, "target_position") : nil,
+            // Tilt slider only for covers that have BOTH position AND tilt (not tilt-only)
+            currentHorizontalTiltId: state.currentTiltPosition != nil && !isTiltOnlyCover(state) ? characteristicUUID(state.entityId, "tilt") : nil,
+            targetHorizontalTiltId: state.currentTiltPosition != nil && !isTiltOnlyCover(state) ? characteristicUUID(state.entityId, "target_tilt") : nil,
             // Sensor characteristics
             humidityId: state.deviceClass == "humidity" ? characteristicUUID(state.entityId, "humidity") : nil,
             // HeaterCooler characteristics
@@ -306,6 +308,14 @@ final class EntityMapper {
     private func hasPowerState(_ state: HAEntityState) -> Bool {
         let domainsWithPower: Set<String> = ["light", "switch", "fan", "humidifier"]
         return domainsWithPower.contains(state.domain)
+    }
+
+    /// Check if cover only supports tilt (no position control)
+    private func isTiltOnlyCover(_ state: HAEntityState) -> Bool {
+        guard state.domain == "cover" else { return false }
+        let hasSetPosition = (state.supportedFeatures & 4) != 0
+        let hasSetTiltPosition = (state.supportedFeatures & 128) != 0
+        return !hasSetPosition && hasSetTiltPosition
     }
 
     private func mapDomainToServiceType(_ domain: String, deviceClass: String?) -> String? {
@@ -466,12 +476,23 @@ final class EntityMapper {
         if let position = state.currentPosition {
             values[characteristicUUID(entityId, "position")] = position
             values[characteristicUUID(entityId, "target_position")] = position
+        } else if state.domain == "cover" {
+            // Check if this is a tilt-only cover (has SET_TILT_POSITION but no SET_POSITION)
+            let isTiltOnly = (state.supportedFeatures & 128) != 0 && (state.supportedFeatures & 4) == 0
+            if isTiltOnly, let tilt = state.currentTiltPosition {
+                // Use tilt position as the "position" for tilt-only covers
+                values[characteristicUUID(entityId, "position")] = tilt
+            } else {
+                // For covers without position support, derive from state
+                // open/opening = 100, closed/closing = 0
+                let derivedPosition = (state.state == "open" || state.state == "opening") ? 100 : 0
+                values[characteristicUUID(entityId, "position")] = derivedPosition
+            }
         }
         if let tilt = state.currentTiltPosition {
-            // Convert 0-100 to -90 to 90
-            let angle = Int(Double(tilt) * 1.8 - 90)
-            values[characteristicUUID(entityId, "tilt")] = angle
-            values[characteristicUUID(entityId, "target_tilt")] = angle
+            // Use 0-100 directly for HA tilt (not angle conversion)
+            values[characteristicUUID(entityId, "tilt")] = tilt
+            values[characteristicUUID(entityId, "target_tilt")] = tilt
         }
 
         // Garage door values

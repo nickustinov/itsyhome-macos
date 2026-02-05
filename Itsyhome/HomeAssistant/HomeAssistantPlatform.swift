@@ -508,12 +508,37 @@ final class HomeAssistantPlatform: SmartHomePlatform {
 
     private func writeCoverValue(client: HomeAssistantClient, entityId: String, characteristicUUID: UUID, value: Any) async throws {
         let features = mapper.getCoverSupportedFeatures(for: entityId)
+        let characteristicType = mapper.getCharacteristicType(for: characteristicUUID, entityId: entityId)
+
+        // Check if this is a tilt-only cover (has tilt but no position/open/close)
+        let isTiltOnly = (features & 128) != 0 && (features & 4) == 0 && (features & 3) == 0
+
+        // Handle tilt characteristic separately - value is already 0-100
+        if characteristicType == "tilt" || characteristicType == "target_tilt" {
+            guard let tiltPosition = value as? Int else { return }
+            if features & 128 != 0 {
+                try await client.callService(
+                    domain: "cover",
+                    service: "set_cover_tilt_position",
+                    serviceData: ["tilt_position": max(0, min(100, tiltPosition))],
+                    target: ["entity_id": entityId]
+                )
+            }
+            return
+        }
 
         if let position = value as? Int {
             // Special value -1 means stop
             if position == -1 {
-                // STOP is bit 8 (value 8) in supported_features
-                if features & 8 != 0 {
+                if isTiltOnly && (features & 64) != 0 {
+                    // STOP_TILT is bit 64
+                    try await client.callService(
+                        domain: "cover",
+                        service: "stop_cover_tilt",
+                        target: ["entity_id": entityId]
+                    )
+                } else if features & 8 != 0 {
+                    // STOP is bit 8
                     try await client.callService(
                         domain: "cover",
                         service: "stop_cover",
@@ -523,31 +548,37 @@ final class HomeAssistantPlatform: SmartHomePlatform {
                 return
             }
 
-            // Check if cover supports position setting (feature bit 4)
-            if features & 4 != 0 {
+            if isTiltOnly {
+                // Tilt-only cover: use tilt commands
+                if features & 128 != 0 {
+                    // SET_TILT_POSITION supported
+                    try await client.callService(
+                        domain: "cover",
+                        service: "set_cover_tilt_position",
+                        serviceData: ["tilt_position": position],
+                        target: ["entity_id": entityId]
+                    )
+                } else {
+                    // Use open_cover_tilt/close_cover_tilt
+                    try await client.callService(
+                        domain: "cover",
+                        service: position >= 50 ? "open_cover_tilt" : "close_cover_tilt",
+                        target: ["entity_id": entityId]
+                    )
+                }
+            } else if features & 4 != 0 {
+                // SET_POSITION supported
                 try await client.callService(
                     domain: "cover",
                     service: "set_cover_position",
                     serviceData: ["position": position],
                     target: ["entity_id": entityId]
                 )
-            } else {
-                // Fallback to open/close for covers without position support
+            } else if features & 3 != 0 {
+                // OPEN/CLOSE supported (bits 0,1)
                 try await client.callService(
                     domain: "cover",
                     service: position >= 50 ? "open_cover" : "close_cover",
-                    target: ["entity_id": entityId]
-                )
-            }
-        } else if let tilt = value as? Int {
-            // Check if cover supports tilt position (feature bit 128)
-            if features & 128 != 0 {
-                // Convert from -90 to 90 to 0-100
-                let tiltPosition = Int((Double(tilt) + 90) / 1.8)
-                try await client.callService(
-                    domain: "cover",
-                    service: "set_cover_tilt_position",
-                    serviceData: ["tilt_position": tiltPosition],
                     target: ["entity_id": entityId]
                 )
             }

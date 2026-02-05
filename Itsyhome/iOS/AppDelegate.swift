@@ -20,9 +20,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         startupLog.info("[iOS] Application didFinishLaunching")
 
-        // Initialize HomeKit manager
-        homeKitManager = HomeKitManager()
-        startupLog.info("[iOS] HomeKitManager created")
+        // Only initialize HomeKit manager if HomeKit is the selected platform
+        if PlatformManager.shared.selectedPlatform == .homeKit {
+            homeKitManager = HomeKitManager()
+            startupLog.info("[iOS] HomeKitManager created")
+        } else {
+            startupLog.info("[iOS] Skipping HomeKitManager - using Home Assistant")
+        }
 
         // Load macOS plugin on Catalyst
         #if targetEnvironment(macCatalyst)
@@ -73,8 +77,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
         macOSController = pluginClass.init()
         startupLog.info("[iOS] MacOSController instantiated")
-        macOSController?.iOSBridge = homeKitManager
-        homeKitManager?.macOSDelegate = macOSController
+
+        // Connect HomeKit if available
+        if let homeKitManager = homeKitManager {
+            macOSController?.iOSBridge = homeKitManager
+            homeKitManager.macOSDelegate = macOSController
+            startupLog.info("[iOS] HomeKit bridge connected")
+        }
 
         startupLog.info("[iOS] macOSBridge plugin loaded and connected")
     }

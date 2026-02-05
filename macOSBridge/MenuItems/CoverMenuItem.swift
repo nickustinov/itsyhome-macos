@@ -49,8 +49,9 @@ class CoverMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
         iconView.imageScaling = .scaleProportionallyUpOrDown
         containerView.addSubview(iconView)
 
-        // Cover control position (right-aligned)
-        let controlWidth: CGFloat = 54
+        // Cover control position (right-aligned, same as toggle switch)
+        let controlWidth: CGFloat = 42  // CoverControl width
+        let controlHeight: CGFloat = 16  // Same as toggle switch
         let controlX = DS.ControlSize.menuItemWidth - controlWidth - DS.Spacing.md
 
         // Name label
@@ -65,9 +66,9 @@ class CoverMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
         containerView.addSubview(nameLabel)
 
         // Cover control
-        let controlY = (DS.ControlSize.menuItemHeight - 18) / 2
+        let controlY = (DS.ControlSize.menuItemHeight - controlHeight) / 2
         coverControl = CoverControl()
-        coverControl.frame = NSRect(x: controlX, y: controlY, width: controlWidth, height: 18)
+        coverControl.frame = NSRect(x: controlX, y: controlY, width: controlWidth, height: controlHeight)
         containerView.addSubview(coverControl)
 
         super.init(title: serviceData.name, action: nil, keyEquivalent: "")
@@ -75,6 +76,16 @@ class CoverMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
         self.view = containerView
 
         containerView.closesMenuOnAction = false
+
+        // Toggle open/closed when clicking outside controls
+        containerView.onAction = { [weak self] in
+            guard let self else { return }
+            if self.isOpen {
+                self.sendCoverCommand(.close)
+            } else {
+                self.sendCoverCommand(.open)
+            }
+        }
 
         // Handle cover control actions
         coverControl.onAction = { [weak self] action in

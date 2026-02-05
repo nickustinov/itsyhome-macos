@@ -67,7 +67,7 @@ class HighlightingMenuItemView: NSView {
     private func updateSubviewColors(in view: NSView, highlighted: Bool) {
         for subview in view.subviews {
             // Skip controls that manage their own appearance
-            if subview is ToggleSwitch || subview is ModernSlider {
+            if subview is ToggleSwitch || subview is ModernSlider || subview is CoverControl {
                 continue
             }
 
@@ -114,6 +114,15 @@ class HighlightingMenuItemView: NSView {
 
     override func mouseUp(with event: NSEvent) {
         guard let action = onAction else { return }
+
+        // Don't trigger action if click was on a control that handles its own clicks
+        let location = convert(event.locationInWindow, from: nil)
+        if let hitView = hitTest(location),
+           hitView is ToggleSwitch || hitView is ModernSlider || hitView is CoverControl ||
+           hitView.superview is CoverControl {
+            return
+        }
+
         if closesMenuOnAction {
             isMouseInside = false
             updateTextColors(highlighted: false)
