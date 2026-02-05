@@ -80,9 +80,10 @@ class BlindMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
         iconView.imageScaling = .scaleProportionallyUpOrDown
         containerView.addSubview(iconView)
 
-        // Slider position (right-aligned)
+        // Slider position (right-aligned, accounting for thumb overflow)
         let sliderWidth = DS.ControlSize.sliderWidth
-        let sliderX = DS.ControlSize.menuItemWidth - sliderWidth - DS.Spacing.md
+        let thumbOffset = DS.ControlSize.sliderThumbSize / 2  // Slider track is inset by thumb radius
+        let sliderX = DS.ControlSize.menuItemWidth - sliderWidth - DS.Spacing.md + thumbOffset
 
         // Name label
         let labelX = DS.Spacing.md + DS.ControlSize.iconMedium + DS.Spacing.sm

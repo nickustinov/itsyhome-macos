@@ -24,7 +24,8 @@ extension GroupMenuItem {
 
     private func setupBlindsControl(height: CGFloat, labelX: CGFloat) {
         let sliderWidth = DS.ControlSize.sliderWidth
-        let sliderX = DS.ControlSize.menuItemWidth - sliderWidth - DS.Spacing.md
+        let thumbOffset = DS.ControlSize.sliderThumbSize / 2  // Slider track is inset by thumb radius
+        let sliderX = DS.ControlSize.menuItemWidth - sliderWidth - DS.Spacing.md + thumbOffset
         let sliderY = (height - 12) / 2
 
         let slider = ModernSlider(minValue: 0, maxValue: 100)

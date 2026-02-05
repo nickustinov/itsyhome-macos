@@ -60,9 +60,10 @@ class SlatMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshab
         iconView.imageScaling = .scaleProportionallyUpOrDown
         containerView.addSubview(iconView)
 
-        // Slider position (right-aligned)
+        // Slider position (right-aligned, accounting for thumb overflow)
         let sliderWidth = DS.ControlSize.sliderWidth
-        let sliderX = DS.ControlSize.menuItemWidth - sliderWidth - DS.Spacing.md
+        let thumbOffset = DS.ControlSize.sliderThumbSize / 2  // Slider track is inset by thumb radius
+        let sliderX = DS.ControlSize.menuItemWidth - sliderWidth - DS.Spacing.md + thumbOffset
 
         // Swing button group position (before slider, only if present)
         let swingGroupWidth = ModeButtonGroup.widthForIconButtons(count: 1)

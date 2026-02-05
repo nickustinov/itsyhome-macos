@@ -414,6 +414,12 @@ extension HAEntityState {
     var direction: String? {
         attributes["direction"] as? String
     }
+
+    /// Whether fan supports percentage/speed control
+    /// SET_PERCENTAGE is bit 0 (value 1) in supported_features
+    var supportsPercentage: Bool {
+        supportedFeatures & 1 != 0
+    }
 }
 
 // MARK: - Alarm control panel attributes

@@ -46,9 +46,8 @@ class CoverControl: NSControl {
     private let thumbLayer = CALayer()
     private let thumbShadowLayer = CALayer()
 
-    // Icon image views (on track)
+    // Icon image views (on track) - just arrows, no stop
     private let downIcon = NSImageView()
-    private let stopIcon = NSImageView()
     private let upIcon = NSImageView()
 
     // Icon on thumb (shows current state)
@@ -56,11 +55,11 @@ class CoverControl: NSControl {
 
     private var trackingArea: NSTrackingArea?
 
-    // Sizing - similar to toggle but wider for 3 positions
-    private let controlWidth: CGFloat = 42
-    private let controlHeight: CGFloat = 16
-    private let thumbSize: CGFloat = 12
-    private let thumbPadding: CGFloat = 2
+    // Sizing - use DS constants for consistency with ToggleSwitch
+    private let controlWidth: CGFloat = 42  // Wider for 3 positions
+    private var controlHeight: CGFloat { DS.ControlSize.switchHeight }
+    private var thumbSize: CGFloat { DS.ControlSize.switchThumbSize }
+    private var thumbPadding: CGFloat { DS.ControlSize.switchThumbPadding }
     private let iconSize: CGFloat = 8
 
     // MARK: - Initialization
@@ -76,7 +75,7 @@ class CoverControl: NSControl {
     }
 
     convenience init() {
-        self.init(frame: NSRect(x: 0, y: 0, width: 42, height: 16))
+        self.init(frame: NSRect(x: 0, y: 0, width: 42, height: DS.ControlSize.switchHeight))
     }
 
     private func setup() {
@@ -88,13 +87,11 @@ class CoverControl: NSControl {
         trackLayer.masksToBounds = true
         layer?.addSublayer(trackLayer)
 
-        // Setup icons
+        // Setup icons - just arrows, no stop
         setupIcon(downIcon, symbolName: "arrow.down")
-        setupIcon(stopIcon, symbolName: "stop.fill")
         setupIcon(upIcon, symbolName: "arrow.up")
 
         addSubview(downIcon)
-        addSubview(stopIcon)
         addSubview(upIcon)
 
         // Thumb icon (shows current state on thumb)
@@ -132,7 +129,7 @@ class CoverControl: NSControl {
     // MARK: - Layout
 
     override var intrinsicContentSize: NSSize {
-        NSSize(width: controlWidth, height: controlHeight)
+        NSSize(width: controlWidth, height: DS.ControlSize.switchHeight)
     }
 
     override func layout() {
@@ -153,15 +150,10 @@ class CoverControl: NSControl {
         let segmentWidth = controlWidth / 3
         let iconOffset = (segmentWidth - iconSize) / 2
 
+        // Position arrows at left and right edges
         downIcon.frame = CGRect(
             x: trackX + iconOffset,
             y: trackY + (controlHeight - iconSize) / 2,
-            width: iconSize,
-            height: iconSize
-        )
-        stopIcon.frame = CGRect(
-            x: trackX + segmentWidth + iconOffset,
-            y: trackY + (controlHeight - iconSize) / 2 + 1,  // +1pt up
             width: iconSize,
             height: iconSize
         )
@@ -189,12 +181,10 @@ class CoverControl: NSControl {
         thumbShadowLayer.frame = thumbFrame
         thumbShadowLayer.backgroundColor = NSColor.white.cgColor
 
-        // Position thumb icon centered on thumb (same size as track icons)
-        // Stop icon on thumb needs +1pt up
-        let stopOffsetY: CGFloat = _state == .stopped ? 1 : 0
+        // Position thumb icon centered on thumb
         thumbIcon.frame = CGRect(
             x: thumbX + (thumbSize - iconSize) / 2,
-            y: thumbY + (thumbSize - iconSize) / 2 + stopOffsetY,
+            y: thumbY + (thumbSize - iconSize) / 2,
             width: iconSize,
             height: iconSize
         )
@@ -210,7 +200,8 @@ class CoverControl: NSControl {
     private func updateColors() {
         let appearance = effectiveAppearance
         appearance.performAsCurrentDrawingAppearance {
-            trackLayer.backgroundColor = DS.Colors.sliderBlind.cgColor
+            // Blue background matching blind slider
+            trackLayer.backgroundColor = DS.Colors.sliderFan.cgColor
             thumbLayer.backgroundColor = NSColor.white.cgColor
         }
         updateIconColors()
@@ -220,24 +211,22 @@ class CoverControl: NSControl {
         // Icons under thumb are hidden, others show in contrasting color
         let appearance = effectiveAppearance
         appearance.performAsCurrentDrawingAppearance {
-            // All icons white to contrast with blue track
+            // All icons white to contrast with green track
             downIcon.contentTintColor = _state == .closed ? .clear : .white
-            stopIcon.contentTintColor = _state == .stopped ? .clear : .white
             upIcon.contentTintColor = _state == .open ? .clear : .white
         }
     }
 
     private func updateThumbIcon() {
         // Set thumb icon to match current state, inverted color (dark on white thumb), dimmed
-        let symbolName: String
-        switch _state {
-        case .closed:
-            symbolName = "arrow.down"
-        case .stopped:
-            symbolName = "stop.fill"
-        case .open:
-            symbolName = "arrow.up"
+        // When stopped (middle), hide the icon
+        if _state == .stopped {
+            thumbIcon.isHidden = true
+            return
         }
+
+        thumbIcon.isHidden = false
+        let symbolName = _state == .closed ? "arrow.down" : "arrow.up"
 
         let config = NSImage.SymbolConfiguration(pointSize: iconSize, weight: .bold)
         if let image = NSImage(systemSymbolName: symbolName, accessibilityDescription: nil)?
@@ -286,15 +275,13 @@ class CoverControl: NSControl {
         thumbShadowLayer.position = CGPoint(x: thumbFrame.midX, y: thumbFrame.midY)
         CATransaction.commit()
 
-        // Animate thumb icon position (same size as track icons)
-        // Stop icon on thumb needs +1pt up
-        let stopOffsetY: CGFloat = _state == .stopped ? 1 : 0
+        // Animate thumb icon position
         NSAnimationContext.runAnimationGroup { context in
             context.duration = 0.2
             context.allowsImplicitAnimation = true
             thumbIcon.frame = CGRect(
                 x: thumbFrame.minX + (thumbSize - iconSize) / 2,
-                y: thumbFrame.minY + (thumbSize - iconSize) / 2 + stopOffsetY,
+                y: thumbFrame.minY + (thumbSize - iconSize) / 2,
                 width: iconSize,
                 height: iconSize
             )

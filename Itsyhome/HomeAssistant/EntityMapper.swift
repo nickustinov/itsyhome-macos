@@ -225,7 +225,7 @@ final class EntityMapper {
 
         // Debug logging for fan capabilities
         if state.domain == "fan" {
-            logger.info("Fan '\(state.friendlyName)' (\(state.entityId)): percentage=\(String(describing: state.percentage)), oscillating=\(state.isOscillating), direction=\(String(describing: state.direction))")
+            logger.info("Fan '\(state.friendlyName)' (\(state.entityId)): supportsPercentage=\(state.supportsPercentage), percentage=\(String(describing: state.percentage)), oscillating=\(state.isOscillating), direction=\(String(describing: state.direction))")
         }
 
         let areaId = resolveAreaId(for: state, deviceId: entityRegistry[state.entityId]?.deviceId)
@@ -274,8 +274,8 @@ final class EntityMapper {
             activeId: state.domain == "valve" || state.domain == "climate" ? characteristicUUID(state.entityId, "active") : nil,
             coolingThresholdTemperatureId: state.targetTempHigh != nil ? characteristicUUID(state.entityId, "target_temp_high") : nil,
             heatingThresholdTemperatureId: state.targetTempLow != nil ? characteristicUUID(state.entityId, "target_temp_low") : nil,
-            // Fan characteristics - always provide speed for fans (percentage may be nil when off)
-            rotationSpeedId: state.domain == "fan" ? characteristicUUID(state.entityId, "speed") : nil,
+            // Fan characteristics - only provide speed if fan supports percentage (SET_PERCENTAGE feature)
+            rotationSpeedId: state.domain == "fan" && state.supportsPercentage ? characteristicUUID(state.entityId, "speed") : nil,
             rotationSpeedMin: 0,
             rotationSpeedMax: 100,
             rotationDirectionId: state.direction != nil ? characteristicUUID(state.entityId, "direction") : nil,
