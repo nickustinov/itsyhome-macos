@@ -166,14 +166,14 @@ extension PhosphorIcon {
         ServiceTypes.thermostat: AccessoryIconConfig(
             defaultIcon: "thermometer",
             suggestedIcons: ["thermometer", "thermometer-cold", "thermometer-hot", "thermometer-simple"],
-            modeIcons: ["heat": "fire", "cool": "snowflake", "auto": "arrows-left-right"]
+            modeIcons: ["heat": "fire", "cool": "snowflake", "auto": "arrows-left-right", "fan": "fan"]
         ),
 
         // Heater/Cooler (AC)
         ServiceTypes.heaterCooler: AccessoryIconConfig(
             defaultIcon: "thermometer-simple",
             suggestedIcons: ["snowflake", "thermometer", "fire", "fire-simple", "thermometer-cold", "thermometer-hot", "thermometer-simple"],
-            modeIcons: ["heat": "fire", "cool": "snowflake", "auto": "arrows-left-right"]
+            modeIcons: ["heat": "fire", "cool": "snowflake", "auto": "arrows-left-right", "fan": "fan"]
         ),
 
         // Door Locks

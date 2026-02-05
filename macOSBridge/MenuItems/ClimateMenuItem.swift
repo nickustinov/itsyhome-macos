@@ -485,19 +485,36 @@ class ClimateMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefres
     }
 
     private func updateStateIcon() {
-        // Show icon based on current state (what it's actually doing)
+        // Show icon based on selected mode (not HVAC action)
         if currentMode == "off" {
             iconView.image = IconResolver.icon(for: serviceData, filled: false)
             return
         }
 
-        // currentState: 0=off, 1=heating, 2=cooling
-        let mode: String = switch currentState {
-        case 1: "heat"
-        case 2: "cool"
-        default: (currentMode == "heat" || currentMode == "heat_cool") ? "heat" : (currentMode == "cool" ? "cool" : "auto")
+        // Use selected mode for icon, except for auto/heat_cool where we show actual action
+        let iconMode: String
+        switch currentMode {
+        case "heat", "heat_cool":
+            // For auto modes, show actual action if actively heating/cooling
+            if currentMode == "heat_cool" && currentState == 2 {
+                iconMode = "cool"
+            } else {
+                iconMode = "heat"
+            }
+        case "cool":
+            iconMode = "cool"
+        case "dry":
+            iconMode = "cool"  // Use cool/snow for dry
+        case "fan_only":
+            iconMode = "fan"
+        case "auto":
+            // Show actual action for auto mode
+            iconMode = currentState == 1 ? "heat" : (currentState == 2 ? "cool" : "auto")
+        default:
+            iconMode = "auto"
         }
-        iconView.image = PhosphorIcon.modeIcon(for: serviceData.serviceType, mode: mode, filled: true)
+
+        iconView.image = PhosphorIcon.modeIcon(for: serviceData.serviceType, mode: iconMode, filled: true)
             ?? IconResolver.icon(for: serviceData, filled: true)
     }
 

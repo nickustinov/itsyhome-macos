@@ -267,8 +267,8 @@ final class EntityMapper {
             // Tilt slider only for covers that have BOTH position AND tilt (not tilt-only)
             currentHorizontalTiltId: state.currentTiltPosition != nil && !isTiltOnlyCover(state) ? characteristicUUID(state.entityId, "tilt") : nil,
             targetHorizontalTiltId: state.currentTiltPosition != nil && !isTiltOnlyCover(state) ? characteristicUUID(state.entityId, "target_tilt") : nil,
-            // Sensor characteristics
-            humidityId: state.deviceClass == "humidity" ? characteristicUUID(state.entityId, "humidity") : nil,
+            // Sensor characteristics (humidity also for climate entities)
+            humidityId: state.deviceClass == "humidity" || (state.domain == "climate" && state.currentHumidity != nil) ? characteristicUUID(state.entityId, "humidity") : nil,
             // HeaterCooler characteristics
             activeId: state.domain == "valve" || state.domain == "climate" ? characteristicUUID(state.entityId, "active") : nil,
             coolingThresholdTemperatureId: state.targetTempHigh != nil ? characteristicUUID(state.entityId, "target_temp_high") : nil,
@@ -460,12 +460,19 @@ final class EntityMapper {
         if let targetTempLow = state.targetTempLow {
             values[characteristicUUID(entityId, "target_temp_low")] = targetTempLow
         }
-        if let hvacAction = state.hvacAction {
-            values[characteristicUUID(entityId, "hvac_action")] = mapHVACActionToHomeKit(hvacAction)
+        // Climate-specific values
+        if state.domain == "climate" {
+            if let hvacAction = state.hvacAction {
+                values[characteristicUUID(entityId, "hvac_action")] = mapHVACActionToHomeKit(hvacAction)
+            }
+            values[characteristicUUID(entityId, "hvac_mode")] = mapHVACModeToHomeKit(state.hvacMode)
+            if let swingMode = state.swingMode {
+                values[characteristicUUID(entityId, "swing_mode")] = swingMode == "off" ? 0 : 1
+            }
         }
-        values[characteristicUUID(entityId, "hvac_mode")] = mapHVACModeToHomeKit(state.hvacMode)
-        if let swingMode = state.swingMode {
-            values[characteristicUUID(entityId, "swing_mode")] = swingMode == "off" ? 0 : 1
+        // Humidity for climate entities
+        if let humidity = state.currentHumidity {
+            values[characteristicUUID(entityId, "humidity")] = humidity
         }
 
         // Lock values
@@ -544,7 +551,9 @@ final class EntityMapper {
         case "dry": return 4
         case "fan_only": return 5
         case "auto": return 6
-        default: return 0
+        default:
+            logger.warning("Unknown HVAC mode '\(mode)', mapping to off")
+            return 0
         }
     }
 

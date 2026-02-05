@@ -442,6 +442,7 @@ final class HomeAssistantPlatform: SmartHomePlatform {
                 serviceData: ["hvac_mode": hvacMode],
                 target: ["entity_id": entityId]
             )
+            logger.debug("HVAC mode set_hvac_mode service call completed")
 
         case "target_temp", "target_temp_high", "target_temp_low":
             // Temperature change - accept Int or Double
