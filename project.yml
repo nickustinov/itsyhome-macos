@@ -120,5 +120,7 @@ targets:
       - path: macOSBridge/Settings/PreferencesManager+Icons.swift
       - path: Itsyhome/Shared
         buildPhase: sources
+      - path: Itsyhome/HomeAssistant
+        buildPhase: sources
     dependencies:
       - target: macOSBridge
