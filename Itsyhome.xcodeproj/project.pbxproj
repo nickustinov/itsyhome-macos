@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 54;
+	objectVersion = 77;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -1919,6 +1919,7 @@
 		9280BF74FC87BBCC51F11952 /* ph.number-five.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 1526D357A7F0310315875BCB /* ph.number-five.fill.svg */; };
 		92886CCB9B0F26EED2A509BC /* ph.path.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 46B2172463301BB0E1C8DB2F /* ph.path.fill.svg */; };
 		928B430CE987288FFB32D1C5 /* GroupMenuItem+StateManagement.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAD260DB410DF9FBD0EEA918 /* GroupMenuItem+StateManagement.swift */; };
+		92BB87A2F09E33D4A17B6B8E /* HAGarageDoorMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C95DFDF3065C820A8BEC8F9A /* HAGarageDoorMenuItem.swift */; };
 		92E48A527A0F408BD0E8738E /* ph.less-than.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 5E4F659697509AF6566D6888 /* ph.less-than.fill.svg */; };
 		92EB47ADB45093FA5465BFF1 /* ph.chats.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = B9D01FCDD6D760086CC8CDF4 /* ph.chats.fill.svg */; };
 		92FC0DFE237B2230CB6E92AB /* ph.share-fat.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = F0E4E3042A6F9AACE0F07480 /* ph.share-fat.fill.svg */; };
@@ -2315,6 +2316,7 @@
 		B1228CCB85868FC9B5969318 /* ph.push-pin-simple-slash.svg in Resources */ = {isa = PBXBuildFile; fileRef = C03780CA9F6F7D2CD6CCC833 /* ph.push-pin-simple-slash.svg */; };
 		B124C575198E8E1BB7FD4F7A /* ph.handbag.svg in Resources */ = {isa = PBXBuildFile; fileRef = 58AD09E7E070CEF046E71854 /* ph.handbag.svg */; };
 		B136EEFFE147661FFF29C8F0 /* ph.rewind.svg in Resources */ = {isa = PBXBuildFile; fileRef = 31F8A0F81E3FB1A8DD54F4C5 /* ph.rewind.svg */; };
+		B142EA15C9B1132556765C5F /* HAGarageDoorMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C95DFDF3065C820A8BEC8F9A /* HAGarageDoorMenuItem.swift */; };
 		B1626128637E1E969781CCC1 /* ph.calendar-minus.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 90EBE738A7840D5CDB2E7E37 /* ph.calendar-minus.fill.svg */; };
 		B17A61C4F6D3252FBB8EB064 /* ph.record.svg in Resources */ = {isa = PBXBuildFile; fileRef = 7E85920E2049332F2861C939 /* ph.record.svg */; };
 		B187938333DA19571C003E16 /* ph.codepen-logo.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = EE443230833D71C8C9AECEC7 /* ph.codepen-logo.fill.svg */; };
@@ -5867,6 +5869,7 @@
 		C94176651EDEA66D72E6F2B6 /* ph.lock.svg */ = {isa = PBXFileReference; path = ph.lock.svg; sourceTree = "<group>"; };
 		C945AFCCE41693BD9E54D313 /* ph.currency-eth.fill.svg */ = {isa = PBXFileReference; path = "ph.currency-eth.fill.svg"; sourceTree = "<group>"; };
 		C94DE8FE82E602328EBEB213 /* ph.coffee.fill.svg */ = {isa = PBXFileReference; path = ph.coffee.fill.svg; sourceTree = "<group>"; };
+		C95DFDF3065C820A8BEC8F9A /* HAGarageDoorMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HAGarageDoorMenuItem.swift; sourceTree = "<group>"; };
 		C966FB0E7D02749BC0F3983A /* ph.steam-logo.svg */ = {isa = PBXFileReference; path = "ph.steam-logo.svg"; sourceTree = "<group>"; };
 		C975B8A5A6E01BFE899C0A38 /* ph.file-doc.fill.svg */ = {isa = PBXFileReference; path = "ph.file-doc.fill.svg"; sourceTree = "<group>"; };
 		C977E06DBAA46B8D898990E2 /* ph.rows-plus-top.fill.svg */ = {isa = PBXFileReference; path = "ph.rows-plus-top.fill.svg"; sourceTree = "<group>"; };
@@ -9971,6 +9974,7 @@
 				3CFE4029922DF6D70348EF11 /* GroupMenuItem+Actions.swift */,
 				7092D0C92D0FD903C128DBDA /* GroupMenuItem+Controls.swift */,
 				AAD260DB410DF9FBD0EEA918 /* GroupMenuItem+StateManagement.swift */,
+				C95DFDF3065C820A8BEC8F9A /* HAGarageDoorMenuItem.swift */,
 				16194313CC7BC3B8F5EEE75F /* HAHumidifierMenuItem.swift */,
 				3E57AE0BD4C19D3F0C5ED7DE /* HALightMenuItem.swift */,
 				313125F042B7666BDE0981C5 /* HALockMenuItem.swift */,
@@ -10087,7 +10091,7 @@
 			packageReferences = (
 				4B83A3AD3D02B152E08700AF /* XCRemoteSwiftPackageReference "webrtc-xcframework" */,
 			);
-			preferredProjectObjectVersion = 54;
+			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -13252,6 +13256,7 @@
 				928B430CE987288FFB32D1C5 /* GroupMenuItem+StateManagement.swift in Sources */,
 				5400908F7EA3B99BACF94081 /* GroupMenuItem.swift in Sources */,
 				6CC1B53F8AF7ED858945EA51 /* HAAuthManager.swift in Sources */,
+				92BB87A2F09E33D4A17B6B8E /* HAGarageDoorMenuItem.swift in Sources */,
 				C75447EACE1D4BE50218DB35 /* HAHumidifierMenuItem.swift in Sources */,
 				05E99E399EE268E72ACB2952 /* HALightMenuItem.swift in Sources */,
 				6A08A1E13F3F2DEB3D28188C /* HALockMenuItem.swift in Sources */,
@@ -13372,6 +13377,7 @@
 				D52FC9FF60F9BDCB530C7763 /* GroupMenuItem+StateManagement.swift in Sources */,
 				38F444AACFBC37487F3A5204 /* GroupMenuItem.swift in Sources */,
 				FBC578257BB524070875DEF8 /* HAAuthManager.swift in Sources */,
+				B142EA15C9B1132556765C5F /* HAGarageDoorMenuItem.swift in Sources */,
 				4290EE69DCA79702020E1CE9 /* HAHumidifierMenuItem.swift in Sources */,
 				21A0ED9BFF5C51EC562180AC /* HALightMenuItem.swift in Sources */,
 				A7F39222155735925EC83103 /* HALockMenuItem.swift in Sources */,

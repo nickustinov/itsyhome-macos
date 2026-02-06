@@ -434,7 +434,11 @@ class MenuBuilder {
             menuItem = FanMenuItem(serviceData: service, bridge: bridge)
 
         case ServiceTypes.garageDoorOpener:
-            menuItem = GarageDoorMenuItem(serviceData: service, bridge: bridge)
+            if PlatformManager.shared.selectedPlatform == .homeAssistant {
+                menuItem = HAGarageDoorMenuItem(serviceData: service, bridge: bridge)
+            } else {
+                menuItem = GarageDoorMenuItem(serviceData: service, bridge: bridge)
+            }
 
         case ServiceTypes.humidifierDehumidifier:
             if PlatformManager.shared.selectedPlatform == .homeAssistant {

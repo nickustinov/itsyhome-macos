@@ -153,10 +153,7 @@ final class EntityMapper {
 
         for (deviceId, states) in deviceEntities {
             let services = states.compactMap { mapEntityToService($0) }
-            guard !services.isEmpty else {
-                logger.debug("No services for device \(deviceId ?? "nil") with \(states.count) states")
-                continue
-            }
+            guard !services.isEmpty else { continue }
 
             let device = deviceId.flatMap { devices[$0] }
             let areaId = resolveAreaId(for: states.first!, deviceId: deviceId)
@@ -226,11 +223,6 @@ final class EntityMapper {
         // Debug logging for light capabilities
         if state.domain == "light" {
             logger.info("Light '\(state.friendlyName)' (\(state.entityId)): supported_color_modes=\(state.supportedColorModes), supportsColor=\(state.supportsColor), supportsBrightness=\(state.supportsBrightness), supportsColorTemp=\(state.supportsColorTemp)")
-        }
-
-        // Debug logging for fan capabilities
-        if state.domain == "fan" {
-            logger.info("Fan '\(state.friendlyName)' (\(state.entityId)): supportsPercentage=\(state.supportsPercentage), percentage=\(String(describing: state.percentage)), oscillating=\(state.isOscillating), direction=\(String(describing: state.direction))")
         }
 
         let areaId = resolveAreaId(for: state, deviceId: entityRegistry[state.entityId]?.deviceId)
@@ -381,22 +373,14 @@ final class EntityMapper {
     private func resolveAreaId(for state: HAEntityState, deviceId: String?) -> String? {
         // First check entity's direct area
         if let entityArea = entityRegistry[state.entityId]?.areaId {
-            logger.debug("\(state.entityId): area from entity registry: \(entityArea)")
             return entityArea
         }
 
         // Then check device's area
         if let deviceId = deviceId, let device = devices[deviceId] {
             if let deviceArea = device.areaId {
-                logger.debug("\(state.entityId): area from device '\(device.name ?? "unnamed")': \(deviceArea)")
                 return deviceArea
-            } else {
-                logger.debug("\(state.entityId): device '\(device.name ?? "unnamed")' has no area")
             }
-        } else if let deviceId = deviceId {
-            logger.debug("\(state.entityId): device \(deviceId) not found in registry")
-        } else {
-            logger.debug("\(state.entityId): no device ID in entity registry")
         }
 
         return nil

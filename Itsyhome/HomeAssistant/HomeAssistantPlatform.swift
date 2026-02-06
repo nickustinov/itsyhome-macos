@@ -169,7 +169,6 @@ final class HomeAssistantPlatform: SmartHomePlatform {
         // HA doesn't have explicit read - values come via state subscriptions
         // Trigger a state refresh if needed
         if let entityId = mapper.getEntityIdFromCharacteristic(identifier) {
-            logger.debug("Read requested for characteristic of entity: \(entityId)")
             // State is already cached, just notify
             let values = mapper.getCharacteristicValues(for: entityId)
             if let value = values[identifier] {
@@ -522,6 +521,18 @@ final class HomeAssistantPlatform: SmartHomePlatform {
             return
         }
 
+        // Handle garage door target state (0=open, 1=closed)
+        if characteristicType == "target_door" {
+            guard let targetDoor = value as? Int else { return }
+            try await client.callService(
+                domain: "cover",
+                service: targetDoor == 0 ? "open_cover" : "close_cover",
+                target: ["entity_id": entityId]
+            )
+            return
+        }
+
+        // Handle position-based covers
         if let position = value as? Int {
             // Special value -1 means stop
             if position == -1 {
@@ -577,13 +588,6 @@ final class HomeAssistantPlatform: SmartHomePlatform {
                     target: ["entity_id": entityId]
                 )
             }
-        } else if let targetDoor = value as? Int {
-            // Garage door: 0=open, 1=closed
-            try await client.callService(
-                domain: "cover",
-                service: targetDoor == 0 ? "open_cover" : "close_cover",
-                target: ["entity_id": entityId]
-            )
         }
     }
 
