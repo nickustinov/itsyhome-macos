@@ -147,6 +147,16 @@ final class WebRTCStreamClient: NSObject {
                 audioTrack.isEnabled = enabled
             }
         }
+
+        // Deactivate/activate audio session to restore system volume when muted
+        let audioSession = LKRTCAudioSession.sharedInstance()
+        audioSession.lockForConfiguration()
+        if enabled {
+            try? audioSession.setActive(true)
+        } else {
+            try? audioSession.setActive(false)
+        }
+        audioSession.unlockForConfiguration()
     }
 
     // MARK: - Disconnection
