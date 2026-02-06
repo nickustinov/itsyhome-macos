@@ -196,20 +196,6 @@ class HomeAssistantSection: SettingsCard, NSTextFieldDelegate {
         disconnectButton.action = #selector(disconnectTapped)
         container.addArrangedSubview(disconnectButton)
 
-        // Spacer
-        let spacer = NSView()
-        spacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
-        container.addArrangedSubview(spacer)
-
-        // Reset platform button
-        let resetButton = NSButton()
-        resetButton.title = "Switch platform..."
-        resetButton.bezelStyle = .rounded
-        resetButton.controlSize = .small
-        resetButton.target = self
-        resetButton.action = #selector(resetPlatformTapped)
-        container.addArrangedSubview(resetButton)
-
         return container
     }
 
@@ -324,22 +310,6 @@ class HomeAssistantSection: SettingsCard, NSTextFieldDelegate {
             updateUI()
             // Notify the app to disconnect
             NotificationCenter.default.post(name: NSNotification.Name("HomeAssistantCredentialsChanged"), object: nil)
-        }
-    }
-
-    @objc private func resetPlatformTapped() {
-        let alert = NSAlert()
-        alert.messageText = "Switch smart home platform?"
-        alert.informativeText = "This will disconnect from Home Assistant and let you choose a different platform on next launch."
-        alert.alertStyle = .warning
-        alert.addButton(withTitle: "Switch platform")
-        alert.addButton(withTitle: "Cancel")
-
-        if alert.runModal() == .alertFirstButtonReturn {
-            HAAuthManager.shared.clearCredentials()
-            PlatformManager.shared.resetPlatform()
-            // Quit the app - it will show platform picker on next launch
-            NSApp.terminate(nil)
         }
     }
 

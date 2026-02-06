@@ -15,6 +15,10 @@ class GeneralSection: SettingsCard {
     private var syncStatusLabel: NSTextField!
     private var syncProBadge: NSView!
 
+    // Platform picker
+    private var homeKitCard: PlatformCardButton!
+    private var homeAssistantCard: PlatformCardButton!
+
     // Pro section
     private var cancellables = Set<AnyCancellable>()
     private var proBox: NSView!
@@ -42,6 +46,13 @@ class GeneralSection: SettingsCard {
     }
 
     private func setupContent() {
+        // Platform picker box
+        let platformBox = createCardBox()
+        let platformContent = createPlatformPickerSection()
+        addContentToBox(platformBox, content: platformContent)
+        stackView.addArrangedSubview(platformBox)
+        platformBox.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
+
         // Launch at login box
         let launchBox = createCardBox()
         launchSwitch.controlSize = .mini
@@ -61,6 +72,95 @@ class GeneralSection: SettingsCard {
         addContentToBox(syncBox, content: syncRow)
         stackView.addArrangedSubview(syncBox)
         syncBox.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
+    }
+
+    private func createPlatformPickerSection() -> NSView {
+        let container = NSView()
+        container.translatesAutoresizingMaskIntoConstraints = false
+
+        let pluginBundle = Bundle(for: GeneralSection.self)
+
+        // Label
+        let label = createLabel("Smart home platform", style: .body)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        container.addSubview(label)
+
+        // Platform cards container
+        let cardsStack = NSStackView()
+        cardsStack.orientation = .horizontal
+        cardsStack.spacing = 12
+        cardsStack.alignment = .centerY
+        cardsStack.translatesAutoresizingMaskIntoConstraints = false
+        container.addSubview(cardsStack)
+
+        let currentPlatform = PlatformManager.shared.selectedPlatform
+
+        // HomeKit card
+        homeKitCard = PlatformCardButton(
+            icon: pluginBundle.image(forResource: "homekit"),
+            title: "HomeKit",
+            isSelected: currentPlatform == .homeKit
+        )
+        homeKitCard.onSelect = { [weak self] in self?.platformCardTapped(.homeKit) }
+        cardsStack.addArrangedSubview(homeKitCard)
+
+        // Home Assistant card
+        homeAssistantCard = PlatformCardButton(
+            icon: pluginBundle.image(forResource: "ha"),
+            title: "Home Assistant",
+            isSelected: currentPlatform == .homeAssistant
+        )
+        homeAssistantCard.onSelect = { [weak self] in self?.platformCardTapped(.homeAssistant) }
+        cardsStack.addArrangedSubview(homeAssistantCard)
+
+        NSLayoutConstraint.activate([
+            container.heightAnchor.constraint(equalToConstant: 80),
+            label.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            label.topAnchor.constraint(equalTo: container.topAnchor, constant: 8),
+            cardsStack.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+            cardsStack.centerYAnchor.constraint(equalTo: container.centerYAnchor)
+        ])
+
+        return container
+    }
+
+    private func platformCardTapped(_ newPlatform: SelectedPlatform) {
+        let currentPlatform = PlatformManager.shared.selectedPlatform
+
+        if newPlatform == currentPlatform {
+            return
+        }
+
+        let alert = NSAlert()
+        alert.messageText = "Restart required"
+        alert.informativeText = "Switching platforms requires restarting Itsyhome. Any unsaved changes will be lost."
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: "Restart app")
+        alert.addButton(withTitle: "Cancel")
+
+        if alert.runModal() == .alertFirstButtonReturn {
+            // Clear HA credentials if switching away from HA
+            if currentPlatform == .homeAssistant {
+                HAAuthManager.shared.clearCredentials()
+            }
+
+            // Set new platform
+            PlatformManager.shared.selectedPlatform = newPlatform
+
+            // Restart the app
+            restartApp()
+        }
+        // No need to revert - cards maintain their own state
+    }
+
+    private func restartApp() {
+        let url = URL(fileURLWithPath: Bundle.main.resourcePath!)
+        let path = url.deletingLastPathComponent().deletingLastPathComponent().absoluteString
+        let task = Process()
+        task.launchPath = "/usr/bin/open"
+        task.arguments = ["-n", path]
+        task.launch()
+        NSApp.terminate(nil)
     }
 
     private func createSyncSettingRow() -> NSView {
@@ -437,5 +537,115 @@ class GeneralSection: SettingsCard {
 
     @objc private func restoreTapped() {
         Task { await ProManager.shared.restore() }
+    }
+}
+
+// MARK: - Platform card button
+
+class PlatformCardButton: NSView {
+
+    var onSelect: (() -> Void)?
+    var isSelected: Bool {
+        didSet { needsDisplay = true }
+    }
+
+    private let iconView = NSImageView()
+    private let titleLabel: NSTextField
+    private var isHovered = false
+    private var trackingArea: NSTrackingArea?
+
+    init(icon: NSImage?, title: String, isSelected: Bool) {
+        self.isSelected = isSelected
+        self.titleLabel = NSTextField(labelWithString: title)
+        super.init(frame: .zero)
+
+        wantsLayer = true
+        layer?.cornerRadius = 6
+
+        // Icon
+        iconView.image = icon
+        iconView.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(iconView)
+
+        // Title
+        titleLabel.font = .systemFont(ofSize: 10, weight: .medium)
+        titleLabel.alignment = .center
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(titleLabel)
+
+        translatesAutoresizingMaskIntoConstraints = false
+
+        NSLayoutConstraint.activate([
+            widthAnchor.constraint(equalToConstant: 95),
+            heightAnchor.constraint(equalToConstant: 68),
+            iconView.centerXAnchor.constraint(equalTo: centerXAnchor),
+            iconView.centerYAnchor.constraint(equalTo: centerYAnchor, constant: -6),
+            iconView.widthAnchor.constraint(equalToConstant: 28),
+            iconView.heightAnchor.constraint(equalToConstant: 28),
+            titleLabel.topAnchor.constraint(equalTo: iconView.bottomAnchor, constant: 4),
+            titleLabel.centerXAnchor.constraint(equalTo: centerXAnchor)
+        ])
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func updateTrackingAreas() {
+        super.updateTrackingAreas()
+        if let existing = trackingArea {
+            removeTrackingArea(existing)
+        }
+        trackingArea = NSTrackingArea(
+            rect: bounds,
+            options: [.mouseEnteredAndExited, .activeAlways],
+            owner: self,
+            userInfo: nil
+        )
+        addTrackingArea(trackingArea!)
+    }
+
+    override func draw(_ dirtyRect: NSRect) {
+        let isDark = effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+
+        let bgColor: NSColor
+        if isSelected {
+            bgColor = isDark ? NSColor(white: 0.28, alpha: 1.0) : NSColor(white: 0.78, alpha: 1.0)
+        } else if isHovered {
+            bgColor = isDark ? NSColor(white: 0.22, alpha: 1.0) : NSColor(white: 0.85, alpha: 1.0)
+        } else {
+            bgColor = isDark ? NSColor(white: 0.18, alpha: 1.0) : NSColor(white: 0.90, alpha: 1.0)
+        }
+
+        bgColor.setFill()
+        NSBezierPath(roundedRect: bounds, xRadius: 6, yRadius: 6).fill()
+    }
+
+    override func mouseEntered(with event: NSEvent) {
+        isHovered = true
+        if !isSelected {
+            NSCursor.pointingHand.set()
+        }
+        needsDisplay = true
+    }
+
+    override func mouseExited(with event: NSEvent) {
+        isHovered = false
+        NSCursor.arrow.set()
+        needsDisplay = true
+    }
+
+    override func mouseDown(with event: NSEvent) {
+        if !isSelected {
+            alphaValue = 0.7
+        }
+    }
+
+    override func mouseUp(with event: NSEvent) {
+        alphaValue = 1.0
+        let location = convert(event.locationInWindow, from: nil)
+        if bounds.contains(location) && !isSelected {
+            onSelect?()
+        }
     }
 }

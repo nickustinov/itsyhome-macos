@@ -85,7 +85,34 @@ public final class PlatformManager {
     // MARK: - Initialization
 
     private init() {
+        migrateExistingUsersIfNeeded()
         logger.info("PlatformManager initialized, platform: \(self.selectedPlatform.rawValue, privacy: .public)")
+    }
+
+    /// Migrate existing users (upgrading from 1.x) to HomeKit automatically
+    private func migrateExistingUsersIfNeeded() {
+        // If already set up, nothing to do
+        if selectedPlatform != .none || hasCompletedOnboarding {
+            return
+        }
+
+        // Check for any pre-existing user data that indicates this is an upgrade from 1.x
+        // These keys existed before 2.0.0 and would only be present for existing users
+        let existingUserIndicators = [
+            "launchAtLogin",
+            "camerasEnabled",
+            "doorbellNotifications"
+        ]
+
+        let hasExistingData = existingUserIndicators.contains { key in
+            UserDefaults.standard.object(forKey: key) != nil
+        }
+
+        if hasExistingData {
+            logger.info("Detected existing user upgrading from 1.x, auto-selecting HomeKit")
+            selectedPlatform = .homeKit
+            hasCompletedOnboarding = true
+        }
     }
 
     // MARK: - Platform selection

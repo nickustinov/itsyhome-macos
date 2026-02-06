@@ -71,7 +71,7 @@ class PlatformPickerView: NSView {
     var onHomeAssistantSelected: (() -> Void)?
 
     private let titleLabel = NSTextField(labelWithString: "Welcome to Itsyhome")
-    private let subtitleLabel = NSTextField(labelWithString: "Choose your smart home platform:")
+    private let subtitleLabel = NSTextField(labelWithString: "Choose your smart home platform")
     private let homeKitCard: PlatformCard
     private let homeAssistantCard: PlatformCard
     private let footerLabel = NSTextField(labelWithString: "You can change this later in Settings")

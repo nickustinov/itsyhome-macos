@@ -866,7 +866,7 @@ extension HomeAssistantPlatform: HomeAssistantClientDelegate {
 
     func clientDidDisconnect(_ client: HomeAssistantClient, error: Error?) {
         logger.info("Client disconnected: \(error?.localizedDescription ?? "no error")")
-        delegate?.platformDidEncounterError(self, message: "Disconnected from Home Assistant")
+        delegate?.platformDidDisconnect(self)
     }
 
     func client(_ client: HomeAssistantClient, didReceiveStateChange entityId: String, newState: HAEntityState, oldState: HAEntityState?) {

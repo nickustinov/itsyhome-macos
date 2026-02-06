@@ -30,6 +30,9 @@ public protocol SmartHomePlatformDelegate: AnyObject {
     /// Called when an error occurs
     func platformDidEncounterError(_ platform: SmartHomePlatform, message: String)
 
+    /// Called when the platform disconnects (resets menu to loading state, no popup)
+    func platformDidDisconnect(_ platform: SmartHomePlatform)
+
     /// Called when a doorbell rings (for camera panel display)
     func platformDidReceiveDoorbellEvent(_ platform: SmartHomePlatform, cameraIdentifier: UUID)
 }

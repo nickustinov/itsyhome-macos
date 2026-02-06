@@ -88,7 +88,18 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
         StartupLogger.log("User selected HomeKit")
         PlatformManager.shared.selectHomeKit()
         platformPickerController = nil
-        // HomeKit will be initialized by the iOS side
+        // Restart to initialize HomeKit (it was skipped at startup when platform was .none)
+        restartApp()
+    }
+
+    private func restartApp() {
+        let url = URL(fileURLWithPath: Bundle.main.resourcePath!)
+        let path = url.deletingLastPathComponent().deletingLastPathComponent().absoluteString
+        let task = Process()
+        task.launchPath = "/usr/bin/open"
+        task.arguments = ["-n", path]
+        task.launch()
+        NSApp.terminate(nil)
     }
 
     func platformPickerDidSelectHomeAssistant() {
@@ -159,8 +170,34 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
         }
 
         // Connect to Home Assistant if already configured
-        if PlatformManager.shared.selectedPlatform == .homeAssistant && HAAuthManager.shared.isConfigured {
-            connectToHomeAssistant()
+        if PlatformManager.shared.selectedPlatform == .homeAssistant {
+            if HAAuthManager.shared.isConfigured {
+                connectToHomeAssistant()
+            } else {
+                // HA selected but not configured - open settings to configure
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                    self?.openSettingsToHomeAssistant()
+                }
+            }
+        }
+    }
+
+    private func openSettingsToHomeAssistant() {
+        openSettings(nil)
+        // Navigate to Home Assistant section
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            NotificationCenter.default.post(
+                name: SettingsView.navigateToSectionNotification,
+                object: nil,
+                userInfo: ["index": 1]
+            )
+            // Focus the server URL field
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                NotificationCenter.default.post(
+                    name: NSNotification.Name("HomeAssistantSectionFocusServerURL"),
+                    object: nil
+                )
+            }
         }
     }
 
@@ -232,6 +269,14 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
             return  // Don't show generic error dialog for alarm code issues
         }
         showError(message: message)
+    }
+
+    public func platformDidDisconnect(_ platform: SmartHomePlatform) {
+        // Reset menu to loading state without showing a popup
+        DispatchQueue.main.async { [weak self] in
+            self?.currentMenuData = nil
+            self?.setupMenu()  // This will show "Loading Home Assistant..."
+        }
     }
 
     public func platformDidReceiveDoorbellEvent(_ platform: SmartHomePlatform, cameraIdentifier: UUID) {
@@ -341,7 +386,7 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
         let loadingText: String
         switch PlatformManager.shared.selectedPlatform {
         case .homeAssistant:
-            loadingText = "Loading Home Assistant..."
+            loadingText = "Connecting to Home Assistant..."
         case .homeKit:
             loadingText = "Loading HomeKit..."
         case .none:
@@ -622,7 +667,12 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
 
     @objc private func refreshHomeKit(_ sender: Any?) {
         if PlatformManager.shared.selectedPlatform == .homeAssistant {
-            homeAssistantPlatform?.reloadData()
+            // Reconnect if disconnected, otherwise just reload
+            if homeAssistantPlatform?.isConnected == true {
+                homeAssistantPlatform?.reloadData()
+            } else {
+                connectToHomeAssistant()
+            }
         } else {
             iOSBridge?.reloadHomeKit()
         }
