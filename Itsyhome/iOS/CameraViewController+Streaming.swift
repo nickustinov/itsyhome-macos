@@ -133,6 +133,14 @@ extension CameraViewController {
         }
         webrtcClient?.disconnect()
         webrtcClient = nil
+
+        // HA HLS cleanup
+        if let videoView = hlsPlayer?.view {
+            videoView.removeFromSuperview()
+        }
+        hlsPlayer?.stop()
+        hlsPlayer = nil
+
         haSignaling?.disconnect()
         haSignaling = nil
         activeHACameraId = nil

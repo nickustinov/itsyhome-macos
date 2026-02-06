@@ -96,6 +96,14 @@ extension CameraViewController {
             return
         }
 
+        // HA HLS audio muting
+        if let hlsPlayer = hlsPlayer {
+            isMuted.toggle()
+            hlsPlayer.setMuted(isMuted)
+            updateMuteButtonState()
+            return
+        }
+
         // HK stream audio muting
         guard let stream = activeStreamControl?.cameraStream else { return }
 

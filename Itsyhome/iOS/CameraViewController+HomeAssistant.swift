@@ -137,7 +137,13 @@ extension CameraViewController {
 
     // MARK: - HA streaming
 
+    /// Debug flag: set to true to test HLS before WebRTC
+    private static let preferHLSOverWebRTC = false
+
     func startHAStream(cameraId: UUID, entityId: String) {
+        // Clean up any existing stream
+        cleanupExistingHAStream()
+
         activeHACameraId = cameraId
         activeHAEntityId = entityId
 
@@ -158,49 +164,160 @@ extension CameraViewController {
         updateHAStreamOverlays(cameraId: cameraId)
 
         Task { @MainActor in
-            do {
-                let signaling = try await createHASignaling()
-                let client = WebRTCStreamClient()
-                self.webrtcClient = client
+            if Self.preferHLSOverWebRTC {
+                let hlsSuccess = await tryHLSStream(entityId: entityId)
+                if !hlsSuccess {
+                    logger.info("HLS failed, trying WebRTC for \(entityId)")
+                    let webrtcSuccess = await tryWebRTCStream(entityId: entityId)
+                    if !webrtcSuccess {
+                        self.streamSpinner.stopAnimating()
+                        self.backToGrid()
+                    }
+                }
+            } else {
+                let webrtcSuccess = await tryWebRTCStream(entityId: entityId)
+                if !webrtcSuccess {
+                    logger.info("WebRTC failed, trying HLS for \(entityId)")
+                    let hlsSuccess = await tryHLSStream(entityId: entityId)
+                    if !hlsSuccess {
+                        self.streamSpinner.stopAnimating()
+                        self.backToGrid()
+                    }
+                }
+            }
+        }
+    }
 
-                client.onDisconnect = { [weak self] in
-                    DispatchQueue.main.async {
+    private func tryWebRTCStream(entityId: String) async -> Bool {
+        do {
+            let signaling = try await createHASignaling()
+            let client = WebRTCStreamClient()
+            self.webrtcClient = client
+
+            client.onDisconnect = { [weak self] in
+                DispatchQueue.main.async {
+                    if self?.hlsPlayer == nil {
                         self?.backToGrid()
                     }
                 }
-
-                try await client.connect(
-                    entityId: entityId,
-                    signaling: signaling
-                )
-
-                // Stream connected — show video view
-                self.streamSpinner.stopAnimating()
-
-                if let videoView = client.videoView {
-                    videoView.translatesAutoresizingMaskIntoConstraints = false
-                    self.streamContainerView.insertSubview(videoView, belowSubview: self.backButton)
-
-                    NSLayoutConstraint.activate([
-                        videoView.topAnchor.constraint(equalTo: self.streamContainerView.topAnchor),
-                        videoView.leadingAnchor.constraint(equalTo: self.streamContainerView.leadingAnchor),
-                        videoView.trailingAnchor.constraint(equalTo: self.streamContainerView.trailingAnchor),
-                        videoView.bottomAnchor.constraint(equalTo: self.streamContainerView.bottomAnchor)
-                    ])
-                }
-
-                // Show mute button for WebRTC audio
-                audioControlsStack.isHidden = false
-                talkButton.isHidden = true
-                isMuted = false
-                updateMuteButtonState()
-
-            } catch {
-                logger.error("Failed to start HA stream: \(error.localizedDescription)")
-                self.streamSpinner.stopAnimating()
-                self.backToGrid()
             }
+
+            try await client.connect(entityId: entityId, signaling: signaling)
+
+            self.streamSpinner.stopAnimating()
+
+            if let videoView = client.videoView {
+                videoView.translatesAutoresizingMaskIntoConstraints = false
+                self.streamContainerView.insertSubview(videoView, at: 0)
+                NSLayoutConstraint.activate([
+                    videoView.topAnchor.constraint(equalTo: self.streamContainerView.topAnchor),
+                    videoView.leadingAnchor.constraint(equalTo: self.streamContainerView.leadingAnchor),
+                    videoView.trailingAnchor.constraint(equalTo: self.streamContainerView.trailingAnchor),
+                    videoView.bottomAnchor.constraint(equalTo: self.streamContainerView.bottomAnchor)
+                ])
+            }
+
+            audioControlsStack.isHidden = false
+            talkButton.isHidden = true
+            isMuted = false
+            updateMuteButtonState()
+            return true
+
+        } catch {
+            logger.warning("WebRTC failed: \(error.localizedDescription)")
+            webrtcClient?.disconnect()
+            webrtcClient = nil
+            haSignaling?.disconnect()
+            haSignaling = nil
+            return false
         }
+    }
+
+    private func tryHLSStream(entityId: String) async -> Bool {
+        let startTime = CFAbsoluteTimeGetCurrent()
+        func elapsed() -> String {
+            String(format: "%.1fs", CFAbsoluteTimeGetCurrent() - startTime)
+        }
+
+        do {
+            logger.info("[HLS \(elapsed())] Connecting signaling...")
+            let signaling = try await createHASignaling()
+
+            logger.info("[HLS \(elapsed())] Requesting stream URL...")
+            let hlsURL = try await signaling.getHLSStreamURL(entityId: entityId)
+
+            var fullURL = hlsURL
+            if hlsURL.host == nil, let serverURL = HAAuthManager.shared.serverURL {
+                fullURL = serverURL.appendingPathComponent(hlsURL.path)
+            }
+            logger.info("[HLS \(elapsed())] Got URL: \(fullURL.absoluteString)")
+
+            let player = HLSStreamPlayer()
+            self.hlsPlayer = player
+
+            player.onReady = { [weak self] in
+                logger.info("[HLS \(elapsed())] Stream ready to play")
+                self?.streamSpinner.stopAnimating()
+            }
+
+            player.onError = { [weak self] error in
+                logger.error("[HLS \(elapsed())] Error: \(error.localizedDescription)")
+                DispatchQueue.main.async {
+                    self?.backToGrid()
+                }
+            }
+
+            logger.info("[HLS \(elapsed())] Starting playback...")
+            player.play(url: fullURL)
+
+            if let videoView = player.view {
+                logger.info("[HLS \(elapsed())] Adding video view to container")
+                videoView.translatesAutoresizingMaskIntoConstraints = false
+                self.streamContainerView.insertSubview(videoView, at: 0)
+                NSLayoutConstraint.activate([
+                    videoView.topAnchor.constraint(equalTo: self.streamContainerView.topAnchor),
+                    videoView.leadingAnchor.constraint(equalTo: self.streamContainerView.leadingAnchor),
+                    videoView.trailingAnchor.constraint(equalTo: self.streamContainerView.trailingAnchor),
+                    videoView.bottomAnchor.constraint(equalTo: self.streamContainerView.bottomAnchor)
+                ])
+                // Bring spinner to front so it's visible over video
+                self.streamContainerView.bringSubviewToFront(self.streamSpinner)
+            } else {
+                logger.error("[HLS \(elapsed())] No video view available!")
+            }
+
+            audioControlsStack.isHidden = false
+            talkButton.isHidden = true
+            isMuted = false
+            updateMuteButtonState()
+            logger.info("[HLS \(elapsed())] Setup complete, returning true")
+            return true
+
+        } catch {
+            logger.warning("[HLS \(elapsed())] Failed: \(error.localizedDescription)")
+            hlsPlayer?.stop()
+            hlsPlayer = nil
+            haSignaling?.disconnect()
+            haSignaling = nil
+            return false
+        }
+    }
+
+    private func cleanupExistingHAStream() {
+        if let videoView = webrtcClient?.videoView {
+            videoView.removeFromSuperview()
+        }
+        webrtcClient?.disconnect()
+        webrtcClient = nil
+
+        if let videoView = hlsPlayer?.view {
+            videoView.removeFromSuperview()
+        }
+        hlsPlayer?.stop()
+        hlsPlayer = nil
+
+        haSignaling?.disconnect()
+        haSignaling = nil
     }
 
     private func createHASignaling() async throws -> HACameraSignaling {

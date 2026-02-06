@@ -96,8 +96,9 @@ class CameraViewController: UIViewController {
     var isDoorbellMode = false
     var hasLoadedInitialData = false
 
-    // HA WebRTC streaming state
+    // HA streaming state (WebRTC or HLS)
     var webrtcClient: WebRTCStreamClient?
+    var hlsPlayer: HLSStreamPlayer?
     var haSignaling: HACameraSignaling?
     var activeHACameraId: UUID?
     var activeHAEntityId: String?
@@ -208,7 +209,7 @@ class CameraViewController: UIViewController {
     }
 
     @objc private func panelDidHide() {
-        if activeStreamControl != nil || webrtcClient != nil {
+        if activeStreamControl != nil || webrtcClient != nil || hlsPlayer != nil {
             backToGrid()
         }
     }

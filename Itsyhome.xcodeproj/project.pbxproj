@@ -1361,6 +1361,7 @@
 		6870C2FD692EE67128A8ED32 /* ph.alarm.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 614CA2F4C95763A913FE8D1C /* ph.alarm.fill.svg */; };
 		687969352D1283E37F80BB9B /* ph.git-diff.svg in Resources */ = {isa = PBXBuildFile; fileRef = D685D3D51513F75866E3E022 /* ph.git-diff.svg */; };
 		6898E8C9153768433C3EC150 /* ph.x.svg in Resources */ = {isa = PBXBuildFile; fileRef = B8D97A3C93B4AE321E247137 /* ph.x.svg */; };
+		689AF2719A578ED1562F6FE0 /* HLSStreamPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D9CEB29C22EDD5350366905 /* HLSStreamPlayer.swift */; };
 		68AE180369CE5C15CE1FB8B2 /* ph.bird.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = FAFD838E16B72BE9A5C19895 /* ph.bird.fill.svg */; };
 		68C6380FA4F1B48EF0D99D00 /* ph.train-simple.svg in Resources */ = {isa = PBXBuildFile; fileRef = 6EA4B81867F68D894440ED5D /* ph.train-simple.svg */; };
 		68CA3849DEDEF48AA564ADC5 /* ph.wifi-x.svg in Resources */ = {isa = PBXBuildFile; fileRef = B80AE4899F808B8CD0FDEEC5 /* ph.wifi-x.svg */; };
@@ -5117,6 +5118,7 @@
 		8D6209D5D4AF8B8C8228A9CB /* ProStatusCacheTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProStatusCacheTests.swift; sourceTree = "<group>"; };
 		8D7C16C6B332CF11F40E8E9D /* ph.network-x.svg */ = {isa = PBXFileReference; path = "ph.network-x.svg"; sourceTree = "<group>"; };
 		8D924C4BEC110647453EAEB4 /* ph.folder-dashed.fill.svg */ = {isa = PBXFileReference; path = "ph.folder-dashed.fill.svg"; sourceTree = "<group>"; };
+		8D9CEB29C22EDD5350366905 /* HLSStreamPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HLSStreamPlayer.swift; sourceTree = "<group>"; };
 		8DB1E95D8D0CA900ADA8C6F2 /* ph.folder-star.fill.svg */ = {isa = PBXFileReference; path = "ph.folder-star.fill.svg"; sourceTree = "<group>"; };
 		8DBE1B3CC17009B1362CD1AA /* ph.lock-laminated-open.svg */ = {isa = PBXFileReference; path = "ph.lock-laminated-open.svg"; sourceTree = "<group>"; };
 		8DD92859C4A4A08ECA7923E1 /* ph.arrows-clockwise.fill.svg */ = {isa = PBXFileReference; path = "ph.arrows-clockwise.fill.svg"; sourceTree = "<group>"; };
@@ -6728,6 +6730,7 @@
 				A0F7D45A6094C8C996325854 /* CameraViewController+Snapshots.swift */,
 				914A41E0AA9D87F86AA5935F /* CameraViewController+Streaming.swift */,
 				70056C596CC06C370C528E5F /* HACameraSignaling.swift */,
+				8D9CEB29C22EDD5350366905 /* HLSStreamPlayer.swift */,
 				81F296FBD051BAC5B51F5322 /* HomeKitManager.swift */,
 				EEF2D6AE841E9309235D15BF /* HomeKitManager+Commands.swift */,
 				17B4F37C745C5889F78BE0FC /* HomeKitManager+DataFetching.swift */,
@@ -13208,6 +13211,7 @@
 				4000C8545AD1515E23242CF0 /* HAAuthManager.swift in Sources */,
 				F527A9CA3DF4F60CCE3FFF4E /* HACameraSignaling.swift in Sources */,
 				DCCB0A4D899D1A138FBE3521 /* HAModels.swift in Sources */,
+				689AF2719A578ED1562F6FE0 /* HLSStreamPlayer.swift in Sources */,
 				2E7414CE3ECC6928D2A6702E /* HomeAssistantClient.swift in Sources */,
 				22DA94E1CBA65A849CC6E62F /* HomeAssistantPlatform.swift in Sources */,
 				BE7EE8B24CBC96E586681210 /* HomeKitManager+Commands.swift in Sources */,

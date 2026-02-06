@@ -290,11 +290,8 @@ final class EntityMapper {
     // MARK: - Camera generation
 
     private func generateCameras() -> [CameraData] {
-        let cameraEntities = entityStates.values.filter { $0.domain == "camera" }
-        NSLog("[CameraDebug] EntityMapper: found %d camera entities out of %d total", cameraEntities.count, entityStates.count)
-        for entity in cameraEntities {
-            NSLog("[CameraDebug] EntityMapper: camera entity_id=%@ name=%@", entity.entityId, entity.friendlyName)
-        }
+        // Filter to cameras that support streaming (bit 2 = STREAM feature)
+        let cameraEntities = entityStates.values.filter { $0.domain == "camera" && ($0.supportedFeatures & 2) != 0 }
         return cameraEntities
             .map { state in
                 CameraData(

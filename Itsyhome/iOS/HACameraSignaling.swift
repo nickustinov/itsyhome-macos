@@ -165,6 +165,66 @@ final class HACameraSignaling: NSObject {
         }
     }
 
+    // MARK: - HLS streaming
+
+    /// Requests an HLS stream URL for a camera entity.
+    func getHLSStreamURL(entityId: String) async throws -> URL {
+        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<URL, Error>) in
+            lock.lock()
+            let id = messageId
+            messageId += 1
+            pendingRequests[id] = { result in
+                switch result {
+                case .success(let response):
+                    if let dict = response as? [String: Any],
+                       let urlString = dict["url"] as? String,
+                       let url = URL(string: urlString) {
+                        continuation.resume(returning: url)
+                    } else {
+                        continuation.resume(throwing: HomeAssistantClientError.invalidResponse)
+                    }
+                case .failure(let error):
+                    continuation.resume(throwing: error)
+                }
+            }
+            lock.unlock()
+
+            let message: [String: Any] = [
+                "id": id,
+                "type": "camera/stream",
+                "entity_id": entityId
+            ]
+
+            guard let data = try? JSONSerialization.data(withJSONObject: message),
+                  let string = String(data: data, encoding: .utf8) else {
+                lock.lock()
+                pendingRequests.removeValue(forKey: id)
+                lock.unlock()
+                continuation.resume(throwing: HomeAssistantClientError.invalidResponse)
+                return
+            }
+
+            logger.info("Requesting HLS stream for \(entityId)")
+            webSocketTask?.send(.string(string)) { error in
+                if let error = error {
+                    logger.error("HLS request send error: \(error.localizedDescription)")
+                }
+            }
+
+            // Timeout
+            DispatchQueue.main.asyncAfter(deadline: .now() + 10) { [weak self] in
+                guard let self = self else { return }
+                self.lock.lock()
+                if let callback = self.pendingRequests.removeValue(forKey: id) {
+                    self.lock.unlock()
+                    callback(.failure(HomeAssistantClientError.timeout))
+                } else {
+                    self.lock.unlock()
+                }
+            }
+        }
+    }
+
     /// Sends an ICE candidate to HA. Queues if session_id is not yet available.
     func sendWebRTCCandidate(entityId: String, candidate: String, sdpMid: String?, sdpMLineIndex: Int32) {
         guard let sessionId = sessionId else {
@@ -264,8 +324,14 @@ final class HACameraSignaling: NSObject {
             let errorMessage = (json["error"] as? [String: Any])?["message"] as? String ?? "Unknown error"
             logger.error("WebSocket result error (id=\(id)): \(errorMessage)")
 
-            // If this was the offer subscription, fail it
+            // Check pending requests (HLS)
             lock.lock()
+            if let callback = pendingRequests.removeValue(forKey: id) {
+                lock.unlock()
+                callback(.failure(HomeAssistantClientError.serviceCallFailed(errorMessage)))
+                return
+            }
+            // If this was the offer subscription, fail it
             if id == subscriptionId {
                 let cont = offerContinuation
                 offerContinuation = nil
@@ -274,6 +340,18 @@ final class HACameraSignaling: NSObject {
             } else {
                 lock.unlock()
             }
+            return
+        }
+
+        // Handle successful result with data (HLS stream URL)
+        if let result = json["result"] as? [String: Any] {
+            lock.lock()
+            if let callback = pendingRequests.removeValue(forKey: id) {
+                lock.unlock()
+                callback(.success(result))
+                return
+            }
+            lock.unlock()
         }
         // Success result for subscription just means the subscription was accepted — events come separately
     }
