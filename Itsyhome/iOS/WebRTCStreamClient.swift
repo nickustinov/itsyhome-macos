@@ -124,16 +124,10 @@ final class WebRTCStreamClient: NSObject {
 
         // Create video view (Metal-based renderer)
         await MainActor.run {
-            #if arch(arm64)
             let metalView = LKRTCMTLVideoView(frame: .zero)
             metalView.videoContentMode = .scaleAspectFit
             self.videoView = metalView
             self.videoTrack?.add(metalView)
-            #else
-            let eglView = LKRTCEAGLVideoView(frame: .zero)
-            self.videoView = eglView
-            self.videoTrack?.add(eglView)
-            #endif
         }
     }
 
@@ -182,15 +176,9 @@ extension WebRTCStreamClient: LKRTCPeerConnectionDelegate {
         if let track = stream.videoTracks.first {
             DispatchQueue.main.async { [weak self] in
                 self?.videoTrack = track
-                #if arch(arm64)
                 if let metalView = self?.videoView as? LKRTCMTLVideoView {
                     track.add(metalView)
                 }
-                #else
-                if let eglView = self?.videoView as? LKRTCEAGLVideoView {
-                    track.add(eglView)
-                }
-                #endif
             }
         }
     }
