@@ -192,23 +192,13 @@ class HAValveMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefres
         // Update icon
         iconView.image = IconResolver.icon(for: serviceData, filled: isOpen)
 
-        // Update status label
+        // Update status label (don't set textColor - let HighlightingMenuItemView handle it)
         switch currentState {
-        case "open":
-            statusLabel.stringValue = hasPosition ? "\(position)%" : "Open"
-            statusLabel.textColor = .secondaryLabelColor
-        case "closed":
-            statusLabel.stringValue = "Closed"
-            statusLabel.textColor = .secondaryLabelColor
-        case "opening":
-            statusLabel.stringValue = "Opening..."
-            statusLabel.textColor = DS.Colors.warning
-        case "closing":
-            statusLabel.stringValue = "Closing..."
-            statusLabel.textColor = DS.Colors.warning
-        default:
-            statusLabel.stringValue = currentState.capitalized
-            statusLabel.textColor = .secondaryLabelColor
+        case "open": statusLabel.stringValue = hasPosition ? "\(position)%" : "Open"
+        case "closed": statusLabel.stringValue = "Closed"
+        case "opening": statusLabel.stringValue = "Opening..."
+        case "closing": statusLabel.stringValue = "Closing..."
+        default: statusLabel.stringValue = currentState.capitalized
         }
 
         // Update toggle

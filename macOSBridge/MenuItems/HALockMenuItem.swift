@@ -141,26 +141,14 @@ class HALockMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresh
         iconView.image = PhosphorIcon.modeIcon(for: serviceData.serviceType, mode: mode, filled: isLocked)
             ?? IconResolver.icon(for: serviceData, filled: isLocked)
 
-        // Update status label text and base color
+        // Update status label text (don't set textColor - let HighlightingMenuItemView handle it)
         switch currentState {
-        case "locked":
-            statusLabel.stringValue = "Locked"
-            statusLabel.textColor = .secondaryLabelColor
-        case "unlocked":
-            statusLabel.stringValue = "Unlocked"
-            statusLabel.textColor = .secondaryLabelColor
-        case "locking":
-            statusLabel.stringValue = "Locking..."
-            statusLabel.textColor = DS.Colors.warning
-        case "unlocking":
-            statusLabel.stringValue = "Unlocking..."
-            statusLabel.textColor = DS.Colors.warning
-        case "jammed":
-            statusLabel.stringValue = "Jammed"
-            statusLabel.textColor = .systemRed
-        default:
-            statusLabel.stringValue = currentState.capitalized
-            statusLabel.textColor = .secondaryLabelColor
+        case "locked": statusLabel.stringValue = "Locked"
+        case "unlocked": statusLabel.stringValue = "Unlocked"
+        case "locking": statusLabel.stringValue = "Locking..."
+        case "unlocking": statusLabel.stringValue = "Unlocking..."
+        case "jammed": statusLabel.stringValue = "Jammed"
+        default: statusLabel.stringValue = currentState.capitalized
         }
 
         // Update toggle

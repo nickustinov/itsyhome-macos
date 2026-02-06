@@ -151,7 +151,7 @@ class HAGarageDoorMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicR
             iconView.image = IconResolver.icon(for: serviceData, filled: filled)
         }
 
-        // Update status label
+        // Update status label (don't set textColor - let HighlightingMenuItemView handle it)
         switch currentState {
         case "open": statusLabel.stringValue = "Open"
         case "closed": statusLabel.stringValue = "Closed"
@@ -159,7 +159,6 @@ class HAGarageDoorMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicR
         case "closing": statusLabel.stringValue = "Closing..."
         default: statusLabel.stringValue = currentState.capitalized
         }
-        statusLabel.textColor = .secondaryLabelColor
 
         // Update toggle (ON = closed, OFF = open)
         toggleSwitch.setOn(!isOpen, animated: false)

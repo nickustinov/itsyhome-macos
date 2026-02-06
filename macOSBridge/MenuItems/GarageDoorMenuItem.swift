@@ -159,7 +159,6 @@ class GarageDoorMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
         }
         iconView.contentTintColor = DS.Colors.iconForeground
         statusLabel.stringValue = stateText
-        statusLabel.textColor = .secondaryLabelColor
         toggleSwitch.setOn(!isOpen, animated: false)  // ON = closed, OFF = open
         toggleSwitch.isEnabled = !isObstructed
     }
