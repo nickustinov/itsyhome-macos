@@ -200,6 +200,9 @@ class CameraViewController: UIViewController {
         }
         guard activeStreamControl == nil && webrtcClient == nil else { return }
         takeAllSnapshots()
+        if isHomeAssistant {
+            refreshHAOverlayStates()
+        }
         let height = computeGridHeight()
         updatePanelSize(width: Self.gridWidth, height: height, animated: false)
     }
