@@ -28,35 +28,9 @@ A native macOS menu bar app for controlling your HomeKit and Home Assistant smar
 - **Webhooks/CLI** - Built-in HTTP server with a dedicated CLI tool *(Pro)*
 - **[Itsytv](https://itsytv.app)** - Free companion app for controlling Apple TV from your menu bar
 
-## Home Assistant
-
-Itsyhome connects to your Home Assistant server using WebSocket API for real-time updates. On first launch, choose your platform (HomeKit or Home Assistant). You can switch between platforms anytime in Settings → General.
-
-**Setup:**
-1. In Home Assistant, go to Profile → Security → Long-Lived Access Tokens
-2. Create a new token and copy it
-3. In Itsyhome settings, enter your server URL (e.g., `http://homeassistant.local:8123`) and access token
-4. Click Connect
-
-**Supported entities:**
-- `light` - On/off, brightness, RGB color, color temperature
-- `switch`, `input_boolean` - On/off toggle
-- `fan` - On/off, speed, direction, oscillation
-- `climate` - HVAC modes, target temperature, presets
-- `cover` - Blinds, garage doors, gates — position, tilt, open/close/stop
-- `lock` - Lock/unlock
-- `humidifier` - On/off, modes, target humidity
-- `valve` - Open/close
-- `alarm_control_panel` - Arm/disarm modes
-- `camera` - Live snapshots and WebRTC streaming
-- `scene` - Activation with state tracking via scene config
-
-**Notes:**
-- Entities are automatically grouped by device and area
-- Cameras require the `stream` integration for live video
-- Scene state tracking requires scenes created in the Home Assistant UI (not YAML)
-
 ## Supported devices
+
+### HomeKit
 
 | Device type | Features |
 |-------------|----------|
@@ -75,6 +49,32 @@ Itsyhome connects to your Home Assistant server using WebSocket API for real-tim
 | Cameras | Live video feed with overlay action buttons to control nearby accessories *(Pro)* |
 | Doorbells | Automatic camera view on ring with live stream and configurable chime sound *(Pro)* |
 | Temperature & Humidity sensors | Summary display per room with ranges |
+
+### Home Assistant
+
+Connects via WebSocket API for real-time updates. On first launch, choose your platform. Switch anytime in Settings → General.
+
+**Setup:** Profile → Security → Long-Lived Access Tokens → Create token → Enter server URL and token in Itsyhome settings.
+
+| Entity | Features |
+|--------|----------|
+| `light` | On/off, brightness slider, RGB color picker, color temperature picker |
+| `switch`, `input_boolean` | On/off toggle |
+| `fan` | On/off, speed slider, direction, oscillation |
+| `climate` | Off/Heat/Cool/Auto/Fan modes, target temperature, presets |
+| `cover` (blinds) | Position slider, tilt control |
+| `cover` (garage/gate) | Open/close toggle, status display (opening/closing/stopped) |
+| `lock` | Lock/unlock toggle with status |
+| `humidifier` | On/off, modes, target humidity |
+| `valve` | Open/close toggle |
+| `alarm_control_panel` | Off/Stay/Away/Night modes, triggered state indicator |
+| `camera` | Live snapshots and WebRTC streaming *(Pro)* |
+| `scene` | Activation with state tracking via scene config |
+
+**Notes:**
+- Entities are automatically grouped by device and area
+- Cameras require the `stream` integration for live video
+- Scene state tracking requires scenes created in the Home Assistant UI (not YAML)
 
 ## Itsyhome Pro
 
