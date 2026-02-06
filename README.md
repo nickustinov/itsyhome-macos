@@ -1,4 +1,4 @@
-# Itsyhome
+# Itsyhome <img src="docs/homekit.png" height="32" alt="HomeKit"> <img src="docs/ha.png" height="32" alt="Home Assistant">
 
 [![Tests](https://github.com/nickustinov/itsyhome-macos/actions/workflows/test.yml/badge.svg)](https://github.com/nickustinov/itsyhome-macos/actions/workflows/test.yml)
 
@@ -77,10 +77,6 @@ Connects via WebSocket API for real-time updates. On first launch, choose your p
 - Scene state tracking requires scenes created in the Home Assistant UI (not YAML)
 
 ## Itsyhome Pro
-
-### Menu bar pinning
-
-Pin rooms, devices, scenes, or groups directly to the menu bar for instant access. Each pinned item appears as a separate menu bar icon. Optionally display names next to icons and assign custom keyboard shortcuts for even faster control.
 
 ### Device groups
 
