@@ -6,17 +6,18 @@
 
 ![Itsyhome app screenshot](itsyhome-screenshot.png)
 
-A native macOS menu bar app for controlling your HomeKit smart home devices.
+A native macOS menu bar app for controlling your HomeKit and Home Assistant smart home.
 
 **[itsyhome.app](https://itsyhome.app)**
 
 ## Features
 
 - **Menu bar access** - Control your smart home from the macOS menu bar
-- **Full HomeKit support** - Lights, switches, outlets, fans, thermostats, AC units, blinds, locks, garage doors, humidifiers, air purifiers, valves, cameras, and security systems
-- **Scenes** - Execute and toggle HomeKit scenes with automatic state tracking
+- **HomeKit support** - Full integration with Apple HomeKit devices and scenes
+- **Home Assistant support** - Connect to your Home Assistant server via WebSocket API
+- **Scenes** - Execute and toggle scenes with automatic state tracking
 - **Favourites** - Pin frequently used devices, scenes, and groups to the top of the menu
-- **Multi-home support** - Switch between multiple HomeKit homes
+- **Multi-home support** - Switch between multiple HomeKit homes (HomeKit only)
 - **Native experience** - Built with AppKit for a true macOS look and feel
 - **Menu bar pinning** - Pin rooms, devices, scenes, or groups as separate menu bar items with optional keyboard shortcuts
 - **Device groups** - Create custom groups to control multiple devices at once *(Pro)*
@@ -26,6 +27,34 @@ A native macOS menu bar app for controlling your HomeKit smart home devices.
 - **Doorbell notifications** - Automatic camera view with live stream when a doorbell rings *(Pro)*
 - **Webhooks/CLI** - Built-in HTTP server with a dedicated CLI tool *(Pro)*
 - **[Itsytv](https://itsytv.app)** - Free companion app for controlling Apple TV from your menu bar
+
+## Home Assistant
+
+Itsyhome connects to your Home Assistant server using WebSocket API for real-time updates. On first launch, choose your platform (HomeKit or Home Assistant). You can switch between platforms anytime in Settings → General.
+
+**Setup:**
+1. In Home Assistant, go to Profile → Security → Long-Lived Access Tokens
+2. Create a new token and copy it
+3. In Itsyhome settings, enter your server URL (e.g., `http://homeassistant.local:8123`) and access token
+4. Click Connect
+
+**Supported entities:**
+- `light` - On/off, brightness, RGB color, color temperature
+- `switch`, `input_boolean` - On/off toggle
+- `fan` - On/off, speed, direction, oscillation
+- `climate` - HVAC modes, target temperature, presets
+- `cover` - Blinds, garage doors, gates — position, tilt, open/close/stop
+- `lock` - Lock/unlock
+- `humidifier` - On/off, modes, target humidity
+- `valve` - Open/close
+- `alarm_control_panel` - Arm/disarm modes
+- `camera` - Live snapshots and WebRTC streaming
+- `scene` - Activation with state tracking via scene config
+
+**Notes:**
+- Entities are automatically grouped by device and area
+- Cameras require the `stream` integration for live video
+- Scene state tracking requires scenes created in the Home Assistant UI (not YAML)
 
 ## Supported devices
 
@@ -59,11 +88,11 @@ Create custom groups of devices to control multiple devices at once. Groups can 
 
 ### Cameras
 
-View live video feeds from your HomeKit cameras directly in the menu bar. Overlay action buttons let you control nearby accessories without leaving the camera view — toggle lights and outlets, open garage doors and gates, or lock and unlock doors.
+View live video feeds from your cameras directly in the menu bar. Supports HomeKit cameras and Home Assistant cameras with WebRTC streaming. Overlay action buttons let you control nearby accessories without leaving the camera view — toggle lights and outlets, open garage doors and gates, or lock and unlock doors.
 
 ### Doorbell notifications
 
-When a HomeKit doorbell rings, the camera panel automatically opens in the top-right corner of the screen with a pinned live stream of the doorbell camera. A configurable chime sound plays on ring. Both the automatic camera display and the sound can be independently toggled in Settings → Cameras.
+When a doorbell rings, the camera panel automatically opens in the top-right corner of the screen with a pinned live stream of the doorbell camera. Supports HomeKit doorbells and Home Assistant doorbell events. A configurable chime sound plays on ring. Both the automatic camera display and the sound can be independently toggled in Settings → Cameras.
 
 ### iCloud sync
 
@@ -71,7 +100,7 @@ Sync your favourites, hidden items, device groups, shortcuts, and pinned items a
 
 ### Deeplinks
 
-Control your HomeKit devices from external apps using URL schemes. Perfect for Shortcuts, Alfred, Raycast, Stream Deck, and other automation tools.
+Control your smart home devices from external apps using URL schemes. Perfect for Shortcuts, Alfred, Raycast, Stream Deck, and other automation tools. Works with both HomeKit and Home Assistant.
 
 **URL format:**
 ```
@@ -114,7 +143,7 @@ open "itsyhome://brightness/50/Bedroom/Lamp"
 
 ### Webhooks/CLI
 
-A built-in HTTP server that lets you control and query your HomeKit devices from any tool on your network — terminal, scripts, other apps, or the dedicated [itsyhome CLI](https://github.com/nickustinov/itsyhome-cli).
+A built-in HTTP server that lets you control and query your smart home devices from any tool on your network — terminal, scripts, other apps, or the dedicated [itsyhome CLI](https://github.com/nickustinov/itsyhome-cli). Works with both HomeKit and Home Assistant.
 
 Enable the server in Settings → Webhooks/CLI. Default port: `8423`.
 
@@ -167,7 +196,7 @@ See [itsyhome-cli](https://github.com/nickustinov/itsyhome-cli) for full documen
 
 ### Stream Deck
 
-Control your HomeKit devices directly from an Elgato Stream Deck using the [Itsyhome Stream Deck plugin](https://marketplace.elgato.com/product/itsyhome-c1aadf59-d8ef-4ac0-8af2-0e2e0bf950a2). Requires the webhook server to be enabled.
+Control your smart home devices directly from an Elgato Stream Deck using the [Itsyhome Stream Deck plugin](https://marketplace.elgato.com/product/itsyhome-c1aadf59-d8ef-4ac0-8af2-0e2e0bf950a2). Works with both HomeKit and Home Assistant. Requires the webhook server to be enabled.
 
 [![Stream Deck](https://github.com/nickustinov/itsyhome-streamdeck/raw/main/itsyhome-streamdeck.png)](https://marketplace.elgato.com/product/itsyhome-c1aadf59-d8ef-4ac0-8af2-0e2e0bf950a2)
 
@@ -224,7 +253,8 @@ Built with Swift and SwiftUI. Free forever, MIT licensed.
 - macOS 14.0 or later
 - Xcode 15.0 or later
 - [XcodeGen](https://github.com/yonaskolb/XcodeGen) for project generation
-- Apple Developer account with HomeKit entitlement
+- Apple Developer account with HomeKit entitlement (for HomeKit mode)
+- Home Assistant server with long-lived access token (for Home Assistant mode)
 
 ## Setup
 
@@ -280,8 +310,16 @@ Itsyhome/
 │   ├── SceneDelegate.swift
 │   └── CameraSceneDelegate.swift  # Camera window handling
 ├── Shared/                        # Shared code between iOS and macOS
+│   ├── SmartHomePlatform.swift    # Platform abstraction protocol
+│   ├── PlatformManager.swift      # Platform selection state
 │   ├── BridgeProtocols.swift      # Bridge protocols & codable data structures
 │   └── URLSchemeHandler.swift     # URL scheme deeplink handling
+├── HomeAssistant/                 # Home Assistant integration
+│   ├── HomeAssistantPlatform.swift # SmartHomePlatform implementation
+│   ├── HomeAssistantClient.swift  # WebSocket + REST API client
+│   ├── HAAuthManager.swift        # Credentials storage (Keychain)
+│   ├── HAModels.swift             # Entity/area/device models
+│   └── EntityMapper.swift         # HA entities → menu data conversion
 └── Resources/
 
 macOSBridge/                       # Native AppKit plugin for menu bar
@@ -291,6 +329,9 @@ macOSBridge/                       # Native AppKit plugin for menu bar
 │   ├── ActionEngine.swift         # Core action execution engine
 │   ├── ActionParser.swift         # Parses actions from URL schemes
 │   └── DeviceResolver.swift       # Resolves targets to devices
+├── HomeAssistant/                 # HA-specific UI components
+│   └── HomeAssistantBridge.swift  # Mac2iOS adapter for HA platform
+├── PlatformPicker/                # First-launch platform selection UI
 ├── MenuItems/                     # Device-specific menu item views
 ├── DesignSystem/                  # shadcn/ui-inspired design tokens
 ├── Controls/                      # Custom UI controls
@@ -302,14 +343,26 @@ macOSBridge/                       # Native AppKit plugin for menu bar
 └── Utilities/                     # Helpers (color conversion, icon mapping)
 ```
 
-The iOS/Catalyst app runs headless and manages HomeKit communication. It loads the `macOSBridge` plugin which provides the native AppKit menu bar interface. Communication happens via bidirectional protocols (Mac2iOS & iOS2Mac) with JSON-serialized data.
+The app supports two smart home platforms via a shared `SmartHomePlatform` protocol:
+
+- **HomeKit**: The iOS/Catalyst app runs headless and manages HomeKit communication via the native HomeKit framework
+- **Home Assistant**: Connects directly via WebSocket API with real-time state subscriptions
+
+Both platforms output the same `MenuData` format, allowing the menu bar UI to work identically regardless of platform.
 
 ## How it works
 
+**HomeKit mode:**
 1. The Catalyst app initializes HomeKit and monitors for device updates
 2. Device data is serialized to JSON and passed to the macOS plugin
 3. The plugin renders custom `NSMenuItem` views with controls
 4. User interactions are sent back to the Catalyst app to execute HomeKit commands
+
+**Home Assistant mode:**
+1. The macOS plugin connects directly to Home Assistant via WebSocket
+2. Entity states are fetched and mapped to the common `MenuData` format
+3. Real-time state changes are received via WebSocket subscriptions
+4. User interactions call Home Assistant services directly via the REST API
 
 ## Building
 
@@ -353,6 +406,16 @@ Startup diagnostics logging can be enabled by setting `StartupLogger.enabled = t
 ```bash
 log stream --predicate 'subsystem == "com.nickustinov.itsyhome"' --level info
 ```
+
+**Home Assistant debugging:**
+
+For local testing without real hardware, run the Home Assistant demo:
+
+```bash
+docker run -d --name homeassistant -p 8123:8123 ghcr.io/home-assistant/home-assistant:stable
+```
+
+Then navigate to `http://localhost:8123`, create an account, and generate a long-lived access token.
 
 ### Webhook debug endpoints
 
