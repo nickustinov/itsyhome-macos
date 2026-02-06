@@ -197,6 +197,53 @@ enum HADomain: String {
     case event
 }
 
+// MARK: - Scene configuration
+
+/// Scene configuration with target entity states
+struct HASceneConfig {
+    let id: String
+    let name: String
+    let entities: [String: HASceneEntityTarget]
+
+    init?(json: [String: Any]) {
+        guard let id = json["id"] as? String else { return nil }
+
+        self.id = id
+        self.name = json["name"] as? String ?? id
+
+        var entities: [String: HASceneEntityTarget] = [:]
+        if let entitiesJson = json["entities"] as? [String: Any] {
+            for (entityId, targetJson) in entitiesJson {
+                if let targetDict = targetJson as? [String: Any] {
+                    entities[entityId] = HASceneEntityTarget(json: targetDict)
+                }
+            }
+        }
+        self.entities = entities
+    }
+}
+
+/// Target state for an entity in a scene
+struct HASceneEntityTarget {
+    let state: String?
+    let brightness: Int?
+    let colorTemp: Int?
+    let hvacMode: String?
+    let temperature: Double?
+    let position: Int?
+    let tiltPosition: Int?
+
+    init(json: [String: Any]) {
+        self.state = json["state"] as? String
+        self.brightness = json["brightness"] as? Int
+        self.colorTemp = json["color_temp"] as? Int
+        self.hvacMode = json["hvac_mode"] as? String
+        self.temperature = json["temperature"] as? Double
+        self.position = json["position"] as? Int ?? json["current_position"] as? Int
+        self.tiltPosition = json["tilt_position"] as? Int ?? json["current_tilt_position"] as? Int
+    }
+}
+
 // MARK: - Light attributes
 
 extension HAEntityState {

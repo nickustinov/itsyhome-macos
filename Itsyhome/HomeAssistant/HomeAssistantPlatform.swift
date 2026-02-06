@@ -102,14 +102,16 @@ final class HomeAssistantPlatform: SmartHomePlatform {
             async let entities = client.getEntities()
             async let devices = client.getDevices()
             async let areas = client.getAreas()
+            async let sceneConfigs = client.getAllSceneConfigs()
 
-            let (statesResult, entitiesResult, devicesResult, areasResult) = try await (states, entities, devices, areas)
+            let (statesResult, entitiesResult, devicesResult, areasResult, sceneConfigsResult) = try await (states, entities, devices, areas, sceneConfigs)
 
             mapper.loadData(
                 states: statesResult,
                 entities: entitiesResult,
                 devices: devicesResult,
-                areas: areasResult
+                areas: areasResult,
+                sceneConfigs: sceneConfigsResult
             )
 
             // Generate and cache menu data

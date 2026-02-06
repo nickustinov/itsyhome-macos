@@ -14,6 +14,7 @@ class SceneMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
 
     private var currentValues: [UUID: Double] = [:]
     private var isActive: Bool = false
+    private var optimisticUntil: Date?  // Ignore state updates until this time
 
     private let containerView: HighlightingMenuItemView
     private let iconView: NSImageView
@@ -77,6 +78,8 @@ class SceneMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
         containerView.closesMenuOnAction = false
         containerView.onAction = { [weak self] in
             guard let self else { return }
+            // Set optimistic period to ignore state updates during slow operations
+            self.optimisticUntil = Date().addingTimeInterval(30)
             self.isActive.toggle()
             self.toggleSwitch.setOn(self.isActive, animated: true)
             if self.isActive {
@@ -114,6 +117,12 @@ class SceneMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
         }
 
         currentValues[characteristicId] = doubleValue
+
+        // Skip state recalculation during optimistic period (e.g., slow cover operations)
+        if let optimisticUntil = optimisticUntil, Date() < optimisticUntil {
+            return
+        }
+
         updateActiveState()
     }
 
@@ -156,6 +165,9 @@ class SceneMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
     }
 
     @objc private func toggleScene(_ sender: ToggleSwitch) {
+        // Set optimistic period to ignore state updates during slow operations
+        optimisticUntil = Date().addingTimeInterval(30)
+
         if sender.isOn {
             executeScene()
             // Optimistically update cached values

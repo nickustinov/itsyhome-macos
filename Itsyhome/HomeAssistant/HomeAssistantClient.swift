@@ -555,6 +555,49 @@ final class HomeAssistantClient: NSObject {
         return states.filter { $0.entityId.hasPrefix("scene.") }
     }
 
+    /// Get scene configuration with target entity states
+    /// - Parameter internalId: The internal scene ID from state attributes, not the entity_id
+    func getSceneConfig(internalId: String) async throws -> HASceneConfig? {
+        do {
+            let data = try await restRequest(path: "api/config/scene/config/\(internalId)")
+            guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+                return nil
+            }
+            return HASceneConfig(json: json)
+        } catch {
+            // Config endpoint may not exist for all scenes (e.g., YAML-defined scenes)
+            return nil
+        }
+    }
+
+    /// Get all scene configurations
+    func getAllSceneConfigs() async throws -> [String: HASceneConfig] {
+        let scenes = try await getScenes()
+        var configs: [String: HASceneConfig] = [:]
+
+        await withTaskGroup(of: (String, HASceneConfig?).self) { group in
+            for scene in scenes {
+                // The internal ID is in the state attributes, not the entity_id
+                guard let internalId = scene.attributes["id"] as? String else {
+                    continue
+                }
+                let entityId = scene.entityId
+                group.addTask {
+                    let config = try? await self.getSceneConfig(internalId: internalId)
+                    return (entityId, config)
+                }
+            }
+
+            for await (entityId, config) in group {
+                if let config = config {
+                    configs[entityId] = config
+                }
+            }
+        }
+
+        return configs
+    }
+
     /// Get camera stream URL (HLS)
     func getCameraStreamURL(entityId: String) async throws -> URL {
         let result = try await sendAndWait([

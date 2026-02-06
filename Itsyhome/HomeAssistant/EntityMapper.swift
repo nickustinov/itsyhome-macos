@@ -18,6 +18,7 @@ final class EntityMapper {
     private var entityRegistry: [String: HAEntityRegistryEntry] = [:]
     private var devices: [String: HADevice] = [:]
     private var areas: [String: HAArea] = [:]
+    private var sceneConfigs: [String: HASceneConfig] = [:]
 
     // Reverse lookup caches for O(1) characteristic lookups
     private var characteristicToEntity: [UUID: String] = [:]
@@ -28,16 +29,18 @@ final class EntityMapper {
     func loadData(states: [HAEntityState],
                   entities: [HAEntityRegistryEntry],
                   devices: [HADevice],
-                  areas: [HAArea]) {
+                  areas: [HAArea],
+                  sceneConfigs: [String: HASceneConfig] = [:]) {
         self.entityStates = Dictionary(uniqueKeysWithValues: states.map { ($0.entityId, $0) })
         self.entityRegistry = Dictionary(uniqueKeysWithValues: entities.map { ($0.entityId, $0) })
         self.devices = Dictionary(uniqueKeysWithValues: devices.map { ($0.id, $0) })
         self.areas = Dictionary(uniqueKeysWithValues: areas.map { ($0.areaId, $0) })
+        self.sceneConfigs = sceneConfigs
 
         // Build reverse lookup caches
         buildCharacteristicCache()
 
-        logger.info("Loaded \(states.count) states, \(entities.count) entities, \(devices.count) devices, \(areas.count) areas")
+        logger.info("Loaded \(states.count) states, \(entities.count) entities, \(devices.count) devices, \(areas.count) areas, \(sceneConfigs.count) scene configs")
     }
 
     func updateState(_ state: HAEntityState) {
@@ -186,13 +189,102 @@ final class EntityMapper {
         return entityStates.values
             .filter { $0.domain == "scene" }
             .map { state in
-                SceneData(
+                let actions = generateSceneActions(for: state.entityId)
+                return SceneData(
                     uniqueIdentifier: deterministicUUID(for: state.entityId),
                     name: state.friendlyName,
-                    actions: []  // HA doesn't expose scene target values
+                    actions: actions
                 )
             }
             .sorted { $0.name < $1.name }
+    }
+
+    /// Generate scene actions from scene config
+    private func generateSceneActions(for sceneEntityId: String) -> [SceneActionData] {
+        guard let config = sceneConfigs[sceneEntityId] else {
+            return []
+        }
+
+        var actions: [SceneActionData] = []
+
+        for (entityId, target) in config.entities {
+            let domain = entityId.components(separatedBy: ".").first ?? ""
+
+            switch domain {
+            case "light":
+                // Power state
+                if let state = target.state {
+                    let isOn = state == "on"
+                    actions.append(SceneActionData(
+                        characteristicId: characteristicUUID(entityId, "power"),
+                        characteristicType: CharacteristicTypes.powerState,
+                        targetValue: isOn ? 1.0 : 0.0
+                    ))
+                }
+                // Brightness (HA uses 0-255, convert to 0-100)
+                if let brightness = target.brightness {
+                    actions.append(SceneActionData(
+                        characteristicId: characteristicUUID(entityId, "brightness"),
+                        characteristicType: CharacteristicTypes.brightness,
+                        targetValue: Double(brightness) / 2.55
+                    ))
+                }
+
+            case "switch":
+                if let state = target.state {
+                    let isOn = state == "on"
+                    actions.append(SceneActionData(
+                        characteristicId: characteristicUUID(entityId, "power"),
+                        characteristicType: CharacteristicTypes.powerState,
+                        targetValue: isOn ? 1.0 : 0.0
+                    ))
+                }
+
+            case "cover":
+                if let position = target.position {
+                    actions.append(SceneActionData(
+                        characteristicId: characteristicUUID(entityId, "position"),
+                        characteristicType: CharacteristicTypes.targetPosition,
+                        targetValue: Double(position)
+                    ))
+                }
+
+            case "fan":
+                if let state = target.state {
+                    let isOn = state == "on"
+                    actions.append(SceneActionData(
+                        characteristicId: characteristicUUID(entityId, "power"),
+                        characteristicType: CharacteristicTypes.active,
+                        targetValue: isOn ? 1.0 : 0.0
+                    ))
+                }
+
+            case "lock":
+                if let state = target.state {
+                    // Lock: locked=1, unlocked=0
+                    let isLocked = state == "locked"
+                    actions.append(SceneActionData(
+                        characteristicId: characteristicUUID(entityId, "lock_target"),
+                        characteristicType: CharacteristicTypes.lockTargetState,
+                        targetValue: isLocked ? 1.0 : 0.0
+                    ))
+                }
+
+            case "climate":
+                if let temp = target.temperature {
+                    actions.append(SceneActionData(
+                        characteristicId: characteristicUUID(entityId, "target_temp"),
+                        characteristicType: CharacteristicTypes.targetTemperature,
+                        targetValue: temp
+                    ))
+                }
+
+            default:
+                break
+            }
+        }
+
+        return actions
     }
 
     // MARK: - Camera generation
