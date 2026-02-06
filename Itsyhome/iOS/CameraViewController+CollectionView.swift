@@ -26,6 +26,10 @@ extension CameraViewController: UICollectionViewDataSource {
 
         if isHomeAssistant {
             cell.configureForHA(image: haSnapshotImages[uuid])
+
+            // Configure HA overlays
+            let items = haOverlayData[uuid] ?? []
+            cell.configureHAOverlays(items: items, target: self, action: #selector(haOverlayPillTapped(_:)))
         } else {
             cell.configureForHomeKit()
             let accessory = cameraAccessories[indexPath.item]
@@ -47,10 +51,8 @@ extension CameraViewController: UICollectionViewDataSource {
 extension CameraViewController: UICollectionViewDelegate {
 
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        NSLog("[CameraDebug] didSelectItemAt: item=%d isHomeAssistant=%d", indexPath.item, isHomeAssistant ? 1 : 0)
         if isHomeAssistant {
             let camera = haCameras[indexPath.item]
-            NSLog("[CameraDebug] didSelectItemAt: camera=%@ entityId=%@", camera.name, camera.entityId ?? "nil")
             guard let entityId = camera.entityId else { return }
             let uuid = UUID(uuidString: camera.uniqueIdentifier)!
             startHAStream(cameraId: uuid, entityId: entityId)

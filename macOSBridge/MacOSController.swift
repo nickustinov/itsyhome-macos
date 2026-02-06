@@ -582,11 +582,12 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
             NSLog("[CameraDebug] MacOSController: posting HACameraDataUpdated with %d cameras", data.cameras.count)
 
             // Encode as JSON — CameraData is compiled into separate modules so direct type casting won't work
-            if let jsonData = try? JSONEncoder().encode(data.cameras) {
+            if let camerasJSON = try? JSONEncoder().encode(data.cameras),
+               let menuDataJSON = try? JSONEncoder().encode(data) {
                 NotificationCenter.default.post(
                     name: NSNotification.Name("HACameraDataUpdated"),
                     object: nil,
-                    userInfo: ["camerasJSON": jsonData]
+                    userInfo: ["camerasJSON": camerasJSON, "menuDataJSON": menuDataJSON]
                 )
             }
         }

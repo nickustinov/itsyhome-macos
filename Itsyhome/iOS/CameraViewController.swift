@@ -105,6 +105,12 @@ class CameraViewController: UIViewController {
     /// Resolved overlay data per camera: [cameraUUID: [(characteristic, service name, service type)]]
     var overlayData: [UUID: [(characteristic: HMCharacteristic, name: String, serviceType: String)]] = [:]
 
+    /// HA overlay data per camera: [cameraUUID: [(entityId, name, serviceType, isOn)]]
+    var haOverlayData: [UUID: [(entityId: String, name: String, serviceType: String, isOn: Bool)]] = [:]
+
+    /// Cached MenuData for HA overlay resolution
+    var cachedMenuData: MenuData?
+
     var macOSController: iOS2Mac? {
         (UIApplication.shared.delegate as? AppDelegate)?.macOSController
     }
@@ -117,14 +123,12 @@ class CameraViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        NSLog("[CameraDebug] CameraVC viewDidLoad: isHomeAssistant=%d cachedHACameras=%d", isHomeAssistant ? 1 : 0, Self.cachedHACameras.count)
         view.backgroundColor = UIColor(white: 0.12, alpha: 1.0)
         loadPersistedAspectRatios()
         setupCollectionView()
         setupEmptyState()
         setupStreamView()
         loadCameras()
-        NSLog("[CameraDebug] CameraVC viewDidLoad: after loadCameras, cameraCount=%d", cameraCount)
 
         NotificationCenter.default.addObserver(
             self,
@@ -215,14 +219,19 @@ class CameraViewController: UIViewController {
     @objc private func handleHACameraDataUpdated(_ notification: Notification) {
         guard let jsonData = notification.userInfo?["camerasJSON"] as? Data,
               let cameras = try? JSONDecoder().decode([CameraData].self, from: jsonData) else {
-            NSLog("[CameraDebug] CameraVC: failed to decode cameras from notification")
             return
         }
-        NSLog("[CameraDebug] CameraVC: received %d cameras, isHomeAssistant=%d", cameras.count, isHomeAssistant ? 1 : 0)
+
+        // Cache MenuData for overlay resolution (instance and static)
+        if let menuDataJSON = notification.userInfo?["menuDataJSON"] as? Data,
+           let menuData = try? JSONDecoder().decode(MenuData.self, from: menuDataJSON) {
+            cachedMenuData = menuData
+            Self.cachedHAMenuData = menuData
+        }
+
         Self.cachedHACameras = cameras
         if isHomeAssistant {
             loadCameras()
-            NSLog("[CameraDebug] CameraVC: after loadCameras, cameraCount=%d, haCameras=%d", cameraCount, haCameras.count)
             emptyLabel.isHidden = cameraCount > 0
             collectionView.isHidden = cameraCount == 0
             collectionView.reloadData()
@@ -537,4 +546,5 @@ class CameraViewController: UIViewController {
 
 struct CameraAssociatedKeys {
     static var characteristic = "overlayCharacteristic"
+    static var haEntityId = "overlayHAEntityId"
 }

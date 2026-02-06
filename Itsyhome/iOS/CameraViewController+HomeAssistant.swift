@@ -15,7 +15,6 @@ extension CameraViewController {
     // MARK: - Camera loading
 
     func loadHACameras() {
-        NSLog("[CameraDebug] loadHACameras: cachedHACameras=%d", Self.cachedHACameras.count)
         let allCameras = Self.cachedHACameras
 
         // Apply ordering (same keys as PreferencesManager — no home suffix for HA)
@@ -32,7 +31,9 @@ extension CameraViewController {
         // Filter hidden cameras
         let hiddenIds = Set(UserDefaults.standard.stringArray(forKey: "hiddenCameraIds") ?? [])
         haCameras = ordered.filter { !hiddenIds.contains($0.uniqueIdentifier) }
-        NSLog("[CameraDebug] loadHACameras: ordered=%d hidden=%d final=%d", ordered.count, hiddenIds.count, haCameras.count)
+
+        // Resolve HA overlay data
+        resolveHAOverlayData()
 
         if webrtcClient == nil {
             let height = computeGridHeight()
@@ -55,6 +56,22 @@ extension CameraViewController {
             cameraDataLock.lock()
             _cachedHACameras = newValue
             cameraDataLock.unlock()
+        }
+    }
+
+    private static var _cachedHAMenuData: MenuData?
+    private static let menuDataLock = NSLock()
+
+    static var cachedHAMenuData: MenuData? {
+        get {
+            menuDataLock.lock()
+            defer { menuDataLock.unlock() }
+            return _cachedHAMenuData
+        }
+        set {
+            menuDataLock.lock()
+            _cachedHAMenuData = newValue
+            menuDataLock.unlock()
         }
     }
 
@@ -121,7 +138,6 @@ extension CameraViewController {
     // MARK: - HA streaming
 
     func startHAStream(cameraId: UUID, entityId: String) {
-        NSLog("[CameraDebug] startHAStream: cameraId=%@ entityId=%@", cameraId.uuidString, entityId)
         activeHACameraId = cameraId
         activeHAEntityId = entityId
 
@@ -138,8 +154,8 @@ extension CameraViewController {
         let streamHeight = Self.streamWidth / ratio
         updatePanelSize(width: Self.streamWidth, height: streamHeight, aspectRatio: ratio, animated: false)
 
-        // Clear HK stream overlays (no overlays for HA)
-        streamOverlayStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        // Show HA stream overlays
+        updateHAStreamOverlays(cameraId: cameraId)
 
         Task { @MainActor in
             do {

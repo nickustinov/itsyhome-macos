@@ -37,8 +37,6 @@ class CameraSceneDelegate: UIResponder, UIWindowSceneDelegate {
         }
         #endif
 
-        NSLog("[CameraDebug] CameraSceneDelegate: creating CameraViewController, cachedHACameras=%d", CameraViewController.cachedHACameras.count)
-
         let window = UIWindow(windowScene: windowScene)
         window.rootViewController = CameraViewController()
         window.isHidden = true

@@ -330,6 +330,7 @@ final class EntityMapper {
             accessoryName: state.friendlyName,
             roomIdentifier: roomUUID,
             isReachable: state.state != "unavailable",
+            haEntityId: state.entityId,
             // Light characteristics - use supported_color_modes for capability detection
             powerStateId: hasPowerState(state) ? characteristicUUID(state.entityId, "power") : nil,
             brightnessId: state.supportsBrightness ? characteristicUUID(state.entityId, "brightness") : nil,

@@ -135,11 +135,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     @objc private func handleHACameraDataUpdated(_ notification: Notification) {
         guard let jsonData = notification.userInfo?["camerasJSON"] as? Data,
               let cameras = try? JSONDecoder().decode([CameraData].self, from: jsonData) else {
-            NSLog("[CameraDebug] AppDelegate: failed to decode cameras from notification")
             return
         }
-        NSLog("[CameraDebug] AppDelegate: cached %d HA cameras", cameras.count)
         CameraViewController.cachedHACameras = cameras
+
+        // Also cache MenuData for overlay resolution
+        if let menuDataJSON = notification.userInfo?["menuDataJSON"] as? Data,
+           let menuData = try? JSONDecoder().decode(MenuData.self, from: menuDataJSON) {
+            CameraViewController.cachedHAMenuData = menuData
+        }
     }
 
     @objc private func handleRequestOpenCameraWindow() {

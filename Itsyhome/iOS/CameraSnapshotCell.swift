@@ -212,14 +212,90 @@ class CameraSnapshotCell: UICollectionViewCell {
     private func iconForType(_ type: String) -> UIImage? {
         let name: String
         switch type {
-        case HMServiceTypeLightbulb: name = "lightbulb.fill"
-        case HMServiceTypeSwitch: name = "power"
-        case HMServiceTypeOutlet: name = "poweroutlet.type.b.fill"
-        case HMServiceTypeGarageDoorOpener: name = "door.garage.closed"
-        case HMServiceTypeLockMechanism: name = "lock.fill"
+        case HMServiceTypeLightbulb, ServiceTypes.lightbulb: name = "lightbulb.fill"
+        case HMServiceTypeSwitch, ServiceTypes.switch: name = "power"
+        case HMServiceTypeOutlet, ServiceTypes.outlet: name = "poweroutlet.type.b.fill"
+        case HMServiceTypeGarageDoorOpener, ServiceTypes.garageDoorOpener: name = "door.garage.closed"
+        case HMServiceTypeLockMechanism, ServiceTypes.lock: name = "lock.fill"
         default: name = "bolt.fill"
         }
         return UIImage(systemName: name)?.withRenderingMode(.alwaysTemplate)
+    }
+
+    // MARK: - HA overlay support
+
+    func configureHAOverlays(items: [(entityId: String, name: String, serviceType: String, isOn: Bool)], target: AnyObject, action: Selector) {
+        overlayStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
+
+        for item in items {
+            let pill = createHAGridPill(entityId: item.entityId, name: item.name, serviceType: item.serviceType, isOn: item.isOn, target: target, action: action)
+            overlayStack.addArrangedSubview(pill)
+        }
+    }
+
+    func updateHAPillStates(items: [(entityId: String, name: String, serviceType: String, isOn: Bool)]) {
+        for (index, pill) in overlayStack.arrangedSubviews.enumerated() {
+            guard index < items.count else { break }
+            let isOn = items[index].isOn
+            if isOn {
+                pill.backgroundColor = UIColor(white: 1.0, alpha: 0.85)
+                if let icon = pill.viewWithTag(1) as? UIImageView { icon.tintColor = .black }
+                if let label = pill.viewWithTag(2) as? UILabel { label.textColor = .black }
+            } else {
+                pill.backgroundColor = UIColor(white: 0.0, alpha: 0.6)
+                if let icon = pill.viewWithTag(1) as? UIImageView { icon.tintColor = .white }
+                if let label = pill.viewWithTag(2) as? UILabel { label.textColor = .white }
+            }
+        }
+    }
+
+    private func createHAGridPill(entityId: String, name: String, serviceType: String, isOn: Bool, target: AnyObject, action: Selector) -> UIView {
+        let pill = UIView()
+        pill.layer.cornerRadius = 12
+        pill.translatesAutoresizingMaskIntoConstraints = false
+
+        let iconImage = iconForType(serviceType)
+        let iconView = UIImageView(image: iconImage)
+        iconView.contentMode = .scaleAspectFit
+        iconView.translatesAutoresizingMaskIntoConstraints = false
+        iconView.tag = 1
+        pill.addSubview(iconView)
+
+        let label = UILabel()
+        label.text = name
+        label.font = .systemFont(ofSize: 10, weight: .medium)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.tag = 2
+        pill.addSubview(label)
+
+        NSLayoutConstraint.activate([
+            pill.heightAnchor.constraint(equalToConstant: 24),
+            iconView.leadingAnchor.constraint(equalTo: pill.leadingAnchor, constant: 6),
+            iconView.centerYAnchor.constraint(equalTo: pill.centerYAnchor),
+            iconView.widthAnchor.constraint(equalToConstant: 12),
+            iconView.heightAnchor.constraint(equalToConstant: 12),
+            label.leadingAnchor.constraint(equalTo: iconView.trailingAnchor, constant: 3),
+            label.centerYAnchor.constraint(equalTo: pill.centerYAnchor),
+            label.trailingAnchor.constraint(equalTo: pill.trailingAnchor, constant: -6)
+        ])
+
+        let tap = UITapGestureRecognizer(target: target, action: action)
+        pill.addGestureRecognizer(tap)
+        pill.isUserInteractionEnabled = true
+
+        objc_setAssociatedObject(pill, &CameraAssociatedKeys.haEntityId, entityId, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+
+        if isOn {
+            pill.backgroundColor = UIColor(white: 1.0, alpha: 0.85)
+            iconView.tintColor = .black
+            label.textColor = .black
+        } else {
+            pill.backgroundColor = UIColor(white: 0.0, alpha: 0.6)
+            iconView.tintColor = .white
+            label.textColor = .white
+        }
+
+        return pill
     }
 
     override func prepareForReuse() {

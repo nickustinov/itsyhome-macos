@@ -13,7 +13,6 @@ extension CameraViewController {
     // MARK: - Camera loading
 
     func loadCameras() {
-        NSLog("[CameraDebug] loadCameras: isHomeAssistant=%d", isHomeAssistant ? 1 : 0)
         if isHomeAssistant {
             loadHACameras()
             return
@@ -122,5 +121,140 @@ extension CameraViewController {
             }
         }
         return nil
+    }
+
+    // MARK: - HA overlay resolution
+
+    func resolveHAOverlayData() {
+        haOverlayData = [:]
+
+        // Use a key without home suffix for HA (no multi-home support)
+        let overlayKey = "cameraOverlayAccessories"
+
+        // Use instance cache if available, otherwise fall back to static cache
+        guard let data = UserDefaults.standard.data(forKey: overlayKey),
+              let mapping = try? JSONDecoder().decode([String: [String]].self, from: data),
+              let menuData = cachedMenuData ?? Self.cachedHAMenuData else {
+            return
+        }
+
+        for camera in haCameras {
+            let cameraId = camera.uniqueIdentifier
+            guard let uuid = UUID(uuidString: cameraId),
+                  let serviceIds = mapping[cameraId], !serviceIds.isEmpty else {
+                continue
+            }
+
+            var resolved: [(entityId: String, name: String, serviceType: String, isOn: Bool)] = []
+            for serviceIdStr in serviceIds {
+                if let service = findService(id: serviceIdStr, in: menuData) {
+                    resolved.append((entityId: serviceIdStr, name: service.name, serviceType: service.serviceType, isOn: false))
+                }
+            }
+            if !resolved.isEmpty {
+                haOverlayData[uuid] = resolved
+            }
+        }
+
+        // Fetch actual states from HA
+        fetchHAOverlayStates()
+    }
+
+    func findService(id: String, in menuData: MenuData) -> ServiceData? {
+        for accessory in menuData.accessories {
+            for service in accessory.services where service.uniqueIdentifier == id {
+                return service
+            }
+        }
+        return nil
+    }
+
+    func fetchHAOverlayStates() {
+        let menuData = cachedMenuData ?? Self.cachedHAMenuData
+        guard let serverURL = HAAuthManager.shared.serverURL,
+              let token = HAAuthManager.shared.accessToken,
+              let menuData = menuData else { return }
+
+        // Collect all unique entity IDs we need to query
+        var entityIds: Set<String> = []
+        for (_, items) in haOverlayData {
+            for item in items {
+                if let service = findService(id: item.entityId, in: menuData),
+                   let haEntityId = service.haEntityId {
+                    entityIds.insert(haEntityId)
+                }
+            }
+        }
+
+        guard !entityIds.isEmpty else { return }
+
+        // Query HA for states
+        let statesURL = serverURL.appendingPathComponent("api/states")
+        var request = URLRequest(url: statesURL)
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+
+        URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
+            guard let self = self,
+                  let data = data,
+                  let states = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] else { return }
+
+            // Build entity state lookup
+            var stateMap: [String: Bool] = [:]
+            for state in states {
+                guard let entityId = state["entity_id"] as? String,
+                      entityIds.contains(entityId),
+                      let stateValue = state["state"] as? String else { continue }
+
+                stateMap[entityId] = self.isEntityOn(entityId: entityId, state: stateValue)
+            }
+
+            DispatchQueue.main.async {
+                self.updateHAOverlayStatesFromMap(stateMap, menuData: menuData)
+            }
+        }.resume()
+    }
+
+    func isEntityOn(entityId: String, state: String) -> Bool {
+        let domain = entityId.components(separatedBy: ".").first ?? ""
+        switch domain {
+        case "light", "switch", "fan":
+            return state == "on"
+        case "lock":
+            return state == "unlocked"
+        case "cover":
+            return state == "open" || state == "opening"
+        default:
+            return state == "on"
+        }
+    }
+
+    func updateHAOverlayStatesFromMap(_ stateMap: [String: Bool], menuData: MenuData) {
+        // Update haOverlayData with actual states
+        for (cameraUUID, items) in haOverlayData {
+            var updated: [(entityId: String, name: String, serviceType: String, isOn: Bool)] = []
+            for item in items {
+                if let service = findService(id: item.entityId, in: menuData),
+                   let haEntityId = service.haEntityId,
+                   let isOn = stateMap[haEntityId] {
+                    updated.append((entityId: item.entityId, name: item.name, serviceType: item.serviceType, isOn: isOn))
+                } else {
+                    updated.append(item)
+                }
+            }
+            haOverlayData[cameraUUID] = updated
+        }
+
+        // Refresh UI
+        collectionView.reloadData()
+
+        // Update stream overlays if streaming
+        if let cameraId = activeHACameraId {
+            updateHAStreamOverlays(cameraId: cameraId)
+        }
+    }
+
+    func refreshHAOverlayStates() {
+        // Re-fetch states from HA API
+        fetchHAOverlayStates()
     }
 }

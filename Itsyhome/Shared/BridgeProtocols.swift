@@ -38,6 +38,7 @@ public struct ServiceData: Codable {
     public let accessoryName: String
     public let roomIdentifier: String?
     public let isReachable: Bool
+    public let haEntityId: String?  // HA only: original entity_id (e.g. "light.living_room")
 
     // Characteristic UUIDs - each service type uses different ones
     public let powerStateId: String?           // Lights, switches, outlets
@@ -120,6 +121,7 @@ public struct ServiceData: Codable {
         accessoryName: String,
         roomIdentifier: UUID?,
         isReachable: Bool = true,
+        haEntityId: String? = nil,
         powerStateId: UUID? = nil,
         outletInUseId: UUID? = nil,
         brightnessId: UUID? = nil,
@@ -195,6 +197,7 @@ public struct ServiceData: Codable {
         self.accessoryName = accessoryName
         self.roomIdentifier = roomIdentifier?.uuidString
         self.isReachable = isReachable
+        self.haEntityId = haEntityId
         self.powerStateId = powerStateId?.uuidString
         self.outletInUseId = outletInUseId?.uuidString
         self.brightnessId = brightnessId?.uuidString
