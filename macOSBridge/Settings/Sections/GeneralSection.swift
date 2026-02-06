@@ -139,10 +139,8 @@ class GeneralSection: SettingsCard {
         alert.addButton(withTitle: "Cancel")
 
         if alert.runModal() == .alertFirstButtonReturn {
-            // Clear HA credentials if switching away from HA
-            if currentPlatform == .homeAssistant {
-                HAAuthManager.shared.clearCredentials()
-            }
+            // Don't clear HA credentials - let user switch back without re-entering them
+            // Credentials are only cleared via Disconnect button in HA settings panel
 
             // Set new platform
             PlatformManager.shared.selectedPlatform = newPlatform
