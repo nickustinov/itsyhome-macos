@@ -387,11 +387,18 @@ final class EntityMapperTests: XCTestCase {
 
         let lockedValues = mapper.getCharacteristicValues(for: "lock.locked")
         let unlockedValues = mapper.getCharacteristicValues(for: "lock.unlocked")
-        let lockedUUID = mapper.characteristicUUID("lock.locked", "lock_state")
-        let unlockedUUID = mapper.characteristicUUID("lock.unlocked", "lock_state")
 
-        XCTAssertEqual(lockedValues[lockedUUID] as? Int, 1)  // Locked
-        XCTAssertEqual(unlockedValues[unlockedUUID] as? Int, 0)  // Unlocked
+        // lock_state returns raw state string
+        let lockedStateUUID = mapper.characteristicUUID("lock.locked", "lock_state")
+        let unlockedStateUUID = mapper.characteristicUUID("lock.unlocked", "lock_state")
+        XCTAssertEqual(lockedValues[lockedStateUUID] as? String, "locked")
+        XCTAssertEqual(unlockedValues[unlockedStateUUID] as? String, "unlocked")
+
+        // lock_target returns Int (1=locked, 0=unlocked)
+        let lockedTargetUUID = mapper.characteristicUUID("lock.locked", "lock_target")
+        let unlockedTargetUUID = mapper.characteristicUUID("lock.unlocked", "lock_target")
+        XCTAssertEqual(lockedValues[lockedTargetUUID] as? Int, 1)
+        XCTAssertEqual(unlockedValues[unlockedTargetUUID] as? Int, 0)
     }
 
     // MARK: - Fan mapping tests
@@ -402,7 +409,8 @@ final class EntityMapperTests: XCTestCase {
             state: "on",
             attributes: [
                 "friendly_name": "Ceiling Fan",
-                "percentage": 50
+                "percentage": 50,
+                "supported_features": 1  // SET_PERCENTAGE bit
             ]
         )
         loadData(states: [state])
@@ -589,5 +597,434 @@ final class EntityMapperTests: XCTestCase {
 
         // armed_away should map to 1 (HomeKit away)
         XCTAssertEqual(values[targetUUID] as? Int, 1)
+    }
+
+    // MARK: - Humidifier mapping tests
+
+    func testHumidifierMapsToHumidifierDehumidifier() {
+        let state = createEntityState(
+            entityId: "humidifier.bedroom",
+            state: "on",
+            attributes: [
+                "friendly_name": "Bedroom Humidifier",
+                "current_humidity": 45,
+                "humidity": 55,
+                "available_modes": ["normal", "eco", "boost"]
+            ]
+        )
+        loadData(states: [state])
+
+        let menuData = mapper.generateMenuData()
+
+        let service = menuData.accessories.first?.services.first
+        XCTAssertEqual(service?.serviceType, ServiceTypes.humidifierDehumidifier)
+        XCTAssertNotNil(service?.powerStateId)
+        XCTAssertNotNil(service?.humidifierThresholdId)
+    }
+
+    func testHumidifierWithModes() {
+        let state = createEntityState(
+            entityId: "humidifier.living_room",
+            state: "on",
+            attributes: [
+                "friendly_name": "Living Room Humidifier",
+                "available_modes": ["normal", "eco", "boost"],
+                "mode": "eco"
+            ]
+        )
+        loadData(states: [state])
+
+        let menuData = mapper.generateMenuData()
+
+        let service = menuData.accessories.first?.services.first
+        XCTAssertNotNil(service?.targetHumidifierDehumidifierStateId)
+        XCTAssertEqual(service?.humidifierAvailableModes, ["normal", "eco", "boost"])
+    }
+
+    func testHumidifierValues() {
+        let state = createEntityState(
+            entityId: "humidifier.test",
+            state: "on",
+            attributes: [
+                "humidity": 60,
+                "current_humidity": 45,
+                "available_modes": ["normal"],
+                "mode": "normal"
+            ]
+        )
+        loadData(states: [state])
+
+        let values = mapper.getCharacteristicValues(for: "humidifier.test")
+        let powerUUID = mapper.characteristicUUID("humidifier.test", "power")
+        let targetHumidityUUID = mapper.characteristicUUID("humidifier.test", "target_humidity")
+        let modeUUID = mapper.characteristicUUID("humidifier.test", "hum_mode")
+
+        XCTAssertEqual(values[powerUUID] as? Bool, true)
+        XCTAssertEqual(values[targetHumidityUUID] as? Int, 60)
+        XCTAssertEqual(values[modeUUID] as? String, "normal")
+    }
+
+    func testHumidifierOffState() {
+        let state = createEntityState(
+            entityId: "humidifier.off_test",
+            state: "off",
+            attributes: ["humidity": 50]
+        )
+        loadData(states: [state])
+
+        let values = mapper.getCharacteristicValues(for: "humidifier.off_test")
+        let powerUUID = mapper.characteristicUUID("humidifier.off_test", "power")
+
+        XCTAssertEqual(values[powerUUID] as? Bool, false)
+    }
+
+    // MARK: - Valve mapping tests
+
+    func testValveMapsToValve() {
+        let state = createEntityState(
+            entityId: "valve.irrigation",
+            state: "open",
+            attributes: [
+                "friendly_name": "Garden Irrigation"
+            ]
+        )
+        loadData(states: [state])
+
+        let menuData = mapper.generateMenuData()
+
+        let service = menuData.accessories.first?.services.first
+        XCTAssertEqual(service?.serviceType, ServiceTypes.valve)
+        XCTAssertNotNil(service?.valveStateId)
+        XCTAssertNotNil(service?.activeId)
+    }
+
+    func testValveWithPosition() {
+        // SET_POSITION is bit 4
+        let state = createEntityState(
+            entityId: "valve.position_valve",
+            state: "open",
+            attributes: [
+                "friendly_name": "Position Valve",
+                "supported_features": 4,
+                "current_position": 75
+            ]
+        )
+        loadData(states: [state])
+
+        let menuData = mapper.generateMenuData()
+
+        let service = menuData.accessories.first?.services.first
+        XCTAssertNotNil(service?.currentPositionId)
+        XCTAssertNotNil(service?.targetPositionId)
+    }
+
+    func testValveValues() {
+        let state = createEntityState(
+            entityId: "valve.test",
+            state: "open",
+            attributes: [
+                "supported_features": 4,
+                "current_position": 80
+            ]
+        )
+        loadData(states: [state])
+
+        let values = mapper.getCharacteristicValues(for: "valve.test")
+        let valveStateUUID = mapper.characteristicUUID("valve.test", "valve_state")
+        let activeUUID = mapper.characteristicUUID("valve.test", "active")
+        let positionUUID = mapper.characteristicUUID("valve.test", "position")
+
+        XCTAssertEqual(values[valveStateUUID] as? String, "open")
+        XCTAssertEqual(values[activeUUID] as? Int, 1)
+        XCTAssertEqual(values[positionUUID] as? Int, 80)
+    }
+
+    func testValveClosedState() {
+        let state = createEntityState(
+            entityId: "valve.closed_test",
+            state: "closed",
+            attributes: [:]
+        )
+        loadData(states: [state])
+
+        let values = mapper.getCharacteristicValues(for: "valve.closed_test")
+        let activeUUID = mapper.characteristicUUID("valve.closed_test", "active")
+
+        XCTAssertEqual(values[activeUUID] as? Int, 0)
+    }
+
+    // MARK: - Scene mapping tests
+
+    func testSceneMapsToSceneData() {
+        let state = createEntityState(
+            entityId: "scene.movie_time",
+            state: "scening",
+            attributes: [
+                "friendly_name": "Movie Time",
+                "id": "movie_time_internal"
+            ]
+        )
+        loadData(states: [state])
+
+        let menuData = mapper.generateMenuData()
+
+        XCTAssertEqual(menuData.scenes.count, 1)
+        let scene = menuData.scenes.first!
+        XCTAssertEqual(scene.name, "Movie Time")
+    }
+
+    func testMultipleScenesAreSorted() {
+        let scene1 = createEntityState(
+            entityId: "scene.zebra",
+            state: "scening",
+            attributes: ["friendly_name": "Zebra Scene"]
+        )
+        let scene2 = createEntityState(
+            entityId: "scene.alpha",
+            state: "scening",
+            attributes: ["friendly_name": "Alpha Scene"]
+        )
+        loadData(states: [scene1, scene2])
+
+        let menuData = mapper.generateMenuData()
+
+        XCTAssertEqual(menuData.scenes.count, 2)
+        XCTAssertEqual(menuData.scenes[0].name, "Alpha Scene")
+        XCTAssertEqual(menuData.scenes[1].name, "Zebra Scene")
+    }
+
+    func testSceneWithConfigGeneratesActions() {
+        let sceneState = createEntityState(
+            entityId: "scene.bedtime",
+            state: "scening",
+            attributes: ["friendly_name": "Bedtime", "id": "bedtime_internal"]
+        )
+        let lightState = createEntityState(
+            entityId: "light.bedroom",
+            state: "on",
+            attributes: ["friendly_name": "Bedroom Light"]
+        )
+
+        // Create scene config (requires id field)
+        let sceneConfig = HASceneConfig(json: [
+            "id": "bedtime_internal",
+            "name": "Bedtime",
+            "entities": [
+                "light.bedroom": ["state": "on", "brightness": 128]
+            ]
+        ])!
+
+        mapper.loadData(
+            states: [sceneState, lightState],
+            entities: [],
+            devices: [],
+            areas: [],
+            sceneConfigs: ["scene.bedtime": sceneConfig]
+        )
+
+        let menuData = mapper.generateMenuData()
+
+        let scene = menuData.scenes.first { $0.name == "Bedtime" }
+        XCTAssertNotNil(scene)
+        XCTAssertFalse(scene!.actions.isEmpty)
+        XCTAssertEqual(scene!.actions.count, 2)  // power + brightness
+    }
+
+    // MARK: - Camera mapping tests
+
+    func testCameraMapsToMenuData() {
+        let state = createEntityState(
+            entityId: "camera.front_door",
+            state: "streaming",
+            attributes: [
+                "friendly_name": "Front Door Camera"
+            ]
+        )
+        loadData(states: [state])
+
+        let menuData = mapper.generateMenuData()
+
+        XCTAssertEqual(menuData.cameras.count, 1)
+        XCTAssertTrue(menuData.hasCameras)
+        let camera = menuData.cameras.first!
+        XCTAssertEqual(camera.name, "Front Door Camera")
+        XCTAssertEqual(camera.entityId, "camera.front_door")
+    }
+
+    func testMultipleCamerasAreSorted() {
+        let cam1 = createEntityState(
+            entityId: "camera.backyard",
+            state: "streaming",
+            attributes: ["friendly_name": "Backyard Camera"]
+        )
+        let cam2 = createEntityState(
+            entityId: "camera.front",
+            state: "streaming",
+            attributes: ["friendly_name": "Front Camera"]
+        )
+        loadData(states: [cam1, cam2])
+
+        let menuData = mapper.generateMenuData()
+
+        XCTAssertEqual(menuData.cameras.count, 2)
+        XCTAssertEqual(menuData.cameras[0].name, "Backyard Camera")
+        XCTAssertEqual(menuData.cameras[1].name, "Front Camera")
+    }
+
+    func testNoCamerasReturnsEmptyAndFalse() {
+        let state = createEntityState(
+            entityId: "light.test",
+            state: "on",
+            attributes: ["friendly_name": "Test Light"]
+        )
+        loadData(states: [state])
+
+        let menuData = mapper.generateMenuData()
+
+        XCTAssertEqual(menuData.cameras.count, 0)
+        XCTAssertFalse(menuData.hasCameras)
+    }
+
+    // MARK: - Sensor mapping tests
+
+    func testTemperatureSensorMapping() {
+        let state = createEntityState(
+            entityId: "sensor.outdoor_temp",
+            state: "23.5",
+            attributes: [
+                "friendly_name": "Outdoor Temperature",
+                "device_class": "temperature",
+                "unit_of_measurement": "°C"
+            ]
+        )
+        loadData(states: [state])
+
+        let menuData = mapper.generateMenuData()
+
+        let service = menuData.accessories.first?.services.first
+        XCTAssertEqual(service?.serviceType, ServiceTypes.temperatureSensor)
+        XCTAssertNotNil(service?.currentTemperatureId)
+    }
+
+    func testTemperatureSensorValues() {
+        let state = createEntityState(
+            entityId: "sensor.living_room_temp",
+            state: "21.5",
+            attributes: [
+                "device_class": "temperature"
+            ]
+        )
+        loadData(states: [state])
+
+        let values = mapper.getCharacteristicValues(for: "sensor.living_room_temp")
+        let tempUUID = mapper.characteristicUUID("sensor.living_room_temp", "current_temp")
+
+        XCTAssertEqual(values[tempUUID] as? Double, 21.5)
+    }
+
+    func testHumiditySensorMapping() {
+        let state = createEntityState(
+            entityId: "sensor.bathroom_humidity",
+            state: "65",
+            attributes: [
+                "friendly_name": "Bathroom Humidity",
+                "device_class": "humidity",
+                "unit_of_measurement": "%"
+            ]
+        )
+        loadData(states: [state])
+
+        let menuData = mapper.generateMenuData()
+
+        let service = menuData.accessories.first?.services.first
+        XCTAssertEqual(service?.serviceType, ServiceTypes.humiditySensor)
+        XCTAssertNotNil(service?.humidityId)
+    }
+
+    func testHumiditySensorValues() {
+        let state = createEntityState(
+            entityId: "sensor.bedroom_humidity",
+            state: "55",
+            attributes: [
+                "device_class": "humidity"
+            ]
+        )
+        loadData(states: [state])
+
+        let values = mapper.getCharacteristicValues(for: "sensor.bedroom_humidity")
+        let humidityUUID = mapper.characteristicUUID("sensor.bedroom_humidity", "humidity")
+
+        XCTAssertEqual(values[humidityUUID] as? Double, 55.0)
+    }
+
+    func testUnsupportedSensorIsIgnored() {
+        let state = createEntityState(
+            entityId: "sensor.battery",
+            state: "80",
+            attributes: [
+                "device_class": "battery"
+            ]
+        )
+        loadData(states: [state])
+
+        let menuData = mapper.generateMenuData()
+
+        // Battery sensors are not supported
+        XCTAssertEqual(menuData.accessories.count, 0)
+    }
+
+    // MARK: - Gate/door cover mapping tests
+
+    func testGateMapsToWindowCovering() {
+        // Gates without explicit "garage" device_class map to window covering
+        let state = createEntityState(
+            entityId: "cover.driveway_gate",
+            state: "closed",
+            attributes: [
+                "friendly_name": "Driveway Gate",
+                "device_class": "gate"
+            ]
+        )
+        loadData(states: [state])
+
+        let menuData = mapper.generateMenuData()
+
+        let service = menuData.accessories.first?.services.first
+        // Gate device_class maps to windowCovering (only "garage" maps to garageDoorOpener)
+        XCTAssertEqual(service?.serviceType, ServiceTypes.windowCovering)
+    }
+
+    func testDoorMapsToWindowCovering() {
+        let state = createEntityState(
+            entityId: "cover.front_door",
+            state: "closed",
+            attributes: [
+                "friendly_name": "Front Door",
+                "device_class": "door"
+            ]
+        )
+        loadData(states: [state])
+
+        let menuData = mapper.generateMenuData()
+
+        let service = menuData.accessories.first?.services.first
+        XCTAssertEqual(service?.serviceType, ServiceTypes.door)
+    }
+
+    func testWindowMapsToWindow() {
+        let state = createEntityState(
+            entityId: "cover.skylight",
+            state: "open",
+            attributes: [
+                "friendly_name": "Skylight",
+                "device_class": "window"
+            ]
+        )
+        loadData(states: [state])
+
+        let menuData = mapper.generateMenuData()
+
+        let service = menuData.accessories.first?.services.first
+        XCTAssertEqual(service?.serviceType, ServiceTypes.window)
     }
 }
