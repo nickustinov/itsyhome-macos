@@ -4,6 +4,12 @@
 
 ### New features
 - **Home Assistant support** — connect to a Home Assistant instance as an alternative to HomeKit, with support for climate, lights, fans, covers, locks, humidifiers, valves, garage doors, security systems, cameras (snapshots, WebRTC, and HLS streaming), and scenes
+- **Dual RGB + color temperature support** — lights exposing both hue/saturation and color temperature (e.g. Govee Neon Rope 2 via Matter) now show both picker buttons and sliders instead of only one
+- **Continuous color temperature slider** — the color temperature picker is now a horizontal warm-to-cool gradient bar instead of 5 discrete circle presets
+- **Slider reflects light color** — the brightness slider tint updates to match the current RGB or color temperature of the light
+
+### Bug fixes
+- **Fix group brightness turning on off lights** — dragging the brightness slider in a light group no longer turns on lights that were off
 
 ## 1.3.1
 

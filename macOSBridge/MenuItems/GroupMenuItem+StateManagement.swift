@@ -199,7 +199,8 @@ extension GroupMenuItem {
         if let newHue = ValueConversion.toDouble(value) {
             hueStates[characteristicId] = newHue
             currentHue = hueStates.values.reduce(0, +) / Double(hueStates.count)
-            updateColorCircle()
+            lastColorSource = "rgb"
+            updateSliderColor()
             (colorPickerView as? ColorWheelPickerView)?.updateColor(hue: currentHue, saturation: currentSaturation)
         }
     }
@@ -208,7 +209,8 @@ extension GroupMenuItem {
         if let newSat = ValueConversion.toDouble(value) {
             saturationStates[characteristicId] = newSat
             currentSaturation = saturationStates.values.reduce(0, +) / Double(saturationStates.count)
-            updateColorCircle()
+            lastColorSource = "rgb"
+            updateSliderColor()
             (colorPickerView as? ColorWheelPickerView)?.updateColor(hue: currentHue, saturation: currentSaturation)
         }
     }
@@ -217,8 +219,9 @@ extension GroupMenuItem {
         if let newTemp = ValueConversion.toDouble(value) {
             colorTempStates[characteristicId] = newTemp
             currentColorTemp = colorTempStates.values.reduce(0, +) / Double(colorTempStates.count)
-            updateColorCircle()
-            (colorPickerView as? ColorTempPickerView)?.updateMired(currentColorTemp)
+            lastColorSource = "temp"
+            updateSliderColor()
+            (tempPickerView as? ColorTempPickerView)?.updateMired(currentColorTemp)
         }
     }
 }

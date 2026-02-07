@@ -24,11 +24,15 @@ class GroupMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
     // Light group controls
     var brightnessSlider: ModernSlider?
     var colorCircle: ClickableColorCircleView?
+    var ctButton: ClickableColorCircleView?
     var colorControlsRow: NSView?
     var colorPickerView: NSView?
-    var isColorPickerExpanded: Bool = false
+    var tempPickerView: NSView?
+    var expandedMode: String?  // nil=collapsed, "color", "temp"
     let collapsedHeight: CGFloat = DS.ControlSize.menuItemHeight
-    var expandedHeight: CGFloat = DS.ControlSize.menuItemHeight
+    var colorPickerExpandedHeight: CGFloat = DS.ControlSize.menuItemHeight
+    var tempPickerExpandedHeight: CGFloat = DS.ControlSize.menuItemHeight
+    lazy var lastColorSource: String = hasRGB ? "rgb" : "temp"
 
     let commonType: String?
 
@@ -36,7 +40,6 @@ class GroupMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
     let hasBrightness: Bool
     let hasRGB: Bool
     let hasColorTemp: Bool
-    var hasColor: Bool { hasRGB || hasColorTemp }
 
     // Track state of each device: characteristicId -> isOn
     var deviceStates: [UUID: Bool] = [:]
@@ -83,7 +86,7 @@ class GroupMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
         if isLightGroup && !services.isEmpty {
             self.hasBrightness = services.allSatisfy { $0.brightnessId != nil }
             self.hasRGB = services.allSatisfy { $0.hueId != nil && $0.saturationId != nil }
-            self.hasColorTemp = !self.hasRGB && services.allSatisfy { $0.colorTemperatureId != nil }
+            self.hasColorTemp = services.allSatisfy { $0.colorTemperatureId != nil }
         } else {
             self.hasBrightness = false
             self.hasRGB = false
@@ -228,23 +231,31 @@ class GroupMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
             statusLabel.isHidden = true
         }
 
-        // Light group specific: show/hide brightness slider and color circle
+        // Light group specific: show/hide brightness slider and color buttons
         if commonType == ServiceTypes.lightbulb {
             let showSlider = isOn && hasBrightness
-            let showColorCircle = isOn && hasColor
+            let showColorCircle = isOn && hasRGB
+            let showCtButton = isOn && hasColorTemp
 
             brightnessSlider?.isHidden = !showSlider
             colorCircle?.isHidden = !showColorCircle
+            ctButton?.isHidden = !showCtButton
 
-            // Collapse color picker if lights turned off
-            if !showColorCircle {
-                isColorPickerExpanded = false
+            // Calculate height based on expansion
+            var newHeight = collapsedHeight
+            if let mode = expandedMode, isOn {
+                switch mode {
+                case "color":
+                    newHeight = colorPickerExpandedHeight
+                case "temp":
+                    newHeight = tempPickerExpandedHeight
+                default:
+                    break
+                }
             }
 
-            // Update layout for expanded/collapsed state
-            let newHeight = (isColorPickerExpanded && showColorCircle) ? expandedHeight : collapsedHeight
             containerView.frame.size.height = newHeight
-            colorControlsRow?.isHidden = !(isColorPickerExpanded && showColorCircle)
+            updateExpandedContent()
 
             // Update vertical positions for controls
             let topAreaY = newHeight - collapsedHeight
@@ -252,32 +263,41 @@ class GroupMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
             let labelY = topAreaY + (collapsedHeight - 17) / 2
             let sliderY = topAreaY + (collapsedHeight - 12) / 2
             let switchY = topAreaY + (collapsedHeight - DS.ControlSize.switchHeight) / 2
-            let colorCircleSize: CGFloat = 14
-            let colorCircleY = topAreaY + (collapsedHeight - colorCircleSize) / 2
+            let buttonSize: CGFloat = 14
+            let buttonY = topAreaY + (collapsedHeight - buttonSize) / 2
 
             iconView.frame.origin.y = iconY
             nameLabel.frame.origin.y = labelY
             brightnessSlider?.frame.origin.y = sliderY
             toggleSwitch?.frame.origin.y = switchY
-            colorCircle?.frame.origin.y = colorCircleY
-            statusLabel.frame.origin.y = labelY
+            statusLabel.frame.origin.y = labelY - 1
 
-            // Update name label width based on visible controls
+            // Position buttons right-to-left
             let switchX = DS.ControlSize.menuItemWidth - DS.ControlSize.switchWidth - DS.Spacing.md
             let sliderWidth = DS.ControlSize.sliderWidth
             let labelX = DS.Spacing.md + DS.ControlSize.iconMedium + DS.Spacing.sm
 
-            var rightEdge = switchX - DS.Spacing.sm
+            var buttonRightEdge = switchX - DS.Spacing.sm
             if showSlider {
-                rightEdge = switchX - sliderWidth - DS.Spacing.sm - DS.Spacing.xs
+                buttonRightEdge = switchX - sliderWidth - DS.Spacing.sm - DS.Spacing.xs
             }
-            if showColorCircle {
-                rightEdge = rightEdge - colorCircleSize - DS.Spacing.xs
-            }
-            nameLabel.frame.size.width = rightEdge - labelX
 
+            var nextButtonX = buttonRightEdge
             if showColorCircle {
-                updateColorCircle()
+                nextButtonX -= buttonSize
+                colorCircle?.frame.origin = CGPoint(x: nextButtonX, y: buttonY)
+                nextButtonX -= DS.Spacing.xs
+            }
+            if showCtButton {
+                nextButtonX -= buttonSize
+                ctButton?.frame.origin = CGPoint(x: nextButtonX, y: buttonY)
+                nextButtonX -= DS.Spacing.xs
+            }
+
+            nameLabel.frame.size.width = nextButtonX - labelX
+
+            if isOn && (hasRGB || hasColorTemp) {
+                updateSliderColor()
             }
         }
     }

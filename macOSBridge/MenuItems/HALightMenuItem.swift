@@ -184,7 +184,7 @@ class HALightMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefres
         fatalError("init(coder:) has not been implemented")
     }
 
-    private static func drawTempGradient(on view: NSView, size: CGFloat) {
+    static func drawTempGradient(on view: NSView, size: CGFloat) {
         let gradientLayer = CAGradientLayer()
         gradientLayer.frame = CGRect(x: 0, y: 0, width: size, height: size)
         gradientLayer.cornerRadius = size / 2

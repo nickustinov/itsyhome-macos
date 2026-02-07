@@ -137,7 +137,7 @@ class HighlightingMenuItemView: NSView {
         let location = convert(event.locationInWindow, from: nil)
         if let hitView = hitTest(location),
            hitView is ToggleSwitch || hitView is ModernSlider || hitView is CoverControl ||
-           hitView.superview is CoverControl {
+           hitView is ClickableColorCircleView || hitView.superview is CoverControl {
             return
         }
 

@@ -34,14 +34,21 @@ class LightMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
     private let toggleSwitch: ToggleSwitch
     private let colorControlsRow: NSView
     private var colorPickerView: NSView?
+    private var tempPickerView: NSView?
     private let collapsedHeight: CGFloat = DS.ControlSize.menuItemHeight
-    private var expandedHeight: CGFloat = DS.ControlSize.menuItemHeight
-    private var isColorPickerExpanded: Bool = false
+    private var colorPickerExpandedHeight: CGFloat = DS.ControlSize.menuItemHeight
+    private var tempPickerExpandedHeight: CGFloat = DS.ControlSize.menuItemHeight
+
+    // CT button for color temp mode
+    private var ctButton: ClickableColorCircleView?
+
+    // Expansion state: nil=collapsed, "color", "temp"
+    private var expandedMode: String?
 
     private let hasBrightness: Bool
     private let hasRGB: Bool
     private let hasColorTemp: Bool
-    private var hasColor: Bool { hasRGB || hasColorTemp }
+    private lazy var lastColorSource: String = hasRGB ? "rgb" : "temp"
 
     var characteristicIdentifiers: [UUID] {
         var ids: [UUID] = []
@@ -113,16 +120,31 @@ class LightMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
             containerView.addSubview(brightnessSlider)
         }
 
-        // Color circle (before slider)
-        let colorCircleSize: CGFloat = 14
-        let colorCircleX = sliderX - colorCircleSize - DS.Spacing.xs
-        let colorCircleY = (height - colorCircleSize) / 2
-        colorCircle = ClickableColorCircleView(frame: NSRect(x: colorCircleX, y: colorCircleY, width: colorCircleSize, height: colorCircleSize))
+        // Color circle (RGB gradient icon)
+        let buttonSize: CGFloat = 14
+        let colorCircleX = sliderX - buttonSize - DS.Spacing.xs
+        let colorCircleY = (height - buttonSize) / 2
+        colorCircle = ClickableColorCircleView(frame: NSRect(x: colorCircleX, y: colorCircleY, width: buttonSize, height: buttonSize))
         colorCircle.wantsLayer = true
-        colorCircle.layer?.cornerRadius = colorCircleSize / 2
-        colorCircle.layer?.backgroundColor = NSColor.white.cgColor
+        colorCircle.layer?.cornerRadius = buttonSize / 2
+        colorCircle.layer?.backgroundColor = NSColor.clear.cgColor
         colorCircle.isHidden = true
+        LightMenuItem.drawRGBGradient(on: colorCircle, size: buttonSize)
         containerView.addSubview(colorCircle)
+
+        // CT button (color temp) - before color circle
+        if hasColorTemp {
+            let ctButtonX = colorCircleX - buttonSize - DS.Spacing.xs
+            let ctButtonY = (height - buttonSize) / 2
+            let btn = ClickableColorCircleView(frame: NSRect(x: ctButtonX, y: ctButtonY, width: buttonSize, height: buttonSize))
+            btn.wantsLayer = true
+            btn.layer?.cornerRadius = buttonSize / 2
+            btn.layer?.backgroundColor = NSColor.clear.cgColor
+            btn.isHidden = true
+            HALightMenuItem.drawTempGradient(on: btn, size: buttonSize)
+            ctButton = btn
+            containerView.addSubview(btn)
+        }
 
         // Color controls row (expanded section)
         colorControlsRow = NSView(frame: .zero)
@@ -149,19 +171,22 @@ class LightMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
         toggleSwitch.action = #selector(togglePower(_:))
 
         colorCircle.onClick = { [weak self] in
-            self?.toggleColorPicker()
+            self?.colorCircleTapped()
         }
 
-        if hasColor {
-            setupColorControlsRow()
+        ctButton?.onClick = { [weak self] in
+            self?.ctButtonTapped()
         }
+
+        setupPickers()
     }
 
     required init(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 
-    private func setupColorControlsRow() {
+    private func setupPickers() {
+        // RGB color picker
         if hasRGB {
             let picker = ColorWheelPickerView(
                 hue: hue,
@@ -171,7 +196,12 @@ class LightMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
                 }
             )
             colorPickerView = picker
-        } else if hasColorTemp {
+            let size = picker.intrinsicContentSize
+            colorPickerExpandedHeight = collapsedHeight + size.height + 8
+        }
+
+        // Color temp picker
+        if hasColorTemp {
             let picker = ColorTempPickerView(
                 currentMired: colorTemp,
                 minMired: colorTempMin,
@@ -180,22 +210,12 @@ class LightMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
                     self?.setColorTemp(newMired)
                 }
             )
-            colorPickerView = picker
-        }
-        if let picker = colorPickerView {
+            tempPickerView = picker
             let size = picker.intrinsicContentSize
-            let padding: CGFloat = 4
-            colorControlsRow.frame = NSRect(x: 0, y: padding, width: DS.ControlSize.menuItemWidth, height: size.height)
-            picker.frame = NSRect(
-                x: (DS.ControlSize.menuItemWidth - size.width) / 2,
-                y: 0,
-                width: size.width,
-                height: size.height
-            )
-            colorControlsRow.addSubview(picker)
-            containerView.addSubview(colorControlsRow)
-            expandedHeight = collapsedHeight + size.height + padding * 2
+            tempPickerExpandedHeight = collapsedHeight + size.height + 8
         }
+
+        containerView.addSubview(colorControlsRow)
     }
 
     func updateValue(for characteristicId: UUID, value: Any, isLocalChange: Bool = false) {
@@ -212,20 +232,23 @@ class LightMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
         } else if characteristicId == hueCharacteristicId {
             if let newHue = ValueConversion.toDouble(value) {
                 hue = newHue
-                updateColorCircle()
+                lastColorSource = "rgb"
+                updateSliderColor()
                 (colorPickerView as? ColorWheelPickerView)?.updateColor(hue: hue, saturation: saturation)
             }
         } else if characteristicId == saturationCharacteristicId {
             if let newSaturation = ValueConversion.toDouble(value) {
                 saturation = newSaturation
-                updateColorCircle()
+                lastColorSource = "rgb"
+                updateSliderColor()
                 (colorPickerView as? ColorWheelPickerView)?.updateColor(hue: hue, saturation: saturation)
             }
         } else if characteristicId == colorTempCharacteristicId {
             if let newColorTemp = ValueConversion.toDouble(value) {
                 colorTemp = newColorTemp
-                updateColorCircle()
-                (colorPickerView as? ColorTempPickerView)?.updateMired(colorTemp)
+                lastColorSource = "temp"
+                updateSliderColor()
+                (tempPickerView as? ColorTempPickerView)?.updateMired(colorTemp)
             }
         }
     }
@@ -235,67 +258,159 @@ class LightMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
         toggleSwitch.setOn(isOn, animated: false)
 
         let showSlider = isOn && hasBrightness
-        let showColorCircle = isOn && hasColor
+        let showColorCircle = isOn && hasRGB
+        let showCtButton = isOn && hasColorTemp
+
         brightnessSlider.isHidden = !showSlider
         colorCircle.isHidden = !showColorCircle
-        if !showColorCircle {
-            isColorPickerExpanded = false
+        ctButton?.isHidden = !showCtButton
+
+        // Calculate height based on expansion
+        var newHeight = collapsedHeight
+        if let mode = expandedMode {
+            switch mode {
+            case "color":
+                newHeight = colorPickerExpandedHeight
+            case "temp":
+                newHeight = tempPickerExpandedHeight
+            default:
+                break
+            }
         }
+
+        containerView.frame.size.height = newHeight
+        updateExpandedContent()
 
         let switchX = DS.ControlSize.menuItemWidth - DS.ControlSize.switchWidth - DS.Spacing.md
         let labelX = DS.Spacing.md + DS.ControlSize.iconMedium + DS.Spacing.sm
         let sliderWidth = DS.ControlSize.sliderWidth
-        let colorCircleSize: CGFloat = 14
-        let newHeight = (isColorPickerExpanded && showColorCircle) ? expandedHeight : collapsedHeight
-        containerView.frame.size.height = newHeight
-        colorControlsRow.isHidden = !(isColorPickerExpanded && showColorCircle)
+        let buttonSize: CGFloat = 14
 
         let topAreaY = newHeight - collapsedHeight
         let iconY = topAreaY + (collapsedHeight - DS.ControlSize.iconMedium) / 2
         let labelY = topAreaY + (collapsedHeight - 17) / 2
         let sliderY = topAreaY + (collapsedHeight - 12) / 2
         let switchY = topAreaY + (collapsedHeight - DS.ControlSize.switchHeight) / 2
-        let colorCircleY = topAreaY + (collapsedHeight - colorCircleSize) / 2
+        let buttonY = topAreaY + (collapsedHeight - buttonSize) / 2
 
         iconView.frame.origin.y = iconY
         nameLabel.frame.origin.y = labelY
         brightnessSlider.frame.origin.y = sliderY
         toggleSwitch.frame.origin.y = switchY
-        colorCircle.frame.origin.y = colorCircleY
 
-        var rightEdge = switchX - DS.Spacing.sm
+        // Position buttons right-to-left
+        var buttonRightEdge = switchX - DS.Spacing.sm
         if showSlider {
-            rightEdge = switchX - sliderWidth - DS.Spacing.sm - DS.Spacing.xs
+            buttonRightEdge = switchX - sliderWidth - DS.Spacing.sm - DS.Spacing.xs
         }
-        if showColorCircle {
-            rightEdge = rightEdge - colorCircleSize - DS.Spacing.xs
-        }
-        nameLabel.frame.size.width = rightEdge - labelX
 
+        var nextButtonX = buttonRightEdge
         if showColorCircle {
-            updateColorCircle()
+            nextButtonX -= buttonSize
+            colorCircle.frame.origin = CGPoint(x: nextButtonX, y: buttonY)
+            nextButtonX -= DS.Spacing.xs
+        }
+        if showCtButton {
+            nextButtonX -= buttonSize
+            ctButton?.frame.origin = CGPoint(x: nextButtonX, y: buttonY)
+            nextButtonX -= DS.Spacing.xs
+        }
+
+        nameLabel.frame.size.width = nextButtonX - labelX
+
+        if isOn && (hasRGB || hasColorTemp) {
+            updateSliderColor()
         }
     }
 
-    private func toggleColorPicker() {
-        guard hasColor, isOn else { return }
-        isColorPickerExpanded.toggle()
+    private func updateExpandedContent() {
+        // Clear existing content
+        colorControlsRow.subviews.forEach { $0.removeFromSuperview() }
+        colorControlsRow.isHidden = true
+
+        guard let mode = expandedMode, isOn else { return }
+
+        let picker: NSView?
+
+        switch mode {
+        case "color":
+            picker = colorPickerView
+        case "temp":
+            picker = tempPickerView
+        default:
+            return
+        }
+
+        if let picker = picker {
+            let size = picker.intrinsicContentSize
+            colorControlsRow.frame = NSRect(x: 0, y: 4, width: DS.ControlSize.menuItemWidth, height: size.height)
+            picker.frame = NSRect(
+                x: (DS.ControlSize.menuItemWidth - size.width) / 2,
+                y: 0,
+                width: size.width,
+                height: size.height
+            )
+            colorControlsRow.addSubview(picker)
+            colorControlsRow.isHidden = false
+        }
+    }
+
+    private func colorCircleTapped() {
+        guard hasRGB, isOn else { return }
+
+        if expandedMode == "color" {
+            expandedMode = nil
+        } else {
+            expandedMode = "color"
+        }
         updateUI()
-        if let menu = menu {
-            menu.itemChanged(self)
-        }
+        menu?.itemChanged(self)
     }
 
-    private func updateColorCircle() {
+    private func ctButtonTapped() {
+        guard hasColorTemp, isOn else { return }
+
+        if expandedMode == "temp" {
+            expandedMode = nil
+        } else {
+            expandedMode = "temp"
+        }
+        updateUI()
+        menu?.itemChanged(self)
+    }
+
+    private func updateSliderColor() {
+        guard hasBrightness else { return }
         let color: NSColor
-        if hasRGB {
+        if lastColorSource == "temp" && hasColorTemp {
+            color = ColorConversion.miredToColor(colorTemp)
+        } else if hasRGB {
             color = NSColor(hue: hue / 360.0, saturation: saturation / 100.0, brightness: 1.0, alpha: 1.0)
         } else if hasColorTemp {
             color = ColorConversion.miredToColor(colorTemp)
         } else {
-            color = .white
+            return
         }
-        colorCircle.layer?.backgroundColor = color.cgColor
+        brightnessSlider.progressTintColor = color
+    }
+
+    static func drawRGBGradient(on view: NSView, size: CGFloat) {
+        let gradientLayer = CAGradientLayer()
+        gradientLayer.frame = CGRect(x: 0, y: 0, width: size, height: size)
+        gradientLayer.cornerRadius = size / 2
+        gradientLayer.type = .conic
+        gradientLayer.startPoint = CGPoint(x: 0.5, y: 0.5)
+        gradientLayer.endPoint = CGPoint(x: 0.5, y: 0)
+        gradientLayer.colors = [
+            NSColor.red.cgColor,
+            NSColor.yellow.cgColor,
+            NSColor.green.cgColor,
+            NSColor.cyan.cgColor,
+            NSColor.blue.cgColor,
+            NSColor.magenta.cgColor,
+            NSColor.red.cgColor
+        ]
+        view.layer?.addSublayer(gradientLayer)
     }
 
     @objc private func sliderChanged(_ sender: ModernSlider) {
@@ -319,13 +434,15 @@ class LightMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
             bridge?.writeCharacteristic(identifier: id, value: isOn)
             notifyLocalChange(characteristicId: id, value: isOn)
         }
+        expandedMode = nil
         updateUI()
     }
 
     private func handleRGBColorChange(hue newHue: Double, saturation newSat: Double, commit: Bool) {
         hue = newHue
         saturation = newSat
-        updateColorCircle()
+        lastColorSource = "rgb"
+        updateSliderColor()
         if commit {
             if let hueId = hueCharacteristicId {
                 bridge?.writeCharacteristic(identifier: hueId, value: Float(newHue))
@@ -340,10 +457,11 @@ class LightMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
 
     private func setColorTemp(_ mired: Double) {
         colorTemp = mired
+        lastColorSource = "temp"
         if let tempId = colorTempCharacteristicId {
             bridge?.writeCharacteristic(identifier: tempId, value: Int(mired))
             notifyLocalChange(characteristicId: tempId, value: Int(mired))
         }
-        updateColorCircle()
+        updateSliderColor()
     }
 }

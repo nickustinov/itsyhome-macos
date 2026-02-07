@@ -55,20 +55,27 @@ extension GroupMenuItem {
         currentBrightness = value
         guard let bridge = bridge else { return }
 
-        // Update local brightness states and notify
-        for id in brightnessIds {
-            brightnessStates[id] = value
-            notifyLocalChange(characteristicId: id, value: Int(value))
+        // Only write brightness to lights that are currently on
+        let services = group.resolveServices(in: menuData)
+        for service in services {
+            let isServiceOn: Bool
+            if let powerIdStr = service.powerStateId, let powerId = UUID(uuidString: powerIdStr) {
+                isServiceOn = deviceStates[powerId] ?? false
+            } else {
+                isServiceOn = false
+            }
+
+            if let brightIdStr = service.brightnessId, let brightId = UUID(uuidString: brightIdStr) {
+                brightnessStates[brightId] = value
+                if isServiceOn {
+                    bridge.writeCharacteristic(identifier: brightId, value: Int(value))
+                    notifyLocalChange(characteristicId: brightId, value: Int(value))
+                }
+            }
         }
 
-        // Write to all brightness characteristics
-        for id in brightnessIds {
-            bridge.writeCharacteristic(identifier: id, value: Int(value))
-        }
-
-        // Turn on lights if slider moved and lights are off
+        // Turn on all lights if slider moved and all lights are off
         if value > 0 && deviceStates.values.allSatisfy({ !$0 }) {
-            let services = group.resolveServices(in: menuData)
             for service in services {
                 if let idString = service.powerStateId, let id = UUID(uuidString: idString) {
                     deviceStates[id] = true
@@ -83,7 +90,8 @@ extension GroupMenuItem {
     func handleRGBColorChange(hue newHue: Double, saturation newSat: Double, commit: Bool) {
         currentHue = newHue
         currentSaturation = newSat
-        updateColorCircle()
+        lastColorSource = "rgb"
+        updateSliderColor()
 
         guard commit, let bridge = bridge else { return }
 
@@ -108,7 +116,8 @@ extension GroupMenuItem {
 
     func setColorTemp(_ mired: Double) {
         currentColorTemp = mired
-        updateColorCircle()
+        lastColorSource = "temp"
+        updateSliderColor()
 
         guard let bridge = bridge else { return }
 

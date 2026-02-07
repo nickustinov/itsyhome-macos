@@ -70,7 +70,7 @@ extension GroupMenuItem {
         slider.doubleValue = currentBrightness
         slider.progressTintColor = DS.Colors.sliderLight
         slider.isContinuous = false
-        slider.isHidden = true  // Show only when lights are on
+        slider.isHidden = true
         slider.target = self
         slider.action = #selector(brightnessSliderChanged(_:))
         if hasBrightness {
@@ -78,29 +78,50 @@ extension GroupMenuItem {
         }
         brightnessSlider = slider
 
-        // Color circle (if all lights support color)
-        if hasColor {
-            let colorCircleSize: CGFloat = 14
-            let colorCircleX = sliderX - colorCircleSize - DS.Spacing.xs
-            let colorCircleY = (height - colorCircleSize) / 2
+        // Color circle (RGB gradient icon)
+        let buttonSize: CGFloat = 14
+        if hasRGB {
+            let colorCircleX = sliderX - buttonSize - DS.Spacing.xs
+            let colorCircleY = (height - buttonSize) / 2
 
-            let circle = ClickableColorCircleView(frame: NSRect(x: colorCircleX, y: colorCircleY, width: colorCircleSize, height: colorCircleSize))
+            let circle = ClickableColorCircleView(frame: NSRect(x: colorCircleX, y: colorCircleY, width: buttonSize, height: buttonSize))
             circle.wantsLayer = true
-            circle.layer?.cornerRadius = colorCircleSize / 2
-            circle.layer?.backgroundColor = NSColor.white.cgColor
-            circle.isHidden = true  // Show only when lights are on
+            circle.layer?.cornerRadius = buttonSize / 2
+            circle.layer?.backgroundColor = NSColor.clear.cgColor
+            circle.isHidden = true
+            LightMenuItem.drawRGBGradient(on: circle, size: buttonSize)
             circle.onClick = { [weak self] in
-                self?.toggleColorPicker()
+                self?.colorCircleTapped()
             }
             containerView.addSubview(circle)
             colorCircle = circle
-
-            setupColorControlsRow()
         }
 
+        // CT button (color temp gradient icon)
+        if hasColorTemp {
+            let ctX = sliderX - buttonSize - DS.Spacing.xs - (hasRGB ? buttonSize + DS.Spacing.xs : 0)
+            let ctY = (height - buttonSize) / 2
+
+            let btn = ClickableColorCircleView(frame: NSRect(x: ctX, y: ctY, width: buttonSize, height: buttonSize))
+            btn.wantsLayer = true
+            btn.layer?.cornerRadius = buttonSize / 2
+            btn.layer?.backgroundColor = NSColor.clear.cgColor
+            btn.isHidden = true
+            HALightMenuItem.drawTempGradient(on: btn, size: buttonSize)
+            btn.onClick = { [weak self] in
+                self?.ctButtonTapped()
+            }
+            containerView.addSubview(btn)
+            ctButton = btn
+        }
+
+        setupPickers()
+
         // Status label position (before controls)
-        let controlsStartX = hasColor ? (sliderX - 14 - DS.Spacing.xs) : sliderX
-        statusLabel.frame = NSRect(x: controlsStartX - 40, y: (height - 17) / 2, width: 35, height: 17)
+        var controlsStartX = sliderX
+        if hasRGB { controlsStartX -= buttonSize + DS.Spacing.xs }
+        if hasColorTemp { controlsStartX -= buttonSize + DS.Spacing.xs }
+        statusLabel.frame = NSRect(x: controlsStartX - 40, y: (height - 17) / 2 - 1, width: 35, height: 17)
         nameLabel.frame.size.width = controlsStartX - 45 - labelX - DS.Spacing.sm
     }
 
@@ -123,7 +144,7 @@ extension GroupMenuItem {
         nameLabel.frame.size.width = switchX - 45 - labelX - DS.Spacing.sm
     }
 
-    func setupColorControlsRow() {
+    func setupPickers() {
         let row = NSView(frame: .zero)
         row.isHidden = true
         colorControlsRow = row
@@ -137,7 +158,11 @@ extension GroupMenuItem {
                 }
             )
             colorPickerView = picker
-        } else if hasColorTemp {
+            let size = picker.intrinsicContentSize
+            colorPickerExpandedHeight = collapsedHeight + size.height + 8
+        }
+
+        if hasColorTemp {
             let picker = ColorTempPickerView(
                 currentMired: currentColorTemp,
                 minMired: colorTempMin,
@@ -146,13 +171,33 @@ extension GroupMenuItem {
                     self?.setColorTemp(newMired)
                 }
             )
-            colorPickerView = picker
+            tempPickerView = picker
+            let size = picker.intrinsicContentSize
+            tempPickerExpandedHeight = collapsedHeight + size.height + 8
         }
 
-        if let picker = colorPickerView {
+        containerView.addSubview(row)
+    }
+
+    func updateExpandedContent() {
+        colorControlsRow?.subviews.forEach { $0.removeFromSuperview() }
+        colorControlsRow?.isHidden = true
+
+        guard let mode = expandedMode, deviceStates.values.contains(true) else { return }
+
+        let picker: NSView?
+        switch mode {
+        case "color":
+            picker = colorPickerView
+        case "temp":
+            picker = tempPickerView
+        default:
+            return
+        }
+
+        if let picker = picker, let row = colorControlsRow {
             let size = picker.intrinsicContentSize
-            let padding: CGFloat = 4
-            row.frame = NSRect(x: 0, y: padding, width: DS.ControlSize.menuItemWidth, height: size.height)
+            row.frame = NSRect(x: 0, y: 4, width: DS.ControlSize.menuItemWidth, height: size.height)
             picker.frame = NSRect(
                 x: (DS.ControlSize.menuItemWidth - size.width) / 2,
                 y: 0,
@@ -160,29 +205,36 @@ extension GroupMenuItem {
                 height: size.height
             )
             row.addSubview(picker)
-            containerView.addSubview(row)
-            expandedHeight = collapsedHeight + size.height + padding * 2
+            row.isHidden = false
         }
     }
 
-    func toggleColorPicker() {
-        guard hasColor, deviceStates.values.contains(true) else { return }
-        isColorPickerExpanded.toggle()
+    func colorCircleTapped() {
+        guard hasRGB, deviceStates.values.contains(true) else { return }
+        expandedMode = expandedMode == "color" ? nil : "color"
         updateUI()
-        if let menu = menu {
-            menu.itemChanged(self)
-        }
+        menu?.itemChanged(self)
     }
 
-    func updateColorCircle() {
+    func ctButtonTapped() {
+        guard hasColorTemp, deviceStates.values.contains(true) else { return }
+        expandedMode = expandedMode == "temp" ? nil : "temp"
+        updateUI()
+        menu?.itemChanged(self)
+    }
+
+    func updateSliderColor() {
+        guard hasBrightness else { return }
         let color: NSColor
-        if hasRGB {
+        if lastColorSource == "temp" && hasColorTemp {
+            color = ColorConversion.miredToColor(currentColorTemp)
+        } else if hasRGB {
             color = NSColor(hue: currentHue / 360.0, saturation: currentSaturation / 100.0, brightness: 1.0, alpha: 1.0)
         } else if hasColorTemp {
             color = ColorConversion.miredToColor(currentColorTemp)
         } else {
-            color = .white
+            return
         }
-        colorCircle?.layer?.backgroundColor = color.cgColor
+        brightnessSlider?.progressTintColor = color
     }
 }
