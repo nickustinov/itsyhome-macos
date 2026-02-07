@@ -1,15 +1,15 @@
 //
-//  CoverMenuItemTests.swift
+//  HACoverMenuItemTests.swift
 //  macOSBridgeTests
 //
-//  Tests for CoverMenuItem (3-button control for HA covers without position support)
+//  Tests for HACoverMenuItem (3-button control for HA covers without position support)
 //
 
 import XCTest
 import AppKit
 @testable import macOSBridge
 
-final class CoverMenuItemTests: XCTestCase {
+final class HACoverMenuItemTests: XCTestCase {
 
     // MARK: - Test helpers
 
@@ -32,7 +32,7 @@ final class CoverMenuItemTests: XCTestCase {
 
     func testInitSetsServiceData() {
         let serviceData = createTestServiceData()
-        let menuItem = CoverMenuItem(serviceData: serviceData, bridge: nil)
+        let menuItem = HACoverMenuItem(serviceData: serviceData, bridge: nil)
 
         XCTAssertEqual(menuItem.serviceData.name, "Test Cover")
         XCTAssertEqual(menuItem.serviceData.serviceType, ServiceTypes.windowCovering)
@@ -40,7 +40,7 @@ final class CoverMenuItemTests: XCTestCase {
 
     func testInitCreatesView() {
         let serviceData = createTestServiceData()
-        let menuItem = CoverMenuItem(serviceData: serviceData, bridge: nil)
+        let menuItem = HACoverMenuItem(serviceData: serviceData, bridge: nil)
 
         XCTAssertNotNil(menuItem.view)
     }
@@ -50,14 +50,14 @@ final class CoverMenuItemTests: XCTestCase {
     func testCharacteristicIdentifiersContainsPositionId() {
         let positionId = UUID()
         let serviceData = createTestServiceData(currentPositionId: positionId)
-        let menuItem = CoverMenuItem(serviceData: serviceData, bridge: nil)
+        let menuItem = HACoverMenuItem(serviceData: serviceData, bridge: nil)
 
         XCTAssertTrue(menuItem.characteristicIdentifiers.contains(positionId))
     }
 
     func testCharacteristicIdentifiersEmptyWhenNoPositionId() {
         let serviceData = createTestServiceData(currentPositionId: nil)
-        let menuItem = CoverMenuItem(serviceData: serviceData, bridge: nil)
+        let menuItem = HACoverMenuItem(serviceData: serviceData, bridge: nil)
 
         XCTAssertTrue(menuItem.characteristicIdentifiers.isEmpty)
     }
@@ -67,7 +67,7 @@ final class CoverMenuItemTests: XCTestCase {
     func testUpdatePositionValue() {
         let positionId = UUID()
         let serviceData = createTestServiceData(currentPositionId: positionId)
-        let menuItem = CoverMenuItem(serviceData: serviceData, bridge: nil)
+        let menuItem = HACoverMenuItem(serviceData: serviceData, bridge: nil)
 
         menuItem.updateValue(for: positionId, value: 100)
 
@@ -78,7 +78,7 @@ final class CoverMenuItemTests: XCTestCase {
         let positionId = UUID()
         let unknownId = UUID()
         let serviceData = createTestServiceData(currentPositionId: positionId)
-        let menuItem = CoverMenuItem(serviceData: serviceData, bridge: nil)
+        let menuItem = HACoverMenuItem(serviceData: serviceData, bridge: nil)
 
         menuItem.updateValue(for: unknownId, value: 50)
 
@@ -89,21 +89,21 @@ final class CoverMenuItemTests: XCTestCase {
 
     func testConformsToCharacteristicUpdatable() {
         let serviceData = createTestServiceData()
-        let menuItem = CoverMenuItem(serviceData: serviceData, bridge: nil)
+        let menuItem = HACoverMenuItem(serviceData: serviceData, bridge: nil)
 
         XCTAssertTrue(menuItem is CharacteristicUpdatable)
     }
 
     func testConformsToCharacteristicRefreshable() {
         let serviceData = createTestServiceData()
-        let menuItem = CoverMenuItem(serviceData: serviceData, bridge: nil)
+        let menuItem = HACoverMenuItem(serviceData: serviceData, bridge: nil)
 
         XCTAssertTrue(menuItem is CharacteristicRefreshable)
     }
 
     func testConformsToLocalChangeNotifiable() {
         let serviceData = createTestServiceData()
-        let menuItem = CoverMenuItem(serviceData: serviceData, bridge: nil)
+        let menuItem = HACoverMenuItem(serviceData: serviceData, bridge: nil)
 
         XCTAssertTrue(menuItem is LocalChangeNotifiable)
     }

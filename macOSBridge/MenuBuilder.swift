@@ -393,21 +393,15 @@ class MenuBuilder {
 
         switch service.serviceType {
         case ServiceTypes.lightbulb:
-            // Use HALightMenuItem for HA lights that need mode switching (hs+white or hs+color_temp)
-            // rgbww/rgbw lights control color and white simultaneously, so they use regular LightMenuItem
-            if service.needsColorModeSwitch == true {
-                menuItem = HALightMenuItem(serviceData: service, bridge: bridge)
-            } else {
-                menuItem = LightMenuItem(serviceData: service, bridge: bridge)
-            }
+            menuItem = LightMenuItem(serviceData: service, bridge: bridge)
 
         case ServiceTypes.switch, ServiceTypes.outlet:
             menuItem = SwitchMenuItem(serviceData: service, bridge: bridge)
 
         case ServiceTypes.thermostat:
-            // Use ClimateMenuItem for HA (has availableHVACModes), ThermostatMenuItem for HomeKit
+            // Use HAClimateMenuItem for HA (has availableHVACModes), ThermostatMenuItem for HomeKit
             if service.availableHVACModes != nil {
-                menuItem = ClimateMenuItem(serviceData: service, bridge: bridge)
+                menuItem = HAClimateMenuItem(serviceData: service, bridge: bridge)
             } else {
                 menuItem = ThermostatMenuItem(serviceData: service, bridge: bridge)
             }
@@ -423,9 +417,9 @@ class MenuBuilder {
             }
 
         case ServiceTypes.windowCovering, ServiceTypes.door, ServiceTypes.window:
-            // Use CoverMenuItem for HA covers without position support
+            // Use HACoverMenuItem for HA covers without position support
             if service.targetPositionId == nil {
-                menuItem = CoverMenuItem(serviceData: service, bridge: bridge)
+                menuItem = HACoverMenuItem(serviceData: service, bridge: bridge)
             } else {
                 menuItem = BlindMenuItem(serviceData: service, bridge: bridge)
             }

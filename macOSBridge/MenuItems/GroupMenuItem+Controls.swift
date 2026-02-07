@@ -107,7 +107,7 @@ extension GroupMenuItem {
             btn.layer?.cornerRadius = buttonSize / 2
             btn.layer?.backgroundColor = NSColor.clear.cgColor
             btn.isHidden = true
-            HALightMenuItem.drawTempGradient(on: btn, size: buttonSize)
+            LightMenuItem.drawTempGradient(on: btn, size: buttonSize)
             btn.onClick = { [weak self] in
                 self?.ctButtonTapped()
             }

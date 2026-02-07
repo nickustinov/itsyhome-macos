@@ -1,5 +1,5 @@
 //
-//  CoverMenuItem.swift
+//  HACoverMenuItem.swift
 //  macOSBridge
 //
 //  Menu item for Home Assistant covers without position support
@@ -8,7 +8,7 @@
 
 import AppKit
 
-class CoverMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable, LocalChangeNotifiable, ReachabilityUpdatableMenuItem {
+class HACoverMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable, LocalChangeNotifiable, ReachabilityUpdatableMenuItem {
 
     let serviceData: ServiceData
     weak var bridge: Mac2iOS?

@@ -1,5 +1,5 @@
 //
-//  ClimateMenuItem.swift
+//  HAClimateMenuItem.swift
 //  macOSBridge
 //
 //  Menu item for Home Assistant climate entities (dynamic HVAC modes + temperature)
@@ -7,7 +7,7 @@
 
 import AppKit
 
-class ClimateMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable, LocalChangeNotifiable, ReachabilityUpdatableMenuItem {
+class HAClimateMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable, LocalChangeNotifiable, ReachabilityUpdatableMenuItem {
 
     let serviceData: ServiceData
     weak var bridge: Mac2iOS?

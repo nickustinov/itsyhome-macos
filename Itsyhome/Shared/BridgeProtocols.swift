@@ -49,7 +49,6 @@ public struct ServiceData: Codable {
     public let colorTemperatureId: String?     // Tunable white lights (Mired)
     public let colorTemperatureMin: Double?    // Min Mired value
     public let colorTemperatureMax: Double?    // Max Mired value
-    public let needsColorModeSwitch: Bool?     // HA: needs mode switching UI (hs+color_temp)
     public let currentTemperatureId: String?   // Thermostats, temperature sensors, AC
     public let targetTemperatureId: String?    // Thermostats
     public let heatingCoolingStateId: String?  // Thermostats (current mode)
@@ -130,7 +129,6 @@ public struct ServiceData: Codable {
         colorTemperatureId: UUID? = nil,
         colorTemperatureMin: Double? = nil,
         colorTemperatureMax: Double? = nil,
-        needsColorModeSwitch: Bool? = nil,
         currentTemperatureId: UUID? = nil,
         targetTemperatureId: UUID? = nil,
         heatingCoolingStateId: UUID? = nil,
@@ -206,7 +204,6 @@ public struct ServiceData: Codable {
         self.colorTemperatureId = colorTemperatureId?.uuidString
         self.colorTemperatureMin = colorTemperatureMin
         self.colorTemperatureMax = colorTemperatureMax
-        self.needsColorModeSwitch = needsColorModeSwitch
         self.currentTemperatureId = currentTemperatureId?.uuidString
         self.targetTemperatureId = targetTemperatureId?.uuidString
         self.heatingCoolingStateId = heatingCoolingStateId?.uuidString

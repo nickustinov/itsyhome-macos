@@ -141,7 +141,7 @@ class LightMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
             btn.layer?.cornerRadius = buttonSize / 2
             btn.layer?.backgroundColor = NSColor.clear.cgColor
             btn.isHidden = true
-            HALightMenuItem.drawTempGradient(on: btn, size: buttonSize)
+            LightMenuItem.drawTempGradient(on: btn, size: buttonSize)
             ctButton = btn
             containerView.addSubview(btn)
         }
@@ -392,6 +392,20 @@ class LightMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
             return
         }
         brightnessSlider.progressTintColor = color
+    }
+
+    static func drawTempGradient(on view: NSView, size: CGFloat) {
+        let gradientLayer = CAGradientLayer()
+        gradientLayer.frame = CGRect(x: 0, y: 0, width: size, height: size)
+        gradientLayer.cornerRadius = size / 2
+        gradientLayer.colors = [
+            NSColor(red: 0.4, green: 0.7, blue: 1.0, alpha: 1.0).cgColor,  // Cool
+            NSColor.white.cgColor,
+            NSColor(red: 1.0, green: 0.8, blue: 0.4, alpha: 1.0).cgColor   // Warm
+        ]
+        gradientLayer.startPoint = CGPoint(x: 0.5, y: 0)
+        gradientLayer.endPoint = CGPoint(x: 0.5, y: 1)
+        view.layer?.addSublayer(gradientLayer)
     }
 
     static func drawRGBGradient(on view: NSView, size: CGFloat) {
