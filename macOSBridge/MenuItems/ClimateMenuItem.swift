@@ -101,7 +101,7 @@ class ClimateMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefres
         let modes = serviceData.availableHVACModes ?? []
         modeOrder = Self.filterAndOrderModes(modes)
         let modeCount = min(modeOrder.count, 5)
-        self.needsThreeRows = modeCount > 3
+        self.needsThreeRows = modeCount > 3 || (modeCount > 2 && hasThresholds)
         self.hideModeSelector = modeCount <= 1
 
         // Create wrapper view - start collapsed
@@ -174,7 +174,8 @@ class ClimateMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefres
         // Build mode buttons from available HVAC modes
         let buttonCount = max(modeCount, 1)  // At least 1 for layout
         let containerWidth = ModeButtonGroup.widthForButtons(count: buttonCount)
-        let modeX = DS.ControlSize.menuItemWidth - DS.Spacing.md - containerWidth
+        // In 3-row mode, modes get full row — right-align. In 2-row, modes share row with temp — left-align.
+        let modeX = needsThreeRows ? (DS.ControlSize.menuItemWidth - DS.Spacing.md - containerWidth) : DS.Spacing.md
         modeContainer = ModeButtonGroup(frame: NSRect(x: modeX, y: 3, width: containerWidth, height: 22))
 
         for (index, mode) in modeOrder.prefix(5).enumerated() {

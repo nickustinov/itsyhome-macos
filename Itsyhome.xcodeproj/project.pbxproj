@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -10106,7 +10106,7 @@
 			packageReferences = (
 				4B83A3AD3D02B152E08700AF /* XCRemoteSwiftPackageReference "webrtc-xcframework" */,
 			);
-			preferredProjectObjectVersion = 77;
+			preferredProjectObjectVersion = 54;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -13491,7 +13491,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_MAC_ICON_IN_CATALYST_APP = YES;
 				CODE_SIGN_ENTITLEMENTS = Itsyhome/Itsyhome.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 200;
+				CURRENT_PROJECT_VERSION = 201;
 				DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER = NO;
 				INFOPLIST_FILE = Itsyhome/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Itsyhome;
@@ -13619,7 +13619,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_MAC_ICON_IN_CATALYST_APP = YES;
 				CODE_SIGN_ENTITLEMENTS = Itsyhome/Itsyhome.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 200;
+				CURRENT_PROJECT_VERSION = 201;
 				DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER = NO;
 				INFOPLIST_FILE = Itsyhome/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Itsyhome;

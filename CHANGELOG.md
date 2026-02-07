@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.0.0
+
+### New features
+- **Home Assistant support** — connect to a Home Assistant instance as an alternative to HomeKit, with support for climate, lights, fans, covers, locks, humidifiers, valves, garage doors, security systems, cameras (snapshots, WebRTC, and HLS streaming), and scenes
+
 ## 1.3.1
 
 ### Bug fixes
