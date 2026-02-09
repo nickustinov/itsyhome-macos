@@ -270,7 +270,7 @@ class GroupMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
             nameLabel.frame.origin.y = labelY
             brightnessSlider?.frame.origin.y = sliderY
             toggleSwitch?.frame.origin.y = switchY
-            statusLabel.frame.origin.y = labelY - 1
+            statusLabel.frame.origin.y = labelY + 2
 
             // Position buttons right-to-left
             let switchX = DS.ControlSize.menuItemWidth - DS.ControlSize.switchWidth - DS.Spacing.md
@@ -294,7 +294,14 @@ class GroupMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
                 nextButtonX -= DS.Spacing.xs
             }
 
-            nameLabel.frame.size.width = nextButtonX - labelX
+            if !statusLabel.isHidden {
+                statusLabel.sizeToFit()
+                let statusWidth = ceil(statusLabel.frame.size.width)
+                statusLabel.frame.origin.x = nextButtonX - statusWidth
+                nameLabel.frame.size.width = nextButtonX - statusWidth - DS.Spacing.xs - labelX
+            } else {
+                nameLabel.frame.size.width = nextButtonX - labelX
+            }
 
             if isOn && (hasRGB || hasColorTemp) {
                 updateSliderColor()
