@@ -10,6 +10,7 @@
 
 ### Bug fixes
 - **Fix group brightness turning on off lights** — dragging the brightness slider in a light group no longer turns on lights that were off
+- **Fix phantom window in Mission Control** — the app no longer appears as an empty window in Mission Control when "Group windows by application" is enabled
 
 ## 1.3.1
 

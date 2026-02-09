@@ -23,17 +23,13 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         windowScene.sizeRestrictions?.minimumSize = CGSize(width: 1, height: 1)
         windowScene.sizeRestrictions?.maximumSize = CGSize(width: 1, height: 1)
 
-        // Create a tiny invisible window
+        // Create a tiny invisible window (never ordered front — see swizzle
+        // in MacOSController that blocks 1×1 windows from Mission Control)
         let window = UIWindow(windowScene: windowScene)
         window.frame = CGRect(x: 0, y: 0, width: 1, height: 1)
         window.rootViewController = UIViewController()
-        window.makeKeyAndVisible()
+        window.isHidden = true
         self.window = window
-
-        // Hide from dock
-        DispatchQueue.main.async {
-            windowScene.windows.forEach { $0.isHidden = true }
-        }
 
         // Handle any URLs passed at launch
         for urlContext in connectionOptions.urlContexts {

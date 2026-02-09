@@ -65,6 +65,7 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
         setupMenu()
         StartupLogger.log("Initial menu set up")
         setupNotifications()
+        swizzleCatalystWindowOrdering()
         Task { @MainActor in _ = ProManager.shared }
         StartupLogger.log("MacOSController init complete")
 
@@ -179,6 +180,18 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
                     self?.openSettingsToHomeAssistant()
                 }
             }
+        }
+    }
+
+    /// Swizzle makeKeyAndOrderFront: on NSWindow so the hidden 1×1 Catalyst
+    /// window is never ordered into the window list. Mission Control only shows
+    /// ordered windows, so this prevents the phantom empty window when
+    /// "Group windows by application" is enabled.
+    private func swizzleCatalystWindowOrdering() {
+        let original = class_getInstanceMethod(NSWindow.self, #selector(NSWindow.makeKeyAndOrderFront(_:)))
+        let replacement = class_getInstanceMethod(NSWindow.self, #selector(NSWindow.itsyhome_makeKeyAndOrderFront(_:)))
+        if let original, let replacement {
+            method_exchangeImplementations(original, replacement)
         }
     }
 
@@ -740,5 +753,20 @@ extension MacOSController: CameraPanelManagerDelegate {
 
     func cameraPanelManagerSetCameraWindowHidden(_ manager: CameraPanelManager, hidden: Bool) {
         activeBridge?.setCameraWindowHidden(hidden)
+    }
+}
+
+// MARK: - Swizzled window ordering
+
+extension NSWindow {
+    @objc func itsyhome_makeKeyAndOrderFront(_ sender: Any?) {
+        // Block the hidden 1×1 Catalyst window from being ordered into the
+        // window list. This prevents Mission Control from showing it as an
+        // empty phantom window when "Group windows by application" is on.
+        if frame.size.width <= 1 || frame.size.height <= 1 {
+            return
+        }
+        // Calls through to the original (swapped) implementation
+        itsyhome_makeKeyAndOrderFront(sender)
     }
 }
