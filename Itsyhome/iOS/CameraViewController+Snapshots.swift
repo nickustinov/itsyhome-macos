@@ -29,6 +29,7 @@ extension CameraViewController {
     }
 
     func startSnapshotTimer() {
+        stopSnapshotTimer()
         if isHomeAssistant {
             startHASnapshotTimer()
             return
@@ -46,6 +47,7 @@ extension CameraViewController {
     }
 
     func startTimestampTimer() {
+        stopTimestampTimer()
         timestampTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
             self?.updateTimestampLabels()
         }

@@ -207,6 +207,8 @@ class CameraViewController: UIViewController {
     }
 
     @objc private func panelDidHide() {
+        stopSnapshotTimer()
+        stopTimestampTimer()
         if activeStreamControl != nil || webrtcClient != nil || hlsPlayer != nil {
             backToGrid()
         }
