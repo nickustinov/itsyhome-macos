@@ -837,7 +837,8 @@ final class EntityMapperTests: XCTestCase {
             entityId: "camera.front_door",
             state: "streaming",
             attributes: [
-                "friendly_name": "Front Door Camera"
+                "friendly_name": "Front Door Camera",
+                "supported_features": 2
             ]
         )
         loadData(states: [state])
@@ -855,12 +856,12 @@ final class EntityMapperTests: XCTestCase {
         let cam1 = createEntityState(
             entityId: "camera.backyard",
             state: "streaming",
-            attributes: ["friendly_name": "Backyard Camera"]
+            attributes: ["friendly_name": "Backyard Camera", "supported_features": 2]
         )
         let cam2 = createEntityState(
             entityId: "camera.front",
             state: "streaming",
-            attributes: ["friendly_name": "Front Camera"]
+            attributes: ["friendly_name": "Front Camera", "supported_features": 2]
         )
         loadData(states: [cam1, cam2])
 

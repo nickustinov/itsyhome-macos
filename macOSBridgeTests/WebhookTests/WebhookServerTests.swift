@@ -18,6 +18,7 @@ final class WebhookServerTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
+        ProStatusCache.shared.isPro = true
         mockBridge = MockWebhookBridge()
         engine = ActionEngine(bridge: mockBridge)
         engine.updateMenuData(createTestMenuData())
@@ -29,6 +30,7 @@ final class WebhookServerTests: XCTestCase {
         server.stop()
         Thread.sleep(forTimeInterval: 0.1)
         server = nil
+        ProStatusCache.shared.isPro = false
         super.tearDown()
     }
 
