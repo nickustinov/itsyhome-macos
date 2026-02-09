@@ -33,7 +33,8 @@ class WebhooksSection: SettingsCard {
         ("List devices", "list/devices"),
         ("List scenes", "list/scenes"),
         ("List groups", "list/groups"),
-        ("Device info", "info/<Room>/<Device>")
+        ("Device info", "info/<Room>/<Device>"),
+        ("Event stream (SSE)", "events")
     ]
 
     override init(frame frameRect: NSRect) {

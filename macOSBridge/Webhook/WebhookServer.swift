@@ -40,6 +40,12 @@ final class WebhookServer {
     private var actionEngine: ActionEngine?
     private let queue = DispatchQueue(label: "com.nickustinov.itsyhome.webhook", qos: .userInitiated)
 
+    // SSE state
+    var sseClients: [NWConnection] = []
+    var characteristicIndex: [String: CharacteristicContext] = [:]
+    var lastPublishedValues: [String: String] = [:]
+    var heartbeatTimer: DispatchSourceTimer?
+
     init(port: UInt16) {
         self.port = port
     }
@@ -93,9 +99,15 @@ final class WebhookServer {
     }
 
     func stop() {
+        disconnectAllSSEClients()
         listener?.cancel()
         listener = nil
         state = .stopped
+    }
+
+    /// Dispatch a block on the webhook queue from extensions
+    func dispatchOnQueue(_ block: @escaping () -> Void) {
+        queue.async(execute: block)
     }
 
     // MARK: - Connection handling
@@ -149,6 +161,11 @@ final class WebhookServer {
 
         guard !trimmedPath.isEmpty else {
             sendResponse(connection: connection, status: 400, body: encode(APIResponse.error("Empty path")))
+            return
+        }
+
+        // Handle SSE endpoint before read endpoints
+        if handleSSERequest(path: trimmedPath, connection: connection) {
             return
         }
 

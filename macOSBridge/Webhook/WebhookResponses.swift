@@ -140,6 +140,29 @@ struct DebugAccessoryInfo: Encodable {
     var room: String?
 }
 
+// MARK: - SSE event models
+
+struct CharacteristicEvent: Encodable {
+    let timestamp: String
+    let device: String
+    let room: String
+    let type: String
+    let characteristic: String
+    let value: AnyEncodable
+    let characteristicId: String
+    let serviceId: String
+    var entityId: String?
+}
+
+struct CharacteristicContext {
+    let deviceName: String
+    let roomName: String
+    let deviceType: String
+    let characteristicName: String
+    let serviceId: String
+    var entityId: String?
+}
+
 // MARK: - Type erasure for encoding Any values
 
 struct AnyEncodable: Encodable {
@@ -203,7 +226,7 @@ struct AnyEncodable: Encodable {
 extension WebhookServer {
     static let jsonEncoder: JSONEncoder = {
         let encoder = JSONEncoder()
-        encoder.outputFormatting = []  // Compact output
+        encoder.outputFormatting = [.sortedKeys]
         return encoder
     }()
 

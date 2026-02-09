@@ -8,6 +8,7 @@
 - **Continuous color temperature slider** — the color temperature picker is now a horizontal warm-to-cool gradient bar instead of 5 discrete circle presets
 - **Slider reflects light color** — the brightness slider tint updates to match the current RGB or color temperature of the light
 - **Remember camera window position and size** — the camera panel remembers its position and size per camera, so reopening the same camera restores where you left it
+- **SSE event stream** — new `/events` endpoint on the webhook server streams real-time device state changes via Server-Sent Events, usable with `curl -N`, browser `EventSource`, or any SSE client
 
 ### Bug fixes
 - **Fix group brightness turning on off lights** — dragging the brightness slider in a light group no longer turns on lights that were off

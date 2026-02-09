@@ -26,6 +26,7 @@ A native macOS menu bar app for controlling your HomeKit and Home Assistant smar
 - **Cameras** - Live video feed with overlay action buttons to control nearby accessories *(Pro)*
 - **Doorbell notifications** - Automatic camera view with live stream when a doorbell rings *(Pro)*
 - **Webhooks/CLI** - Built-in HTTP server with a dedicated CLI tool *(Pro)*
+- **Event stream (SSE)** - Real-time device state changes via Server-Sent Events for external automation *(Pro)*
 - **[Itsytv](https://itsytv.app)** - Free companion app for controlling Apple TV from your menu bar
 
 ## Supported devices
@@ -172,6 +173,35 @@ curl http://localhost:8423/close/Bedroom/Blinds
 | `/list/groups` | List all device groups (includes room info for room-scoped groups) |
 | `/list/groups/<room>` | List groups available in a specific room (room-scoped + global) |
 | `/info/<target>` | Detailed device/room info with current state |
+| `/events` | SSE event stream for real-time characteristic changes |
+
+**Event stream (SSE):**
+
+Stream real-time device state changes using [Server-Sent Events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events). Connect with `curl -N` or any SSE client (including `EventSource` in browsers). Only actual value changes are emitted — read refreshes are filtered out.
+
+```bash
+curl -N http://localhost:8423/events
+```
+
+Each event is a JSON object on a `data:` line:
+
+```
+data: {"characteristic":"brightness","characteristicId":"ABC-123","device":"Desk Lamp","entityId":"light.desk_lamp","room":"Office","serviceId":"DEF-456","timestamp":"2026-02-09T14:30:00Z","type":"light","value":75}
+```
+
+| Field | Description |
+|-------|-------------|
+| `device` | Human-readable device name |
+| `room` | Room the device belongs to |
+| `type` | Device type (`light`, `switch`, `thermostat`, `blinds`, etc.) |
+| `characteristic` | Characteristic that changed (`power`, `brightness`, `current-temperature`, etc.) |
+| `value` | New value (type varies: boolean, integer, double) |
+| `characteristicId` | UUID of the characteristic |
+| `serviceId` | UUID of the service |
+| `entityId` | Home Assistant entity ID (only present for HA devices) |
+| `timestamp` | ISO 8601 timestamp |
+
+Multiple clients can connect simultaneously. A `: heartbeat` comment is sent every 15 seconds to keep connections alive.
 
 **Response format:**
 
@@ -388,6 +418,7 @@ Test coverage includes:
 | `DeviceResolverTests` | Target resolution logic |
 | `URLSchemeHandlerTests` | URL scheme handler |
 | `WebhookServerTests` | HTTP server lifecycle and endpoints |
+| `WebhookSSETests` | SSE event streaming, client management, characteristic index |
 | `CloudSyncManagerTests` | iCloud sync |
 | `CloudSyncTranslatorTests` | ID translation for sync (cameras, groups, order, shortcuts) |
 | `DeviceGroupTests` | Device group functionality |

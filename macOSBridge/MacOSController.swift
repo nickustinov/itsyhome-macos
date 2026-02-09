@@ -588,6 +588,7 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
         actionEngine.updateMenuData(data)
 
         WebhookServer.shared.configure(actionEngine: actionEngine)
+        WebhookServer.shared.rebuildCharacteristicIndex(from: data)
         let camerasEnabled = PreferencesManager.shared.camerasEnabled
         let isPro = ProStatusCache.shared.isPro
         let shouldShow = data.hasCameras && camerasEnabled && isPro

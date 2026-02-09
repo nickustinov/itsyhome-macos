@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 54;
+	objectVersion = 77;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -1074,6 +1074,7 @@
 		529AFE969382E6E6F5282856 /* ph.book-bookmark.svg in Resources */ = {isa = PBXBuildFile; fileRef = B0A69DFBABF0CD81B57C3AC6 /* ph.book-bookmark.svg */; };
 		52A9F45CCC802D1360653565 /* ph.behance-logo.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = D52507A8915C01A6A74515BE /* ph.behance-logo.fill.svg */; };
 		52BC6104FEB84A6178C950FB /* ph.arrow-fat-down.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 245BAD77F90D60078E5319D6 /* ph.arrow-fat-down.fill.svg */; };
+		52BC754F64F792511A52277A /* WebhookServer+SSE.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CF4BE087642B38DE7273E5A /* WebhookServer+SSE.swift */; };
 		52BED706E1E2183D364BA285 /* BridgeProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88919649EAF34363518DE9FF /* BridgeProtocols.swift */; };
 		52CAE23B0C3D14A7C3E56B43 /* ph.cell-signal-none.svg in Resources */ = {isa = PBXBuildFile; fileRef = F27AD71D12106F736B139E74 /* ph.cell-signal-none.svg */; };
 		52E47BFEF7523E957540DC84 /* ph.clock-afternoon.svg in Resources */ = {isa = PBXBuildFile; fileRef = 4BF4DCE4AE91AF603BD938BE /* ph.clock-afternoon.svg */; };
@@ -1403,6 +1404,7 @@
 		6AFFBFFB10974506ACDEE022 /* ph.gauge.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 8D44756AF9DCE49D71B3C35F /* ph.gauge.fill.svg */; };
 		6B0F497A951224F232EC072E /* ph.currency-dollar-simple.svg in Resources */ = {isa = PBXBuildFile; fileRef = EA1057D3BBB558FA76CDD0A4 /* ph.currency-dollar-simple.svg */; };
 		6B1133FEF6B69B3A0E0B3D6B /* ph.wifi-none.svg in Resources */ = {isa = PBXBuildFile; fileRef = 5C5A242880399B78BBAE5123 /* ph.wifi-none.svg */; };
+		6B135FFAA1E699C959DDAD0A /* WebhookSSETests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5421F51D6080A8552F715D4 /* WebhookSSETests.swift */; };
 		6B138CB53D2AC67EEAFB9221 /* ph.spade.svg in Resources */ = {isa = PBXBuildFile; fileRef = CB9A995B20A069675A8B41E4 /* ph.spade.svg */; };
 		6B3208B526A13956CD24F7D1 /* ph.arrow-u-right-down.svg in Resources */ = {isa = PBXBuildFile; fileRef = 328AF42A98156E7E7327C769 /* ph.arrow-u-right-down.svg */; };
 		6B354A661E821C92B2B32E0F /* ph.align-top-simple.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = FB2E5F98C08136D40E9D4A78 /* ph.align-top-simple.fill.svg */; };
@@ -2526,6 +2528,7 @@
 		C1872886D488F26EAB29EF5E /* ph.person-simple-throw.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = EE5CD964EF1FAA0B66244ED3 /* ph.person-simple-throw.fill.svg */; };
 		C19A3650BAA8E3532335894C /* night.png in Resources */ = {isa = PBXBuildFile; fileRef = 72A6D02383082352635F077C /* night.png */; };
 		C1ADC018A31CDE941688DA4F /* ph.boot.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 919C012741944C1A8919BBC5 /* ph.boot.fill.svg */; };
+		C1C7520AAA73BF3D2AE806CB /* WebhookServer+SSE.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CF4BE087642B38DE7273E5A /* WebhookServer+SSE.swift */; };
 		C2074A6DEB54A9CF824A9CE2 /* ph.lectern.svg in Resources */ = {isa = PBXBuildFile; fileRef = ACE08D78B53555A0A32F6227 /* ph.lectern.svg */; };
 		C20D2E312C3438B4A2F48E7A /* ph.map-pin-simple.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 87AA27C6B01DF99F05BE4C39 /* ph.map-pin-simple.fill.svg */; };
 		C213453FA3E29455B711A9CC /* ph.gear-six.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 83E57A7DA54E6A17DDD3723C /* ph.gear-six.fill.svg */; };
@@ -4910,6 +4913,7 @@
 		7CA61CC75B464139EE8FBFF0 /* ph.compass-tool.fill.svg */ = {isa = PBXFileReference; path = "ph.compass-tool.fill.svg"; sourceTree = "<group>"; };
 		7CC03FC359FC05C2D8ECF083 /* ph.smiley.svg */ = {isa = PBXFileReference; path = ph.smiley.svg; sourceTree = "<group>"; };
 		7CC7A4B9B8EFAFAF05DEEEB2 /* ph.certificate.svg */ = {isa = PBXFileReference; path = ph.certificate.svg; sourceTree = "<group>"; };
+		7CF4BE087642B38DE7273E5A /* WebhookServer+SSE.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WebhookServer+SSE.swift"; sourceTree = "<group>"; };
 		7D376772C81EC5CE52B0AB9A /* ph.shrimp.svg */ = {isa = PBXFileReference; path = ph.shrimp.svg; sourceTree = "<group>"; };
 		7D5480706E997B6E3C64D1DE /* ph.link.svg */ = {isa = PBXFileReference; path = ph.link.svg; sourceTree = "<group>"; };
 		7D616F73EA9E7ED8E107C809 /* ph.compass.fill.svg */ = {isa = PBXFileReference; path = ph.compass.fill.svg; sourceTree = "<group>"; };
@@ -6210,6 +6214,7 @@
 		E53477F0FD27D953F16ED5EB /* ph.snapchat-logo.fill.svg */ = {isa = PBXFileReference; path = "ph.snapchat-logo.fill.svg"; sourceTree = "<group>"; };
 		E53529DEB10403CBB276F9AD /* ActionEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionEngineTests.swift; sourceTree = "<group>"; };
 		E5379A21D0FAC62A3E6DA757 /* ph.caret-right.svg */ = {isa = PBXFileReference; path = "ph.caret-right.svg"; sourceTree = "<group>"; };
+		E5421F51D6080A8552F715D4 /* WebhookSSETests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebhookSSETests.swift; sourceTree = "<group>"; };
 		E5528F2EF8791A4D21BE6C9D /* ph.arrow-square-down-left.svg */ = {isa = PBXFileReference; path = "ph.arrow-square-down-left.svg"; sourceTree = "<group>"; };
 		E5636DBDFA51BE821F498473 /* ph.phone-incoming.svg */ = {isa = PBXFileReference; path = "ph.phone-incoming.svg"; sourceTree = "<group>"; };
 		E56C2188E794B8F16513A29A /* ph.trolley.fill.svg */ = {isa = PBXFileReference; path = ph.trolley.fill.svg; sourceTree = "<group>"; };
@@ -6696,6 +6701,7 @@
 				C89601E207FEBA59AF221472 /* WebhookResponses.swift */,
 				CE0096925C98FD6B955AB016 /* WebhookServer.swift */,
 				E1852A78644B4B1C92FE7EA2 /* WebhookServer+Endpoints.swift */,
+				7CF4BE087642B38DE7273E5A /* WebhookServer+SSE.swift */,
 			);
 			path = Webhook;
 			sourceTree = "<group>";
@@ -9954,6 +9960,7 @@
 			isa = PBXGroup;
 			children = (
 				5E5CD57B9AFE976E31909CE2 /* WebhookServerTests.swift */,
+				E5421F51D6080A8552F715D4 /* WebhookSSETests.swift */,
 			);
 			path = WebhookTests;
 			sourceTree = "<group>";
@@ -10102,7 +10109,7 @@
 			packageReferences = (
 				4B83A3AD3D02B152E08700AF /* XCRemoteSwiftPackageReference "webrtc-xcframework" */,
 			);
-			preferredProjectObjectVersion = 54;
+			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -13334,6 +13341,7 @@
 				CCFB8C68628CB06195CD5CBB /* ValveMenuItem.swift in Sources */,
 				0C57D09568CED9F45FD2EBE7 /* WebhookResponses.swift in Sources */,
 				5356F633677BBC4303ACA417 /* WebhookServer+Endpoints.swift in Sources */,
+				C1C7520AAA73BF3D2AE806CB /* WebhookServer+SSE.swift in Sources */,
 				6E332413D206C25EBCCC03DF /* WebhookServer.swift in Sources */,
 				13236318334A338D80E0C741 /* WebhooksSection.swift in Sources */,
 			);
@@ -13456,7 +13464,9 @@
 				1539311789FA41246C3F438C /* ValveMenuItem.swift in Sources */,
 				21E1F6CE76E069D99FB6F811 /* ValveMenuItemTests.swift in Sources */,
 				56966DAD1F7822B3F00291AE /* WebhookResponses.swift in Sources */,
+				6B135FFAA1E699C959DDAD0A /* WebhookSSETests.swift in Sources */,
 				74C6D156EF4A0EF696E83996 /* WebhookServer+Endpoints.swift in Sources */,
+				52BC754F64F792511A52277A /* WebhookServer+SSE.swift in Sources */,
 				91DC242EDBAC2B3ADF8BE6B3 /* WebhookServer.swift in Sources */,
 				0554ECE0D0F5808206BF4215 /* WebhookServerTests.swift in Sources */,
 			);

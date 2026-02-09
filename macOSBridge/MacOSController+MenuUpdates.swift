@@ -20,6 +20,9 @@ extension MacOSController {
 
         // Update pinned status items
         updatePinnedStatusItems(for: characteristicId, value: value)
+
+        // Publish to SSE clients
+        WebhookServer.shared.publishCharacteristicChange(characteristicId: characteristicId, value: value)
     }
 
     func updatePinnedStatusItems(for characteristicId: UUID, value: Any) {
