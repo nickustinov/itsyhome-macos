@@ -25,7 +25,6 @@ class CameraViewController: UIViewController {
     var streamSpinner: UIActivityIndicatorView!
     var backButton: UIButton!
     var pinButton: UIButton!
-    var zoomButton: UIButton!
     var streamOverlayStack: UIStackView!
 
     // Audio controls
@@ -92,7 +91,6 @@ class CameraViewController: UIViewController {
     var cameraAspectRatios: [UUID: CGFloat] = [:]
     var streamConfirmedRatios: Set<UUID> = []
     var isPinned = false
-    var isStreamZoomed = false
     var isDoorbellMode = false
     var hasLoadedInitialData = false
 
@@ -456,24 +454,6 @@ class CameraViewController: UIViewController {
             streamOverlayStack.leadingAnchor.constraint(equalTo: streamContainerView.leadingAnchor, constant: 8),
             streamOverlayStack.bottomAnchor.constraint(equalTo: streamContainerView.bottomAnchor, constant: -8)
         ])
-
-        zoomButton = UIButton(type: .custom)
-        zoomButton.setImage(UIImage(systemName: "plus.magnifyingglass")?.withTintColor(.white, renderingMode: .alwaysOriginal), for: .normal)
-        zoomButton.backgroundColor = UIColor(white: 0, alpha: 0.5)
-        zoomButton.layer.cornerRadius = 14
-        zoomButton.contentEdgeInsets = UIEdgeInsets(top: 6, left: 8, bottom: 6, right: 8)
-        zoomButton.translatesAutoresizingMaskIntoConstraints = false
-        zoomButton.addTarget(self, action: #selector(toggleStreamZoom), for: .touchUpInside)
-        streamContainerView.addSubview(zoomButton)
-
-        NSLayoutConstraint.activate([
-            zoomButton.topAnchor.constraint(equalTo: streamContainerView.topAnchor, constant: 8),
-            zoomButton.trailingAnchor.constraint(equalTo: pinButton.leadingAnchor, constant: -6)
-        ])
-
-        let doubleTap = UITapGestureRecognizer(target: self, action: #selector(toggleStreamZoom))
-        doubleTap.numberOfTapsRequired = 2
-        streamContainerView.addGestureRecognizer(doubleTap)
 
         setupAudioControls()
     }

@@ -526,6 +526,12 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
         }
     }
 
+    @objc public func notifyStreamStarted(cameraIdentifier: UUID) {
+        DispatchQueue.main.async { [weak self] in
+            self?.cameraPanelManager.setActiveCameraId(cameraIdentifier)
+        }
+    }
+
     @objc public func dismissCameraPanel() {
         DispatchQueue.main.async { [weak self] in
             self?.cameraPanelManager.dismissCameraPanel()

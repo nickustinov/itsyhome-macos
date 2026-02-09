@@ -24,6 +24,8 @@ extension CameraViewController {
         collectionView.isHidden = true
         stopSnapshotTimer()
 
+        macOSController?.notifyStreamStarted(cameraIdentifier: accessory.uniqueIdentifier)
+
         let ratio = cameraAspectRatios[accessory.uniqueIdentifier] ?? Self.defaultAspectRatio
         let streamHeight = Self.streamWidth / ratio
         updatePanelSize(width: Self.streamWidth, height: streamHeight, aspectRatio: ratio, animated: false)
@@ -65,34 +67,10 @@ extension CameraViewController {
         }
     }
 
-    @objc func toggleStreamZoom() {
-        let isHAStreaming = webrtcClient != nil
-        let isHKStreaming = activeStreamControl != nil
-
-        guard isHAStreaming || isHKStreaming else { return }
-
-        isStreamZoomed.toggle()
-        let iconName = isStreamZoomed ? "minus.magnifyingglass" : "plus.magnifyingglass"
-        zoomButton.setImage(UIImage(systemName: iconName)?.withTintColor(.white, renderingMode: .alwaysOriginal), for: .normal)
-
-        let cameraId: UUID?
-        if isHAStreaming {
-            cameraId = activeHACameraId
-        } else {
-            cameraId = activeStreamAccessory?.uniqueIdentifier
-        }
-
-        let ratio = cameraId.flatMap { cameraAspectRatios[$0] } ?? Self.defaultAspectRatio
-        let width = isStreamZoomed ? Self.streamWidth * 2 : Self.streamWidth
-        let height = width / ratio
-        updatePanelSize(width: width, height: height, aspectRatio: ratio, animated: true)
-    }
-
     @objc func backToGrid() {
         if isDoorbellMode {
             isDoorbellMode = false
             isPinned = false
-            isStreamZoomed = false
             resetDoorbellButtonState()
             cleanupActiveStream()
             collectionView.isHidden = cameraCount == 0
@@ -107,7 +85,6 @@ extension CameraViewController {
             macOSController?.setCameraPanelPinned(false)
         }
 
-        isStreamZoomed = false
         cleanupActiveStream()
         collectionView.isHidden = cameraCount == 0
         collectionView.collectionViewLayout.invalidateLayout()

@@ -29,8 +29,39 @@ final class CameraPanelManager {
     private var cameraWindowObserver: NSObjectProtocol?
     private(set) var isPinned = false
     private var isDoorbellMode = false
+    private var activeCameraId: UUID?
+    private var moveObserver: NSObjectProtocol?
+    private var resizeObserver: NSObjectProtocol?
 
     weak var delegate: CameraPanelManagerDelegate?
+
+    // MARK: - Active camera tracking
+
+    func setActiveCameraId(_ id: UUID) {
+        activeCameraId = id
+    }
+
+    // MARK: - Frame persistence
+
+    private static let savedFramesKey = "cameraWindowFrames"
+
+    private func savedFrames() -> [String: String] {
+        UserDefaults.standard.dictionary(forKey: Self.savedFramesKey) as? [String: String] ?? [:]
+    }
+
+    private func saveCurrentFrame() {
+        guard let window = cameraPanelWindow,
+              let cameraId = activeCameraId else { return }
+        var frames = savedFrames()
+        frames[cameraId.uuidString] = NSStringFromRect(window.frame)
+        UserDefaults.standard.set(frames, forKey: Self.savedFramesKey)
+    }
+
+    private func savedFrame(for cameraId: UUID) -> NSRect? {
+        guard let frameString = savedFrames()[cameraId.uuidString] else { return nil }
+        let rect = NSRectFromString(frameString)
+        return rect.isEmpty ? nil : rect
+    }
 
     // MARK: - Public API
 
@@ -62,6 +93,7 @@ final class CameraPanelManager {
     }
 
     func dismissCameraPanel() {
+        activeCameraId = nil
         isPinned = false
         isDoorbellMode = false
         pendingDoorbellReveal = false
@@ -148,6 +180,7 @@ final class CameraPanelManager {
             window.maxSize = NSSize(width: maxWidth, height: maxWidth / aspectRatio)
             window.aspectRatio = NSSize(width: aspectRatio, height: 1)
         } else {
+            activeCameraId = nil
             isDoorbellMode = false
             if isPinned {
                 isPinned = false
@@ -178,6 +211,8 @@ final class CameraPanelManager {
         guard window.isVisible else { return }
         if isDoorbellMode {
             positionCameraPanelTopRight(window, width: width, height: height)
+        } else if isStreamMode, let cameraId = activeCameraId, let saved = savedFrame(for: cameraId) {
+            window.setFrame(saved, display: true, animate: animated)
         } else {
             positionCameraPanelWithSize(window, width: width, height: height, animate: animated)
         }
@@ -292,6 +327,22 @@ final class CameraPanelManager {
         cameraWindow.contentView?.wantsLayer = true
         cameraWindow.contentView?.layer?.cornerRadius = 10
         cameraWindow.contentView?.layer?.masksToBounds = true
+
+        // Save frame when user moves or resizes the window
+        moveObserver = NotificationCenter.default.addObserver(
+            forName: NSWindow.didMoveNotification,
+            object: cameraWindow,
+            queue: .main
+        ) { [weak self] _ in
+            self?.saveCurrentFrame()
+        }
+        resizeObserver = NotificationCenter.default.addObserver(
+            forName: NSWindow.didEndLiveResizeNotification,
+            object: cameraWindow,
+            queue: .main
+        ) { [weak self] _ in
+            self?.saveCurrentFrame()
+        }
 
         // Window stays hidden — will be shown by showCameraPanel() on user click
         isCameraPanelOpening = false

@@ -147,6 +147,8 @@ extension CameraViewController {
         activeHACameraId = cameraId
         activeHAEntityId = entityId
 
+        macOSController?.notifyStreamStarted(cameraIdentifier: cameraId)
+
         streamContainerView.isHidden = false
         streamCameraView.isHidden = true
         streamSpinner.startAnimating()
