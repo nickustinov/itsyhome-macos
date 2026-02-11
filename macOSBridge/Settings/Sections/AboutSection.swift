@@ -49,7 +49,7 @@ class AboutSection: SettingsCard {
         stackView.addArrangedSubview(versionLabel)
 
         // Description
-        let descLabel = createLabel("A lightweight HomeKit controller for your menu bar", style: .subtitle)
+        let descLabel = createLabel("A lightweight smart home controller for your menu bar", style: .subtitle)
         descLabel.alignment = .center
         stackView.addArrangedSubview(descLabel)
 

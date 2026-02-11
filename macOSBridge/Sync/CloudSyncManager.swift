@@ -140,7 +140,6 @@ final class CloudSyncManager {
         guard translator.hasData else { return }
 
         isApplyingCloudChanges = true
-        defer { isApplyingCloudChanges = false }
 
         var appliedCount = 0
 
@@ -180,10 +179,15 @@ final class CloudSyncManager {
 
         if appliedCount > 0 {
             lastSyncTimestamp = Date()
-            NotificationCenter.default.post(
-                name: PreferencesManager.preferencesChangedNotification,
-                object: nil
-            )
+            DispatchQueue.main.async { [self] in
+                NotificationCenter.default.post(
+                    name: PreferencesManager.preferencesChangedNotification,
+                    object: nil
+                )
+                isApplyingCloudChanges = false
+            }
+        } else {
+            isApplyingCloudChanges = false
         }
     }
 

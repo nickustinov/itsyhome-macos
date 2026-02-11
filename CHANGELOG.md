@@ -16,6 +16,7 @@
 - **Fix camera snapshot timer draining battery** — the 30-second snapshot polling timer now stops when the camera panel is closed, preventing continuous wake-ups on battery-powered cameras
 - **Fix group brightness turning on off lights** — dragging the brightness slider in a light group no longer turns on lights that were off
 - **Fix phantom window in Mission Control** — the app no longer appears as an empty window in Mission Control when "Group windows by application" is enabled
+- **Fix crash when iCloud sync updates camera view** — iCloud sync notifications could arrive on a background thread, causing a crash when the camera collection view reloaded off the main queue; notifications are now dispatched to the main thread
 
 ## 1.3.1
 
