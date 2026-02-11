@@ -14,6 +14,7 @@ final class EntityMapper {
 
     // MARK: - Properties
 
+    private let lock = NSLock()
     private var entityStates: [String: HAEntityState] = [:]
     private var entityRegistry: [String: HAEntityRegistryEntry] = [:]
     private var devices: [String: HADevice] = [:]
@@ -31,6 +32,7 @@ final class EntityMapper {
                   devices: [HADevice],
                   areas: [HAArea],
                   sceneConfigs: [String: HASceneConfig] = [:]) {
+        lock.lock()
         self.entityStates = Dictionary(uniqueKeysWithValues: states.map { ($0.entityId, $0) })
         self.entityRegistry = Dictionary(uniqueKeysWithValues: entities.map { ($0.entityId, $0) })
         self.devices = Dictionary(uniqueKeysWithValues: devices.map { ($0.id, $0) })
@@ -39,12 +41,15 @@ final class EntityMapper {
 
         // Build reverse lookup caches
         buildCharacteristicCache()
+        lock.unlock()
 
         logger.info("Loaded \(states.count) states, \(entities.count) entities, \(devices.count) devices, \(areas.count) areas, \(sceneConfigs.count) scene configs")
     }
 
     func updateState(_ state: HAEntityState) {
+        lock.lock()
         entityStates[state.entityId] = state
+        lock.unlock()
     }
 
     /// Build reverse lookup caches for fast UUID → entityId lookups
@@ -78,10 +83,12 @@ final class EntityMapper {
     // MARK: - Menu data generation
 
     func generateMenuData() -> MenuData {
+        lock.lock()
         let roomData = generateRooms()
         let accessoryData = generateAccessories()
         let sceneData = generateScenes()
         let cameraData = generateCameras()
+        lock.unlock()
 
         logger.info("Generated menu data: \(roomData.count) rooms, \(accessoryData.count) accessories, \(sceneData.count) scenes, \(cameraData.count) cameras")
         for room in roomData {
@@ -507,7 +514,12 @@ final class EntityMapper {
 
     /// Convert HA entity state to characteristic values
     func getCharacteristicValues(for entityId: String) -> [UUID: Any] {
-        guard let state = entityStates[entityId] else { return [:] }
+        lock.lock()
+        guard let state = entityStates[entityId] else {
+            lock.unlock()
+            return [:]
+        }
+        lock.unlock()
 
         var values: [UUID: Any] = [:]
 
@@ -713,19 +725,34 @@ final class EntityMapper {
 
     /// Get available HVAC modes for a climate entity
     func getAvailableHVACModes(for entityId: String) -> [String] {
-        guard let state = entityStates[entityId] else { return [] }
+        lock.lock()
+        guard let state = entityStates[entityId] else {
+            lock.unlock()
+            return []
+        }
+        lock.unlock()
         return state.hvacModes
     }
 
     /// Check if alarm panel requires a code
     func alarmRequiresCode(for entityId: String) -> Bool {
-        guard let state = entityStates[entityId] else { return true }
+        lock.lock()
+        guard let state = entityStates[entityId] else {
+            lock.unlock()
+            return true
+        }
+        lock.unlock()
         return state.codeArmRequired
     }
 
     /// Get supported features for a cover entity
     func getCoverSupportedFeatures(for entityId: String) -> Int {
-        guard let state = entityStates[entityId] else { return 0 }
+        lock.lock()
+        guard let state = entityStates[entityId] else {
+            lock.unlock()
+            return 0
+        }
+        lock.unlock()
         return state.supportedFeatures
     }
 
@@ -753,11 +780,17 @@ final class EntityMapper {
 
     /// Get entity ID from service UUID - O(1) via cache
     func getEntityId(for serviceUUID: UUID) -> String? {
-        return serviceToEntity[serviceUUID]
+        lock.lock()
+        let result = serviceToEntity[serviceUUID]
+        lock.unlock()
+        return result
     }
 
     /// Get entity ID from characteristic UUID - O(1) via cache
     func getEntityIdFromCharacteristic(_ characteristicUUID: UUID) -> String? {
-        return characteristicToEntity[characteristicUUID]
+        lock.lock()
+        let result = characteristicToEntity[characteristicUUID]
+        lock.unlock()
+        return result
     }
 }

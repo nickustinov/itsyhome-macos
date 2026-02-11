@@ -27,6 +27,7 @@ enum HomeAssistantClientError: LocalizedError {
     case authenticationFailed(String)
     case connectionFailed(String)
     case invalidResponse
+    case invalidURL(String)
     case serviceCallFailed(String)
     case timeout
 
@@ -40,6 +41,8 @@ enum HomeAssistantClientError: LocalizedError {
             return "Connection failed: \(message)"
         case .invalidResponse:
             return "Invalid response from Home Assistant"
+        case .invalidURL(let message):
+            return "Invalid server URL: \(message)"
         case .serviceCallFailed(let message):
             return "Service call failed: \(message)"
         case .timeout:
@@ -82,13 +85,27 @@ final class HomeAssistantClient: NSObject {
 
     // MARK: - Initialization
 
-    init(serverURL: URL, accessToken: String) {
-        // Ensure we have the websocket URL
+    init(serverURL: URL, accessToken: String) throws {
+        // Convert to WebSocket URL
         var wsURL = serverURL
-        if wsURL.scheme == "http" {
-            wsURL = URL(string: wsURL.absoluteString.replacingOccurrences(of: "http://", with: "ws://"))!
-        } else if wsURL.scheme == "https" {
-            wsURL = URL(string: wsURL.absoluteString.replacingOccurrences(of: "https://", with: "wss://"))!
+        switch wsURL.scheme {
+        case "http":
+            wsURL = URL(string: wsURL.absoluteString.replacingOccurrences(of: "http://", with: "ws://")) ?? serverURL
+        case "https":
+            wsURL = URL(string: wsURL.absoluteString.replacingOccurrences(of: "https://", with: "wss://")) ?? serverURL
+        case "ws", "wss":
+            break
+        default:
+            throw HomeAssistantClientError.invalidURL("URL scheme must be http, https, ws, or wss (got \(wsURL.scheme ?? "none"))")
+        }
+
+        // Validate scheme after conversion
+        guard wsURL.scheme == "ws" || wsURL.scheme == "wss" else {
+            throw HomeAssistantClientError.invalidURL("Failed to convert URL to WebSocket scheme")
+        }
+
+        guard wsURL.host != nil && !wsURL.host!.isEmpty else {
+            throw HomeAssistantClientError.invalidURL("URL has no host")
         }
 
         // Append websocket path if not present

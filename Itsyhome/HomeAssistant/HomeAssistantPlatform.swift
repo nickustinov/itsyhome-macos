@@ -68,7 +68,7 @@ final class HomeAssistantPlatform: SmartHomePlatform {
 
         logger.info("Connecting to Home Assistant...")
 
-        client = HomeAssistantClient(serverURL: serverURL, accessToken: accessToken)
+        client = try HomeAssistantClient(serverURL: serverURL, accessToken: accessToken)
         client?.delegate = self
 
         try await client?.connect()

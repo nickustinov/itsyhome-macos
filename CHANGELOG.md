@@ -11,6 +11,8 @@
 - **SSE event stream** — new `/events` endpoint on the webhook server streams real-time device state changes via Server-Sent Events, usable with `curl -N`, browser `EventSource`, or any SSE client
 
 ### Bug fixes
+- **Fix crash when connecting to Nabu Casa cloud URLs** — the app no longer crashes when the Home Assistant server URL triggers an invalid WebSocket connection; URL scheme is now validated before connecting, and `wss://` URLs are accepted directly
+- **Fix crash from concurrent state updates** — a data race in the entity state mapper that could cause crashes during rapid state changes is now fixed with proper thread synchronization
 - **Fix camera snapshot timer draining battery** — the 30-second snapshot polling timer now stops when the camera panel is closed, preventing continuous wake-ups on battery-powered cameras
 - **Fix group brightness turning on off lights** — dragging the brightness slider in a light group no longer turns on lights that were off
 - **Fix phantom window in Mission Control** — the app no longer appears as an empty window in Mission Control when "Group windows by application" is enabled

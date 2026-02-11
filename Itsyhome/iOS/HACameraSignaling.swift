@@ -58,12 +58,19 @@ final class HACameraSignaling: NSObject {
         // Build WebSocket URL
         var wsURL: URL
         let urlString = serverURL.absoluteString
-        if urlString.hasPrefix("http://") {
-            wsURL = URL(string: urlString.replacingOccurrences(of: "http://", with: "ws://"))!
-        } else if urlString.hasPrefix("https://") {
-            wsURL = URL(string: urlString.replacingOccurrences(of: "https://", with: "wss://"))!
-        } else {
+        switch serverURL.scheme {
+        case "http":
+            wsURL = URL(string: urlString.replacingOccurrences(of: "http://", with: "ws://")) ?? serverURL
+        case "https":
+            wsURL = URL(string: urlString.replacingOccurrences(of: "https://", with: "wss://")) ?? serverURL
+        case "ws", "wss":
             wsURL = serverURL
+        default:
+            throw HomeAssistantClientError.invalidURL("URL scheme must be http, https, ws, or wss")
+        }
+
+        guard wsURL.scheme == "ws" || wsURL.scheme == "wss" else {
+            throw HomeAssistantClientError.invalidURL("Failed to convert URL to WebSocket scheme")
         }
 
         if !wsURL.path.contains("api/websocket") {

@@ -144,6 +144,32 @@ final class HomeAssistantClientTests: XCTestCase {
         XCTAssertEqual(error.errorDescription, "Invalid response from Home Assistant")
     }
 
+    func testInvalidURLError() {
+        let error = HomeAssistantClientError.invalidURL("URL scheme must be http, https, ws, or wss (got ftp)")
+        XCTAssertEqual(error.errorDescription, "Invalid server URL: URL scheme must be http, https, ws, or wss (got ftp)")
+    }
+
+    func testInitWithHTTPURL() throws {
+        let client = try HomeAssistantClient(serverURL: URL(string: "http://homeassistant.local:8123")!, accessToken: "test")
+        XCTAssertNotNil(client)
+    }
+
+    func testInitWithHTTPSURL() throws {
+        let client = try HomeAssistantClient(serverURL: URL(string: "https://example.ui.nabu.casa")!, accessToken: "test")
+        XCTAssertNotNil(client)
+    }
+
+    func testInitWithWSSURL() throws {
+        let client = try HomeAssistantClient(serverURL: URL(string: "wss://example.ui.nabu.casa/api/websocket")!, accessToken: "test")
+        XCTAssertNotNil(client)
+    }
+
+    func testInitWithInvalidSchemeThrows() {
+        XCTAssertThrowsError(try HomeAssistantClient(serverURL: URL(string: "ftp://homeassistant.local")!, accessToken: "test")) { error in
+            XCTAssertTrue(error.localizedDescription.contains("URL scheme must be"))
+        }
+    }
+
     func testServiceCallFailedError() {
         let error = HomeAssistantClientError.serviceCallFailed("Entity not found")
         XCTAssertEqual(error.errorDescription, "Service call failed: Entity not found")

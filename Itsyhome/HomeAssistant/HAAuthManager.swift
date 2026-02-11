@@ -88,7 +88,7 @@ final class HAAuthManager {
         }
 
         // Try to connect and get config
-        let client = HomeAssistantClient(serverURL: url, accessToken: token)
+        let client = try HomeAssistantClient(serverURL: url, accessToken: token)
 
         do {
             try await client.connect()
