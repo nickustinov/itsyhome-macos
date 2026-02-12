@@ -29,7 +29,7 @@ class AccessoriesSettingsView: NSView {
     // MARK: - Persistent table views
 
     var favouritesTableView: NSTableView!
-    var globalGroupsTableView: NSTableView!
+    var globalGroupsTableView: GroupsTableView!
     var scenesTableView: NSTableView!
     var roomsTableView: RoomsTableView!
 
@@ -120,7 +120,8 @@ class AccessoriesSettingsView: NSView {
 
         // Global groups section
         globalGroupsSection = SettingsSectionContainer()
-        globalGroupsTableView = createTableView(dragType: .globalGroupItem)
+        globalGroupsTableView = GroupsTableView()
+        configureTableView(globalGroupsTableView, dragType: .globalGroupItem)
         globalGroupsSection.setContent(globalGroupsTableView)
         addSection(globalGroupsSection)
 
@@ -142,6 +143,7 @@ class AccessoriesSettingsView: NSView {
         roomsSection = SimpleHeightContainer()
         roomsTableView = RoomsTableView()
         roomsTableView.roomTableItems = { [weak self] in self?.roomTableItems ?? [] }
+        roomsTableView.groupCountForRoom = { [weak self] roomId in self?.groupsByRoom[roomId]?.count ?? 0 }
         configureTableView(roomsTableView, dragType: .roomItem, intercellSpacing: 4)
         roomsTableView.registerForDraggedTypes([.roomItem, .roomGroupItem])
         roomsTableView.translatesAutoresizingMaskIntoConstraints = false

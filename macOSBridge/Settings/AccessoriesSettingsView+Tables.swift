@@ -193,11 +193,22 @@ extension AccessoriesSettingsView {
     }
 }
 
+// MARK: - Groups table view (prevents dragging when only one group)
+
+class GroupsTableView: NSTableView {
+
+    override func mouseDown(with event: NSEvent) {
+        guard numberOfRows > 1 else { return }
+        super.mouseDown(with: event)
+    }
+}
+
 // MARK: - Rooms table view (prevents dragging accessory rows)
 
 class RoomsTableView: NSTableView {
 
     var roomTableItems: (() -> [RoomTableItem])?
+    var groupCountForRoom: ((String) -> Int)?
 
     override func draggingSession(_ session: NSDraggingSession, sourceOperationMaskFor context: NSDraggingContext) -> NSDragOperation {
         return context == .withinApplication ? .move : []
@@ -207,12 +218,17 @@ class RoomsTableView: NSTableView {
         let point = convert(event.locationInWindow, from: nil)
         let clickedRow = row(at: point)
 
-        // Only allow drag initiation from header rows and group rows
         if clickedRow >= 0, let items = roomTableItems?(), clickedRow < items.count {
             let item = items[clickedRow]
-            if !item.isHeader && !item.isGroup {
-                // For accessory rows, handle click but don't allow drag
-                // Just select/deselect without initiating drag
+            switch item {
+            case .header:
+                break // headers are always draggable
+            case .group(_, let roomId):
+                // Only allow drag if the room has more than one group
+                if let roomId = roomId, (groupCountForRoom?(roomId) ?? 0) <= 1 {
+                    return
+                }
+            default:
                 return
             }
         }

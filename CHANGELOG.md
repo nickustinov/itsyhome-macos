@@ -17,6 +17,7 @@
 - **Fix group brightness turning on off lights** — dragging the brightness slider in a light group no longer turns on lights that were off
 - **Fix phantom window in Mission Control** — the app no longer appears as an empty window in Mission Control when "Group windows by application" is enabled
 - **Fix crash when iCloud sync updates camera view** — iCloud sync notifications could arrive on a background thread, causing a crash when the camera collection view reloaded off the main queue; notifications are now dispatched to the main thread
+- **Fix group row disappearing on drag in settings** — dragging a group row in the Home settings tab when it was the only group in its section caused it to vanish; drag initiation is now blocked when there is only one group
 
 ## 1.3.1
 
