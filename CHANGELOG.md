@@ -2,9 +2,27 @@
 
 ## 2.0.0
 
-### New features
+### Build 209
+- **Fix pinned room not updating after hiding accessories** — toggling accessory visibility via the eye icon now immediately updates pinned room menus without needing to unpin and re-pin
+- **Fix HA not reconnecting after Mac sleep** — the app now listens for system wake events and automatically reconnects to Home Assistant instead of staying stuck on "Loading Home Assistant..."
+- **Fix CLI/webhook toggle failing until Refresh clicked** — after an HA reconnect, the action engine bridge reference is now updated immediately so CLI and webhook commands work without needing to click Refresh first
+
+### Build 208
 - **Hide "Other" section** — the "Other" section (devices with no room) now has an eyeball toggle in Settings → Home to hide it from the menu, matching rooms and scenes
+- **Fix HA thermostat showing wrong temperature** — thermostats on Home Assistant instances configured for Fahrenheit showed doubled-converted values (e.g. 156° instead of 70°); the app now fetches the HA unit system at connect time and normalizes all temperatures to Celsius internally
+
+### Build 207
 - **Group display options** — groups can now be shown as expandable submenus with individual device controls, not just a single toggle row; two new settings per group – "Group switch" and "Submenu" – control whether the toggle row and/or submenu are shown
+
+### Build 206
+- **Fix group row disappearing on drag in settings** — dragging a group row in the Home settings tab when it was the only group in its section caused it to vanish; drag initiation is now blocked when there is only one group
+
+### Build 205
+- **Fix crash when iCloud sync updates camera view** — iCloud sync notifications could arrive on a background thread, causing a crash when the camera collection view reloaded off the main queue; notifications are now dispatched to the main thread
+
+### Earlier
+
+#### New features
 - **Home Assistant support** — connect to a Home Assistant instance as an alternative to HomeKit, with support for climate, lights, fans, covers, locks, humidifiers, valves, garage doors, security systems, cameras (snapshots, WebRTC, and HLS streaming), and scenes
 - **Dual RGB + color temperature support** — lights exposing both hue/saturation and color temperature (e.g. Govee Neon Rope 2 via Matter) now show both picker buttons and sliders instead of only one
 - **Continuous color temperature slider** — the color temperature picker is now a horizontal warm-to-cool gradient bar instead of 5 discrete circle presets
@@ -12,18 +30,12 @@
 - **Remember camera window position and size** — the camera panel remembers its position and size per camera, so reopening the same camera restores where you left it
 - **SSE event stream** — new `/events` endpoint on the webhook server streams real-time device state changes via Server-Sent Events, usable with `curl -N`, browser `EventSource`, or any SSE client
 
-### Bug fixes
-- **Fix pinned room not updating after hiding accessories** — toggling accessory visibility via the eye icon now immediately updates pinned room menus without needing to unpin and re-pin
-- **Fix HA not reconnecting after Mac sleep** — the app now listens for system wake events and automatically reconnects to Home Assistant instead of staying stuck on "Loading Home Assistant..."
-- **Fix CLI/webhook toggle failing until Refresh clicked** — after an HA reconnect, the action engine bridge reference is now updated immediately so CLI and webhook commands work without needing to click Refresh first
+#### Bug fixes
 - **Fix crash when connecting to Nabu Casa cloud URLs** — the app no longer crashes when the Home Assistant server URL triggers an invalid WebSocket connection; URL scheme is now validated before connecting, and `wss://` URLs are accepted directly
 - **Fix crash from concurrent state updates** — a data race in the entity state mapper that could cause crashes during rapid state changes is now fixed with proper thread synchronization
 - **Fix camera snapshot timer draining battery** — the 30-second snapshot polling timer now stops when the camera panel is closed, preventing continuous wake-ups on battery-powered cameras
 - **Fix group brightness turning on off lights** — dragging the brightness slider in a light group no longer turns on lights that were off
 - **Fix phantom window in Mission Control** — the app no longer appears as an empty window in Mission Control when "Group windows by application" is enabled
-- **Fix crash when iCloud sync updates camera view** — iCloud sync notifications could arrive on a background thread, causing a crash when the camera collection view reloaded off the main queue; notifications are now dispatched to the main thread
-- **Fix group row disappearing on drag in settings** — dragging a group row in the Home settings tab when it was the only group in its section caused it to vanish; drag initiation is now blocked when there is only one group
-- **Fix HA thermostat showing wrong temperature** — thermostats on Home Assistant instances configured for Fahrenheit showed doubled-converted values (e.g. 156° instead of 70°); the app now fetches the HA unit system at connect time and normalizes all temperatures to Celsius internally
 
 ## 1.3.1
 
