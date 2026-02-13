@@ -44,7 +44,7 @@ extension PinnedStatusItem {
                     let i2 = savedOrder.firstIndex(of: g2.id) ?? Int.max
                     return i1 < i2
                 }
-                for group in orderedGroups {
+                for group in orderedGroups where group.showGroupSwitch {
                     let item = GroupMenuItem(group: group, menuData: menuData, bridge: builder.bridge)
                     menu.addItem(item)
                     menuItems.append(item)
@@ -72,13 +72,14 @@ extension PinnedStatusItem {
             }
 
         case .group(let group, let services):
-            // Add group menu item with toggle at the top
-            let groupItem = GroupMenuItem(group: group, menuData: menuData, bridge: builder.bridge)
-            menu.addItem(groupItem)
-            menuItems.append(groupItem)
+            if group.showGroupSwitch {
+                // Add group menu item with toggle at the top
+                let groupItem = GroupMenuItem(group: group, menuData: menuData, bridge: builder.bridge)
+                menu.addItem(groupItem)
 
-            // Add separator
-            menu.addItem(NSMenuItem.separator())
+                // Add separator
+                menu.addItem(NSMenuItem.separator())
+            }
 
             // Add individual accessories from the group
             builder.addServicesGroupedByType(to: menu, accessories: servicesAsAccessories(services))

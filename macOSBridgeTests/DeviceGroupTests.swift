@@ -172,4 +172,76 @@ final class DeviceGroupTests: XCTestCase {
 
         XCTAssertNil(decoded.roomId)
     }
+
+    // MARK: - Display options tests
+
+    func testDisplayOptionsDefaults() {
+        let group = DeviceGroup(name: "Test")
+
+        XCTAssertTrue(group.showGroupSwitch)
+        XCTAssertFalse(group.showAsSubmenu)
+    }
+
+    func testDisplayOptionsCustomValues() {
+        let group = DeviceGroup(
+            name: "Submenu Group",
+            showGroupSwitch: false,
+            showAsSubmenu: true
+        )
+
+        XCTAssertFalse(group.showGroupSwitch)
+        XCTAssertTrue(group.showAsSubmenu)
+    }
+
+    func testDisplayOptionsBothEnabled() {
+        let group = DeviceGroup(
+            name: "Both",
+            showGroupSwitch: true,
+            showAsSubmenu: true
+        )
+
+        XCTAssertTrue(group.showGroupSwitch)
+        XCTAssertTrue(group.showAsSubmenu)
+    }
+
+    func testEncodeDecodeDisplayOptions() throws {
+        let original = DeviceGroup(
+            id: "test-id",
+            name: "Test",
+            icon: "fan",
+            deviceIds: ["a"],
+            showGroupSwitch: false,
+            showAsSubmenu: true
+        )
+
+        let data = try JSONEncoder().encode(original)
+        let decoded = try JSONDecoder().decode(DeviceGroup.self, from: data)
+
+        XCTAssertEqual(decoded.showGroupSwitch, false)
+        XCTAssertEqual(decoded.showAsSubmenu, true)
+    }
+
+    func testDecodeWithoutDisplayOptionsUsesDefaults() throws {
+        // Simulate JSON from an older version without the new fields
+        let json = """
+        {"id":"old-id","name":"Old Group","icon":"folder","deviceIds":["x","y"]}
+        """
+        let data = json.data(using: .utf8)!
+        let decoded = try JSONDecoder().decode(DeviceGroup.self, from: data)
+
+        XCTAssertEqual(decoded.id, "old-id")
+        XCTAssertEqual(decoded.name, "Old Group")
+        XCTAssertTrue(decoded.showGroupSwitch)
+        XCTAssertFalse(decoded.showAsSubmenu)
+    }
+
+    func testDisplayOptionsCanBeChanged() {
+        var group = DeviceGroup(name: "Test")
+
+        group.showGroupSwitch = false
+        group.showAsSubmenu = true
+
+        XCTAssertFalse(group.showGroupSwitch)
+        XCTAssertTrue(group.showAsSubmenu)
+    }
 }

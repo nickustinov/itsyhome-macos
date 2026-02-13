@@ -13,13 +13,32 @@ struct DeviceGroup: Codable, Identifiable {
     var icon: String
     var deviceIds: [String]  // Service unique identifiers
     var roomId: String?  // Room this group belongs to, nil = global group
+    var showGroupSwitch: Bool  // Show the group toggle row
+    var showAsSubmenu: Bool  // Render as expandable submenu with individual devices
 
-    init(id: String = UUID().uuidString, name: String, icon: String = "squares-four", deviceIds: [String] = [], roomId: String? = nil) {
+    enum CodingKeys: String, CodingKey {
+        case id, name, icon, deviceIds, roomId, showGroupSwitch, showAsSubmenu
+    }
+
+    init(id: String = UUID().uuidString, name: String, icon: String = "squares-four", deviceIds: [String] = [], roomId: String? = nil, showGroupSwitch: Bool = true, showAsSubmenu: Bool = false) {
         self.id = id
         self.name = name
         self.icon = icon
         self.deviceIds = deviceIds
         self.roomId = roomId
+        self.showGroupSwitch = showGroupSwitch
+        self.showAsSubmenu = showAsSubmenu
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(String.self, forKey: .id)
+        name = try container.decode(String.self, forKey: .name)
+        icon = try container.decode(String.self, forKey: .icon)
+        deviceIds = try container.decode([String].self, forKey: .deviceIds)
+        roomId = try container.decodeIfPresent(String.self, forKey: .roomId)
+        showGroupSwitch = try container.decodeIfPresent(Bool.self, forKey: .showGroupSwitch) ?? true
+        showAsSubmenu = try container.decodeIfPresent(Bool.self, forKey: .showAsSubmenu) ?? false
     }
 
     /// Returns true if all devices in the group are of the same type

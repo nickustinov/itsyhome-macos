@@ -109,7 +109,7 @@ struct CloudSyncTranslator {
         guard let groups = try? JSONDecoder().decode([DeviceGroup].self, from: data) else { return nil }
         let translated = groups.map { group -> [String: Any] in
             let stableIds = group.deviceIds.compactMap { serviceIdToStable[$0] }
-            var dict: [String: Any] = ["id": group.id, "name": group.name, "icon": group.icon, "deviceIds": stableIds]
+            var dict: [String: Any] = ["id": group.id, "name": group.name, "icon": group.icon, "deviceIds": stableIds, "showGroupSwitch": group.showGroupSwitch, "showAsSubmenu": group.showAsSubmenu]
             // Translate roomId to roomName for cross-device sync
             if let roomId = group.roomId, let roomName = roomIdToName[roomId] {
                 dict["roomName"] = roomName
@@ -132,7 +132,9 @@ struct CloudSyncTranslator {
             if let roomName = dict["roomName"] as? String {
                 roomId = roomNameToId[roomName]
             }
-            return DeviceGroup(id: id, name: name, icon: icon, deviceIds: localIds, roomId: roomId)
+            let showGroupSwitch = dict["showGroupSwitch"] as? Bool ?? true
+            let showAsSubmenu = dict["showAsSubmenu"] as? Bool ?? false
+            return DeviceGroup(id: id, name: name, icon: icon, deviceIds: localIds, roomId: roomId, showGroupSwitch: showGroupSwitch, showAsSubmenu: showAsSubmenu)
         }
         return try? JSONEncoder().encode(groups)
     }

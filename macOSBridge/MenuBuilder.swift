@@ -106,11 +106,42 @@ class MenuBuilder {
         }
 
         for group in orderedGroups {
-            let item = GroupMenuItem(group: group, menuData: data, bridge: bridge)
-            menu.addItem(item)
+            addGroupItem(to: menu, group: group, menuData: data)
         }
 
         return true
+    }
+
+    private func addGroupItem(to menu: NSMenu, group: DeviceGroup, menuData: MenuData) {
+        if group.showAsSubmenu {
+            let icon = IconResolver.icon(for: group)
+            let submenuItem = createSubmenuItem(title: group.name, icon: icon)
+            let submenu = StayOpenMenu()
+
+            if group.showGroupSwitch {
+                let groupToggle = GroupMenuItem(group: group, menuData: menuData, bridge: bridge)
+                submenu.addItem(groupToggle)
+                submenu.addItem(NSMenuItem.separator())
+            }
+
+            let services = group.resolveServices(in: menuData)
+            let accessories = services.map { service in
+                AccessoryData(
+                    uniqueIdentifier: service.uniqueIdentifier,
+                    name: service.accessoryName,
+                    roomIdentifier: service.roomIdentifier,
+                    services: [service],
+                    isReachable: service.isReachable
+                )
+            }
+            addServicesGroupedByType(to: submenu, accessories: accessories)
+
+            submenuItem.submenu = submenu
+            menu.addItem(submenuItem)
+        } else {
+            let item = GroupMenuItem(group: group, menuData: menuData, bridge: bridge)
+            menu.addItem(item)
+        }
     }
 
     // MARK: - Scenes
@@ -198,8 +229,7 @@ class MenuBuilder {
             // Add groups at the top of the room submenu
             if let menuData = currentMenuData {
                 for group in roomGroups {
-                    let groupItem = GroupMenuItem(group: group, menuData: menuData, bridge: bridge)
-                    submenu.addItem(groupItem)
+                    addGroupItem(to: submenu, group: group, menuData: menuData)
                 }
                 // Add separator after groups if there are both groups and accessories
                 if !roomGroups.isEmpty && !roomAccessories.isEmpty {

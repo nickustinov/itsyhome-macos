@@ -17,6 +17,10 @@ class GroupEditorPanel: NSViewController {
     private var deviceCheckboxes: [(checkbox: NSButton, serviceId: String)] = []
     private var selectedDeviceIds: Set<String> = []
     private var selectedRoomId: String?
+    private var showGroupSwitch: Bool = true
+    private var showAsSubmenu: Bool = false
+    private var groupSwitchCheckbox: NSButton!
+    private var submenuCheckbox: NSButton!
 
     var onSave: ((DeviceGroup) -> Void)?
     var onDelete: ((DeviceGroup) -> Void)?
@@ -27,6 +31,8 @@ class GroupEditorPanel: NSViewController {
         if let group = group {
             self.selectedDeviceIds = Set(group.deviceIds)
             self.selectedRoomId = group.roomId
+            self.showGroupSwitch = group.showGroupSwitch
+            self.showAsSubmenu = group.showAsSubmenu
         }
         super.init(nibName: nil, bundle: nil)
     }
@@ -81,6 +87,21 @@ class GroupEditorPanel: NSViewController {
            let room = menuData.rooms.first(where: { $0.uniqueIdentifier == roomId }) {
             roomPopup.selectItem(withTitle: room.name)
         }
+
+        // Display options (inline row)
+        groupSwitchCheckbox = NSButton(checkboxWithTitle: "Group switch", target: self, action: #selector(displayOptionToggled(_:)))
+        groupSwitchCheckbox.state = showGroupSwitch ? .on : .off
+        groupSwitchCheckbox.font = .systemFont(ofSize: 11)
+        groupSwitchCheckbox.translatesAutoresizingMaskIntoConstraints = false
+        container.addSubview(groupSwitchCheckbox)
+
+        submenuCheckbox = NSButton(checkboxWithTitle: "Submenu", target: self, action: #selector(displayOptionToggled(_:)))
+        submenuCheckbox.state = showAsSubmenu ? .on : .off
+        submenuCheckbox.font = .systemFont(ofSize: 11)
+        submenuCheckbox.translatesAutoresizingMaskIntoConstraints = false
+        container.addSubview(submenuCheckbox)
+
+        updateDisplayOptionStates()
 
         // Devices label
         let devicesLabel = NSTextField(labelWithString: "Select devices")
@@ -175,7 +196,13 @@ class GroupEditorPanel: NSViewController {
             roomPopup.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 20),
             roomPopup.widthAnchor.constraint(equalToConstant: 200),
 
-            devicesLabel.topAnchor.constraint(equalTo: roomPopup.bottomAnchor, constant: 16),
+            groupSwitchCheckbox.topAnchor.constraint(equalTo: roomPopup.bottomAnchor, constant: 12),
+            groupSwitchCheckbox.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 20),
+
+            submenuCheckbox.centerYAnchor.constraint(equalTo: groupSwitchCheckbox.centerYAnchor),
+            submenuCheckbox.leadingAnchor.constraint(equalTo: groupSwitchCheckbox.trailingAnchor, constant: 16),
+
+            devicesLabel.topAnchor.constraint(equalTo: groupSwitchCheckbox.bottomAnchor, constant: 12),
             devicesLabel.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 20),
 
             scrollView.topAnchor.constraint(equalTo: devicesLabel.bottomAnchor, constant: 8),
@@ -237,6 +264,18 @@ class GroupEditorPanel: NSViewController {
         }
     }
 
+    @objc private func displayOptionToggled(_ sender: NSButton) {
+        showGroupSwitch = groupSwitchCheckbox.state == .on
+        showAsSubmenu = submenuCheckbox.state == .on
+        updateDisplayOptionStates()
+    }
+
+    private func updateDisplayOptionStates() {
+        // When only one is checked, disable it so user can't uncheck both
+        groupSwitchCheckbox.isEnabled = showAsSubmenu
+        submenuCheckbox.isEnabled = showGroupSwitch
+    }
+
     @objc private func deviceToggled(_ sender: NSButton) {
         guard let item = deviceCheckboxes.first(where: { $0.checkbox === sender }) else { return }
         if sender.state == .on {
@@ -293,9 +332,9 @@ class GroupEditorPanel: NSViewController {
 
         let group: DeviceGroup
         if let existing = existingGroup {
-            group = DeviceGroup(id: existing.id, name: name, icon: icon, deviceIds: deviceIds, roomId: selectedRoomId)
+            group = DeviceGroup(id: existing.id, name: name, icon: icon, deviceIds: deviceIds, roomId: selectedRoomId, showGroupSwitch: showGroupSwitch, showAsSubmenu: showAsSubmenu)
         } else {
-            group = DeviceGroup(name: name, icon: icon, deviceIds: deviceIds, roomId: selectedRoomId)
+            group = DeviceGroup(name: name, icon: icon, deviceIds: deviceIds, roomId: selectedRoomId, showGroupSwitch: showGroupSwitch, showAsSubmenu: showAsSubmenu)
         }
 
         onSave?(group)

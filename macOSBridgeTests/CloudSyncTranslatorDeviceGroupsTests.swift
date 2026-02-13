@@ -202,4 +202,66 @@ final class CloudSyncTranslatorDeviceGroupsTests: CloudSyncTranslatorTestCase {
         let decoded = try JSONDecoder().decode([DeviceGroup].self, from: roundTripped!)
         XCTAssertTrue(decoded.isEmpty)
     }
+
+    // MARK: - Display options sync tests
+
+    func testDisplayOptionsRoundTrip() throws {
+        let roomId = UUID()
+        let id1 = UUID()
+        let s1 = makeService(id: id1, name: "Light", accessoryName: "Lamp", roomId: roomId)
+        let acc = makeAccessory(name: "Lamp", roomId: roomId, services: [s1])
+        let data = makeMenuData(
+            rooms: [RoomData(uniqueIdentifier: roomId, name: "Bedroom")],
+            accessories: [acc]
+        )
+        translator.updateMenuData(data)
+
+        let original = [DeviceGroup(id: "g1", name: "Group", icon: "folder", deviceIds: [id1.uuidString], showGroupSwitch: false, showAsSubmenu: true)]
+        let localData = try JSONEncoder().encode(original)
+
+        let cloudData = translator.translateDeviceGroupsToCloud(localData)!
+        let roundTripped = translator.translateDeviceGroupsFromCloud(cloudData)!
+        let decoded = try JSONDecoder().decode([DeviceGroup].self, from: roundTripped)
+
+        XCTAssertFalse(decoded[0].showGroupSwitch)
+        XCTAssertTrue(decoded[0].showAsSubmenu)
+    }
+
+    func testDisplayOptionsToCloudIncludesFields() throws {
+        let roomId = UUID()
+        let id1 = UUID()
+        let s1 = makeService(id: id1, name: "Light", accessoryName: "Lamp", roomId: roomId)
+        let acc = makeAccessory(name: "Lamp", roomId: roomId, services: [s1])
+        let data = makeMenuData(
+            rooms: [RoomData(uniqueIdentifier: roomId, name: "Bedroom")],
+            accessories: [acc]
+        )
+        translator.updateMenuData(data)
+
+        let groups = [DeviceGroup(id: "g1", name: "Test", icon: "fan", deviceIds: [id1.uuidString], showGroupSwitch: true, showAsSubmenu: true)]
+        let localData = try JSONEncoder().encode(groups)
+
+        let cloudData = translator.translateDeviceGroupsToCloud(localData)!
+        let parsed = try JSONSerialization.jsonObject(with: cloudData) as! [[String: Any]]
+
+        XCTAssertEqual(parsed[0]["showGroupSwitch"] as? Bool, true)
+        XCTAssertEqual(parsed[0]["showAsSubmenu"] as? Bool, true)
+    }
+
+    func testDisplayOptionsFromOlderClientDefaultsCorrectly() throws {
+        translator.updateMenuData(makeMenuData())
+
+        // Cloud data from older client without display option fields
+        let cloudGroups: [[String: Any]] = [
+            ["id": "g1", "name": "Old Group", "icon": "folder", "deviceIds": []]
+        ]
+        let cloudData = try JSONSerialization.data(withJSONObject: cloudGroups)
+
+        let localData = translator.translateDeviceGroupsFromCloud(cloudData)!
+        let decoded = try JSONDecoder().decode([DeviceGroup].self, from: localData)
+
+        XCTAssertEqual(decoded.count, 1)
+        XCTAssertTrue(decoded[0].showGroupSwitch)
+        XCTAssertFalse(decoded[0].showAsSubmenu)
+    }
 }
