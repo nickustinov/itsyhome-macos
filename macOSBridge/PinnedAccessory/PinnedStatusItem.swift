@@ -33,7 +33,7 @@ class PinnedStatusItem: NSObject, NSMenuDelegate {
 
     let itemId: String
     let itemName: String
-    let itemType: PinnedItemType
+    var itemType: PinnedItemType
 
     weak var delegate: PinnedStatusItemDelegate?
 

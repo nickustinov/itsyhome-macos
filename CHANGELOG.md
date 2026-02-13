@@ -13,6 +13,9 @@
 - **SSE event stream** — new `/events` endpoint on the webhook server streams real-time device state changes via Server-Sent Events, usable with `curl -N`, browser `EventSource`, or any SSE client
 
 ### Bug fixes
+- **Fix pinned room not updating after hiding accessories** — toggling accessory visibility via the eye icon now immediately updates pinned room menus without needing to unpin and re-pin
+- **Fix HA not reconnecting after Mac sleep** — the app now listens for system wake events and automatically reconnects to Home Assistant instead of staying stuck on "Loading Home Assistant..."
+- **Fix CLI/webhook toggle failing until Refresh clicked** — after an HA reconnect, the action engine bridge reference is now updated immediately so CLI and webhook commands work without needing to click Refresh first
 - **Fix crash when connecting to Nabu Casa cloud URLs** — the app no longer crashes when the Home Assistant server URL triggers an invalid WebSocket connection; URL scheme is now validated before connecting, and `wss://` URLs are accepted directly
 - **Fix crash from concurrent state updates** — a data race in the entity state mapper that could cause crashes during rapid state changes is now fixed with proper thread synchronization
 - **Fix camera snapshot timer draining battery** — the 30-second snapshot polling timer now stops when the camera panel is closed, preventing continuous wake-ups on battery-powered cameras

@@ -157,6 +157,13 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
             object: nil
         )
 
+        NSWorkspace.shared.notificationCenter.addObserver(
+            self,
+            selector: #selector(handleSystemWake),
+            name: NSWorkspace.didWakeNotification,
+            object: nil
+        )
+
         HotkeyManager.shared.onHotkeyTriggered = { [weak self] favouriteId in
             self?.handleHotkeyForFavourite(favouriteId)
         }
@@ -227,6 +234,16 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
         setupMenu()  // Refresh menu for the new platform
     }
 
+    @objc private func handleSystemWake() {
+        guard PlatformManager.shared.selectedPlatform == .homeAssistant else { return }
+        guard HAAuthManager.shared.isConfigured else { return }
+        guard homeAssistantPlatform?.isConnected != true else { return }
+
+        StartupLogger.log("System woke from sleep – reconnecting to Home Assistant")
+        disconnectFromHomeAssistant()
+        connectToHomeAssistant()
+    }
+
     private func connectToHomeAssistant() {
         guard PlatformManager.shared.selectedPlatform == .homeAssistant else { return }
         guard HAAuthManager.shared.isConfigured else { return }
@@ -238,6 +255,11 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
             homeAssistantPlatform?.delegate = self
             homeAssistantBridge = HomeAssistantBridge(platform: homeAssistantPlatform!)
         }
+
+        // Update ActionEngine bridge immediately so CLI/webhook commands
+        // work as soon as the connection is established, not only after
+        // the first rebuildMenu call with new data.
+        actionEngine.bridge = homeAssistantBridge
 
         Task {
             do {

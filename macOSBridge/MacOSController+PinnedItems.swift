@@ -77,9 +77,11 @@ extension MacOSController {
             }
         }
 
-        // Create status items for newly pinned items
+        // Create or update status items for pinned items
         for (itemId, itemType) in validPinnedItems {
-            if pinnedStatusItems[itemId] == nil {
+            if let existing = pinnedStatusItems[itemId] {
+                existing.itemType = itemType
+            } else {
                 let itemName: String
                 switch itemType {
                 case .service(let service):
