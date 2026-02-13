@@ -66,6 +66,7 @@ class ActionEngine {
 
     weak var bridge: Mac2iOS?
     private(set) var menuData: MenuData?
+    var onCharacteristicWrite: ((UUID, Any) -> Void)?
 
     init(bridge: Mac2iOS? = nil) {
         self.bridge = bridge
@@ -192,62 +193,67 @@ class ActionEngine {
         }
     }
 
+    private func writeCharacteristic(identifier: UUID, value: Any, bridge: Mac2iOS) {
+        bridge.writeCharacteristic(identifier: identifier, value: value)
+        onCharacteristicWrite?(identifier, value)
+    }
+
     // MARK: - Individual action executors
 
     private func executeToggle(on service: ServiceData, bridge: Mac2iOS) -> Bool {
         // Power state toggle (lights, switches, outlets)
         if let idString = service.powerStateId, let id = UUID(uuidString: idString) {
             let current = bridge.getCharacteristicValue(identifier: id) as? Bool ?? false
-            bridge.writeCharacteristic(identifier: id, value: !current)
+            writeCharacteristic(identifier: id, value: !current, bridge: bridge)
             return true
         }
 
         // Active toggle (AC, fans)
         if let idString = service.activeId, let id = UUID(uuidString: idString) {
             let current = bridge.getCharacteristicValue(identifier: id) as? Int ?? 0
-            bridge.writeCharacteristic(identifier: id, value: current == 0 ? 1 : 0)
+            writeCharacteristic(identifier: id, value: current == 0 ? 1 : 0, bridge: bridge)
             return true
         }
 
         // Lock toggle
         if let idString = service.lockTargetStateId, let id = UUID(uuidString: idString) {
             let current = bridge.getCharacteristicValue(identifier: id) as? Int ?? 1
-            bridge.writeCharacteristic(identifier: id, value: current == 0 ? 1 : 0)
+            writeCharacteristic(identifier: id, value: current == 0 ? 1 : 0, bridge: bridge)
             return true
         }
 
         // Blind toggle (open/close)
         if let idString = service.targetPositionId, let id = UUID(uuidString: idString) {
             let current = bridge.getCharacteristicValue(identifier: id) as? Int ?? 0
-            bridge.writeCharacteristic(identifier: id, value: current > 50 ? 0 : 100)
+            writeCharacteristic(identifier: id, value: current > 50 ? 0 : 100, bridge: bridge)
             return true
         }
 
         // Garage door toggle
         if let idString = service.targetDoorStateId, let id = UUID(uuidString: idString) {
             let current = bridge.getCharacteristicValue(identifier: id) as? Int ?? 1
-            bridge.writeCharacteristic(identifier: id, value: current == 0 ? 1 : 0)
+            writeCharacteristic(identifier: id, value: current == 0 ? 1 : 0, bridge: bridge)
             return true
         }
 
         // Thermostat toggle (off/auto)
         if let idString = service.targetHeatingCoolingStateId, let id = UUID(uuidString: idString) {
             let current = bridge.getCharacteristicValue(identifier: id) as? Int ?? 0
-            bridge.writeCharacteristic(identifier: id, value: current == 0 ? 3 : 0)
+            writeCharacteristic(identifier: id, value: current == 0 ? 3 : 0, bridge: bridge)
             return true
         }
 
         // Brightness toggle for dimmable lights without power state
         if let idString = service.brightnessId, let id = UUID(uuidString: idString) {
             let current = bridge.getCharacteristicValue(identifier: id) as? Int ?? 0
-            bridge.writeCharacteristic(identifier: id, value: current > 0 ? 0 : 100)
+            writeCharacteristic(identifier: id, value: current > 0 ? 0 : 100, bridge: bridge)
             return true
         }
 
         // Security system toggle (disarmed/stay armed)
         if let idString = service.securitySystemTargetStateId, let id = UUID(uuidString: idString) {
             let current = bridge.getCharacteristicValue(identifier: id) as? Int ?? 3
-            bridge.writeCharacteristic(identifier: id, value: current == 3 ? 0 : 3)
+            writeCharacteristic(identifier: id, value: current == 3 ? 0 : 3, bridge: bridge)
             return true
         }
 
@@ -256,12 +262,12 @@ class ActionEngine {
 
     private func executePowerState(_ on: Bool, on service: ServiceData, bridge: Mac2iOS) -> Bool {
         if let idString = service.powerStateId, let id = UUID(uuidString: idString) {
-            bridge.writeCharacteristic(identifier: id, value: on)
+            writeCharacteristic(identifier: id, value: on, bridge: bridge)
             return true
         }
 
         if let idString = service.activeId, let id = UUID(uuidString: idString) {
-            bridge.writeCharacteristic(identifier: id, value: on ? 1 : 0)
+            writeCharacteristic(identifier: id, value: on ? 1 : 0, bridge: bridge)
             return true
         }
 
@@ -277,10 +283,10 @@ class ActionEngine {
         // Explicitly set power state to ensure light turns on/off with brightness
         // HomeKit spec leaves this behavior to the accessory, so we be explicit
         if let powerIdString = service.powerStateId, let powerId = UUID(uuidString: powerIdString) {
-            bridge.writeCharacteristic(identifier: powerId, value: clampedValue > 0)
+            writeCharacteristic(identifier: powerId, value: clampedValue > 0, bridge: bridge)
         }
 
-        bridge.writeCharacteristic(identifier: id, value: clampedValue)
+        writeCharacteristic(identifier: id, value: clampedValue, bridge: bridge)
         return true
     }
 
@@ -291,8 +297,8 @@ class ActionEngine {
         }
         let clampedHue = max(0, min(360, hue))
         let clampedSat = max(0, min(100, saturation))
-        bridge.writeCharacteristic(identifier: hueId, value: clampedHue)
-        bridge.writeCharacteristic(identifier: satId, value: clampedSat)
+        writeCharacteristic(identifier: hueId, value: clampedHue, bridge: bridge)
+        writeCharacteristic(identifier: satId, value: clampedSat, bridge: bridge)
         return true
     }
 
@@ -307,7 +313,7 @@ class ActionEngine {
         if let maxMired = service.colorTemperatureMax {
             value = min(Int(maxMired), value)
         }
-        bridge.writeCharacteristic(identifier: id, value: value)
+        writeCharacteristic(identifier: id, value: value, bridge: bridge)
         return true
     }
 
@@ -316,25 +322,25 @@ class ActionEngine {
             return false
         }
         let clampedValue = max(0, min(100, value))
-        bridge.writeCharacteristic(identifier: id, value: clampedValue)
+        writeCharacteristic(identifier: id, value: clampedValue, bridge: bridge)
         return true
     }
 
     private func executeTargetTemp(_ temp: Double, on service: ServiceData, bridge: Mac2iOS) -> Bool {
         // Standard thermostat
         if let idString = service.targetTemperatureId, let id = UUID(uuidString: idString) {
-            bridge.writeCharacteristic(identifier: id, value: temp)
+            writeCharacteristic(identifier: id, value: temp, bridge: bridge)
             return true
         }
 
         // HeaterCooler (AC) - set both cooling and heating thresholds
         var success = false
         if let idString = service.coolingThresholdTemperatureId, let id = UUID(uuidString: idString) {
-            bridge.writeCharacteristic(identifier: id, value: temp)
+            writeCharacteristic(identifier: id, value: temp, bridge: bridge)
             success = true
         }
         if let idString = service.heatingThresholdTemperatureId, let id = UUID(uuidString: idString) {
-            bridge.writeCharacteristic(identifier: id, value: temp)
+            writeCharacteristic(identifier: id, value: temp, bridge: bridge)
             success = true
         }
 
@@ -344,13 +350,13 @@ class ActionEngine {
     private func executeThermostatMode(_ mode: ThermostatMode, on service: ServiceData, bridge: Mac2iOS) -> Bool {
         // Standard thermostat
         if let idString = service.targetHeatingCoolingStateId, let id = UUID(uuidString: idString) {
-            bridge.writeCharacteristic(identifier: id, value: mode.rawValue)
+            writeCharacteristic(identifier: id, value: mode.rawValue, bridge: bridge)
             return true
         }
 
         // HeaterCooler (AC)
         if let idString = service.targetHeaterCoolerStateId, let id = UUID(uuidString: idString) {
-            bridge.writeCharacteristic(identifier: id, value: mode.rawValue)
+            writeCharacteristic(identifier: id, value: mode.rawValue, bridge: bridge)
             return true
         }
 
@@ -362,7 +368,7 @@ class ActionEngine {
             return false
         }
         // 0 = unsecured (unlocked), 1 = secured (locked)
-        bridge.writeCharacteristic(identifier: id, value: locked ? 1 : 0)
+        writeCharacteristic(identifier: id, value: locked ? 1 : 0, bridge: bridge)
         return true
     }
 }

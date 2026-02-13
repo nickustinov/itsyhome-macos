@@ -586,6 +586,9 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
 
         actionEngine.bridge = activeBridge
         actionEngine.updateMenuData(data)
+        actionEngine.onCharacteristicWrite = { [weak self] characteristicId, value in
+            self?.updateMenuItems(for: characteristicId, value: value, isLocalChange: true)
+        }
 
         WebhookServer.shared.configure(actionEngine: actionEngine)
         WebhookServer.shared.rebuildCharacteristicIndex(from: data)

@@ -7,6 +7,24 @@
 
 import Foundation
 
+// MARK: - String normalization for comparison
+
+private extension String {
+    /// Replaces typographic (smart/curly) quotes with their ASCII equivalents
+    /// so that HomeKit names like "Jay\u{2019}s Office" match URL-encoded
+    /// queries that use straight quotes like "Jay's Office".
+    func normalizedForComparison() -> String {
+        var result = self
+        // Single quotes: left ' (U+2018) and right ' (U+2019) → ' (U+0027)
+        result = result.replacingOccurrences(of: "\u{2018}", with: "'")
+        result = result.replacingOccurrences(of: "\u{2019}", with: "'")
+        // Double quotes: left " (U+201C) and right " (U+201D) → " (U+0022)
+        result = result.replacingOccurrences(of: "\u{201C}", with: "\"")
+        result = result.replacingOccurrences(of: "\u{201D}", with: "\"")
+        return result
+    }
+}
+
 enum DeviceResolver {
 
     // MARK: - Result types
@@ -107,7 +125,7 @@ enum DeviceResolver {
     }
 
     private static func resolveScene(_ query: String, in data: MenuData) -> ResolveResult? {
-        let lowered = query.lowercased()
+        let lowered = query.lowercased().normalizedForComparison()
 
         // Check for scene. prefix
         if lowered.hasPrefix("scene.") {
@@ -117,7 +135,7 @@ enum DeviceResolver {
 
         // Also check direct scene name match
         for scene in data.scenes {
-            if scene.name.lowercased() == lowered {
+            if scene.name.lowercased().normalizedForComparison() == lowered {
                 return .scene(scene)
             }
         }
@@ -126,18 +144,18 @@ enum DeviceResolver {
     }
 
     private static func findSceneByName(_ name: String, in data: MenuData) -> ResolveResult {
-        let loweredName = name.lowercased()
+        let loweredName = name.lowercased().normalizedForComparison()
 
         // Exact match first
         for scene in data.scenes {
-            if scene.name.lowercased() == loweredName {
+            if scene.name.lowercased().normalizedForComparison() == loweredName {
                 return .scene(scene)
             }
         }
 
         // Partial match
         let matches = data.scenes.filter { scene in
-            scene.name.lowercased().contains(loweredName)
+            scene.name.lowercased().normalizedForComparison().contains(loweredName)
         }
 
         if matches.count == 1 {
@@ -148,7 +166,7 @@ enum DeviceResolver {
     }
 
     private static func resolveGroup(_ query: String, groups: [DeviceGroup], data: MenuData) -> ResolveResult? {
-        let lowered = query.lowercased()
+        let lowered = query.lowercased().normalizedForComparison()
 
         // Check for group. prefix
         if lowered.hasPrefix("group.") {
@@ -158,7 +176,7 @@ enum DeviceResolver {
 
         // Also check direct group name match (exact only to avoid conflicts with devices)
         for group in groups {
-            if group.name.lowercased() == lowered {
+            if group.name.lowercased().normalizedForComparison() == lowered {
                 let services = group.resolveServices(in: data)
                 if services.isEmpty {
                     return .notFound(query)
@@ -171,11 +189,11 @@ enum DeviceResolver {
     }
 
     private static func findGroupByName(_ name: String, groups: [DeviceGroup], data: MenuData) -> ResolveResult {
-        let loweredName = name.lowercased()
+        let loweredName = name.lowercased().normalizedForComparison()
 
         // Exact match first
         for group in groups {
-            if group.name.lowercased() == loweredName {
+            if group.name.lowercased().normalizedForComparison() == loweredName {
                 let services = group.resolveServices(in: data)
                 if services.isEmpty {
                     return .notFound("group.\(name)")
@@ -186,7 +204,7 @@ enum DeviceResolver {
 
         // Partial match
         let matches = groups.filter { group in
-            group.name.lowercased().contains(loweredName)
+            group.name.lowercased().normalizedForComparison().contains(loweredName)
         }
 
         if matches.count == 1 {
@@ -216,17 +234,17 @@ enum DeviceResolver {
         guard loweredTarget.hasPrefix("group.") else { return nil }
 
         let groupName = String(targetPart.dropFirst(6))
-        let loweredGroupName = groupName.lowercased()
-        let loweredRoom = roomPart.lowercased()
+        let loweredGroupName = groupName.lowercased().normalizedForComparison()
+        let loweredRoom = roomPart.lowercased().normalizedForComparison()
 
         // Find the room
-        guard let room = data.rooms.first(where: { $0.name.lowercased() == loweredRoom }) else {
+        guard let room = data.rooms.first(where: { $0.name.lowercased().normalizedForComparison() == loweredRoom }) else {
             return .notFound(query)
         }
 
         // First try to find a group with matching name AND roomId
         let roomScopedGroup = groups.first { group in
-            group.name.lowercased() == loweredGroupName && group.roomId == room.uniqueIdentifier
+            group.name.lowercased().normalizedForComparison() == loweredGroupName && group.roomId == room.uniqueIdentifier
         }
 
         if let group = roomScopedGroup {
@@ -239,7 +257,7 @@ enum DeviceResolver {
 
         // Fall back to global group (roomId == nil) with matching name
         let globalGroup = groups.first { group in
-            group.name.lowercased() == loweredGroupName && group.roomId == nil
+            group.name.lowercased().normalizedForComparison() == loweredGroupName && group.roomId == nil
         }
 
         if let group = globalGroup {
@@ -261,12 +279,13 @@ enum DeviceResolver {
             let parts = query.split(separator: separator, maxSplits: 1)
             guard parts.count == 2 else { continue }
 
-            let roomPart = String(parts[0]).lowercased()
-            let devicePart = String(parts[1]).lowercased()
+            let roomPart = String(parts[0]).lowercased().normalizedForComparison()
+            let devicePart = String(parts[1]).lowercased().normalizedForComparison()
 
             // Find matching room
             let roomMatches = data.rooms.filter { room in
-                room.name.lowercased() == roomPart || room.name.lowercased().contains(roomPart)
+                let name = room.name.lowercased().normalizedForComparison()
+                return name == roomPart || name.contains(roomPart)
             }
 
             guard !roomMatches.isEmpty else { continue }
@@ -277,10 +296,10 @@ enum DeviceResolver {
             var matchingServices: [ServiceData] = []
             for accessory in data.accessories {
                 for service in accessory.services {
+                    let name = service.name.lowercased().normalizedForComparison()
                     if let roomId = service.roomIdentifier,
                        roomIds.contains(roomId),
-                       (service.name.lowercased() == devicePart ||
-                        service.name.lowercased().contains(devicePart)) {
+                       (name == devicePart || name.contains(devicePart)) {
                         matchingServices.append(service)
                     }
                 }
@@ -290,7 +309,7 @@ enum DeviceResolver {
                 return .services(matchingServices)
             } else if matchingServices.count > 1 {
                 // Prefer exact name match
-                let exactMatches = matchingServices.filter { $0.name.lowercased() == devicePart }
+                let exactMatches = matchingServices.filter { $0.name.lowercased().normalizedForComparison() == devicePart }
                 if exactMatches.count == 1 {
                     return .services(exactMatches)
                 }

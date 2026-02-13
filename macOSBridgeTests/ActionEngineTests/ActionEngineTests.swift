@@ -236,6 +236,98 @@ final class ActionEngineTests: XCTestCase {
             XCTFail("Expected partial result")
         }
     }
+
+    // MARK: - onCharacteristicWrite callback tests
+
+    func testOnCharacteristicWriteCalledOnToggle() {
+        mockBridge.characteristicValues[powerStateId] = false
+        var writes: [(UUID, Any)] = []
+        engine.onCharacteristicWrite = { id, value in
+            writes.append((id, value))
+        }
+
+        _ = engine.execute(target: "Room/Test Light", action: .toggle)
+
+        XCTAssertEqual(writes.count, 1)
+        XCTAssertEqual(writes[0].0, powerStateId)
+        XCTAssertEqual(writes[0].1 as? Bool, true)
+    }
+
+    func testOnCharacteristicWriteCalledOnTurnOn() {
+        var writes: [(UUID, Any)] = []
+        engine.onCharacteristicWrite = { id, value in
+            writes.append((id, value))
+        }
+
+        _ = engine.execute(target: "Room/Test Light", action: .turnOn)
+
+        XCTAssertEqual(writes.count, 1)
+        XCTAssertEqual(writes[0].0, powerStateId)
+        XCTAssertEqual(writes[0].1 as? Bool, true)
+    }
+
+    func testOnCharacteristicWriteCalledOnBrightness() {
+        var writes: [(UUID, Any)] = []
+        engine.onCharacteristicWrite = { id, value in
+            writes.append((id, value))
+        }
+
+        _ = engine.execute(target: "Room/Test Light", action: .setBrightness(75))
+
+        // Brightness write also writes power state (on), so expect 2 writes
+        XCTAssertEqual(writes.count, 2)
+        XCTAssertEqual(writes[0].0, powerStateId)
+        XCTAssertEqual(writes[0].1 as? Bool, true)
+        XCTAssertEqual(writes[1].0, brightnessId)
+        XCTAssertEqual(writes[1].1 as? Int, 75)
+    }
+
+    func testOnCharacteristicWriteCalledOnLock() {
+        var writes: [(UUID, Any)] = []
+        engine.onCharacteristicWrite = { id, value in
+            writes.append((id, value))
+        }
+
+        _ = engine.execute(target: "Room/Test Lock", action: .lock)
+
+        XCTAssertEqual(writes.count, 1)
+        XCTAssertEqual(writes[0].0, lockTargetStateId)
+        XCTAssertEqual(writes[0].1 as? Int, 1)
+    }
+
+    func testOnCharacteristicWriteCalledOnUnlock() {
+        var writes: [(UUID, Any)] = []
+        engine.onCharacteristicWrite = { id, value in
+            writes.append((id, value))
+        }
+
+        _ = engine.execute(target: "Room/Test Lock", action: .unlock)
+
+        XCTAssertEqual(writes.count, 1)
+        XCTAssertEqual(writes[0].0, lockTargetStateId)
+        XCTAssertEqual(writes[0].1 as? Int, 0)
+    }
+
+    func testOnCharacteristicWriteNotCalledForNotFound() {
+        var writeCount = 0
+        engine.onCharacteristicWrite = { _, _ in
+            writeCount += 1
+        }
+
+        _ = engine.execute(target: "Nonexistent", action: .toggle)
+
+        XCTAssertEqual(writeCount, 0)
+    }
+
+    func testOnCharacteristicWriteNotCalledWhenNil() {
+        // Ensure no crash when callback is nil
+        engine.onCharacteristicWrite = nil
+        mockBridge.characteristicValues[powerStateId] = false
+
+        let result = engine.execute(target: "Room/Test Light", action: .toggle)
+
+        XCTAssertEqual(result, .success)
+    }
 }
 
 // MARK: - Mock bridge

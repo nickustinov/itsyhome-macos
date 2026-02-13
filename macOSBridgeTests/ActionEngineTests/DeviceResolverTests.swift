@@ -16,13 +16,16 @@ final class DeviceResolverTests: XCTestCase {
     private let bedroomRoomId = UUID()
     private let kitchenRoomId = UUID()
     private let officeRoomId = UUID()
+    private let smartQuoteRoomId = UUID()
     private let bedroomLightId = UUID()
     private let kitchenLightId = UUID()
     private let bedroomSwitchId = UUID()
     private let bedroomSpotlightsId = UUID()
     private let officeSpotlightsId = UUID()
+    private let smartQuoteLampId = UUID()
     private let goodnightSceneId = UUID()
     private let morningSceneId = UUID()
+    private let smartQuoteSceneId = UUID()
 
     override func setUp() {
         super.setUp()
@@ -33,7 +36,8 @@ final class DeviceResolverTests: XCTestCase {
         let rooms = [
             RoomData(uniqueIdentifier: bedroomRoomId, name: "Bedroom"),
             RoomData(uniqueIdentifier: kitchenRoomId, name: "Kitchen"),
-            RoomData(uniqueIdentifier: officeRoomId, name: "Office")
+            RoomData(uniqueIdentifier: officeRoomId, name: "Office"),
+            RoomData(uniqueIdentifier: smartQuoteRoomId, name: "Jay\u{2019}s Office")
         ]
 
         let bedroomLight = ServiceData(
@@ -84,6 +88,16 @@ final class DeviceResolverTests: XCTestCase {
             brightnessId: UUID()
         )
 
+        // Device with smart quote in room name (from iOS keyboard)
+        let smartQuoteLamp = ServiceData(
+            uniqueIdentifier: smartQuoteLampId,
+            name: "Desk Light",
+            serviceType: ServiceTypes.lightbulb,
+            accessoryName: "Desk Light",
+            roomIdentifier: smartQuoteRoomId,
+            powerStateId: UUID()
+        )
+
         let accessories = [
             AccessoryData(
                 uniqueIdentifier: UUID(),
@@ -119,12 +133,20 @@ final class DeviceResolverTests: XCTestCase {
                 roomIdentifier: officeRoomId,
                 services: [officeSpotlights],
                 isReachable: true
+            ),
+            AccessoryData(
+                uniqueIdentifier: UUID(),
+                name: "Desk Light",
+                roomIdentifier: smartQuoteRoomId,
+                services: [smartQuoteLamp],
+                isReachable: true
             )
         ]
 
         let scenes = [
             SceneData(uniqueIdentifier: goodnightSceneId, name: "Goodnight"),
-            SceneData(uniqueIdentifier: morningSceneId, name: "Good Morning")
+            SceneData(uniqueIdentifier: morningSceneId, name: "Good Morning"),
+            SceneData(uniqueIdentifier: smartQuoteSceneId, name: "Jay\u{2019}s Bedtime")
         ]
 
         return MenuData(
@@ -551,6 +573,101 @@ final class DeviceResolverTests: XCTestCase {
             // Expected
         } else {
             XCTFail("Expected notFound result")
+        }
+    }
+
+    // MARK: - Smart quote normalization tests
+
+    func testResolveRoomWithSmartQuoteMatchesStraightQuote() {
+        // Room name has smart quote (U+2019), query uses straight quote (U+0027)
+        let result = DeviceResolver.resolve("Jay's Office/Desk Light", in: testMenuData)
+
+        if case .services(let services) = result {
+            XCTAssertEqual(services.count, 1)
+            XCTAssertEqual(services[0].uniqueIdentifier, smartQuoteLampId.uuidString)
+        } else {
+            XCTFail("Expected services result, got \(result)")
+        }
+    }
+
+    func testResolveRoomWithStraightQuoteMatchesSmartQuote() {
+        // Query uses smart quote (U+2019), should still match
+        let result = DeviceResolver.resolve("Jay\u{2019}s Office/Desk Light", in: testMenuData)
+
+        if case .services(let services) = result {
+            XCTAssertEqual(services.count, 1)
+            XCTAssertEqual(services[0].uniqueIdentifier, smartQuoteLampId.uuidString)
+        } else {
+            XCTFail("Expected services result, got \(result)")
+        }
+    }
+
+    func testResolveSceneWithSmartQuoteMatchesStraightQuote() {
+        // Scene name has smart quote, query uses straight quote
+        let result = DeviceResolver.resolve("scene.Jay's Bedtime", in: testMenuData)
+
+        if case .scene(let scene) = result {
+            XCTAssertEqual(scene.uniqueIdentifier, smartQuoteSceneId.uuidString)
+        } else {
+            XCTFail("Expected scene result, got \(result)")
+        }
+    }
+
+    func testResolveSceneDirectNameWithSmartQuote() {
+        // Direct scene name match with straight quote vs smart quote
+        let result = DeviceResolver.resolve("Jay's Bedtime", in: testMenuData)
+
+        if case .scene(let scene) = result {
+            XCTAssertEqual(scene.uniqueIdentifier, smartQuoteSceneId.uuidString)
+        } else {
+            XCTFail("Expected scene result, got \(result)")
+        }
+    }
+
+    func testResolveGroupWithSmartQuoteInName() {
+        let group = DeviceGroup(
+            id: UUID().uuidString,
+            name: "Jay\u{2019}s Lights",
+            icon: "lightbulb",
+            deviceIds: [smartQuoteLampId.uuidString]
+        )
+
+        // Query with straight quote
+        let result = DeviceResolver.resolve("group.Jay's Lights", in: testMenuData, groups: [group])
+
+        if case .services(let services) = result {
+            XCTAssertEqual(services.count, 1)
+            XCTAssertEqual(services[0].uniqueIdentifier, smartQuoteLampId.uuidString)
+        } else {
+            XCTFail("Expected services result, got \(result)")
+        }
+    }
+
+    func testResolveLeftSingleQuoteNormalized() {
+        // Test left single quote U+2018 also normalizes
+        let rooms = [RoomData(uniqueIdentifier: smartQuoteRoomId, name: "\u{2018}Special\u{2019} Room")]
+        let lamp = ServiceData(
+            uniqueIdentifier: smartQuoteLampId,
+            name: "Lamp",
+            serviceType: ServiceTypes.lightbulb,
+            accessoryName: "Lamp",
+            roomIdentifier: smartQuoteRoomId,
+            powerStateId: UUID()
+        )
+        let data = MenuData(
+            homes: [HomeData(uniqueIdentifier: UUID(), name: "Home", isPrimary: true)],
+            rooms: rooms,
+            accessories: [AccessoryData(uniqueIdentifier: UUID(), name: "Lamp", roomIdentifier: smartQuoteRoomId, services: [lamp], isReachable: true)],
+            scenes: [],
+            selectedHomeId: nil
+        )
+
+        let result = DeviceResolver.resolve("'Special' Room/Lamp", in: data)
+
+        if case .services(let services) = result {
+            XCTAssertEqual(services.count, 1)
+        } else {
+            XCTFail("Expected services result, got \(result)")
         }
     }
 }
