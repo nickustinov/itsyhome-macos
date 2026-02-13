@@ -3,6 +3,7 @@
 ## 2.0.0
 
 ### New features
+- **Hide "Other" section** — the "Other" section (devices with no room) now has an eyeball toggle in Settings → Home to hide it from the menu, matching rooms and scenes
 - **Group display options** — groups can now be shown as expandable submenus with individual device controls, not just a single toggle row; two new settings per group – "Group switch" and "Submenu" – control whether the toggle row and/or submenu are shown
 - **Home Assistant support** — connect to a Home Assistant instance as an alternative to HomeKit, with support for climate, lights, fans, covers, locks, humidifiers, valves, garage doors, security systems, cameras (snapshots, WebRTC, and HLS streaming), and scenes
 - **Dual RGB + color temperature support** — lights exposing both hue/saturation and color temperature (e.g. Govee Neon Rope 2 via Matter) now show both picker buttons and sliders instead of only one
@@ -19,6 +20,7 @@
 - **Fix phantom window in Mission Control** — the app no longer appears as an empty window in Mission Control when "Group windows by application" is enabled
 - **Fix crash when iCloud sync updates camera view** — iCloud sync notifications could arrive on a background thread, causing a crash when the camera collection view reloaded off the main queue; notifications are now dispatched to the main thread
 - **Fix group row disappearing on drag in settings** — dragging a group row in the Home settings tab when it was the only group in its section caused it to vanish; drag initiation is now blocked when there is only one group
+- **Fix HA thermostat showing wrong temperature** — thermostats on Home Assistant instances configured for Fahrenheit showed doubled-converted values (e.g. 156° instead of 70°); the app now fetches the HA unit system at connect time and normalizes all temperatures to Celsius internally
 
 ## 1.3.1
 

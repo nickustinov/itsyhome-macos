@@ -25,6 +25,9 @@ final class EntityMapper {
     private var characteristicToEntity: [UUID: String] = [:]
     private var serviceToEntity: [UUID: String] = [:]
 
+    /// Temperature unit from HA config (e.g. "°F" or "°C")
+    private(set) var haTemperatureUnit: String = "°C"
+
     // MARK: - Data loading
 
     func loadData(states: [HAEntityState],
@@ -50,6 +53,21 @@ final class EntityMapper {
         lock.lock()
         entityStates[state.entityId] = state
         lock.unlock()
+    }
+
+    func setTemperatureUnit(_ unit: String) {
+        lock.lock()
+        haTemperatureUnit = unit
+        lock.unlock()
+        logger.info("HA temperature unit set to '\(unit)'")
+    }
+
+    /// Convert a temperature from HA's unit to Celsius for internal storage
+    private func normalizeTemperature(_ value: Double) -> Double {
+        if haTemperatureUnit == "°F" {
+            return (value - 32.0) * 5.0 / 9.0
+        }
+        return value
     }
 
     /// Build reverse lookup caches for fast UUID → entityId lookups
@@ -540,18 +558,18 @@ final class EntityMapper {
             values[characteristicUUID(entityId, "color_temp")] = mireds
         }
 
-        // Climate values
+        // Climate values (normalize from HA's unit to Celsius)
         if let currentTemp = state.currentTemperature {
-            values[characteristicUUID(entityId, "current_temp")] = currentTemp
+            values[characteristicUUID(entityId, "current_temp")] = normalizeTemperature(currentTemp)
         }
         if let targetTemp = state.targetTemperature {
-            values[characteristicUUID(entityId, "target_temp")] = targetTemp
+            values[characteristicUUID(entityId, "target_temp")] = normalizeTemperature(targetTemp)
         }
         if let targetTempHigh = state.targetTempHigh {
-            values[characteristicUUID(entityId, "target_temp_high")] = targetTempHigh
+            values[characteristicUUID(entityId, "target_temp_high")] = normalizeTemperature(targetTempHigh)
         }
         if let targetTempLow = state.targetTempLow {
-            values[characteristicUUID(entityId, "target_temp_low")] = targetTempLow
+            values[characteristicUUID(entityId, "target_temp_low")] = normalizeTemperature(targetTempLow)
         }
         // Climate-specific values
         if state.domain == "climate" {
@@ -571,7 +589,7 @@ final class EntityMapper {
         // Sensor entities: temperature/humidity value is the state itself
         if state.domain == "sensor" {
             if state.deviceClass == "temperature", let temp = state.numericState {
-                values[characteristicUUID(entityId, "current_temp")] = temp
+                values[characteristicUUID(entityId, "current_temp")] = normalizeTemperature(temp)
             }
             if state.deviceClass == "humidity", let humidity = state.numericState {
                 values[characteristicUUID(entityId, "humidity")] = humidity

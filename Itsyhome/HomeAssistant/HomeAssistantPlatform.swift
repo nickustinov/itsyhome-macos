@@ -103,8 +103,15 @@ final class HomeAssistantPlatform: SmartHomePlatform {
             async let devices = client.getDevices()
             async let areas = client.getAreas()
             async let sceneConfigs = client.getAllSceneConfigs()
+            async let config = client.getConfig()
 
-            let (statesResult, entitiesResult, devicesResult, areasResult, sceneConfigsResult) = try await (states, entities, devices, areas, sceneConfigs)
+            let (statesResult, entitiesResult, devicesResult, areasResult, sceneConfigsResult, configResult) = try await (states, entities, devices, areas, sceneConfigs, config)
+
+            // Extract temperature unit from HA config
+            if let unitSystem = configResult["unit_system"] as? [String: Any],
+               let tempUnit = unitSystem["temperature"] as? String {
+                mapper.setTemperatureUnit(tempUnit)
+            }
 
             mapper.loadData(
                 states: statesResult,
@@ -440,7 +447,7 @@ final class HomeAssistantPlatform: SmartHomePlatform {
             logger.debug("HVAC mode set_hvac_mode service call completed")
 
         case "target_temp", "target_temp_high", "target_temp_low":
-            // Temperature change - accept Int or Double
+            // Temperature change - accept Int or Double (value is in Celsius internally)
             let temp: Double
             if let d = value as? Double {
                 temp = d
@@ -454,7 +461,7 @@ final class HomeAssistantPlatform: SmartHomePlatform {
 
             if characteristicType == "target_temp_high" || characteristicType == "target_temp_low" {
                 // HA requires both temps sent together for dual setpoint
-                // Get current values from mapper
+                // Get current values from mapper (already in Celsius)
                 let currentValues = mapper.getCharacteristicValues(for: entityId)
                 let highUUID = mapper.characteristicUUID(entityId, "target_temp_high")
                 let lowUUID = mapper.characteristicUUID(entityId, "target_temp_low")
@@ -469,20 +476,25 @@ final class HomeAssistantPlatform: SmartHomePlatform {
                     currentLow = temp
                 }
 
-                logger.info("Setting temperature range: low=\(currentLow), high=\(currentHigh)")
+                // Convert back to HA's unit before sending
+                let haLow = denormalizeTemperature(currentLow)
+                let haHigh = denormalizeTemperature(currentHigh)
+
+                logger.info("Setting temperature range: low=\(haLow), high=\(haHigh)")
 
                 try await client.callService(
                     domain: "climate",
                     service: "set_temperature",
-                    serviceData: ["target_temp_low": currentLow, "target_temp_high": currentHigh],
+                    serviceData: ["target_temp_low": haLow, "target_temp_high": haHigh],
                     target: ["entity_id": entityId]
                 )
             } else {
-                // Single temperature setpoint
+                // Single temperature setpoint - convert back to HA's unit
+                let haTemp = denormalizeTemperature(temp)
                 try await client.callService(
                     domain: "climate",
                     service: "set_temperature",
-                    serviceData: ["temperature": temp],
+                    serviceData: ["temperature": haTemp],
                     target: ["entity_id": entityId]
                 )
             }
@@ -784,6 +796,14 @@ final class HomeAssistantPlatform: SmartHomePlatform {
             serviceData: serviceData.isEmpty ? nil : serviceData,
             target: ["entity_id": entityId]
         )
+    }
+
+    /// Convert a temperature from internal Celsius back to HA's configured unit
+    private func denormalizeTemperature(_ celsius: Double) -> Double {
+        if mapper.haTemperatureUnit == "°F" {
+            return celsius * 9.0 / 5.0 + 32.0
+        }
+        return celsius
     }
 
     func getCharacteristicValue(identifier: UUID) -> Any? {

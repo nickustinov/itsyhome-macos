@@ -242,7 +242,7 @@ class MenuBuilder {
             menu.addItem(roomItem)
         }
 
-        if !noRoomAccessories.isEmpty {
+        if !noRoomAccessories.isEmpty && !preferences.hideOtherSection {
             let icon = PhosphorIcon.regular("squares-four")
             let otherItem = createSubmenuItem(title: "Other", icon: icon)
 

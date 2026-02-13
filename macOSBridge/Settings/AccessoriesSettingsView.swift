@@ -318,8 +318,9 @@ class AccessoriesSettingsView: NSView {
         if hasOther {
             let otherKey = "other"
             let isCollapsed = !expandedSections.contains(otherKey)
+            let isHidden = PreferencesManager.shared.hideOtherSection
 
-            updateOtherHeader(isCollapsed: isCollapsed)
+            updateOtherHeader(isHidden: isHidden, isCollapsed: isCollapsed)
 
             if isCollapsed {
                 otherContentContainer.isHidden = true
@@ -346,11 +347,11 @@ class AccessoriesSettingsView: NSView {
         scenesHeaderContainer.setHeight(L.rowHeight)
     }
 
-    private func updateOtherHeader(isCollapsed: Bool) {
+    private func updateOtherHeader(isHidden: Bool, isCollapsed: Bool) {
         let L = AccessoryRowLayout.self
         otherHeaderContainer.subviews.forEach { $0.removeFromSuperview() }
 
-        let header = createOtherHeaderStrip(isCollapsed: isCollapsed)
+        let header = createOtherHeaderStrip(isHidden: isHidden, isCollapsed: isCollapsed)
         header.translatesAutoresizingMaskIntoConstraints = false
         otherHeaderContainer.addSubview(header)
         NSLayoutConstraint.activate([

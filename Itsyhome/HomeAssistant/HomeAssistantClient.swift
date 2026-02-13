@@ -533,6 +533,17 @@ final class HomeAssistantClient: NSObject {
         _ = try await sendAndWait(message)
     }
 
+    /// Get HA configuration (unit system, location, etc.)
+    func getConfig() async throws -> [String: Any] {
+        let result = try await sendAndWait(["type": "get_config"])
+
+        guard let config = result as? [String: Any] else {
+            throw HomeAssistantClientError.invalidResponse
+        }
+
+        return config
+    }
+
     /// Get areas from registry
     func getAreas() async throws -> [HAArea] {
         let result = try await sendAndWait(["type": "config/area_registry/list"])

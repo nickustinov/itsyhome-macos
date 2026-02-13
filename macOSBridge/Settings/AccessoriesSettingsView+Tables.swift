@@ -83,16 +83,21 @@ extension AccessoriesSettingsView {
         return rowView
     }
 
-    func createOtherHeaderStrip(isCollapsed: Bool) -> NSView {
+    func createOtherHeaderStrip(isHidden: Bool, isCollapsed: Bool) -> NSView {
         let config = AccessoryRowConfig(
             name: "Other",
             showChevron: true,
             isCollapsed: isCollapsed,
+            isItemHidden: isHidden,
+            showEyeButton: true,
             isSectionHeader: true
         )
         let rowView = AccessoryRowView(config: config)
         rowView.onChevronToggled = { [weak self] in
             self?.otherChevronTapped()
+        }
+        rowView.onEyeToggled = { [weak self] in
+            self?.otherEyeTapped()
         }
         return rowView
     }
@@ -164,6 +169,11 @@ extension AccessoriesSettingsView {
         } else {
             expandedSections.insert(otherKey)
         }
+        updateOtherSection()
+    }
+
+    func otherEyeTapped() {
+        PreferencesManager.shared.hideOtherSection.toggle()
         updateOtherSection()
     }
 

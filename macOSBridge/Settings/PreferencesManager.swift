@@ -34,6 +34,7 @@ final class PreferencesManager {
         static let hiddenSceneIds = "hiddenSceneIds"
         static let hiddenServiceIds = "hiddenServiceIds"
         static let hideScenesSection = "hideScenesSection"
+        static let hideOtherSection = "hideOtherSection"
         static let hiddenRoomIds = "hiddenRoomIds"
         static let deviceGroups = "deviceGroups"
         static let hiddenCameraIds = "hiddenCameraIds"

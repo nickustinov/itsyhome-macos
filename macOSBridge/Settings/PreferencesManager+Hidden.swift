@@ -73,6 +73,16 @@ extension PreferencesManager {
         }
     }
 
+    // MARK: - Hide "Other" section (per-home)
+
+    var hideOtherSection: Bool {
+        get { defaults.bool(forKey: homeKey(Keys.hideOtherSection)) }
+        set {
+            defaults.set(newValue, forKey: homeKey(Keys.hideOtherSection))
+            postNotification()
+        }
+    }
+
     // MARK: - Hidden rooms (per-home)
 
     var hiddenRoomIds: Set<String> {
