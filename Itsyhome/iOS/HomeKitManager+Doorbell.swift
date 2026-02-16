@@ -67,11 +67,14 @@ extension HomeKitManager {
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
 
+            // Notify macOS side to open the camera panel (checks preferences + shows panel)
+            self.macOSDelegate?.showCameraPanelForDoorbell(cameraIdentifier: cameraId)
+
+            // Only start the stream if doorbell notifications are enabled
+            guard UserDefaults.standard.bool(forKey: "doorbellNotifications") else { return }
+
             // Store pending camera ID for CameraViewController to consume on show
             self.pendingDoorbellCameraId = cameraId
-
-            // Notify macOS side to open the camera panel
-            self.macOSDelegate?.showCameraPanelForDoorbell(cameraIdentifier: cameraId)
 
             // If CameraViewController is already visible, notify it directly
             NotificationCenter.default.post(

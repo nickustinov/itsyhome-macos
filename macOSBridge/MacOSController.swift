@@ -564,13 +564,13 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
         DispatchQueue.main.async { [weak self] in
             guard let self,
                   ProStatusCache.shared.isPro,
-                  PreferencesManager.shared.camerasEnabled else { return }
+                  PreferencesManager.shared.camerasEnabled,
+                  PreferencesManager.shared.doorbellNotifications else { return }
 
             if PreferencesManager.shared.doorbellSound {
                 NSSound(named: "Glass")?.play()
             }
 
-            guard PreferencesManager.shared.doorbellNotifications else { return }
             self.cameraPanelManager.showForDoorbell()
         }
     }

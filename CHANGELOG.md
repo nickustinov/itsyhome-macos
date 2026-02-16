@@ -5,6 +5,7 @@
 ### Build 210
 - **Hide mode selector for single-mode climate devices** — heater-cooler and thermostat devices that only support one mode (e.g. heat-only radiators like Eve Thermo) no longer show the Cool/Heat/Auto mode selector; devices with two valid modes show only those two buttons
 - **Fan speed control via webhooks and URL schemes** — fan rotation speed can now be set through webhooks (`/speed/50/Room/Fan`), URL schemes (`itsyhome://speed/50/Room/Fan`), and commands (`set speed 50 Room/Fan`), with automatic clamping to device min/max limits (contributed by [@loganprit](https://github.com/loganprit))
+- **Fix doorbell notifications ignoring disabled setting** — disabling "Show doorbell camera on ring" now correctly prevents both the camera stream and the doorbell sound from triggering
 
 ### Build 209
 - **Fix pinned room not updating after hiding accessories** — toggling accessory visibility via the eye icon now immediately updates pinned room menus without needing to unpin and re-pin
