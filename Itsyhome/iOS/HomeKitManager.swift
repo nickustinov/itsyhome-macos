@@ -167,6 +167,23 @@ extension HomeKitManager: HMHomeDelegate {
 extension HomeKitManager: HMAccessoryDelegate {
     func accessoryDidUpdateReachability(_ accessory: HMAccessory) {
         macOSDelegate?.setReachability(accessoryIdentifier: accessory.uniqueIdentifier, isReachable: accessory.isReachable)
+
+        // Re-read all characteristic values when accessory becomes reachable,
+        // since we may have missed updates while it was unreachable
+        if accessory.isReachable {
+            for service in accessory.services {
+                for characteristic in service.characteristics {
+                    characteristic.readValue { error in
+                        if error == nil, let value = characteristic.value {
+                            self.macOSDelegate?.updateCharacteristic(
+                                identifier: characteristic.uniqueIdentifier,
+                                value: value
+                            )
+                        }
+                    }
+                }
+            }
+        }
     }
 
     func accessory(_ accessory: HMAccessory, service: HMService, didUpdateValueFor characteristic: HMCharacteristic) {

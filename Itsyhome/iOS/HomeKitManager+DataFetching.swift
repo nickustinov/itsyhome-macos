@@ -111,8 +111,36 @@ extension HomeKitManager {
         // Subscribe to doorbell events
         subscribeToDoorbellEvents()
 
+        // Subscribe to all characteristic notifications for real-time updates
+        subscribeToCharacteristicNotifications()
+
         // Serialize to JSON for safe cross-module transfer
         sendMenuDataAsJSON()
+    }
+
+    // MARK: - Characteristic notification subscriptions
+
+    func subscribeToCharacteristicNotifications() {
+        guard let home = selectedHome else { return }
+
+        var subscribed = 0
+        for accessory in home.accessories {
+            for service in accessory.services {
+                for characteristic in service.characteristics {
+                    guard characteristic.properties.contains(
+                        HMCharacteristicPropertySupportsEventNotification
+                    ) else { continue }
+
+                    characteristic.enableNotification(true) { error in
+                        if let error = error {
+                            logger.error("enableNotification failed for \(characteristic.characteristicType): \(error.localizedDescription)")
+                        }
+                    }
+                    subscribed += 1
+                }
+            }
+        }
+        logger.info("Subscribed to notifications for \(subscribed) characteristics")
     }
 
     // MARK: - JSON serialization

@@ -2,6 +2,9 @@
 
 ## 2.0.0
 
+### Build 211
+- **Real-time accessory updates** – accessories now update instantly when toggled from the Home app or other controllers, instead of waiting for the menu to be opened; also re-reads characteristic values when a device becomes reachable again after being offline
+
 ### Build 210
 - **Hide mode selector for single-mode climate devices** — heater-cooler and thermostat devices that only support one mode (e.g. heat-only radiators like Eve Thermo) no longer show the Cool/Heat/Auto mode selector; devices with two valid modes show only those two buttons
 - **Fan speed control via webhooks and URL schemes** — fan rotation speed can now be set through webhooks (`/speed/50/Room/Fan`), URL schemes (`itsyhome://speed/50/Room/Fan`), and commands (`set speed 50 Room/Fan`), with automatic clamping to device min/max limits (contributed by [@loganprit](https://github.com/loganprit))
