@@ -25,6 +25,9 @@ enum Action: Equatable {
     // Position (blinds, 0-100)
     case setPosition(Int)
 
+    // Fan speed (0-100)
+    case setSpeed(Int)
+
     // Thermostat
     case setTargetTemp(Double)
     case setMode(ThermostatMode)
@@ -180,6 +183,8 @@ class ActionEngine {
             return executeColorTemp(mired, on: service, bridge: bridge)
         case .setPosition(let value):
             return executePosition(value, on: service, bridge: bridge)
+        case .setSpeed(let value):
+            return executeSpeed(value, on: service, bridge: bridge)
         case .setTargetTemp(let temp):
             return executeTargetTemp(temp, on: service, bridge: bridge)
         case .setMode(let mode):
@@ -323,6 +328,21 @@ class ActionEngine {
         }
         let clampedValue = max(0, min(100, value))
         writeCharacteristic(identifier: id, value: clampedValue, bridge: bridge)
+        return true
+    }
+
+    private func executeSpeed(_ value: Int, on service: ServiceData, bridge: Mac2iOS) -> Bool {
+        guard let idString = service.rotationSpeedId, let id = UUID(uuidString: idString) else {
+            return false
+        }
+        var clampedValue = max(0, min(100, value))
+        if let minSpeed = service.rotationSpeedMin {
+            clampedValue = max(Int(minSpeed), clampedValue)
+        }
+        if let maxSpeed = service.rotationSpeedMax {
+            clampedValue = min(Int(maxSpeed), clampedValue)
+        }
+        bridge.writeCharacteristic(identifier: id, value: clampedValue)
         return true
     }
 

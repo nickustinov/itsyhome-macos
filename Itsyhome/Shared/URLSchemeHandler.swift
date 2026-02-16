@@ -50,6 +50,9 @@ enum URLSchemeHandler {
         case "color":
             return parseColorAction(components: components)
 
+        case "speed":
+            return parseValueAction("speed", components: components)
+
         case "scene":
             return parseSceneAction(components: components)
 
