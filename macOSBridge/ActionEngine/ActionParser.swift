@@ -150,6 +150,9 @@ enum ActionParser {
         case "mode":
             return parseModeCommand(tokens: tokens)
 
+        case "speed":
+            return parseSpeedCommand(tokens: tokens)
+
         default:
             return .failure(.unknownAction("set \(property)"))
         }
@@ -253,6 +256,20 @@ enum ActionParser {
 
         let target = tokens.dropFirst(3).joined(separator: " ")
         return .success(ParsedCommand(target: target, action: .setMode(mode)))
+    }
+
+    private static func parseSpeedCommand(tokens: [String]) -> Result<ParsedCommand, ParseError> {
+        // "set speed 50 bedroom fan"
+        guard tokens.count >= 4 else {
+            return .failure(.missingTarget)
+        }
+
+        guard let value = Int(tokens[2]), value >= 0, value <= 100 else {
+            return .failure(.invalidValue(tokens[2]))
+        }
+
+        let target = tokens.dropFirst(3).joined(separator: " ")
+        return .success(ParsedCommand(target: target, action: .setSpeed(value)))
     }
 
     private static func parseSceneCommand(tokens: [String]) -> Result<ParsedCommand, ParseError> {
