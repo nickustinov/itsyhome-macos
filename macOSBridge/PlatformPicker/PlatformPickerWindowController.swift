@@ -20,7 +20,7 @@ class PlatformPickerWindowController: NSWindowController {
 
     init() {
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 500, height: 340),
+            contentRect: NSRect(x: 0, y: 0, width: 500, height: 370),
             styleMask: [.borderless],
             backing: .buffered,
             defer: false
@@ -36,7 +36,7 @@ class PlatformPickerWindowController: NSWindowController {
         super.init(window: window)
 
         window.contentView = pickerView
-        window.setContentSize(NSSize(width: 500, height: 340))
+        window.setContentSize(NSSize(width: 500, height: 370))
 
         pickerView.onHomeKitSelected = { [weak self] in
             self?.window?.close()
@@ -81,10 +81,12 @@ class PlatformPickerView: NSView {
 
         homeKitCard = PlatformCard(
             title: "HomeKit",
+            subtitle: "Apple's built-in smart home framework",
             icon: pluginBundle.image(forResource: "homekit") ?? NSImage()
         )
         homeAssistantCard = PlatformCard(
             title: "Home Assistant",
+            subtitle: "Open-source home automation",
             icon: pluginBundle.image(forResource: "ha") ?? NSImage()
         )
 
@@ -157,7 +159,7 @@ class PlatformPickerView: NSView {
             cardsStack.topAnchor.constraint(equalTo: subtitleLabel.bottomAnchor, constant: 28),
             cardsStack.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 32),
             cardsStack.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -32),
-            cardsStack.heightAnchor.constraint(equalToConstant: 160),
+            cardsStack.heightAnchor.constraint(equalToConstant: 190),
 
             // Footer
             footerLabel.topAnchor.constraint(equalTo: cardsStack.bottomAnchor, constant: 20),
@@ -174,11 +176,13 @@ class PlatformCard: NSView {
 
     private let iconView = NSImageView()
     private let titleLabel: NSTextField
+    private let subtitleLabel: NSTextField
     private var isHovered = false
     private var trackingArea: NSTrackingArea?
 
-    init(title: String, icon: NSImage) {
+    init(title: String, subtitle: String, icon: NSImage) {
         titleLabel = NSTextField(labelWithString: title)
+        subtitleLabel = NSTextField(labelWithString: subtitle)
         super.init(frame: .zero)
 
         wantsLayer = true
@@ -197,14 +201,28 @@ class PlatformCard: NSView {
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         addSubview(titleLabel)
 
+        // Subtitle
+        subtitleLabel.font = NSFont.systemFont(ofSize: 12, weight: .regular)
+        subtitleLabel.textColor = .secondaryLabelColor
+        subtitleLabel.alignment = .center
+        subtitleLabel.maximumNumberOfLines = 2
+        subtitleLabel.preferredMaxLayoutWidth = 140
+        subtitleLabel.lineBreakMode = .byWordWrapping
+        subtitleLabel.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(subtitleLabel)
+
         NSLayoutConstraint.activate([
             iconView.centerXAnchor.constraint(equalTo: centerXAnchor),
-            iconView.centerYAnchor.constraint(equalTo: centerYAnchor, constant: -16),
+            iconView.centerYAnchor.constraint(equalTo: centerYAnchor, constant: -24),
             iconView.widthAnchor.constraint(equalToConstant: 64),
             iconView.heightAnchor.constraint(equalToConstant: 64),
 
             titleLabel.topAnchor.constraint(equalTo: iconView.bottomAnchor, constant: 12),
             titleLabel.centerXAnchor.constraint(equalTo: centerXAnchor),
+
+            subtitleLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 4),
+            subtitleLabel.centerXAnchor.constraint(equalTo: centerXAnchor),
+            subtitleLabel.widthAnchor.constraint(lessThanOrEqualToConstant: 140),
         ])
     }
 
