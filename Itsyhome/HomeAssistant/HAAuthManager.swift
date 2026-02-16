@@ -100,6 +100,27 @@ final class HAAuthManager {
         }
     }
 
+    /// Validate credentials and fetch device/area counts for onboarding
+    func validateAndFetchCounts() async throws -> (deviceCount: Int, areaCount: Int) {
+        guard let url = serverURL, let token = accessToken else {
+            throw HAAuthError.notConfigured
+        }
+
+        let client = try HomeAssistantClient(serverURL: url, accessToken: token)
+
+        do {
+            try await client.connect()
+            let devices = try await client.getDevices()
+            let areas = try await client.getAreas()
+            client.disconnect()
+            return (devices.count, areas.count)
+        } catch {
+            client.disconnect()
+            logger.error("Credential validation failed: \(error.localizedDescription)")
+            throw error
+        }
+    }
+
     // MARK: - Keychain operations
 
     private func saveTokenToKeychain(_ token: String) {

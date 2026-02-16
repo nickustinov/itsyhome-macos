@@ -29,7 +29,7 @@ class PlatformPickerWindowController: NSWindowController {
         window.backgroundColor = .clear
         window.hasShadow = true
         window.isMovableByWindowBackground = true
-        window.level = .floating
+        window.level = .normal
 
         pickerView = PlatformPickerView()
 

@@ -22,7 +22,7 @@ final class StayOpenMenu: NSMenu {
 }
 
 @objc(MacOSController)
-public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerDelegate, SmartHomePlatformDelegate {
+public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerDelegate, HAConnectDelegate, HASuccessDelegate, SmartHomePlatformDelegate {
 
     // MARK: - Properties
 
@@ -37,6 +37,8 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
     var pinnedStatusItems: [String: PinnedStatusItem] = [:]
     private let cameraPanelManager = CameraPanelManager()
     private var platformPickerController: PlatformPickerWindowController?
+    private var haConnectController: HAConnectWindowController?
+    private var haSuccessController: HASuccessWindowController?
     private var homeAssistantPlatform: HomeAssistantPlatform?
     private var homeAssistantBridge: HomeAssistantBridge?
     private var lastErrorMessage: String?
@@ -105,27 +107,39 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
 
     func platformPickerDidSelectHomeAssistant() {
         StartupLogger.log("User selected Home Assistant")
-        PlatformManager.shared.selectHomeAssistant()
         platformPickerController = nil
-        // Show settings to configure Home Assistant, navigate to HA section
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
-            self?.openSettings(nil)
-            // Navigate to Home Assistant section (index 1 when HA is selected)
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                NotificationCenter.default.post(
-                    name: SettingsView.navigateToSectionNotification,
-                    object: nil,
-                    userInfo: ["index": 1]
-                )
-                // Focus the server URL field
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    NotificationCenter.default.post(
-                        name: NSNotification.Name("HomeAssistantSectionFocusServerURL"),
-                        object: nil
-                    )
-                }
-            }
-        }
+        showHAConnectScreen()
+    }
+
+    private func showHAConnectScreen() {
+        haConnectController = HAConnectWindowController()
+        haConnectController?.delegate = self
+        haConnectController?.showWindow(nil)
+    }
+
+    // MARK: - HAConnectDelegate
+
+    func haConnectDidSucceed(serverURL: String, accessToken: String, deviceCount: Int, areaCount: Int) {
+        StartupLogger.log("Home Assistant connection successful – \(deviceCount) devices, \(areaCount) areas")
+        haConnectController = nil
+        // Credentials are already saved, show success screen before finishing
+        haSuccessController = HASuccessWindowController(deviceCount: deviceCount, areaCount: areaCount)
+        haSuccessController?.delegate = self
+        haSuccessController?.showWindow(nil)
+    }
+
+    // MARK: - HASuccessDelegate
+
+    func haSuccessDidFinish() {
+        haSuccessController = nil
+        PlatformManager.shared.selectHomeAssistant()
+        restartApp()
+    }
+
+    func haConnectDidCancel() {
+        haConnectController = nil
+        // Go back to platform picker
+        showPlatformPicker()
     }
 
     private func setupNotifications() {
@@ -433,7 +447,7 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
         mainMenu.addItem(loadingItem)
 
         mainMenu.addItem(NSMenuItem.separator())
-        addFooterItems()
+        addFooterItems(disableSettings: PlatformManager.shared.needsOnboarding)
     }
 
     // MARK: - iOS2Mac Protocol
@@ -649,7 +663,7 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
         StartupLogger.log("rebuildMenu complete")
     }
 
-    private func addFooterItems() {
+    private func addFooterItems(disableSettings: Bool = false) {
         if let data = currentMenuData, data.homes.count > 1 {
             addHomeSelector(homes: data.homes, selectedId: data.selectedHomeId)
         }
@@ -657,6 +671,13 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
         let settingsIcon = PhosphorIcon.regular("gear")
         let settingsItem = menuBuilder.createActionItem(title: "Settings...", icon: settingsIcon) { [weak self] in
             self?.openSettings(nil)
+        }
+        if disableSettings {
+            settingsItem.isEnabled = false
+            if let view = settingsItem.view as? HighlightingMenuItemView {
+                view.onAction = nil
+                view.alphaValue = 0.4
+            }
         }
         mainMenu.addItem(settingsItem)
 
