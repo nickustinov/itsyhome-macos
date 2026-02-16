@@ -36,9 +36,9 @@ class ACMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable
 
     // Controls row (shown when active)
     private let controlsRow: NSView
-    private let modeButtonAuto: ModeButton
-    private let modeButtonHeat: ModeButton
-    private let modeButtonCool: ModeButton
+    private var modeButtonAuto: ModeButton?
+    private var modeButtonHeat: ModeButton?
+    private var modeButtonCool: ModeButton?
     private var swingButtonGroup: ModeButtonGroup?
     private var swingButton: ModeButton?
 
@@ -58,6 +58,8 @@ class ACMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable
     private let coolPlusButton: NSButton
 
     private let hasThresholds: Bool
+    private let hideModeSelector: Bool
+    private let validModes: [Int]  // Valid target states (0=auto, 1=heat, 2=cool)
 
     private let collapsedHeight: CGFloat = DS.ControlSize.menuItemHeight
     private let expandedHeight: CGFloat = DS.ControlSize.menuItemHeight + 36
@@ -87,6 +89,11 @@ class ACMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable
         self.heatingThresholdId = serviceData.heatingThresholdTemperatureId?.uuid
         self.swingModeId = serviceData.swingModeId?.uuid
         self.hasThresholds = coolingThresholdId != nil && heatingThresholdId != nil
+
+        // Determine valid modes: all 3 by default, or filtered by validValues
+        let allModes = serviceData.validTargetHeaterCoolerStates ?? [0, 1, 2]
+        self.validModes = allModes
+        self.hideModeSelector = allModes.count <= 1
 
         // Create wrapper view (full width for menu sizing) - start collapsed
         containerView = HighlightingMenuItemView(frame: NSRect(x: 0, y: 0, width: DS.ControlSize.menuItemWidth, height: collapsedHeight))
@@ -154,17 +161,30 @@ class ACMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable
         controlsRow.isHidden = true
 
         // Mode buttons container
-        let containerWidth = ModeButtonGroup.widthForButtons(count: 3)
+        let modeCount = validModes.count
+        let containerWidth = ModeButtonGroup.widthForButtons(count: max(modeCount, 1))
         let modeContainer = ModeButtonGroup(frame: NSRect(x: labelX, y: 3, width: containerWidth, height: 22))
 
-        modeButtonCool = modeContainer.addButton(title: "Cool", color: DS.Colors.thermostatCool, tag: 2)
-        modeButtonHeat = modeContainer.addButton(title: "Heat", color: DS.Colors.thermostatHeat, tag: 1)
-        modeButtonAuto = modeContainer.addButton(title: "Auto", color: DS.Colors.success, tag: 0)
+        if validModes.contains(2) {
+            modeButtonCool = modeContainer.addButton(title: "Cool", color: DS.Colors.thermostatCool, tag: 2)
+        }
+        if validModes.contains(1) {
+            modeButtonHeat = modeContainer.addButton(title: "Heat", color: DS.Colors.thermostatHeat, tag: 1)
+        }
+        if validModes.contains(0) {
+            modeButtonAuto = modeContainer.addButton(title: "Auto", color: DS.Colors.success, tag: 0)
+        }
 
         controlsRow.addSubview(modeContainer)
 
-        // Set initial selection
-        modeButtonAuto.isSelected = true
+        if hideModeSelector {
+            modeContainer.isHidden = true
+        }
+
+        // Set initial target state to first valid mode
+        if let firstMode = validModes.first {
+            targetState = firstMode
+        }
 
         // Single temperature control: [−] 24° [+]
         let singleTempX = DS.ControlSize.menuItemWidth - DS.Spacing.md - 78
@@ -236,6 +256,7 @@ class ACMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable
         super.init(title: serviceData.name, action: nil, keyEquivalent: "")
 
         self.view = containerView
+        updateModeButtons()
 
         containerView.closesMenuOnAction = false
         containerView.onAction = { [weak self] in
@@ -253,12 +274,12 @@ class ACMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable
         powerToggle.target = self
         powerToggle.action = #selector(togglePower(_:))
 
-        modeButtonAuto.target = self
-        modeButtonAuto.action = #selector(modeChanged(_:))
-        modeButtonHeat.target = self
-        modeButtonHeat.action = #selector(modeChanged(_:))
-        modeButtonCool.target = self
-        modeButtonCool.action = #selector(modeChanged(_:))
+        modeButtonAuto?.target = self
+        modeButtonAuto?.action = #selector(modeChanged(_:))
+        modeButtonHeat?.target = self
+        modeButtonHeat?.action = #selector(modeChanged(_:))
+        modeButtonCool?.target = self
+        modeButtonCool?.action = #selector(modeChanged(_:))
 
         minusButton.target = self
         minusButton.action = #selector(decreaseTemp(_:))
@@ -374,9 +395,9 @@ class ACMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable
     }
 
     private func updateModeButtons() {
-        modeButtonAuto.isSelected = (targetState == 0)
-        modeButtonHeat.isSelected = (targetState == 1)
-        modeButtonCool.isSelected = (targetState == 2)
+        modeButtonAuto?.isSelected = (targetState == 0)
+        modeButtonHeat?.isSelected = (targetState == 1)
+        modeButtonCool?.isSelected = (targetState == 2)
     }
 
     private func updateTargetDisplay() {

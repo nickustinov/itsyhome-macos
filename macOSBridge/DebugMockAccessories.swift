@@ -51,6 +51,11 @@ enum DebugMockups {
                     if let id = service.coolingThresholdTemperatureId.flatMap({ UUID(uuidString: $0) }) {
                         acItem.updateValue(for: id, value: 24.0)
                     }
+                    // Set heat-only radiator to heat mode
+                    if let id = service.targetHeaterCoolerStateId.flatMap({ UUID(uuidString: $0) }),
+                       service.validTargetHeaterCoolerStates == [1] {
+                        acItem.updateValue(for: id, value: 1)
+                    }
                 }
 
                 if let humidifierItem = item as? HumidifierMenuItem {
@@ -139,6 +144,31 @@ enum DebugMockups {
                 coolingThresholdTemperatureId: UUID(),
                 heatingThresholdTemperatureId: UUID(),
                 swingModeId: UUID()
+            ),
+            ServiceData(
+                uniqueIdentifier: UUID(),
+                name: "Mock Radiator (Heat)",
+                serviceType: ServiceTypes.heaterCooler,
+                accessoryName: "Mock",
+                roomIdentifier: nil,
+                currentTemperatureId: UUID(),
+                activeId: UUID(),
+                currentHeaterCoolerStateId: UUID(),
+                targetHeaterCoolerStateId: UUID(),
+                validTargetHeaterCoolerStates: [1],
+                heatingThresholdTemperatureId: UUID()
+            ),
+            ServiceData(
+                uniqueIdentifier: UUID(),
+                name: "Mock Thermostat (Heat)",
+                serviceType: ServiceTypes.thermostat,
+                accessoryName: "Mock",
+                roomIdentifier: nil,
+                currentTemperatureId: UUID(),
+                targetTemperatureId: UUID(),
+                heatingCoolingStateId: UUID(),
+                targetHeatingCoolingStateId: UUID(),
+                validTargetHeatingCoolingStates: [0, 1]
             ),
             ServiceData(
                 uniqueIdentifier: UUID(),

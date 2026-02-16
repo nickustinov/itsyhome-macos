@@ -193,6 +193,12 @@ extension HomeKitManager {
         let valveTypeChar = findChar(CharacteristicTypes.valveType)
         let valveTypeValue = valveTypeChar?.value as? Int
 
+        // Get valid target states from characteristic metadata
+        let validHCStates = findChar(CharacteristicTypes.targetHeaterCoolerState)?
+            .metadata?.validValues?.compactMap { $0.intValue }
+        let validHCoolingStates = findChar(HMCharacteristicTypeTargetHeatingCooling)?
+            .metadata?.validValues?.compactMap { $0.intValue }
+
         // Get slat type value (stored directly, not as characteristic ID)
         let slatTypeChar = findChar(CharacteristicTypes.slatType)
         let slatTypeValue = slatTypeChar?.value as? Int
@@ -216,6 +222,7 @@ extension HomeKitManager {
             targetTemperatureId: charId(HMCharacteristicTypeTargetTemperature),
             heatingCoolingStateId: charId(HMCharacteristicTypeCurrentHeatingCooling),
             targetHeatingCoolingStateId: charId(HMCharacteristicTypeTargetHeatingCooling),
+            validTargetHeatingCoolingStates: validHCoolingStates,
             lockCurrentStateId: charId(CharacteristicTypes.lockCurrentState),
             lockTargetStateId: charId(CharacteristicTypes.lockTargetState),
             currentPositionId: charId(HMCharacteristicTypeCurrentPosition),
@@ -231,6 +238,7 @@ extension HomeKitManager {
             activeId: charId(CharacteristicTypes.active),
             currentHeaterCoolerStateId: charId(CharacteristicTypes.currentHeaterCoolerState),
             targetHeaterCoolerStateId: charId(CharacteristicTypes.targetHeaterCoolerState),
+            validTargetHeaterCoolerStates: validHCStates,
             coolingThresholdTemperatureId: charId(CharacteristicTypes.coolingThresholdTemperature),
             heatingThresholdTemperatureId: charId(CharacteristicTypes.heatingThresholdTemperature),
             // Fan characteristics

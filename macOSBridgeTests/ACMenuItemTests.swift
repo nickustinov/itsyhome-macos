@@ -18,6 +18,7 @@ final class ACMenuItemTests: XCTestCase {
         currentTemperatureId: UUID? = UUID(),
         currentHeaterCoolerStateId: UUID? = nil,
         targetHeaterCoolerStateId: UUID? = nil,
+        validTargetHeaterCoolerStates: [Int]? = nil,
         coolingThresholdTemperatureId: UUID? = nil,
         heatingThresholdTemperatureId: UUID? = nil,
         swingModeId: UUID? = nil
@@ -32,6 +33,7 @@ final class ACMenuItemTests: XCTestCase {
             activeId: activeId,
             currentHeaterCoolerStateId: currentHeaterCoolerStateId,
             targetHeaterCoolerStateId: targetHeaterCoolerStateId,
+            validTargetHeaterCoolerStates: validTargetHeaterCoolerStates,
             coolingThresholdTemperatureId: coolingThresholdTemperatureId,
             heatingThresholdTemperatureId: heatingThresholdTemperatureId,
             swingModeId: swingModeId
@@ -207,6 +209,61 @@ final class ACMenuItemTests: XCTestCase {
         menuItem.updateValue(for: unknownId, value: 50)
 
         XCTAssertNotNil(menuItem.view)
+    }
+
+    // MARK: - Mode selector visibility tests
+
+    /// Recursively finds the first subview of a given type
+    private func findSubview<T: NSView>(of type: T.Type, in view: NSView) -> T? {
+        for subview in view.subviews {
+            if let match = subview as? T { return match }
+            if let found = findSubview(of: type, in: subview) { return found }
+        }
+        return nil
+    }
+
+    func testSingleModeHidesModeSelector() {
+        let serviceData = createTestServiceData(
+            targetHeaterCoolerStateId: UUID(),
+            validTargetHeaterCoolerStates: [1],  // heat only
+            heatingThresholdTemperatureId: UUID()
+        )
+        let menuItem = ACMenuItem(serviceData: serviceData, bridge: nil)
+
+        // Find ModeButtonGroup in view hierarchy – it should be hidden
+        let modeGroup = findSubview(of: ModeButtonGroup.self, in: menuItem.view!)
+        XCTAssertNotNil(modeGroup)
+        XCTAssertTrue(modeGroup!.isHidden)
+    }
+
+    func testAllModesShowsModeSelector() {
+        let serviceData = createTestServiceData(
+            targetHeaterCoolerStateId: UUID(),
+            coolingThresholdTemperatureId: UUID(),
+            heatingThresholdTemperatureId: UUID()
+        )
+        let menuItem = ACMenuItem(serviceData: serviceData, bridge: nil)
+
+        let modeGroup = findSubview(of: ModeButtonGroup.self, in: menuItem.view!)
+        XCTAssertNotNil(modeGroup)
+        XCTAssertFalse(modeGroup!.isHidden)
+    }
+
+    func testTwoModesShowsTwoButtons() {
+        let serviceData = createTestServiceData(
+            targetHeaterCoolerStateId: UUID(),
+            validTargetHeaterCoolerStates: [1, 2],  // heat + cool
+            coolingThresholdTemperatureId: UUID(),
+            heatingThresholdTemperatureId: UUID()
+        )
+        let menuItem = ACMenuItem(serviceData: serviceData, bridge: nil)
+
+        let modeGroup = findSubview(of: ModeButtonGroup.self, in: menuItem.view!)
+        XCTAssertNotNil(modeGroup)
+        XCTAssertFalse(modeGroup!.isHidden)
+        // Should have exactly 2 ModeButton subviews
+        let modeButtons = modeGroup!.subviews.compactMap { $0 as? ModeButton }
+        XCTAssertEqual(modeButtons.count, 2)
     }
 
     // MARK: - Protocol conformance tests
