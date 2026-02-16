@@ -813,14 +813,11 @@ extension MacOSController: CameraPanelManagerDelegate {
 
 extension NSWindow {
     @objc func itsyhome_makeKeyAndOrderFront(_ sender: Any?) {
-        // Block the hidden 1×1 Catalyst window from being ordered into the
-        // window list. This prevents Mission Control from showing it as an
-        // empty phantom window when "Group windows by application" is on.
-        // Use orderBack instead of blocking entirely, so the window scene
-        // stays connected (required by StoreKit for purchase sheets).
+        // For the hidden 1×1 Catalyst window: mark it as transient so
+        // Mission Control ignores it, but still order it so the window
+        // scene stays connected (required by StoreKit for purchase sheets).
         if frame.size.width <= 1 || frame.size.height <= 1 {
-            orderBack(sender)
-            return
+            collectionBehavior.insert(.transient)
         }
         // Calls through to the original (swapped) implementation
         itsyhome_makeKeyAndOrderFront(sender)
