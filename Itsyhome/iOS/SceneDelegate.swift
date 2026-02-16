@@ -23,12 +23,12 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         windowScene.sizeRestrictions?.minimumSize = CGSize(width: 1, height: 1)
         windowScene.sizeRestrictions?.maximumSize = CGSize(width: 1, height: 1)
 
-        // Create a tiny invisible window (never ordered front — see swizzle
-        // in MacOSController that blocks 1×1 windows from Mission Control)
+        // Create a tiny invisible window. Must be key+visible so StoreKit
+        // has a window scene to present purchase sheets on.
         let window = UIWindow(windowScene: windowScene)
         window.frame = CGRect(x: 0, y: 0, width: 1, height: 1)
         window.rootViewController = UIViewController()
-        window.isHidden = true
+        window.makeKeyAndVisible()
         self.window = window
 
         // Handle any URLs passed at launch
