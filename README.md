@@ -1,7 +1,6 @@
 # Itsyhome <img src="docs/homekit.png" height="32" alt="HomeKit"> <img src="docs/ha.png" height="32" alt="Home Assistant">
 
 [![Tests](https://github.com/nickustinov/itsyhome-macos/actions/workflows/test.yml/badge.svg)](https://github.com/nickustinov/itsyhome-macos/actions/workflows/test.yml)
-[![Release](https://img.shields.io/github/v/release/nickustinov/itsyhome-macos)](https://github.com/nickustinov/itsyhome-macos/releases/latest)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Swift 5.9](https://img.shields.io/badge/swift-5.9-orange.svg)](https://swift.org)
 [![macOS 14+](https://img.shields.io/badge/macOS-14%2B-brightgreen.svg)](https://www.apple.com/macos/sonoma/)
