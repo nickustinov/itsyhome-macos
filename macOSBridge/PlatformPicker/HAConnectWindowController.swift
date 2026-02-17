@@ -68,8 +68,11 @@ class HAConnectWindowController: NSWindowController {
 
     private func attemptConnection(serverURL: String, accessToken: String) {
         // Validate URL
-        guard let url = URL(string: serverURL), url.host != nil else {
-            connectView.showError("Invalid server URL")
+        let result = HAURLValidator.validate(serverURL)
+        guard case .success(let url) = result else {
+            if case .failure(let message) = result {
+                connectView.showError(message)
+            }
             return
         }
 

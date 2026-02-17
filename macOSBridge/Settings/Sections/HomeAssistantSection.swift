@@ -252,20 +252,23 @@ class HomeAssistantSection: SettingsCard, NSTextFieldDelegate {
     }
 
     @objc private func connectTapped() {
-        let urlString = serverURLField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        let urlString = serverURLField.stringValue
         let token = accessTokenField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
 
-        guard !urlString.isEmpty, !token.isEmpty else {
+        guard !token.isEmpty else {
             showAlert(title: "Missing credentials", message: "Please enter both server URL and access token.")
             return
         }
 
-        guard let url = URL(string: urlString) else {
-            showAlert(title: "Invalid URL", message: "Please enter a valid server URL.")
+        let result = HAURLValidator.validate(urlString)
+        guard case .success(let url) = result else {
+            if case .failure(let message) = result {
+                showAlert(title: "Invalid URL", message: message)
+            }
             return
         }
 
-        // Save credentials first
+        // Save credentials
         HAAuthManager.shared.saveCredentials(serverURL: url, accessToken: token)
 
         // Test connection
