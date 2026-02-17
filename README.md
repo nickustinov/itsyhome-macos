@@ -113,6 +113,7 @@ itsyhome://<action>/<target>
 | Turn off | `itsyhome://off/<Room>/<Device>` | `itsyhome://off/Bedroom/Lamp` |
 | Brightness | `itsyhome://brightness/<0-100>/<Room>/<Device>` | `itsyhome://brightness/50/Office/Lamp` |
 | Position | `itsyhome://position/<0-100>/<Room>/<Device>` | `itsyhome://position/75/Living%20Room/Blinds` |
+| Speed | `itsyhome://speed/<0-100>/<Room>/<Device>` | `itsyhome://speed/50/Bedroom/Ceiling%20Fan` |
 | Temperature | `itsyhome://temp/<degrees>/<Room>/<Device>` | `itsyhome://temp/22/Hallway/Thermostat` |
 | Color | `itsyhome://color/<hue>/<saturation>/<Room>/<Device>` | `itsyhome://color/120/100/Bedroom/Light` |
 | Scene | `itsyhome://scene/<Scene%20Name>` | `itsyhome://scene/Goodnight` |
@@ -152,6 +153,7 @@ curl http://localhost:8423/on/Kitchen/Light
 curl http://localhost:8423/off/Bedroom/Lamp
 curl http://localhost:8423/brightness/50/Office/Lamp
 curl http://localhost:8423/position/75/Living%20Room/Blinds
+curl http://localhost:8423/speed/50/Bedroom/Ceiling%20Fan
 curl http://localhost:8423/temp/22/Hallway/Thermostat
 curl http://localhost:8423/color/120/100/Bedroom/Light
 curl http://localhost:8423/scene/Goodnight
@@ -240,7 +242,7 @@ Control your smart home devices directly from an Elgato Stream Deck using the [I
 | Status | Display temperature or humidity readings |
 | Blinds | Open/close blinds with position display |
 | Garage door | Open/close garage door with state feedback |
-| Security system | Arm/disarm a security system with mode selection |
+| Security system | Arm/disarm a security system with mode selection (HomeKit only) |
 | Group | Turn on/off a device group with partial count display |
 
 Features include color-coded icons per device type, dynamic state display, live state polling, optimistic updates for slow devices (locks, garage doors), custom on/off colors, and optional labels for multi-button setups.

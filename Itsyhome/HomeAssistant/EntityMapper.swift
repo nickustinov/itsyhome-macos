@@ -381,7 +381,7 @@ final class EntityMapper {
             // Sensor characteristics (humidity for sensors, climate, and humidifier entities)
             humidityId: state.deviceClass == "humidity" || ((state.domain == "climate" || state.domain == "humidifier") && state.currentHumidity != nil) ? characteristicUUID(state.entityId, "humidity") : nil,
             // HeaterCooler characteristics
-            activeId: state.domain == "valve" || state.domain == "climate" ? characteristicUUID(state.entityId, "active") : nil,
+            activeId: state.domain == "valve" ? characteristicUUID(state.entityId, "active") : nil,
             coolingThresholdTemperatureId: state.targetTempHigh != nil ? characteristicUUID(state.entityId, "target_temp_high") : nil,
             heatingThresholdTemperatureId: state.targetTempLow != nil ? characteristicUUID(state.entityId, "target_temp_low") : nil,
             // Fan characteristics - only provide speed if fan supports percentage (SET_PERCENTAGE feature)

@@ -2,6 +2,14 @@
 
 ## 2.0.0
 
+### Build 223
+- **Fix HA lock state always showing unlocked** – Home Assistant sends lock state as a string ("locked", "unlocked"), but the webhook server was converting it with `intValue()` which returned 0 for strings, causing all HA locks to appear unlocked
+- **Fix HA climate toggle not working** – climate entities had `activeId` set which caused toggle to write to an unhandled "active" characteristic; removed `activeId` for climate so toggle correctly uses HVAC mode (off/auto)
+- **Fix roomless accessories not toggling via webhooks** – devices without a room (shown in "Other") could be read via `/info/` but not controlled via `/toggle/` because DeviceResolver had no bare device name resolution; added a new resolution step for unqualified device names
+- **Add humidifier-dehumidifier to webhook device type labels** – the `/list/devices` endpoint returned a raw UUID for humidifier devices instead of `"humidifier-dehumidifier"`, causing the Stream Deck property inspector to show an empty dropdown
+- **Add fan speed to README** – documented the `/speed/` webhook endpoint and `itsyhome://speed/` deeplink added in build 210
+- **Security system action is HomeKit only** – added note to Stream Deck plugin docs that the security button does not support Home Assistant alarm panels (PIN and custom modes)
+
 ### Build 211
 - **Real-time accessory updates** – accessories now update instantly when toggled from the Home app or other controllers, instead of waiting for the menu to be opened; also re-reads characteristic values when a device becomes reachable again after being offline
 

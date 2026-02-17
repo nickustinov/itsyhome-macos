@@ -23,6 +23,7 @@ final class DeviceResolverTests: XCTestCase {
     private let bedroomSpotlightsId = UUID()
     private let officeSpotlightsId = UUID()
     private let smartQuoteLampId = UUID()
+    private let roomlessOutletId = UUID()
     private let goodnightSceneId = UUID()
     private let morningSceneId = UUID()
     private let smartQuoteSceneId = UUID()
@@ -88,6 +89,16 @@ final class DeviceResolverTests: XCTestCase {
             brightnessId: UUID()
         )
 
+        // Device without a room (shows in "Other")
+        let roomlessOutlet = ServiceData(
+            uniqueIdentifier: roomlessOutletId,
+            name: "Smart Plug",
+            serviceType: ServiceTypes.outlet,
+            accessoryName: "Smart Plug",
+            roomIdentifier: nil,
+            powerStateId: UUID()
+        )
+
         // Device with smart quote in room name (from iOS keyboard)
         let smartQuoteLamp = ServiceData(
             uniqueIdentifier: smartQuoteLampId,
@@ -139,6 +150,13 @@ final class DeviceResolverTests: XCTestCase {
                 name: "Desk Light",
                 roomIdentifier: smartQuoteRoomId,
                 services: [smartQuoteLamp],
+                isReachable: true
+            ),
+            AccessoryData(
+                uniqueIdentifier: UUID(),
+                name: "Smart Plug",
+                roomIdentifier: nil,
+                services: [roomlessOutlet],
                 isReachable: true
             )
         ]
@@ -541,6 +559,40 @@ final class DeviceResolverTests: XCTestCase {
             // Also acceptable
         } else {
             XCTFail("Expected services or ambiguous result, got \(result)")
+        }
+    }
+
+    // MARK: - Bare device name resolution tests (roomless accessories)
+
+    func testResolveRoomlessDeviceByExactName() {
+        let result = DeviceResolver.resolve("Smart Plug", in: testMenuData)
+
+        if case .services(let services) = result {
+            XCTAssertEqual(services.count, 1)
+            XCTAssertEqual(services[0].uniqueIdentifier, roomlessOutletId.uuidString)
+        } else {
+            XCTFail("Expected services result, got \(result)")
+        }
+    }
+
+    func testResolveRoomlessDeviceCaseInsensitive() {
+        let result = DeviceResolver.resolve("smart plug", in: testMenuData)
+
+        if case .services(let services) = result {
+            XCTAssertEqual(services.count, 1)
+            XCTAssertEqual(services[0].uniqueIdentifier, roomlessOutletId.uuidString)
+        } else {
+            XCTFail("Expected services result, got \(result)")
+        }
+    }
+
+    func testResolveRoomlessDeviceNotFound() {
+        let result = DeviceResolver.resolve("Nonexistent Plug", in: testMenuData)
+
+        if case .notFound = result {
+            // Expected
+        } else {
+            XCTFail("Expected notFound result, got \(result)")
         }
     }
 

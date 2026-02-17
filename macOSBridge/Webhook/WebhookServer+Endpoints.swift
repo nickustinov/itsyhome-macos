@@ -331,7 +331,12 @@ extension WebhookServer {
             state.saturation = doubleValue(value)
         }
         if let value = getValue(service.lockCurrentStateId) {
-            state.locked = LockState(rawValue: intValue(value))?.isLocked ?? false
+            if let strValue = value as? String {
+                // HA sends raw state strings: "locked", "unlocked", "locking", "unlocking", "jammed"
+                state.locked = strValue == "locked"
+            } else {
+                state.locked = LockState(rawValue: intValue(value))?.isLocked ?? false
+            }
         }
         if let value = getValue(service.currentDoorStateId) {
             state.doorState = DoorState(rawValue: intValue(value))?.label ?? "stopped"

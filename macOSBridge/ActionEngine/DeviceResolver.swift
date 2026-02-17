@@ -59,6 +59,7 @@ enum DeviceResolver {
     /// - Room/Group: "Office/group.All Lights" (room-scoped group)
     /// - Scene: "scene.Goodnight", "Goodnight"
     /// - Group: "group.Office Lights" (global group)
+    /// - Device: "My Switch" (bare name, no room prefix)
     /// - UUID: "ABC123-DEF456-..."
     static func resolve(_ query: String, in data: MenuData, groups: [DeviceGroup] = []) -> ResolveResult {
         let trimmed = query.trimmingCharacters(in: .whitespaces)
@@ -89,6 +90,11 @@ enum DeviceResolver {
         // 5. Room/Device format: "Office/Spotlights"
         if let roomDeviceMatch = resolveRoomAndDeviceName(trimmed, in: data) {
             return roomDeviceMatch
+        }
+
+        // 6. Bare device name (no room prefix) – handles roomless accessories
+        if let deviceMatch = resolveDeviceName(trimmed, in: data) {
+            return deviceMatch
         }
 
         return .notFound(query)
@@ -269,6 +275,28 @@ enum DeviceResolver {
         }
 
         return .notFound(query)
+    }
+
+    private static func resolveDeviceName(_ query: String, in data: MenuData) -> ResolveResult? {
+        let lowered = query.lowercased().normalizedForComparison()
+
+        var matchingServices: [ServiceData] = []
+        for accessory in data.accessories {
+            for service in accessory.services {
+                let name = service.name.lowercased().normalizedForComparison()
+                if name == lowered {
+                    matchingServices.append(service)
+                }
+            }
+        }
+
+        if matchingServices.count == 1 {
+            return .services(matchingServices)
+        } else if matchingServices.count > 1 {
+            return .ambiguous(matchingServices)
+        }
+
+        return nil
     }
 
     private static func resolveRoomAndDeviceName(_ query: String, in data: MenuData) -> ResolveResult? {
