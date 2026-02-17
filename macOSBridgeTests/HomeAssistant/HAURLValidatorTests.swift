@@ -7,7 +7,7 @@ import XCTest
 
 final class HAURLValidatorTests: XCTestCase {
 
-    // MARK: - Success cases
+    // MARK: - Explicit scheme is preserved
 
     func testFullHTTPURL() {
         assertSuccess("http://homeassistant.local:8123",
@@ -29,20 +29,66 @@ final class HAURLValidatorTests: XCTestCase {
                        expected: "wss://ha.example.com")
     }
 
-    func testBareHostnameGetsSchemePrepended() {
+    // MARK: - Bare local addresses default to http
+
+    func testBareLocalHostname() {
         assertSuccess("homeassistant.local:8123",
                        expected: "http://homeassistant.local:8123")
     }
 
-    func testBareIPGetsSchemePrepended() {
+    func testBareLocalHostnameWithoutPort() {
+        assertSuccess("homeassistant.local",
+                       expected: "http://homeassistant.local")
+    }
+
+    func testBarePrivateIP192() {
         assertSuccess("192.168.1.100:8123",
                        expected: "http://192.168.1.100:8123")
     }
 
-    func testBareHostnameWithoutPort() {
-        assertSuccess("homeassistant.local",
-                       expected: "http://homeassistant.local")
+    func testBarePrivateIP10() {
+        assertSuccess("10.0.0.5:8123",
+                       expected: "http://10.0.0.5:8123")
     }
+
+    func testBarePrivateIP172() {
+        assertSuccess("172.16.0.1:8123",
+                       expected: "http://172.16.0.1:8123")
+    }
+
+    func testBareLocalhost() {
+        assertSuccess("localhost:8123",
+                       expected: "http://localhost:8123")
+    }
+
+    func testBareLoopback() {
+        assertSuccess("127.0.0.1:8123",
+                       expected: "http://127.0.0.1:8123")
+    }
+
+    // MARK: - Bare remote addresses default to https
+
+    func testBareNabuCasaDomain() {
+        assertSuccess("abcdef123.ui.nabu.casa",
+                       expected: "https://abcdef123.ui.nabu.casa")
+    }
+
+    func testBareDuckDNSDomain() {
+        assertSuccess("myha.duckdns.org",
+                       expected: "https://myha.duckdns.org")
+    }
+
+    func testBareCustomDomain() {
+        assertSuccess("ha.example.com",
+                       expected: "https://ha.example.com")
+    }
+
+    func testBareCustomDomainWithPort() {
+        assertSuccess("ha.example.com:8443",
+                       expected: "https://ha.example.com:8443")
+    }
+
+    // MARK: - Normalisation
 
     func testTrailingSlashStripped() {
         assertSuccess("http://ha.local:8123/",
