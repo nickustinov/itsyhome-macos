@@ -2,6 +2,10 @@
 
 ## 2.0.0
 
+### Build 224
+- **Default to https for remote HA URLs** – bare hostnames for remote services (Nabu Casa, DuckDNS, custom domains) now default to `https://` instead of `http://`, so the WebSocket connection uses `wss://` as required; local addresses (`.local`, private IPs, `localhost`) still default to `http://`
+- **Add ATS local networking exception** – added `NSAllowsLocalNetworking` to App Transport Security so local `http://` and `ws://` connections aren't blocked by macOS
+
 ### Build 223
 - **Fix HA lock state always showing unlocked** – Home Assistant sends lock state as a string ("locked", "unlocked"), but the webhook server was converting it with `intValue()` which returned 0 for strings, causing all HA locks to appear unlocked
 - **Fix HA climate toggle not working** – climate entities had `activeId` set which caused toggle to write to an unhandled "active" characteristic; removed `activeId` for climate so toggle correctly uses HVAC mode (off/auto)
