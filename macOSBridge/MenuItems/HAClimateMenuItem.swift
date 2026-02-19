@@ -94,7 +94,10 @@ class HAClimateMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefr
         self.targetStateId = serviceData.targetHeatingCoolingStateId?.uuid
         self.coolingThresholdId = serviceData.coolingThresholdTemperatureId?.uuid
         self.heatingThresholdId = serviceData.heatingThresholdTemperatureId?.uuid
-        self.swingModeId = serviceData.swingModeId?.uuid
+        // Hide swing button if available modes don't include "off" (can't toggle)
+        let swingModes = serviceData.availableSwingModes ?? []
+        let showSwing = swingModes.isEmpty || swingModes.contains("off")
+        self.swingModeId = showSwing ? serviceData.swingModeId?.uuid : nil
         self.hasThresholds = coolingThresholdId != nil && heatingThresholdId != nil
 
         // Determine if we need 3 rows (4+ mode buttons) or should hide mode selector (1 mode)

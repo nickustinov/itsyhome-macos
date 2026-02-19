@@ -2,6 +2,9 @@
 
 ## 2.1.0
 
+### Build 226
+- **Fix swing button shown on A/C units without "off" swing mode** – the swing toggle is now hidden for climate entities whose available swing modes don't include "off", since the button can only toggle between off and on
+
 ### Build 225
 - **Localization** – added full localization support with translations for 12 languages: Spanish, French, German, Italian, Portuguese (Brazil), Russian, Polish, Japanese, Korean, Chinese Simplified, Chinese Traditional
 - **Fix crash on launch for some Home Assistant setups** – building the favourites menu with `Dictionary(uniqueKeysWithValues:)` crashed when duplicate service identifiers were present; replaced with duplicate-safe dictionary construction

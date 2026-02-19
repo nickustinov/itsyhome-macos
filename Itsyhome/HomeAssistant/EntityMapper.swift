@@ -391,6 +391,7 @@ final class EntityMapper {
             rotationDirectionId: state.direction != nil ? characteristicUUID(state.entityId, "direction") : nil,
             swingModeId: state.swingMode != nil ? characteristicUUID(state.entityId, "swing_mode") :
                          state.isOscillating ? characteristicUUID(state.entityId, "oscillating") : nil,
+            availableSwingModes: !state.swingModes.isEmpty ? state.swingModes : nil,
             // Garage door characteristics
             currentDoorStateId: state.deviceClass == "garage" ? characteristicUUID(state.entityId, "door_state") : nil,
             targetDoorStateId: state.deviceClass == "garage" ? characteristicUUID(state.entityId, "target_door") : nil,

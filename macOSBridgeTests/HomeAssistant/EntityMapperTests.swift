@@ -1028,4 +1028,65 @@ final class EntityMapperTests: XCTestCase {
         let service = menuData.accessories.first?.services.first
         XCTAssertEqual(service?.serviceType, ServiceTypes.window)
     }
+
+    // MARK: - Climate swing mode visibility
+
+    func testClimateSwingModePassesAvailableModes() {
+        loadData(states: [
+            createEntityState(
+                entityId: "climate.ac",
+                state: "cool",
+                attributes: [
+                    "swing_mode": "both",
+                    "swing_modes": ["off", "both", "vertical", "horizontal"],
+                    "hvac_modes": ["off", "cool"]
+                ]
+            )
+        ])
+
+        let menuData = mapper.generateMenuData()
+        let service = menuData.accessories.first?.services.first
+
+        XCTAssertNotNil(service?.swingModeId)
+        XCTAssertEqual(service?.availableSwingModes, ["off", "both", "vertical", "horizontal"])
+    }
+
+    func testClimateSwingModeWithoutOffMode() {
+        loadData(states: [
+            createEntityState(
+                entityId: "climate.ac",
+                state: "cool",
+                attributes: [
+                    "swing_mode": "both",
+                    "swing_modes": ["both", "vertical", "horizontal"],
+                    "hvac_modes": ["off", "cool"]
+                ]
+            )
+        ])
+
+        let menuData = mapper.generateMenuData()
+        let service = menuData.accessories.first?.services.first
+
+        XCTAssertNotNil(service?.swingModeId)
+        XCTAssertEqual(service?.availableSwingModes, ["both", "vertical", "horizontal"])
+        XCTAssertFalse(service!.availableSwingModes!.contains("off"))
+    }
+
+    func testClimateSwingModeNilWhenNoSwingModes() {
+        loadData(states: [
+            createEntityState(
+                entityId: "climate.ac",
+                state: "cool",
+                attributes: [
+                    "hvac_modes": ["off", "cool"]
+                ]
+            )
+        ])
+
+        let menuData = mapper.generateMenuData()
+        let service = menuData.accessories.first?.services.first
+
+        XCTAssertNil(service?.swingModeId)
+        XCTAssertNil(service?.availableSwingModes)
+    }
 }

@@ -374,6 +374,11 @@ extension HAEntityState {
     var swingMode: String? {
         attributes["swing_mode"] as? String
     }
+
+    /// Available swing modes
+    var swingModes: [String] {
+        attributes["swing_modes"] as? [String] ?? []
+    }
 }
 
 // MARK: - Cover attributes

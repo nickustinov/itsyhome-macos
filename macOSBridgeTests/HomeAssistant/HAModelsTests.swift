@@ -447,4 +447,32 @@ final class HAModelsTests: XCTestCase {
         XCTAssertNotNil(state)
         XCTAssertTrue(state!.codeArmRequired)
     }
+
+    // MARK: - Climate swing modes tests
+
+    func testClimateSwingModes() {
+        let json: [String: Any] = [
+            "entity_id": "climate.ac",
+            "state": "cool",
+            "attributes": [
+                "swing_modes": ["off", "both", "vertical", "horizontal"]
+            ]
+        ]
+
+        let state = HAEntityState(json: json)
+
+        XCTAssertEqual(state?.swingModes, ["off", "both", "vertical", "horizontal"])
+    }
+
+    func testClimateSwingModesEmpty() {
+        let json: [String: Any] = [
+            "entity_id": "climate.ac",
+            "state": "cool",
+            "attributes": [:]
+        ]
+
+        let state = HAEntityState(json: json)
+
+        XCTAssertEqual(state?.swingModes, [])
+    }
 }

@@ -81,6 +81,7 @@ public struct ServiceData: Codable {
     public let currentFanStateId: String?      // 0=INACTIVE, 1=IDLE, 2=BLOWING_AIR (read-only)
     public let rotationDirectionId: String?    // 0=CLOCKWISE, 1=COUNTER_CLOCKWISE
     public let swingModeId: String?            // 0=DISABLED, 1=ENABLED
+    public let availableSwingModes: [String]?  // HA only: available swing modes (e.g. ["off", "both", "vertical"])
     // Garage door characteristics
     public let currentDoorStateId: String?     // 0=open, 1=closed, 2=opening, 3=closing, 4=stopped
     public let targetDoorStateId: String?      // 0=open, 1=closed
@@ -161,6 +162,7 @@ public struct ServiceData: Codable {
         currentFanStateId: UUID? = nil,
         rotationDirectionId: UUID? = nil,
         swingModeId: UUID? = nil,
+        availableSwingModes: [String]? = nil,
         currentDoorStateId: UUID? = nil,
         targetDoorStateId: UUID? = nil,
         obstructionDetectedId: UUID? = nil,
@@ -238,6 +240,7 @@ public struct ServiceData: Codable {
         self.currentFanStateId = currentFanStateId?.uuidString
         self.rotationDirectionId = rotationDirectionId?.uuidString
         self.swingModeId = swingModeId?.uuidString
+        self.availableSwingModes = availableSwingModes
         self.currentDoorStateId = currentDoorStateId?.uuidString
         self.targetDoorStateId = targetDoorStateId?.uuidString
         self.obstructionDetectedId = obstructionDetectedId?.uuidString
