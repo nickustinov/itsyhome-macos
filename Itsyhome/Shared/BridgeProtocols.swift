@@ -460,6 +460,7 @@ public protocol Mac2iOS: NSObjectProtocol {
     func closeCameraWindow()
     func setCameraWindowHidden(_ hidden: Bool)
     func getRawHomeKitDump() -> String?
+    func getCameraDebugJSON(entityId: String?, completion: @escaping (String?) -> Void)
 }
 
 /// Protocol for iOS code to call macOS plugin

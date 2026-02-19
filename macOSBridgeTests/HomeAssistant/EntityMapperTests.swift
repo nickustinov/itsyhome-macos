@@ -872,6 +872,51 @@ final class EntityMapperTests: XCTestCase {
         XCTAssertEqual(menuData.cameras[1].name, "Front Camera")
     }
 
+    func testCameraWithoutStreamFeatureShownInMenu() {
+        let frigate = createEntityState(
+            entityId: "camera.front_door",
+            state: "recording",
+            attributes: [
+                "friendly_name": "Front Door",
+                "supported_features": 0,
+                "client_id": "frigate"
+            ]
+        )
+        loadData(states: [frigate])
+
+        let menuData = mapper.generateMenuData()
+
+        XCTAssertEqual(menuData.cameras.count, 1)
+        XCTAssertTrue(menuData.hasCameras)
+        XCTAssertEqual(menuData.cameras.first?.entityId, "camera.front_door")
+    }
+
+    func testUnavailableCameraExcludedFromMenu() {
+        let available = createEntityState(
+            entityId: "camera.front_door",
+            state: "idle",
+            attributes: [
+                "friendly_name": "Front Door Camera",
+                "supported_features": 2
+            ]
+        )
+        let unavailable = createEntityState(
+            entityId: "camera.test_fluent",
+            state: "unavailable",
+            attributes: [
+                "friendly_name": "Fluent",
+                "supported_features": 2,
+                "restored": true
+            ]
+        )
+        loadData(states: [available, unavailable])
+
+        let menuData = mapper.generateMenuData()
+
+        XCTAssertEqual(menuData.cameras.count, 1)
+        XCTAssertEqual(menuData.cameras.first?.entityId, "camera.front_door")
+    }
+
     func testNoCamerasReturnsEmptyAndFalse() {
         let state = createEntityState(
             entityId: "light.test",
@@ -1070,6 +1115,75 @@ final class EntityMapperTests: XCTestCase {
         XCTAssertNotNil(service?.swingModeId)
         XCTAssertEqual(service?.availableSwingModes, ["both", "vertical", "horizontal"])
         XCTAssertFalse(service!.availableSwingModes!.contains("off"))
+    }
+
+    // MARK: - getAllCameraEntities tests
+
+    func testGetAllCameraEntitiesIncludesWithoutStreamFlag() {
+        let withStream = createEntityState(
+            entityId: "camera.front_door",
+            state: "idle",
+            attributes: [
+                "friendly_name": "Front Door",
+                "supported_features": 2
+            ]
+        )
+        let withoutStream = createEntityState(
+            entityId: "camera.frigate",
+            state: "idle",
+            attributes: [
+                "friendly_name": "Frigate Camera",
+                "supported_features": 0
+            ]
+        )
+        loadData(states: [withStream, withoutStream])
+
+        let cameras = mapper.getAllCameraEntities()
+
+        XCTAssertEqual(cameras.count, 2)
+        let entityIds = Set(cameras.map { $0.entityId })
+        XCTAssertTrue(entityIds.contains("camera.front_door"))
+        XCTAssertTrue(entityIds.contains("camera.frigate"))
+    }
+
+    func testGetAllCameraEntitiesExcludesNonCameras() {
+        let camera = createEntityState(
+            entityId: "camera.backyard",
+            state: "streaming",
+            attributes: [
+                "friendly_name": "Backyard Camera",
+                "supported_features": 2
+            ]
+        )
+        let light = createEntityState(
+            entityId: "light.kitchen",
+            state: "on",
+            attributes: ["friendly_name": "Kitchen Light"]
+        )
+        let sensor = createEntityState(
+            entityId: "sensor.temperature",
+            state: "22.5",
+            attributes: ["device_class": "temperature"]
+        )
+        loadData(states: [camera, light, sensor])
+
+        let cameras = mapper.getAllCameraEntities()
+
+        XCTAssertEqual(cameras.count, 1)
+        XCTAssertEqual(cameras.first?.entityId, "camera.backyard")
+    }
+
+    func testGetAllCameraEntitiesReturnsEmptyWhenNoCameras() {
+        let light = createEntityState(
+            entityId: "light.kitchen",
+            state: "on",
+            attributes: ["friendly_name": "Kitchen Light"]
+        )
+        loadData(states: [light])
+
+        let cameras = mapper.getAllCameraEntities()
+
+        XCTAssertTrue(cameras.isEmpty)
     }
 
     func testClimateSwingModeNilWhenNoSwingModes() {

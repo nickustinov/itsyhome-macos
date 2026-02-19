@@ -70,4 +70,11 @@ class HomeAssistantBridge: NSObject, Mac2iOS {
     func getRawHomeKitDump() -> String? {
         return platform.getRawDataDump()
     }
+
+    func getCameraDebugJSON(entityId: String?, completion: @escaping (String?) -> Void) {
+        Task {
+            let json = await platform.getCameraDebugJSON(entityId: entityId)
+            completion(json)
+        }
+    }
 }

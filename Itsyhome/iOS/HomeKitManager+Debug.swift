@@ -165,6 +165,10 @@ extension HomeKitManager {
         }
     }
 
+    func getCameraDebugJSON(entityId: String?, completion: @escaping (String?) -> Void) {
+        completion(nil)
+    }
+
     // MARK: - Private helpers
 
     private func addSerializableValue(_ value: Any, to dict: [String: Any]) -> [String: Any] {

@@ -38,6 +38,9 @@ extension WebhookServer {
                 handleDebugRaw(connection: connection, engine: engine)
             } else if decoded == "all" {
                 handleDebugAll(connection: connection, engine: engine)
+            } else if decoded == "cameras" || decoded.hasPrefix("cameras/") {
+                let entityFilter = decoded.hasPrefix("cameras/") ? String(decoded.dropFirst(8)) : nil
+                handleDebugCameras(connection: connection, engine: engine, entityId: entityFilter)
             } else {
                 handleDebug(target: decoded, connection: connection, engine: engine)
             }
@@ -235,6 +238,27 @@ extension WebhookServer {
             scenes: data.scenes.count
         )
         sendResponse(connection: connection, status: 200, body: encode(response))
+    }
+
+    private func handleDebugCameras(connection: NWConnection, engine: ActionEngine, entityId: String? = nil) {
+        guard let bridge = engine.bridge else {
+            sendResponse(connection: connection, status: 500, body: encode(APIResponse.error("Bridge unavailable")))
+            return
+        }
+
+        DispatchQueue.main.async { [weak self] in
+            guard let self else {
+                connection.cancel()
+                return
+            }
+            bridge.getCameraDebugJSON(entityId: entityId) { json in
+                if let json = json {
+                    self.sendResponse(connection: connection, status: 200, body: json)
+                } else {
+                    self.sendResponse(connection: connection, status: 500, body: self.encode(APIResponse.error("Camera debug not available (HomeKit mode?)")))
+                }
+            }
+        }
     }
 
     private func handleDebugRaw(connection: NWConnection, engine: ActionEngine) {

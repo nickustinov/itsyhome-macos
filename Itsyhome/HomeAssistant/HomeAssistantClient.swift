@@ -659,6 +659,20 @@ final class HomeAssistantClient: NSObject {
         return answer
     }
 
+    /// Probe whether a camera supports WebRTC by sending a minimal offer
+    /// Returns the raw HA response (success or error) without parsing the answer SDP
+    func probeWebRTCSupport(entityId: String) async throws -> [String: Any] {
+        let minimalOffer = "v=0\r\no=- 0 0 IN IP4 127.0.0.1\r\ns=-\r\nt=0 0\r\nm=video 9 UDP/TLS/RTP/SAVPF 96\r\na=mid:0\r\na=recvonly\r\na=rtpmap:96 H264/90000\r\n"
+
+        let result = try await sendAndWait([
+            "type": "camera/webrtc/offer",
+            "entity_id": entityId,
+            "offer": minimalOffer
+        ])
+
+        return result as? [String: Any] ?? [:]
+    }
+
     /// WebRTC signaling - send ICE candidate
     func sendWebRTCCandidate(entityId: String, candidate: String) async throws {
         _ = try await sendAndWait([

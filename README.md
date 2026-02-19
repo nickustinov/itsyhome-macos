@@ -447,13 +447,15 @@ Then navigate to `http://localhost:8123`, create an account, and generate a long
 
 ### Webhook debug endpoints
 
-When the webhook server is running, three debug endpoints are available to inspect raw HomeKit data:
+When the webhook server is running, these debug endpoints are available:
 
 | Endpoint | Description |
 |---|---|
 | `GET /debug/<name>` | Returns characteristics, service type, limits, room, and reachability for a specific device or service matched by name |
 | `GET /debug/all` | Dumps all accessories with their services, rooms count, and scenes count |
 | `GET /debug/raw` | Returns the complete raw HomeKit data dump from the iOS bridge including service groups, zones, action sets, and triggers |
+| `GET /debug/cameras` | Probes all camera entities – snapshot, HLS, and WebRTC connectivity tests with timing. Tokens are redacted. |
+| `GET /debug/cameras/<entity_id>` | Same as above for a single camera (e.g. `camera.front_door`) |
 
 Example using curl:
 
@@ -461,6 +463,8 @@ Example using curl:
 curl http://localhost:<port>/debug/all
 curl http://localhost:<port>/debug/Living%20Room%20Light
 curl http://localhost:<port>/debug/raw
+curl http://localhost:<port>/debug/cameras
+curl http://localhost:<port>/debug/cameras/camera.front_door
 ```
 
 ## HomeKit entitlement

@@ -2,6 +2,10 @@
 
 ## 2.1.0
 
+### Build 227
+- **Fix cameras not showing without STREAM feature flag** – cameras from integrations like Frigate and Blue Iris that don't set the `supported_features` STREAM bit are now shown; the filter now only excludes cameras with state "unavailable"
+- **Camera debug endpoint** – new `/debug/cameras` webhook endpoint probes each camera's snapshot, HLS, and WebRTC support, with per-entity filtering via `/debug/cameras/{entity_id}`
+
 ### Build 226
 - **Fix swing button shown on A/C units without "off" swing mode** – the swing toggle is now hidden for climate entities whose available swing modes don't include "off", since the button can only toggle between off and on
 

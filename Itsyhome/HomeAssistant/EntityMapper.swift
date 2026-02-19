@@ -315,8 +315,8 @@ final class EntityMapper {
     // MARK: - Camera generation
 
     private func generateCameras() -> [CameraData] {
-        // Filter to cameras that support streaming (bit 2 = STREAM feature)
-        let cameraEntities = entityStates.values.filter { $0.domain == "camera" && ($0.supportedFeatures & 2) != 0 }
+        // Show all available cameras (Frigate, Blue Iris, etc. don't set the STREAM feature flag)
+        let cameraEntities = entityStates.values.filter { $0.domain == "camera" && $0.state != "unavailable" }
         return cameraEntities
             .map { state in
                 CameraData(
@@ -793,6 +793,15 @@ final class EntityMapper {
             }
         }
         return "unknown"
+    }
+
+    // MARK: - Camera debug
+
+    /// Returns all camera domain entities (including those without STREAM feature)
+    func getAllCameraEntities() -> [HAEntityState] {
+        lock.lock()
+        defer { lock.unlock() }
+        return entityStates.values.filter { $0.domain == "camera" }
     }
 
     // MARK: - Entity ID lookup

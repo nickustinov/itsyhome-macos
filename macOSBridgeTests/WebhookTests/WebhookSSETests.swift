@@ -315,4 +315,5 @@ private class MockSSEBridge: NSObject, Mac2iOS {
     func closeCameraWindow() {}
     func setCameraWindowHidden(_ hidden: Bool) {}
     func getRawHomeKitDump() -> String? { nil }
+    func getCameraDebugJSON(entityId: String?, completion: @escaping (String?) -> Void) { completion(nil) }
 }
