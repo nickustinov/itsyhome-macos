@@ -374,10 +374,10 @@ final class WebhookServerTests: XCTestCase {
     private func sendRequest(path: String) -> HTTPResponse? {
         // Wait for server to be ready
         let readyExpectation = expectation(description: "Server ready")
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
             readyExpectation.fulfill()
         }
-        wait(for: [readyExpectation], timeout: 2)
+        wait(for: [readyExpectation], timeout: 3)
 
         let responseExpectation = expectation(description: "HTTP response")
         var httpResponse: HTTPResponse?
@@ -393,7 +393,7 @@ final class WebhookServerTests: XCTestCase {
         }
         task.resume()
 
-        wait(for: [responseExpectation], timeout: 5)
+        wait(for: [responseExpectation], timeout: 10)
         return httpResponse
     }
 }

@@ -471,6 +471,84 @@ This app requires the HomeKit entitlement. You'll need to:
 2. Create an App ID with HomeKit enabled
 3. The entitlement is already configured in `Itsyhome/Itsyhome.entitlements`
 
+## Localization
+
+Itsyhome uses a Swift String Catalog (`macOSBridge/Resources/Localizable.xcstrings`) for localization. Translations are managed via [Lokalise](https://lokalise.com).
+
+Languages: English (base), Spanish, French, German, Russian, Japanese, Simplified Chinese, Traditional Chinese, Korean, Portuguese (Brazil), Italian, Polish.
+
+### Setup
+
+```bash
+brew tap lokalise/cli-2
+brew install lokalise2
+cp lokalise.yml.example lokalise.yml
+# Edit lokalise.yml and add your API token
+```
+
+### Push source strings to Lokalise
+
+Extracts English keys and values from the xcstrings file and uploads to Lokalise:
+
+```bash
+scripts/push-translations.sh
+```
+
+### Pull translations from Lokalise
+
+Downloads all translations from Lokalise and merges them into the xcstrings file:
+
+```bash
+scripts/pull-translations.sh
+```
+
+### Adding new strings
+
+All user-facing strings use `String(localized:defaultValue:bundle:)` with a structured key and the `bundle: .macOSBridge` parameter (required because the xcstrings file lives in the macOSBridge plugin bundle, not the main app):
+
+```swift
+// AppKit menu items
+item.title = String(localized: "menu.loading.homekit", defaultValue: "Loading HomeKit…", bundle: .macOSBridge)
+
+// Settings UI
+Text(String(localized: "settings.general.title", defaultValue: "General", bundle: .macOSBridge))
+
+// Alerts
+alert.messageText = String(localized: "alert.connected.title", defaultValue: "Connected to \(name)", bundle: .macOSBridge)
+```
+
+### Key naming convention
+
+Keys use dot-separated structured names: `{area}.{context}.{name}`
+
+| Area | Example keys |
+|---|---|
+| `menu.*` | `menu.home`, `menu.loading.homekit`, `menu.loading.home_assistant` |
+| `settings.*` | `settings.general.title`, `settings.about.github`, `settings.cameras.title` |
+| `device.*` | `device.air_purifier.auto`, `device.blind.tilt`, `device.thermostat.heat` |
+| `alert.*` | `alert.connected.title`, `alert.connection_failed.title` |
+| `common.*` | `common.cancel`, `common.connect`, `common.back` |
+| `onboarding.*` | `onboarding.access_token`, `onboarding.change_later` |
+| `group.*` | `group.create_title`, `group.edit_title`, `group.group_switch` |
+| `pinned.*` | `pinned.show_name`, `pinned.unpin` |
+| `shortcut.*` | `shortcut.add`, `shortcut.reset_icon` |
+
+### Workflow after adding new strings
+
+1. Build the project – Xcode auto-populates new keys in `Localizable.xcstrings`
+2. Push source strings to Lokalise: `scripts/push-translations.sh`
+3. Translate in [Lokalise](https://app.lokalise.com) (or let translators handle it)
+4. Pull translations back: `scripts/pull-translations.sh`
+5. Build and verify
+
+### How it works
+
+- All strings (SwiftUI and AppKit) use `String(localized:defaultValue:bundle:)` with structured keys and `bundle: .macOSBridge`
+- Xcode populates the `.xcstrings` file with discovered keys on each build
+- Push extracts English as `.strings` and uploads to Lokalise
+- Pull downloads `.strings` per language and merges back into the xcstrings file
+- The main app declares supported languages in `CFBundleLocalizations` in `Itsyhome/Info.plist` – this is required for Mac Catalyst to recognize available translations
+
 ## License
 
 MIT License © 2026 Nick Ustinov - see [LICENSE](LICENSE) for details.
