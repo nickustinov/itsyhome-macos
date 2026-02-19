@@ -18,12 +18,12 @@ A native macOS menu bar app for controlling your HomeKit and Home Assistant smar
 - **Menu bar access** - Control your smart home from the macOS menu bar
 - **HomeKit support** - Full integration with Apple HomeKit devices and scenes
 - **Home Assistant support** - Connect to your Home Assistant server via WebSocket API
+- **Device groups** - Create custom groups to control multiple devices at once
 - **Scenes** - Execute and toggle scenes with automatic state tracking
 - **Favourites** - Pin frequently used devices, scenes, and groups to the top of the menu
 - **Multi-home support** - Switch between multiple HomeKit homes (HomeKit only)
 - **Native experience** - Built with AppKit for a true macOS look and feel
 - **Menu bar pinning** - Pin rooms, devices, scenes, or groups as separate menu bar items with optional keyboard shortcuts
-- **Device groups** - Create custom groups to control multiple devices at once *(Pro)*
 - **iCloud sync** - Sync favourites, groups, and settings across your Macs *(Pro)*
 - **Deeplinks** - Control devices from Shortcuts, Alfred, Raycast, Stream Deck *(Pro)*
 - **Cameras** - Live video feed with overlay action buttons to control nearby accessories *(Pro)*
@@ -81,10 +81,6 @@ Connects via WebSocket API for real-time updates. On first launch, choose your p
 - Scene state tracking requires scenes created in the Home Assistant UI (not YAML)
 
 ## Itsyhome Pro
-
-### Device groups
-
-Create custom groups of devices to control multiple devices at once. Groups can be scoped to a room or made global. Light groups support full control (power, brightness, color), blind groups control position, and lock groups toggle all locks together. Groups show partial state indicators when devices differ (e.g., "2/3 on").
 
 ### Cameras
 
