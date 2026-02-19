@@ -117,7 +117,6 @@ targets:
           - "MacOSController.swift"
           - "MacOSController+*.swift"
           - "MenuBuilder.swift"
-          - "Bundle+Localization.swift"
           - "DebugMockAccessories.swift"
           - "HotkeyManager.swift"
           - "CameraPanelManager.swift"

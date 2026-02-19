@@ -1747,6 +1747,7 @@
 		856331FFCC8E834E1518970F /* ph.warning-circle.svg in Resources */ = {isa = PBXBuildFile; fileRef = 6BDB09B5997632AB2BBEDB48 /* ph.warning-circle.svg */; };
 		856553EF5CA3D689494046F1 /* ph.number-six.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = AAD87D8833DDFEE8785F348C /* ph.number-six.fill.svg */; };
 		8567F2DD5FA1031BAE65667C /* ph.barbell.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 49B37D09AFC660AFD9C7387A /* ph.barbell.fill.svg */; };
+		858EF267E61FE0324A42C646 /* Bundle+Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 235CB44726480F81E5436B85 /* Bundle+Localization.swift */; };
 		85A7FA1BF8285A1BF44CEA0E /* TemperatureFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 377DE1391A6CCD59734552A7 /* TemperatureFormatter.swift */; };
 		85AFFAE6A607C7D2869FE003 /* ph.file-sql.svg in Resources */ = {isa = PBXBuildFile; fileRef = 6BAA1999DB374B4F22691EBC /* ph.file-sql.svg */; };
 		85B129A04D69E555923F3376 /* ph.taxi.svg in Resources */ = {isa = PBXBuildFile; fileRef = 17340E824BE92B203EA826D0 /* ph.taxi.svg */; };
@@ -13404,6 +13405,7 @@
 				851260AF14FDF357AD88C04F /* BlindMenuItem.swift in Sources */,
 				CB2495B718EDDDF5D1B94AC7 /* BlindMenuItemTests.swift in Sources */,
 				67926ADF4BFE82DCEF6BB9D1 /* BridgeProtocols.swift in Sources */,
+				858EF267E61FE0324A42C646 /* Bundle+Localization.swift in Sources */,
 				53ECA3675440CD9BAC4279B3 /* CloudSyncManager.swift in Sources */,
 				985B67023A87C83880C511BE /* CloudSyncManagerTests.swift in Sources */,
 				111E21896B8031FB1B180CDD /* CloudSyncTranslator.swift in Sources */,

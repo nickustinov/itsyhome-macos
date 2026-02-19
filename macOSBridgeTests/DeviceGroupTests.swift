@@ -244,4 +244,71 @@ final class DeviceGroupTests: XCTestCase {
         XCTAssertFalse(group.showGroupSwitch)
         XCTAssertTrue(group.showAsSubmenu)
     }
+
+    // MARK: - Resolve services tests
+
+    private func makeService(id: String, name: String = "Service") -> ServiceData {
+        ServiceData(
+            uniqueIdentifier: UUID(uuidString: id) ?? UUID(),
+            name: name,
+            serviceType: "light",
+            accessoryName: name,
+            roomIdentifier: nil
+        )
+    }
+
+    private func makeMenuData(accessories: [AccessoryData]) -> MenuData {
+        MenuData(
+            homes: [],
+            rooms: [],
+            accessories: accessories,
+            scenes: [],
+            selectedHomeId: nil
+        )
+    }
+
+    func testResolveServicesFindsMatchingDevices() {
+        let id1 = UUID().uuidString
+        let id2 = UUID().uuidString
+        let service1 = makeService(id: id1, name: "Light 1")
+        let service2 = makeService(id: id2, name: "Light 2")
+        let accessory = AccessoryData(
+            uniqueIdentifier: UUID().uuidString,
+            name: "Acc",
+            roomIdentifier: nil,
+            services: [service1, service2],
+            isReachable: true
+        )
+        let data = makeMenuData(accessories: [accessory])
+        let group = DeviceGroup(name: "Test", deviceIds: [id1, id2])
+
+        let resolved = group.resolveServices(in: data)
+        XCTAssertEqual(resolved.count, 2)
+    }
+
+    func testResolveServicesHandlesDuplicateServiceIds() {
+        let sharedId = UUID().uuidString
+        let service1 = makeService(id: sharedId, name: "Light A")
+        let service2 = makeService(id: sharedId, name: "Light B")
+        let acc1 = AccessoryData(
+            uniqueIdentifier: UUID().uuidString,
+            name: "Acc1",
+            roomIdentifier: nil,
+            services: [service1],
+            isReachable: true
+        )
+        let acc2 = AccessoryData(
+            uniqueIdentifier: UUID().uuidString,
+            name: "Acc2",
+            roomIdentifier: nil,
+            services: [service2],
+            isReachable: true
+        )
+        let data = makeMenuData(accessories: [acc1, acc2])
+        let group = DeviceGroup(name: "Test", deviceIds: [sharedId])
+
+        // Should not crash and should resolve to one service
+        let resolved = group.resolveServices(in: data)
+        XCTAssertEqual(resolved.count, 1)
+    }
 }
