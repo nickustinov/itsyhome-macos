@@ -32,11 +32,11 @@ extension AccessoriesSettingsView: IconPickerPopoverDelegate {
 
     private func showProUpgradeAlert() {
         let alert = NSAlert()
-        alert.messageText = "Custom icons require Itsyhome Pro"
-        alert.informativeText = "Upgrade to Pro to customize icons for your accessories, scenes, groups, and rooms."
+        alert.messageText = String(localized: "alert.pro_required.icons_title", defaultValue: "Custom icons require Itsyhome Pro", bundle: .macOSBridge)
+        alert.informativeText = String(localized: "alert.pro_required.icons_message", defaultValue: "Upgrade to Pro to customize icons for your accessories, scenes, groups, and rooms.", bundle: .macOSBridge)
         alert.alertStyle = .informational
-        alert.addButton(withTitle: "Get Pro")
-        alert.addButton(withTitle: "Not now")
+        alert.addButton(withTitle: String(localized: "common.get_pro", defaultValue: "Get Pro", bundle: .macOSBridge))
+        alert.addButton(withTitle: String(localized: "common.not_now", defaultValue: "Not now", bundle: .macOSBridge))
 
         if alert.runModal() == .alertFirstButtonReturn {
             // Navigate to General section to show Pro purchase options
@@ -57,7 +57,7 @@ extension AccessoriesSettingsView {
     func createScenesHeaderStrip(isHidden: Bool, isCollapsed: Bool, sceneCount: Int) -> NSView {
         let isPinned = PreferencesManager.shared.isPinnedScenesSection
         let config = AccessoryRowConfig(
-            name: "Scenes",
+            name: String(localized: "menu.scenes", defaultValue: "Scenes", bundle: .macOSBridge),
             icon: PhosphorIcon.regular("sparkle"),
             count: sceneCount,
             reserveDragHandleSpace: true,
@@ -85,7 +85,7 @@ extension AccessoriesSettingsView {
 
     func createOtherHeaderStrip(isHidden: Bool, isCollapsed: Bool) -> NSView {
         let config = AccessoryRowConfig(
-            name: "Other",
+            name: String(localized: "menu.other", defaultValue: "Other", bundle: .macOSBridge),
             showChevron: true,
             isCollapsed: isCollapsed,
             isItemHidden: isHidden,

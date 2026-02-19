@@ -1,6 +1,7 @@
 name: Itsyhome
 options:
   bundleIdPrefix: com.nickustinov
+  knownRegions: [en, es, fr, de, ru, ja, zh-Hans, zh-Hant, ko, pt-BR, it, pl, Base]
   deploymentTarget:
     iOS: "17.0"
   xcodeVersion: "15.0"
@@ -13,6 +14,7 @@ packages:
 
 settings:
   base:
+    SWIFT_EMIT_LOC_STRINGS: "YES"
     SWIFT_VERSION: "5.9"
     CODE_SIGN_STYLE: Automatic
     DEVELOPMENT_TEAM: R892A93W42
@@ -43,8 +45,8 @@ targets:
         DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER: NO
         TARGETED_DEVICE_FAMILY: "6"
         # App metadata
-        MARKETING_VERSION: "2.0.0"
-        CURRENT_PROJECT_VERSION: "224"
+        MARKETING_VERSION: "2.1.0"
+        CURRENT_PROJECT_VERSION: "225"
         INFOPLIST_KEY_CFBundleDisplayName: Itsyhome
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.utilities
     scheme:
@@ -115,6 +117,7 @@ targets:
           - "MacOSController.swift"
           - "MacOSController+*.swift"
           - "MenuBuilder.swift"
+          - "Bundle+Localization.swift"
           - "DebugMockAccessories.swift"
           - "HotkeyManager.swift"
           - "CameraPanelManager.swift"

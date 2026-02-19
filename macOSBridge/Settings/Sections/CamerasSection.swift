@@ -89,8 +89,8 @@ class CamerasSection: NSView {
         cameraSwitch.state = PreferencesManager.shared.camerasEnabled ? .on : .off
 
         let row = createSettingRow(
-            label: "Show cameras in menu bar",
-            subtitle: "Display a camera icon in the menu bar to quickly view live camera feeds.",
+            label: String(localized: "settings.cameras.show_in_menu_bar", defaultValue: "Show cameras in menu bar", bundle: .macOSBridge),
+            subtitle: String(localized: "settings.cameras.show_in_menu_bar_description", defaultValue: "Display a camera icon in the menu bar to quickly view live camera feeds.", bundle: .macOSBridge),
             control: cameraSwitch
         )
         row.translatesAutoresizingMaskIntoConstraints = false
@@ -126,8 +126,8 @@ class CamerasSection: NSView {
         doorbellSwitch.state = PreferencesManager.shared.doorbellNotifications ? .on : .off
 
         let doorbellRow = createSettingRow(
-            label: "Show doorbell camera on ring",
-            subtitle: "Automatically display the camera feed when a doorbell rings.",
+            label: String(localized: "settings.cameras.doorbell_on_ring", defaultValue: "Show doorbell camera on ring", bundle: .macOSBridge),
+            subtitle: String(localized: "settings.cameras.doorbell_on_ring_description", defaultValue: "Automatically display the camera feed when a doorbell rings.", bundle: .macOSBridge),
             control: doorbellSwitch
         )
         doorbellStack.addArrangedSubview(doorbellRow)
@@ -146,8 +146,8 @@ class CamerasSection: NSView {
         doorbellSoundSwitch.state = PreferencesManager.shared.doorbellSound ? .on : .off
 
         let soundRow = createSettingRow(
-            label: "Play doorbell sound",
-            subtitle: "Play a chime sound when a doorbell rings.",
+            label: String(localized: "settings.cameras.doorbell_sound", defaultValue: "Play doorbell sound", bundle: .macOSBridge),
+            subtitle: String(localized: "settings.cameras.doorbell_sound_description", defaultValue: "Play a chime sound when a doorbell rings.", bundle: .macOSBridge),
             control: doorbellSoundSwitch
         )
         doorbellStack.addArrangedSubview(soundRow)
@@ -169,7 +169,7 @@ class CamerasSection: NSView {
         // Camera list
         loadCameras()
         if !cameras.isEmpty {
-            let header = AccessorySectionHeader(title: "Your cameras")
+            let header = AccessorySectionHeader(title: String(localized: "settings.cameras.your_cameras", defaultValue: "Your cameras", bundle: .macOSBridge))
             addView(header, height: 32)
             addSpacer(height: 4)
 
@@ -178,7 +178,7 @@ class CamerasSection: NSView {
             let tableContainer = createCamerasTable(height: tableHeight, rowHeight: 60, spacing: spacing)
             addView(tableContainer, height: tableHeight)
         } else if menuData != nil {
-            let emptyLabel = NSTextField(labelWithString: "No cameras found in this home.")
+            let emptyLabel = NSTextField(labelWithString: String(localized: "settings.cameras.no_cameras", defaultValue: "No cameras found in this home.", bundle: .macOSBridge))
             emptyLabel.font = .systemFont(ofSize: 11)
             emptyLabel.textColor = .tertiaryLabelColor
             emptyLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -311,7 +311,7 @@ class CamerasSection: NSView {
         nameLabel.translatesAutoresizingMaskIntoConstraints = false
         container.addSubview(nameLabel)
 
-        let addButton = NSButton(title: "Add accessory", target: self, action: #selector(addOverlayTapped(_:)))
+        let addButton = NSButton(title: String(localized: "settings.cameras.add_accessory", defaultValue: "Add accessory", bundle: .macOSBridge), target: self, action: #selector(addOverlayTapped(_:)))
         addButton.bezelStyle = .rounded
         addButton.controlSize = .regular
         addButton.tag = row
@@ -481,10 +481,10 @@ class CamerasSection: NSView {
 
         guard !servicesByRoom.isEmpty else {
             let alert = NSAlert()
-            alert.messageText = "No accessories available"
-            alert.informativeText = "All compatible accessories (lights, switches, outlets, garage openers, locks) are already assigned to this camera."
+            alert.messageText = String(localized: "alert.no_accessories.title", defaultValue: "No accessories available", bundle: .macOSBridge)
+            alert.informativeText = String(localized: "alert.no_accessories.message", defaultValue: "All compatible accessories (lights, switches, outlets, garage openers, locks) are already assigned to this camera.", bundle: .macOSBridge)
             alert.alertStyle = .informational
-            alert.addButton(withTitle: "OK")
+            alert.addButton(withTitle: String(localized: "common.ok", defaultValue: "OK", bundle: .macOSBridge))
             alert.runModal()
             return
         }

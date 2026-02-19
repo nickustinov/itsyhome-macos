@@ -96,7 +96,7 @@ class HAValveMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefres
         containerView.addSubview(nameLabel)
 
         // Status label
-        statusLabel = NSTextField(labelWithString: "Closed")
+        statusLabel = NSTextField(labelWithString: String(localized: "device.valve.closed", defaultValue: "Closed", bundle: .macOSBridge))
         statusLabel.frame = NSRect(x: statusX, y: labelY - 1, width: statusWidth, height: 17)
         statusLabel.font = DS.Typography.labelSmall
         statusLabel.textColor = .secondaryLabelColor
@@ -194,10 +194,10 @@ class HAValveMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefres
 
         // Update status label (don't set textColor - let HighlightingMenuItemView handle it)
         switch currentState {
-        case "open": statusLabel.stringValue = hasPosition ? "\(position)%" : "Open"
-        case "closed": statusLabel.stringValue = "Closed"
-        case "opening": statusLabel.stringValue = "Opening..."
-        case "closing": statusLabel.stringValue = "Closing..."
+        case "open": statusLabel.stringValue = hasPosition ? "\(position)%" : String(localized: "device.valve.open", defaultValue: "Open", bundle: .macOSBridge)
+        case "closed": statusLabel.stringValue = String(localized: "device.valve.closed", defaultValue: "Closed", bundle: .macOSBridge)
+        case "opening": statusLabel.stringValue = String(localized: "device.valve.opening", defaultValue: "Opening...", bundle: .macOSBridge)
+        case "closing": statusLabel.stringValue = String(localized: "device.valve.closing", defaultValue: "Closing...", bundle: .macOSBridge)
         default: statusLabel.stringValue = currentState.capitalized
         }
 

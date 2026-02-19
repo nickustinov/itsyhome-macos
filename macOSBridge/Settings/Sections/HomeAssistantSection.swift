@@ -12,7 +12,7 @@ class HomeAssistantSection: SettingsCard, NSTextFieldDelegate {
     private let serverURLField = NSTextField()
     private let accessTokenField = NSSecureTextField()
     private let statusIndicator = NSImageView()
-    private let statusLabel = NSTextField(labelWithString: "Not connected")
+    private let statusLabel = NSTextField(labelWithString: String(localized: "settings.home_assistant.not_connected", defaultValue: "Not connected", bundle: .macOSBridge))
     private let connectButton = NSButton()
     private let disconnectButton = NSButton()
 
@@ -124,7 +124,7 @@ class HomeAssistantSection: SettingsCard, NSTextFieldDelegate {
 
         // Server URL row
         let urlRow = createInputRow(
-            label: "Server URL",
+            label: String(localized: "settings.home_assistant.server_url", defaultValue: "Server URL", bundle: .macOSBridge),
             placeholder: "http://homeassistant.local:8123",
             textField: serverURLField
         )
@@ -133,7 +133,7 @@ class HomeAssistantSection: SettingsCard, NSTextFieldDelegate {
 
         // Access token row
         let tokenRow = createInputRow(
-            label: "Access token",
+            label: String(localized: "settings.home_assistant.access_token", defaultValue: "Access token", bundle: .macOSBridge),
             placeholder: "Long-lived access token",
             textField: accessTokenField
         )
@@ -141,7 +141,7 @@ class HomeAssistantSection: SettingsCard, NSTextFieldDelegate {
         tokenRow.widthAnchor.constraint(equalTo: container.widthAnchor).isActive = true
 
         // Help text
-        let helpLabel = createLabel("Get your token from Home Assistant > Profile > Security > Long-Lived Access Tokens", style: .caption)
+        let helpLabel = createLabel(String(localized: "settings.home_assistant.token_help", defaultValue: "Get your token from Home Assistant > Profile > Security > Long-Lived Access Tokens", bundle: .macOSBridge), style: .caption)
         helpLabel.textColor = .secondaryLabelColor
         container.addArrangedSubview(helpLabel)
 
@@ -184,13 +184,13 @@ class HomeAssistantSection: SettingsCard, NSTextFieldDelegate {
         container.alignment = .centerY
         container.translatesAutoresizingMaskIntoConstraints = false
 
-        connectButton.title = "Connect"
+        connectButton.title = String(localized: "common.connect", defaultValue: "Connect", bundle: .macOSBridge)
         connectButton.bezelStyle = .rounded
         connectButton.target = self
         connectButton.action = #selector(connectTapped)
         container.addArrangedSubview(connectButton)
 
-        disconnectButton.title = "Disconnect"
+        disconnectButton.title = String(localized: "settings.home_assistant.disconnect", defaultValue: "Disconnect", bundle: .macOSBridge)
         disconnectButton.bezelStyle = .rounded
         disconnectButton.target = self
         disconnectButton.action = #selector(disconnectTapped)
@@ -230,17 +230,17 @@ class HomeAssistantSection: SettingsCard, NSTextFieldDelegate {
 
         if isConnecting {
             statusIndicator.contentTintColor = .systemOrange
-            statusLabel.stringValue = "Connecting..."
+            statusLabel.stringValue = String(localized: "common.connecting", defaultValue: "Connecting...", bundle: .macOSBridge)
             connectButton.isEnabled = false
         } else if hasCredentials {
             statusIndicator.contentTintColor = .systemGreen
             statusLabel.stringValue = "Connected to \(HAAuthManager.shared.serverURL?.host ?? "server")"
-            connectButton.title = "Test connection"
+            connectButton.title = String(localized: "settings.home_assistant.test_connection", defaultValue: "Test connection", bundle: .macOSBridge)
             connectButton.isEnabled = true
         } else {
             statusIndicator.contentTintColor = .systemGray
-            statusLabel.stringValue = "Not connected"
-            connectButton.title = "Connect"
+            statusLabel.stringValue = String(localized: "settings.home_assistant.not_connected", defaultValue: "Not connected", bundle: .macOSBridge)
+            connectButton.title = String(localized: "common.connect", defaultValue: "Connect", bundle: .macOSBridge)
             connectButton.isEnabled = !serverURLField.stringValue.isEmpty && !accessTokenField.stringValue.isEmpty
         }
 
@@ -256,14 +256,14 @@ class HomeAssistantSection: SettingsCard, NSTextFieldDelegate {
         let token = accessTokenField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
 
         guard !token.isEmpty else {
-            showAlert(title: "Missing credentials", message: "Please enter both server URL and access token.")
+            showAlert(title: String(localized: "alert.missing_credentials.title", defaultValue: "Missing credentials", bundle: .macOSBridge), message: String(localized: "alert.missing_credentials.message", defaultValue: "Please enter both server URL and access token.", bundle: .macOSBridge))
             return
         }
 
         let result = HAURLValidator.validate(urlString)
         guard case .success(let url) = result else {
             if case .failure(let message) = result {
-                showAlert(title: "Invalid URL", message: message)
+                showAlert(title: String(localized: "alert.invalid_url.title", defaultValue: "Invalid URL", bundle: .macOSBridge), message: message)
             }
             return
         }
@@ -282,7 +282,7 @@ class HomeAssistantSection: SettingsCard, NSTextFieldDelegate {
                     isConnecting = false
                     if success {
                         updateUI()
-                        showAlert(title: "Connected", message: "Successfully connected to Home Assistant.")
+                        showAlert(title: String(localized: "alert.connected.title", defaultValue: "Connected", bundle: .macOSBridge), message: String(localized: "alert.connected.message", defaultValue: "Successfully connected to Home Assistant.", bundle: .macOSBridge))
                         // Notify the app to connect
                         NotificationCenter.default.post(name: NSNotification.Name("HomeAssistantCredentialsChanged"), object: nil)
                     }
@@ -292,7 +292,7 @@ class HomeAssistantSection: SettingsCard, NSTextFieldDelegate {
                     isConnecting = false
                     HAAuthManager.shared.clearCredentials()
                     updateUI()
-                    showAlert(title: "Connection failed", message: error.localizedDescription)
+                    showAlert(title: String(localized: "alert.connection_failed.title", defaultValue: "Connection failed", bundle: .macOSBridge), message: error.localizedDescription)
                 }
             }
         }
@@ -300,11 +300,11 @@ class HomeAssistantSection: SettingsCard, NSTextFieldDelegate {
 
     @objc private func disconnectTapped() {
         let alert = NSAlert()
-        alert.messageText = "Disconnect from Home Assistant?"
-        alert.informativeText = "This will clear your saved credentials."
+        alert.messageText = String(localized: "alert.disconnect.title", defaultValue: "Disconnect from Home Assistant?", bundle: .macOSBridge)
+        alert.informativeText = String(localized: "alert.disconnect.message", defaultValue: "This will clear your saved credentials.", bundle: .macOSBridge)
         alert.alertStyle = .warning
-        alert.addButton(withTitle: "Disconnect")
-        alert.addButton(withTitle: "Cancel")
+        alert.addButton(withTitle: String(localized: "alert.disconnect.confirm", defaultValue: "Disconnect", bundle: .macOSBridge))
+        alert.addButton(withTitle: String(localized: "common.cancel", defaultValue: "Cancel", bundle: .macOSBridge))
 
         if alert.runModal() == .alertFirstButtonReturn {
             HAAuthManager.shared.clearCredentials()
@@ -321,7 +321,7 @@ class HomeAssistantSection: SettingsCard, NSTextFieldDelegate {
         alert.messageText = title
         alert.informativeText = message
         alert.alertStyle = .informational
-        alert.addButton(withTitle: "OK")
+        alert.addButton(withTitle: String(localized: "common.ok", defaultValue: "OK", bundle: .macOSBridge))
         alert.runModal()
     }
 }

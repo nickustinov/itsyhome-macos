@@ -1,61 +1,40 @@
 # Changelog
 
-## 2.0.0
+## 2.1.0
 
-### Build 224
+### Build 225
+- **Localization** – added full localization support with translations for 12 languages: Spanish, French, German, Italian, Portuguese (Brazil), Russian, Polish, Japanese, Korean, Chinese Simplified, Chinese Traditional
+- **Fix crash on launch for some Home Assistant setups** – building the favourites menu with `Dictionary(uniqueKeysWithValues:)` crashed when duplicate service identifiers were present; replaced with duplicate-safe dictionary construction
+
+## 2.0.0
+- **Home Assistant support** – connect to a Home Assistant instance as an alternative to HomeKit, with support for climate, lights, fans, covers, locks, humidifiers, valves, garage doors, security systems, cameras (snapshots, WebRTC, and HLS streaming), and scenes
+- **Dual RGB + color temperature support** – lights exposing both hue/saturation and color temperature (e.g. Govee Neon Rope 2 via Matter) now show both picker buttons and sliders instead of only one
+- **Continuous color temperature slider** – the color temperature picker is now a horizontal warm-to-cool gradient bar instead of 5 discrete circle presets
+- **Slider reflects light color** – the brightness slider tint updates to match the current RGB or color temperature of the light
+- **Remember camera window position and size** – the camera panel remembers its position and size per camera, so reopening the same camera restores where you left it
+- **SSE event stream** – new `/events` endpoint on the webhook server streams real-time device state changes via Server-Sent Events, usable with `curl -N`, browser `EventSource`, or any SSE client
+- **Real-time accessory updates** – accessories now update instantly when toggled from the Home app or other controllers, instead of waiting for the menu to be opened; also re-reads characteristic values when a device becomes reachable again after being offline
+- **Hide mode selector for single-mode climate devices** – heater-cooler and thermostat devices that only support one mode (e.g. heat-only radiators like Eve Thermo) no longer show the Cool/Heat/Auto mode selector; devices with two valid modes show only those two buttons
+- **Fan speed control via webhooks and URL schemes** – fan rotation speed can now be set through webhooks (`/speed/50/Room/Fan`), URL schemes (`itsyhome://speed/50/Room/Fan`), and commands (`set speed 50 Room/Fan`), with automatic clamping to device min/max limits (contributed by [@loganprit](https://github.com/loganprit))
+- **Group display options** – groups can now be shown as expandable submenus with individual device controls, not just a single toggle row; two new settings per group – "Group switch" and "Submenu" – control whether the toggle row and/or submenu are shown
+- **Hide "Other" section** – the "Other" section (devices with no room) now has an eyeball toggle in Settings → Home to hide it from the menu, matching rooms and scenes
 - **Default to https for remote HA URLs** – bare hostnames for remote services (Nabu Casa, DuckDNS, custom domains) now default to `https://` instead of `http://`, so the WebSocket connection uses `wss://` as required; local addresses (`.local`, private IPs, `localhost`) still default to `http://`
 - **Add ATS local networking exception** – added `NSAllowsLocalNetworking` to App Transport Security so local `http://` and `ws://` connections aren't blocked by macOS
-
-### Build 223
+- **Fix crash when connecting to Nabu Casa cloud URLs** – the app no longer crashes when the Home Assistant server URL triggers an invalid WebSocket connection; URL scheme is now validated before connecting, and `wss://` URLs are accepted directly
+- **Fix crash from concurrent state updates** – a data race in the entity state mapper that could cause crashes during rapid state changes is now fixed with proper thread synchronization
+- **Fix crash when iCloud sync updates camera view** – iCloud sync notifications could arrive on a background thread, causing a crash when the camera collection view reloaded off the main queue; notifications are now dispatched to the main thread
 - **Fix HA lock state always showing unlocked** – Home Assistant sends lock state as a string ("locked", "unlocked"), but the webhook server was converting it with `intValue()` which returned 0 for strings, causing all HA locks to appear unlocked
 - **Fix HA climate toggle not working** – climate entities had `activeId` set which caused toggle to write to an unhandled "active" characteristic; removed `activeId` for climate so toggle correctly uses HVAC mode (off/auto)
+- **Fix HA thermostat showing wrong temperature** – thermostats on Home Assistant instances configured for Fahrenheit showed doubled-converted values (e.g. 156° instead of 70°); the app now fetches the HA unit system at connect time and normalizes all temperatures to Celsius internally
+- **Fix HA not reconnecting after Mac sleep** – the app now listens for system wake events and automatically reconnects to Home Assistant instead of staying stuck on "Loading Home Assistant..."
 - **Fix roomless accessories not toggling via webhooks** – devices without a room (shown in "Other") could be read via `/info/` but not controlled via `/toggle/` because DeviceResolver had no bare device name resolution; added a new resolution step for unqualified device names
-- **Add humidifier-dehumidifier to webhook device type labels** – the `/list/devices` endpoint returned a raw UUID for humidifier devices instead of `"humidifier-dehumidifier"`, causing the Stream Deck property inspector to show an empty dropdown
-- **Add fan speed to README** – documented the `/speed/` webhook endpoint and `itsyhome://speed/` deeplink added in build 210
-- **Security system action is HomeKit only** – added note to Stream Deck plugin docs that the security button does not support Home Assistant alarm panels (PIN and custom modes)
-
-### Build 211
-- **Real-time accessory updates** – accessories now update instantly when toggled from the Home app or other controllers, instead of waiting for the menu to be opened; also re-reads characteristic values when a device becomes reachable again after being offline
-
-### Build 210
-- **Hide mode selector for single-mode climate devices** — heater-cooler and thermostat devices that only support one mode (e.g. heat-only radiators like Eve Thermo) no longer show the Cool/Heat/Auto mode selector; devices with two valid modes show only those two buttons
-- **Fan speed control via webhooks and URL schemes** — fan rotation speed can now be set through webhooks (`/speed/50/Room/Fan`), URL schemes (`itsyhome://speed/50/Room/Fan`), and commands (`set speed 50 Room/Fan`), with automatic clamping to device min/max limits (contributed by [@loganprit](https://github.com/loganprit))
-- **Fix doorbell notifications ignoring disabled setting** — disabling "Show doorbell camera on ring" now correctly prevents both the camera stream and the doorbell sound from triggering
-
-### Build 209
-- **Fix pinned room not updating after hiding accessories** — toggling accessory visibility via the eye icon now immediately updates pinned room menus without needing to unpin and re-pin
-- **Fix HA not reconnecting after Mac sleep** — the app now listens for system wake events and automatically reconnects to Home Assistant instead of staying stuck on "Loading Home Assistant..."
-- **Fix CLI/webhook toggle failing until Refresh clicked** — after an HA reconnect, the action engine bridge reference is now updated immediately so CLI and webhook commands work without needing to click Refresh first
-
-### Build 208
-- **Hide "Other" section** — the "Other" section (devices with no room) now has an eyeball toggle in Settings → Home to hide it from the menu, matching rooms and scenes
-- **Fix HA thermostat showing wrong temperature** — thermostats on Home Assistant instances configured for Fahrenheit showed doubled-converted values (e.g. 156° instead of 70°); the app now fetches the HA unit system at connect time and normalizes all temperatures to Celsius internally
-
-### Build 207
-- **Group display options** — groups can now be shown as expandable submenus with individual device controls, not just a single toggle row; two new settings per group – "Group switch" and "Submenu" – control whether the toggle row and/or submenu are shown
-
-### Build 206
-- **Fix group row disappearing on drag in settings** — dragging a group row in the Home settings tab when it was the only group in its section caused it to vanish; drag initiation is now blocked when there is only one group
-
-### Build 205
-- **Fix crash when iCloud sync updates camera view** — iCloud sync notifications could arrive on a background thread, causing a crash when the camera collection view reloaded off the main queue; notifications are now dispatched to the main thread
-
-### Earlier
-
-#### New features
-- **Home Assistant support** — connect to a Home Assistant instance as an alternative to HomeKit, with support for climate, lights, fans, covers, locks, humidifiers, valves, garage doors, security systems, cameras (snapshots, WebRTC, and HLS streaming), and scenes
-- **Dual RGB + color temperature support** — lights exposing both hue/saturation and color temperature (e.g. Govee Neon Rope 2 via Matter) now show both picker buttons and sliders instead of only one
-- **Continuous color temperature slider** — the color temperature picker is now a horizontal warm-to-cool gradient bar instead of 5 discrete circle presets
-- **Slider reflects light color** — the brightness slider tint updates to match the current RGB or color temperature of the light
-- **Remember camera window position and size** — the camera panel remembers its position and size per camera, so reopening the same camera restores where you left it
-- **SSE event stream** — new `/events` endpoint on the webhook server streams real-time device state changes via Server-Sent Events, usable with `curl -N`, browser `EventSource`, or any SSE client
-
-#### Bug fixes
-- **Fix crash when connecting to Nabu Casa cloud URLs** — the app no longer crashes when the Home Assistant server URL triggers an invalid WebSocket connection; URL scheme is now validated before connecting, and `wss://` URLs are accepted directly
-- **Fix crash from concurrent state updates** — a data race in the entity state mapper that could cause crashes during rapid state changes is now fixed with proper thread synchronization
-- **Fix camera snapshot timer draining battery** — the 30-second snapshot polling timer now stops when the camera panel is closed, preventing continuous wake-ups on battery-powered cameras
-- **Fix group brightness turning on off lights** — dragging the brightness slider in a light group no longer turns on lights that were off
-- **Fix phantom window in Mission Control** — the app no longer appears as an empty window in Mission Control when "Group windows by application" is enabled
+- **Fix CLI/webhook toggle failing until Refresh clicked** – after an HA reconnect, the action engine bridge reference is now updated immediately so CLI and webhook commands work without needing to click Refresh first
+- **Fix pinned room not updating after hiding accessories** – toggling accessory visibility via the eye icon now immediately updates pinned room menus without needing to unpin and re-pin
+- **Fix doorbell notifications ignoring disabled setting** – disabling "Show doorbell camera on ring" now correctly prevents both the camera stream and the doorbell sound from triggering
+- **Fix camera snapshot timer draining battery** – the 30-second snapshot polling timer now stops when the camera panel is closed, preventing continuous wake-ups on battery-powered cameras
+- **Fix group brightness turning on off lights** – dragging the brightness slider in a light group no longer turns on lights that were off
+- **Fix group row disappearing on drag in settings** – dragging a group row in the Home settings tab when it was the only group in its section caused it to vanish; drag initiation is now blocked when there is only one group
+- **Fix phantom window in Mission Control** – the app no longer appears as an empty window in Mission Control when "Group windows by application" is enabled
 
 ## 1.3.1
 

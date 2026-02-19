@@ -58,7 +58,7 @@ class GeneralSection: SettingsCard {
         launchSwitch.controlSize = .mini
         launchSwitch.target = self
         launchSwitch.action = #selector(launchSwitchChanged)
-        let launchRow = createSettingRow(label: "Launch Itsyhome at login", control: launchSwitch)
+        let launchRow = createSettingRow(label: String(localized: "settings.general.launch_at_login", defaultValue: "Launch Itsyhome at login", bundle: .macOSBridge), control: launchSwitch)
         addContentToBox(launchBox, content: launchRow)
         stackView.addArrangedSubview(launchBox)
         launchBox.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
@@ -81,7 +81,7 @@ class GeneralSection: SettingsCard {
         let pluginBundle = Bundle(for: GeneralSection.self)
 
         // Label
-        let label = createLabel("Smart home platform", style: .body)
+        let label = createLabel(String(localized: "settings.general.platform", defaultValue: "Smart home platform", bundle: .macOSBridge), style: .body)
         label.translatesAutoresizingMaskIntoConstraints = false
         container.addSubview(label)
 
@@ -98,7 +98,7 @@ class GeneralSection: SettingsCard {
         // HomeKit card
         homeKitCard = PlatformCardButton(
             icon: pluginBundle.image(forResource: "homekit"),
-            title: "HomeKit",
+            title: String(localized: "settings.general.homekit", defaultValue: "HomeKit", bundle: .macOSBridge),
             isSelected: currentPlatform == .homeKit
         )
         homeKitCard.onSelect = { [weak self] in self?.platformCardTapped(.homeKit) }
@@ -107,7 +107,7 @@ class GeneralSection: SettingsCard {
         // Home Assistant card
         homeAssistantCard = PlatformCardButton(
             icon: pluginBundle.image(forResource: "ha"),
-            title: "Home Assistant",
+            title: String(localized: "settings.general.home_assistant", defaultValue: "Home Assistant", bundle: .macOSBridge),
             isSelected: currentPlatform == .homeAssistant
         )
         homeAssistantCard.onSelect = { [weak self] in self?.platformCardTapped(.homeAssistant) }
@@ -132,11 +132,11 @@ class GeneralSection: SettingsCard {
         }
 
         let alert = NSAlert()
-        alert.messageText = "Restart required"
-        alert.informativeText = "Switching platforms requires restarting Itsyhome. Any unsaved changes will be lost."
+        alert.messageText = String(localized: "alert.restart.title", defaultValue: "Restart required", bundle: .macOSBridge)
+        alert.informativeText = String(localized: "alert.restart.message", defaultValue: "Switching platforms requires restarting Itsyhome. Any unsaved changes will be lost.", bundle: .macOSBridge)
         alert.alertStyle = .warning
-        alert.addButton(withTitle: "Restart app")
-        alert.addButton(withTitle: "Cancel")
+        alert.addButton(withTitle: String(localized: "alert.restart.confirm", defaultValue: "Restart app", bundle: .macOSBridge))
+        alert.addButton(withTitle: String(localized: "common.cancel", defaultValue: "Cancel", bundle: .macOSBridge))
 
         if alert.runModal() == .alertFirstButtonReturn {
             // Don't clear HA credentials - let user switch back without re-entering them
@@ -177,7 +177,7 @@ class GeneralSection: SettingsCard {
         headerRow.spacing = 6
         headerRow.alignment = .centerY
 
-        let labelField = createLabel("iCloud sync", style: .body)
+        let labelField = createLabel(String(localized: "settings.general.icloud_sync", defaultValue: "iCloud sync", bundle: .macOSBridge), style: .body)
         headerRow.addArrangedSubview(labelField)
 
         // Pro badge (only shown for non-Pro users)
@@ -203,7 +203,7 @@ class GeneralSection: SettingsCard {
         labelStack.addArrangedSubview(headerRow)
 
         // Status label
-        syncStatusLabel = createLabel("Sync favourites across your devices.", style: .caption)
+        syncStatusLabel = createLabel(String(localized: "settings.general.sync_description", defaultValue: "Sync favourites across your devices.", bundle: .macOSBridge), style: .caption)
         syncStatusLabel.lineBreakMode = .byWordWrapping
         syncStatusLabel.maximumNumberOfLines = 2
         labelStack.addArrangedSubview(syncStatusLabel)
@@ -257,7 +257,7 @@ class GeneralSection: SettingsCard {
         titleRow.spacing = 8
         titleRow.alignment = .centerY
 
-        let titleLabel = NSTextField(labelWithString: "Itsyhome Pro")
+        let titleLabel = NSTextField(labelWithString: String(localized: "settings.pro.title", defaultValue: "Itsyhome Pro", bundle: .macOSBridge))
         titleLabel.font = .systemFont(ofSize: 15, weight: .semibold)
         titleRow.addArrangedSubview(titleLabel)
 
@@ -283,7 +283,7 @@ class GeneralSection: SettingsCard {
         textContent.addArrangedSubview(titleRow)
 
         // Thank you label (shown when subscribed)
-        thankYouLabel.stringValue = "Thank you for your support!"
+        thankYouLabel.stringValue = String(localized: "settings.pro.thank_you", defaultValue: "Thank you for your support!", bundle: .macOSBridge)
         thankYouLabel.font = .systemFont(ofSize: 12)
         thankYouLabel.textColor = .secondaryLabelColor
         thankYouLabel.isBezeled = false
@@ -292,13 +292,13 @@ class GeneralSection: SettingsCard {
         textContent.addArrangedSubview(thankYouLabel)
 
         // Subtitle (shown when not subscribed)
-        proSubtitleLabel = NSTextField(labelWithString: "Unlock the full power of your smart home.")
+        proSubtitleLabel = NSTextField(labelWithString: String(localized: "settings.pro.subtitle", defaultValue: "Unlock the full power of your smart home.", bundle: .macOSBridge))
         proSubtitleLabel.font = .systemFont(ofSize: 12)
         proSubtitleLabel.textColor = .secondaryLabelColor
         textContent.addArrangedSubview(proSubtitleLabel)
 
         // No subscriptions label
-        noSubscriptionsLabel = NSTextField(labelWithString: "No subscriptions \u{00B7} Purchase once, keep forever")
+        noSubscriptionsLabel = NSTextField(labelWithString: String(localized: "settings.pro.no_subscriptions", defaultValue: "No subscriptions \u{00B7} Purchase once, keep forever", bundle: .macOSBridge))
         noSubscriptionsLabel.font = .boldSystemFont(ofSize: 12)
         noSubscriptionsLabel.textColor = .labelColor
         textContent.addArrangedSubview(noSubscriptionsLabel)
@@ -325,7 +325,7 @@ class GeneralSection: SettingsCard {
         buyButton.action = #selector(buyTapped)
         buttonStack.addArrangedSubview(buyButton)
 
-        restoreButton.title = "Restore purchases"
+        restoreButton.title = String(localized: "settings.pro.restore_purchases", defaultValue: "Restore purchases", bundle: .macOSBridge)
         restoreButton.bezelStyle = .inline
         restoreButton.controlSize = .small
         restoreButton.isBordered = false
@@ -349,8 +349,12 @@ class GeneralSection: SettingsCard {
 
     private func createFeaturesGrid() -> NSView {
         let features = [
-            "Cameras", "Device groups", "Deeplinks",
-            "iCloud sync", "Stream Deck", "Webhooks/CLI"
+            String(localized: "settings.pro.feature_cameras", defaultValue: "Cameras", bundle: .macOSBridge),
+            String(localized: "settings.pro.feature_groups", defaultValue: "Device groups", bundle: .macOSBridge),
+            String(localized: "settings.pro.feature_deeplinks", defaultValue: "Deeplinks", bundle: .macOSBridge),
+            String(localized: "settings.pro.feature_sync", defaultValue: "iCloud sync", bundle: .macOSBridge),
+            String(localized: "settings.pro.feature_stream_deck", defaultValue: "Stream Deck", bundle: .macOSBridge),
+            String(localized: "settings.pro.feature_webhooks", defaultValue: "Webhooks/CLI", bundle: .macOSBridge)
         ]
 
         let grid = NSGridView(numberOfColumns: 3, rows: 0)
@@ -455,7 +459,7 @@ class GeneralSection: SettingsCard {
         syncSwitch.isEnabled = isPro
         syncProBadge.isHidden = isPro
         if !isPro {
-            syncStatusLabel.stringValue = "Sync favourites, hidden items, groups, and shortcuts."
+            syncStatusLabel.stringValue = String(localized: "settings.general.sync_full_description", defaultValue: "Sync favourites, hidden items, groups, and shortcuts.", bundle: .macOSBridge)
         } else if syncEnabled {
             if let lastSync = CloudSyncManager.shared.lastSyncTimestamp {
                 let formatter = RelativeDateTimeFormatter()
@@ -463,10 +467,10 @@ class GeneralSection: SettingsCard {
                 let relative = formatter.localizedString(for: lastSync, relativeTo: Date())
                 syncStatusLabel.stringValue = "Last synced \(relative)."
             } else {
-                syncStatusLabel.stringValue = "Sync enabled."
+                syncStatusLabel.stringValue = String(localized: "settings.general.sync_enabled", defaultValue: "Sync enabled.", bundle: .macOSBridge)
             }
         } else {
-            syncStatusLabel.stringValue = "Sync favourites, hidden items, groups, and shortcuts."
+            syncStatusLabel.stringValue = String(localized: "settings.general.sync_full_description", defaultValue: "Sync favourites, hidden items, groups, and shortcuts.", bundle: .macOSBridge)
         }
     }
 
@@ -488,10 +492,10 @@ class GeneralSection: SettingsCard {
             .font: NSFont.systemFont(ofSize: 14, weight: .medium)
         ]
         if let product = ProManager.shared.lifetimeProduct {
-            buyButton.attributedTitle = NSAttributedString(string: "Get Pro \u{2013} \(product.displayPrice)", attributes: attrs)
+            buyButton.attributedTitle = NSAttributedString(string: "\(String(localized: "settings.pro.get_pro", defaultValue: "Get Pro", bundle: .macOSBridge)) \u{2013} \(product.displayPrice)", attributes: attrs)
             buyButton.isEnabled = true
         } else {
-            buyButton.attributedTitle = NSAttributedString(string: "Get Pro", attributes: attrs)
+            buyButton.attributedTitle = NSAttributedString(string: String(localized: "settings.pro.get_pro", defaultValue: "Get Pro", bundle: .macOSBridge), attributes: attrs)
             buyButton.isEnabled = false
         }
     }

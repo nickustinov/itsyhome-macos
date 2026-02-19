@@ -84,7 +84,7 @@ class HAGarageDoorMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicR
         containerView.addSubview(nameLabel)
 
         // Status label
-        statusLabel = NSTextField(labelWithString: "Closed")
+        statusLabel = NSTextField(labelWithString: String(localized: "device.door.closed", defaultValue: "Closed", bundle: .macOSBridge))
         statusLabel.frame = NSRect(x: statusX, y: labelY - 1, width: statusWidth, height: 17)
         statusLabel.font = DS.Typography.labelSmall
         statusLabel.textColor = .secondaryLabelColor
@@ -153,10 +153,10 @@ class HAGarageDoorMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicR
 
         // Update status label (don't set textColor - let HighlightingMenuItemView handle it)
         switch currentState {
-        case "open": statusLabel.stringValue = "Open"
-        case "closed": statusLabel.stringValue = "Closed"
-        case "opening": statusLabel.stringValue = "Opening..."
-        case "closing": statusLabel.stringValue = "Closing..."
+        case "open": statusLabel.stringValue = String(localized: "device.door.open", defaultValue: "Open", bundle: .macOSBridge)
+        case "closed": statusLabel.stringValue = String(localized: "device.door.closed", defaultValue: "Closed", bundle: .macOSBridge)
+        case "opening": statusLabel.stringValue = String(localized: "device.door.opening", defaultValue: "Opening...", bundle: .macOSBridge)
+        case "closing": statusLabel.stringValue = String(localized: "device.door.closing", defaultValue: "Closing...", bundle: .macOSBridge)
         default: statusLabel.stringValue = currentState.capitalized
         }
 

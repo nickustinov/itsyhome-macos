@@ -57,7 +57,7 @@ class ShortcutButton: NSButton {
             title = shortcut.displayString
             contentTintColor = DS.Colors.foreground
         } else {
-            title = "Add shortcut"
+            title = String(localized: "shortcut.add", defaultValue: "Add shortcut", bundle: .macOSBridge)
             contentTintColor = DS.Colors.mutedForeground
         }
     }

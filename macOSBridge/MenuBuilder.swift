@@ -50,7 +50,7 @@ class MenuBuilder {
         let visibleRooms = data.rooms.filter { !preferences.isHidden(roomId: $0.uniqueIdentifier) }
 
         if visibleRooms.isEmpty && filteredAccessories.isEmpty {
-            let emptyItem = NSMenuItem(title: "No devices found", action: nil, keyEquivalent: "")
+            let emptyItem = NSMenuItem(title: String(localized: "menu.no_devices", defaultValue: "No devices found", bundle: .macOSBridge), action: nil, keyEquivalent: "")
             emptyItem.isEnabled = false
             menu.addItem(emptyItem)
         } else {
@@ -64,9 +64,9 @@ class MenuBuilder {
     func addFavouritesSection(to menu: NSMenu, from data: MenuData) -> Bool {
         let preferences = PreferencesManager.shared
 
-        let sceneLookup = Dictionary(uniqueKeysWithValues: data.scenes.map { ($0.uniqueIdentifier, $0) })
+        let sceneLookup = Dictionary(data.scenes.map { ($0.uniqueIdentifier, $0) }, uniquingKeysWith: { _, last in last })
         let allServices = data.accessories.flatMap { $0.services }
-        let serviceLookup = Dictionary(uniqueKeysWithValues: allServices.map { ($0.uniqueIdentifier, $0) })
+        let serviceLookup = Dictionary(allServices.map { ($0.uniqueIdentifier, $0) }, uniquingKeysWith: { _, last in last })
 
         var addedAny = false
 
@@ -160,7 +160,7 @@ class MenuBuilder {
         }
 
         let icon = PhosphorIcon.regular("sparkle")
-        let scenesItem = createSubmenuItem(title: "Scenes", icon: icon)
+        let scenesItem = createSubmenuItem(title: String(localized: "menu.scenes", defaultValue: "Scenes", bundle: .macOSBridge), icon: icon)
 
         let submenu = StayOpenMenu()
         for scene in orderedScenes {
@@ -244,7 +244,7 @@ class MenuBuilder {
 
         if !noRoomAccessories.isEmpty && !preferences.hideOtherSection {
             let icon = PhosphorIcon.regular("squares-four")
-            let otherItem = createSubmenuItem(title: "Other", icon: icon)
+            let otherItem = createSubmenuItem(title: String(localized: "menu.other", defaultValue: "Other", bundle: .macOSBridge), icon: icon)
 
             let submenu = StayOpenMenu()
             addServicesGroupedByType(to: submenu, accessories: noRoomAccessories)

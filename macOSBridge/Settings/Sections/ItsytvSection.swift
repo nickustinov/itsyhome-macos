@@ -66,7 +66,7 @@ class ItsytvSection: SettingsCard {
         let titleLabel = createLabel("Itsytv", style: .sectionHeader)
         textStack.addArrangedSubview(titleLabel)
 
-        let descLabel = NSTextField(wrappingLabelWithString: "A free companion app for controlling Apple TV from your Mac menu bar. Full remote control, now playing widget, app launcher, and keyboard shortcuts — all running natively on macOS.")
+        let descLabel = NSTextField(wrappingLabelWithString: String(localized: "settings.itsytv.description", defaultValue: "A free companion app for controlling Apple TV from your Mac menu bar. Full remote control, now playing widget, app launcher, and keyboard shortcuts \u{2013} all running natively on macOS.", bundle: .macOSBridge))
         descLabel.font = .systemFont(ofSize: 13)
         descLabel.textColor = .secondaryLabelColor
         textStack.addArrangedSubview(descLabel)
@@ -78,11 +78,11 @@ class ItsytvSection: SettingsCard {
         textStack.addArrangedSubview(spacer)
 
         let features = [
-            "Full remote with D-pad and playback controls",
-            "Now playing with live progress tracking",
-            "Browse and launch Apple TV apps",
-            "Keyboard shortcuts for quick control",
-            "Works with multiple Apple TVs"
+            String(localized: "settings.itsytv.feature_remote", defaultValue: "Full remote with D-pad and playback controls", bundle: .macOSBridge),
+            String(localized: "settings.itsytv.feature_now_playing", defaultValue: "Now playing with live progress tracking", bundle: .macOSBridge),
+            String(localized: "settings.itsytv.feature_apps", defaultValue: "Browse and launch Apple TV apps", bundle: .macOSBridge),
+            String(localized: "settings.itsytv.feature_keyboard", defaultValue: "Keyboard shortcuts for quick control", bundle: .macOSBridge),
+            String(localized: "settings.itsytv.feature_multiple", defaultValue: "Works with multiple Apple TVs", bundle: .macOSBridge)
         ]
 
         for feature in features {
@@ -115,12 +115,12 @@ class ItsytvSection: SettingsCard {
         buttonRow.orientation = .horizontal
         buttonRow.spacing = 12
 
-        let learnMoreButton = NSButton(title: "Learn more", target: self, action: #selector(openWebsite))
+        let learnMoreButton = NSButton(title: String(localized: "settings.itsytv.learn_more", defaultValue: "Learn more", bundle: .macOSBridge), target: self, action: #selector(openWebsite))
         learnMoreButton.bezelStyle = .rounded
         learnMoreButton.controlSize = .regular
         buttonRow.addArrangedSubview(learnMoreButton)
 
-        let freeLabel = createLabel("Free and open source", style: .caption)
+        let freeLabel = createLabel(String(localized: "settings.itsytv.free_open_source", defaultValue: "Free and open source", bundle: .macOSBridge), style: .caption)
         buttonRow.addArrangedSubview(freeLabel)
 
         textStack.addArrangedSubview(buttonRow)

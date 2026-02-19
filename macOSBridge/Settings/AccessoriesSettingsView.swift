@@ -96,7 +96,7 @@ class AccessoriesSettingsView: NSView {
 
     private func setupUI() {
         // Description
-        let descLabel = NSTextField(wrappingLabelWithString: "Manage your Home menu from here. Star accessories to add them to Favourites, use the eye icon to hide sections or devices, and pin items to the menu bar.")
+        let descLabel = NSTextField(wrappingLabelWithString: String(localized: "settings.accessories.description", defaultValue: "Manage your Home menu from here. Star accessories to add them to Favourites, use the eye icon to hide sections or devices, and pin items to the menu bar.", bundle: .macOSBridge))
         descLabel.font = .systemFont(ofSize: 13)
         descLabel.textColor = .secondaryLabelColor
         descLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -105,7 +105,7 @@ class AccessoriesSettingsView: NSView {
         addSpacer(height: 16)
 
         // Create group button
-        let createButton = NSButton(title: "Create group", target: self, action: #selector(createGroupTapped))
+        let createButton = NSButton(title: String(localized: "settings.accessories.create_group", defaultValue: "Create group", bundle: .macOSBridge), target: self, action: #selector(createGroupTapped))
         createButton.bezelStyle = .rounded
         createButton.controlSize = .regular
         createButton.translatesAutoresizingMaskIntoConstraints = false
@@ -428,11 +428,11 @@ class AccessoriesSettingsView: NSView {
 
     func deleteGroup(_ group: DeviceGroup) {
         let alert = NSAlert()
-        alert.messageText = "Delete group?"
-        alert.informativeText = "Are you sure you want to delete \"\(group.name)\"? This cannot be undone."
+        alert.messageText = String(localized: "alert.delete_group.title", defaultValue: "Delete group?", bundle: .macOSBridge)
+        alert.informativeText = String(localized: "alert.delete_group.message", defaultValue: "Are you sure you want to delete \"\(group.name)\"? This cannot be undone.", bundle: .macOSBridge)
         alert.alertStyle = .warning
-        alert.addButton(withTitle: "Delete")
-        alert.addButton(withTitle: "Cancel")
+        alert.addButton(withTitle: String(localized: "common.delete", defaultValue: "Delete", bundle: .macOSBridge))
+        alert.addButton(withTitle: String(localized: "common.cancel", defaultValue: "Cancel", bundle: .macOSBridge))
 
         if alert.runModal() == .alertFirstButtonReturn {
             PreferencesManager.shared.deleteDeviceGroup(id: group.id)

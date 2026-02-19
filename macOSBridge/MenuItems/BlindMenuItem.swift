@@ -112,7 +112,7 @@ class BlindMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
             // Tilt label (right-aligned before slider, same spacing as status labels)
             let tiltLabelWidth: CGFloat = 30
             let tiltLabelX = sliderX - tiltLabelWidth - DS.Spacing.xs
-            let tiltLabelView = NSTextField(labelWithString: "Tilt")
+            let tiltLabelView = NSTextField(labelWithString: String(localized: "device.blind.tilt", defaultValue: "Tilt", bundle: .macOSBridge))
             tiltLabelView.frame = NSRect(x: tiltLabelX, y: row2Y - 1, width: tiltLabelWidth, height: 14)
             tiltLabelView.font = DS.Typography.labelSmall
             tiltLabelView.textColor = .secondaryLabelColor

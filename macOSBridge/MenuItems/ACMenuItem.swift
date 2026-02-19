@@ -166,13 +166,13 @@ class ACMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable
         let modeContainer = ModeButtonGroup(frame: NSRect(x: labelX, y: 3, width: containerWidth, height: 22))
 
         if validModes.contains(2) {
-            modeButtonCool = modeContainer.addButton(title: "Cool", color: DS.Colors.thermostatCool, tag: 2)
+            modeButtonCool = modeContainer.addButton(title: String(localized: "device.climate.cool", defaultValue: "Cool", bundle: .macOSBridge), color: DS.Colors.thermostatCool, tag: 2)
         }
         if validModes.contains(1) {
-            modeButtonHeat = modeContainer.addButton(title: "Heat", color: DS.Colors.thermostatHeat, tag: 1)
+            modeButtonHeat = modeContainer.addButton(title: String(localized: "device.climate.heat", defaultValue: "Heat", bundle: .macOSBridge), color: DS.Colors.thermostatHeat, tag: 1)
         }
         if validModes.contains(0) {
-            modeButtonAuto = modeContainer.addButton(title: "Auto", color: DS.Colors.success, tag: 0)
+            modeButtonAuto = modeContainer.addButton(title: String(localized: "device.climate.auto", defaultValue: "Auto", bundle: .macOSBridge), color: DS.Colors.success, tag: 0)
         }
 
         controlsRow.addSubview(modeContainer)

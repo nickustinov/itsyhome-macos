@@ -75,7 +75,7 @@ class GarageDoorMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
         containerView.addSubview(nameLabel)
 
         // Status label
-        statusLabel = NSTextField(labelWithString: "Closed")
+        statusLabel = NSTextField(labelWithString: String(localized: "device.door.closed", defaultValue: "Closed", bundle: .macOSBridge))
         statusLabel.frame = NSRect(x: statusX, y: labelY - 1, width: statusWidth, height: 17)
         statusLabel.font = DS.Typography.labelSmall
         statusLabel.textColor = .secondaryLabelColor
@@ -133,21 +133,21 @@ class GarageDoorMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
     private func updateUI() {
         let (filled, stateText, isOpen): (Bool, String, Bool) = {
             if isObstructed {
-                return (false, "Obstructed", false)
+                return (false, String(localized: "device.door.obstructed", defaultValue: "Obstructed", bundle: .macOSBridge), false)
             }
             switch currentState {
             case 0:  // Open
-                return (false, "Open", true)
+                return (false, String(localized: "device.door.open", defaultValue: "Open", bundle: .macOSBridge), true)
             case 1:  // Closed
-                return (true, "Closed", false)
+                return (true, String(localized: "device.door.closed", defaultValue: "Closed", bundle: .macOSBridge), false)
             case 2:  // Opening
-                return (false, "Opening...", true)
+                return (false, String(localized: "device.door.opening", defaultValue: "Opening...", bundle: .macOSBridge), true)
             case 3:  // Closing
-                return (true, "Closing...", false)
+                return (true, String(localized: "device.door.closing", defaultValue: "Closing...", bundle: .macOSBridge), false)
             case 4:  // Stopped
-                return (false, "Stopped", true)
+                return (false, String(localized: "device.door.stopped", defaultValue: "Stopped", bundle: .macOSBridge), true)
             default:
-                return (true, "Unknown", false)
+                return (true, String(localized: "device.door.unknown", defaultValue: "Unknown", bundle: .macOSBridge), false)
             }
         }()
 

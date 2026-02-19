@@ -49,7 +49,7 @@ class AboutSection: SettingsCard {
         stackView.addArrangedSubview(versionLabel)
 
         // Description
-        let descLabel = createLabel("A lightweight smart home controller for your menu bar", style: .subtitle)
+        let descLabel = createLabel(String(localized: "settings.about.description", defaultValue: "A lightweight smart home controller for your menu bar", bundle: .macOSBridge), style: .subtitle)
         descLabel.alignment = .center
         stackView.addArrangedSubview(descLabel)
 
@@ -64,8 +64,8 @@ class AboutSection: SettingsCard {
         linksStack.orientation = .horizontal
         linksStack.spacing = 16
 
-        let websiteButton = createLinkButton(title: "Website", url: "https://itsyhome.app")
-        let githubButton = createLinkButton(title: "GitHub", url: "https://github.com/nickustinov/itsyhome-macos")
+        let websiteButton = createLinkButton(title: String(localized: "settings.about.website", defaultValue: "Website", bundle: .macOSBridge), url: "https://itsyhome.app")
+        let githubButton = createLinkButton(title: String(localized: "settings.about.github", defaultValue: "GitHub", bundle: .macOSBridge), url: "https://github.com/nickustinov/itsyhome-macos")
 
         linksStack.addArrangedSubview(websiteButton)
         linksStack.addArrangedSubview(githubButton)

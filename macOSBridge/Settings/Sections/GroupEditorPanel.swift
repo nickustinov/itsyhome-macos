@@ -46,31 +46,31 @@ class GroupEditorPanel: NSViewController {
         self.view = container
 
         // Title
-        let titleLabel = NSTextField(labelWithString: existingGroup == nil ? "Create group" : "Edit group")
+        let titleLabel = NSTextField(labelWithString: existingGroup == nil ? String(localized: "group.create_title", defaultValue: "Create group", bundle: .macOSBridge) : String(localized: "group.edit_title", defaultValue: "Edit group", bundle: .macOSBridge))
         titleLabel.font = .systemFont(ofSize: 16, weight: .semibold)
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         container.addSubview(titleLabel)
 
         // Name field
-        let nameLabel = NSTextField(labelWithString: "Group name")
+        let nameLabel = NSTextField(labelWithString: String(localized: "group.name_label", defaultValue: "Group name", bundle: .macOSBridge))
         nameLabel.font = .systemFont(ofSize: 12, weight: .medium)
         nameLabel.textColor = .secondaryLabelColor
         nameLabel.translatesAutoresizingMaskIntoConstraints = false
         container.addSubview(nameLabel)
 
-        nameField.placeholderString = "e.g. All bedroom lights"
+        nameField.placeholderString = String(localized: "group.name_placeholder", defaultValue: "e.g. All bedroom lights", bundle: .macOSBridge)
         nameField.stringValue = existingGroup?.name ?? ""
         nameField.translatesAutoresizingMaskIntoConstraints = false
         container.addSubview(nameField)
 
         // Room dropdown
-        let roomLabel = NSTextField(labelWithString: "Room")
+        let roomLabel = NSTextField(labelWithString: String(localized: "group.room_label", defaultValue: "Room", bundle: .macOSBridge))
         roomLabel.font = .systemFont(ofSize: 12, weight: .medium)
         roomLabel.textColor = .secondaryLabelColor
         roomLabel.translatesAutoresizingMaskIntoConstraints = false
         container.addSubview(roomLabel)
 
-        roomPopup.addItem(withTitle: "No room (global)")
+        roomPopup.addItem(withTitle: String(localized: "group.no_room", defaultValue: "No room (global)", bundle: .macOSBridge))
         roomPopup.menu?.addItem(NSMenuItem.separator())
         for room in menuData.rooms.sorted(by: { $0.name < $1.name }) {
             let item = NSMenuItem(title: room.name, action: nil, keyEquivalent: "")
@@ -89,13 +89,13 @@ class GroupEditorPanel: NSViewController {
         }
 
         // Display options (inline row)
-        groupSwitchCheckbox = NSButton(checkboxWithTitle: "Group switch", target: self, action: #selector(displayOptionToggled(_:)))
+        groupSwitchCheckbox = NSButton(checkboxWithTitle: String(localized: "group.group_switch", defaultValue: "Group switch", bundle: .macOSBridge), target: self, action: #selector(displayOptionToggled(_:)))
         groupSwitchCheckbox.state = showGroupSwitch ? .on : .off
         groupSwitchCheckbox.font = .systemFont(ofSize: 11)
         groupSwitchCheckbox.translatesAutoresizingMaskIntoConstraints = false
         container.addSubview(groupSwitchCheckbox)
 
-        submenuCheckbox = NSButton(checkboxWithTitle: "Submenu", target: self, action: #selector(displayOptionToggled(_:)))
+        submenuCheckbox = NSButton(checkboxWithTitle: String(localized: "group.submenu", defaultValue: "Submenu", bundle: .macOSBridge), target: self, action: #selector(displayOptionToggled(_:)))
         submenuCheckbox.state = showAsSubmenu ? .on : .off
         submenuCheckbox.font = .systemFont(ofSize: 11)
         submenuCheckbox.translatesAutoresizingMaskIntoConstraints = false
@@ -104,7 +104,7 @@ class GroupEditorPanel: NSViewController {
         updateDisplayOptionStates()
 
         // Devices label
-        let devicesLabel = NSTextField(labelWithString: "Select devices")
+        let devicesLabel = NSTextField(labelWithString: String(localized: "group.select_devices", defaultValue: "Select devices", bundle: .macOSBridge))
         devicesLabel.font = .systemFont(ofSize: 12, weight: .medium)
         devicesLabel.textColor = .secondaryLabelColor
         devicesLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -157,7 +157,7 @@ class GroupEditorPanel: NSViewController {
         // Buttons
         var deleteButton: NSButton?
         if existingGroup != nil {
-            let btn = NSButton(title: "Delete", target: self, action: #selector(deleteTapped))
+            let btn = NSButton(title: String(localized: "common.delete", defaultValue: "Delete", bundle: .macOSBridge), target: self, action: #selector(deleteTapped))
             btn.bezelStyle = .rounded
             btn.contentTintColor = .systemRed
             btn.translatesAutoresizingMaskIntoConstraints = false
@@ -165,13 +165,13 @@ class GroupEditorPanel: NSViewController {
             deleteButton = btn
         }
 
-        let cancelButton = NSButton(title: "Cancel", target: self, action: #selector(cancelTapped))
+        let cancelButton = NSButton(title: String(localized: "common.cancel", defaultValue: "Cancel", bundle: .macOSBridge), target: self, action: #selector(cancelTapped))
         cancelButton.bezelStyle = .rounded
         cancelButton.keyEquivalent = "\u{1b}" // Escape
         cancelButton.translatesAutoresizingMaskIntoConstraints = false
         container.addSubview(cancelButton)
 
-        let saveButton = NSButton(title: existingGroup == nil ? "Create" : "Save", target: self, action: #selector(saveTapped))
+        let saveButton = NSButton(title: existingGroup == nil ? String(localized: "common.create", defaultValue: "Create", bundle: .macOSBridge) : String(localized: "common.save", defaultValue: "Save", bundle: .macOSBridge), target: self, action: #selector(saveTapped))
         saveButton.bezelStyle = .rounded
         saveButton.keyEquivalent = "\r" // Enter
         saveButton.translatesAutoresizingMaskIntoConstraints = false
@@ -293,11 +293,11 @@ class GroupEditorPanel: NSViewController {
         guard let group = existingGroup else { return }
 
         let alert = NSAlert()
-        alert.messageText = "Delete group?"
-        alert.informativeText = "Are you sure you want to delete \"\(group.name)\"? This cannot be undone."
+        alert.messageText = String(localized: "alert.delete_group.title", defaultValue: "Delete group?", bundle: .macOSBridge)
+        alert.informativeText = String(localized: "alert.delete_group.message", defaultValue: "Are you sure you want to delete \"\(group.name)\"? This cannot be undone.", bundle: .macOSBridge)
         alert.alertStyle = .warning
-        alert.addButton(withTitle: "Delete")
-        alert.addButton(withTitle: "Cancel")
+        alert.addButton(withTitle: String(localized: "common.delete", defaultValue: "Delete", bundle: .macOSBridge))
+        alert.addButton(withTitle: String(localized: "common.cancel", defaultValue: "Cancel", bundle: .macOSBridge))
 
         let response = alert.runModal()
         if response == .alertFirstButtonReturn {
@@ -312,16 +312,16 @@ class GroupEditorPanel: NSViewController {
         // Validation
         if name.isEmpty {
             let alert = NSAlert()
-            alert.messageText = "Name required"
-            alert.informativeText = "Please enter a name for the group."
+            alert.messageText = String(localized: "alert.name_required.title", defaultValue: "Name required", bundle: .macOSBridge)
+            alert.informativeText = String(localized: "alert.name_required.message", defaultValue: "Please enter a name for the group.", bundle: .macOSBridge)
             alert.runModal()
             return
         }
 
         if selectedDeviceIds.isEmpty {
             let alert = NSAlert()
-            alert.messageText = "No devices selected"
-            alert.informativeText = "Please select at least one device for the group."
+            alert.messageText = String(localized: "alert.no_devices_selected.title", defaultValue: "No devices selected", bundle: .macOSBridge)
+            alert.informativeText = String(localized: "alert.no_devices_selected.message", defaultValue: "Please select at least one device for the group.", bundle: .macOSBridge)
             alert.runModal()
             return
         }
@@ -345,7 +345,7 @@ class GroupEditorPanel: NSViewController {
     lazy var window: NSWindow? = {
         let window = NSWindow(contentViewController: self)
         window.styleMask = [.titled]
-        window.title = existingGroup == nil ? "Create group" : "Edit group"
+        window.title = existingGroup == nil ? String(localized: "group.create_title", defaultValue: "Create group", bundle: .macOSBridge) : String(localized: "group.edit_title", defaultValue: "Edit group", bundle: .macOSBridge)
         return window
     }()
 }

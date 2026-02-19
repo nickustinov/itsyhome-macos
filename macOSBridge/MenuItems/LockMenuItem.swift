@@ -69,7 +69,7 @@ class LockMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshab
         containerView.addSubview(nameLabel)
 
         // Status label
-        statusLabel = NSTextField(labelWithString: "Locked")
+        statusLabel = NSTextField(labelWithString: String(localized: "device.lock.locked", defaultValue: "Locked", bundle: .macOSBridge))
         statusLabel.frame = NSRect(x: statusX, y: labelY - 1, width: statusWidth, height: 17)
         statusLabel.font = DS.Typography.labelSmall
         statusLabel.textColor = .secondaryLabelColor
@@ -116,7 +116,7 @@ class LockMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshab
         let mode = isLocked ? "locked" : "unlocked"
         iconView.image = PhosphorIcon.modeIcon(for: serviceData.serviceType, mode: mode, filled: isLocked)
             ?? IconResolver.icon(for: serviceData, filled: isLocked)
-        statusLabel.stringValue = isLocked ? "Locked" : "Unlocked"
+        statusLabel.stringValue = isLocked ? String(localized: "device.lock.locked", defaultValue: "Locked", bundle: .macOSBridge) : String(localized: "device.lock.unlocked", defaultValue: "Unlocked", bundle: .macOSBridge)
         toggleSwitch.setOn(isLocked, animated: false)
     }
 

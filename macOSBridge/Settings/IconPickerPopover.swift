@@ -42,7 +42,7 @@ class IconPickerPopover: NSViewController {
     private let allLabel = NSTextField(labelWithString: "All icons")
     private let scrollView = NSScrollView()
     private let iconsCollectionView: NSCollectionView
-    private let resetButton = NSButton(title: "Reset to default", target: nil, action: nil)
+    private let resetButton = NSButton(title: String(localized: "shortcut.reset_icon", defaultValue: "Reset to default", bundle: .macOSBridge), target: nil, action: nil)
 
     // MARK: - Data
 

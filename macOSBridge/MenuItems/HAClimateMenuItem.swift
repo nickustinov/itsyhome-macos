@@ -342,17 +342,17 @@ class HAClimateMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefr
     private static func titleAndColorForMode(_ mode: String) -> (String, NSColor) {
         switch mode {
         case "heat":
-            return ("Heat", DS.Colors.thermostatHeat)
+            return (String(localized: "device.climate.heat", defaultValue: "Heat", bundle: .macOSBridge), DS.Colors.thermostatHeat)
         case "cool":
-            return ("Cool", DS.Colors.thermostatCool)
+            return (String(localized: "device.climate.cool", defaultValue: "Cool", bundle: .macOSBridge), DS.Colors.thermostatCool)
         case "heat_cool":
-            return ("Heat", DS.Colors.thermostatHeat)  // Dual setpoint, show as Heat
+            return (String(localized: "device.climate.heat", defaultValue: "Heat", bundle: .macOSBridge), DS.Colors.thermostatHeat)  // Dual setpoint, show as Heat
         case "auto":
-            return ("Auto", DS.Colors.success)
+            return (String(localized: "device.climate.auto", defaultValue: "Auto", bundle: .macOSBridge), DS.Colors.success)
         case "dry":
-            return ("Dry", NSColor.systemTeal)
+            return (String(localized: "device.climate.dry", defaultValue: "Dry", bundle: .macOSBridge), NSColor.systemTeal)
         case "fan_only":
-            return ("Fan", DS.Colors.fanOn)
+            return (String(localized: "device.climate.fan", defaultValue: "Fan", bundle: .macOSBridge), DS.Colors.fanOn)
         default:
             return (mode.capitalized, NSColor.systemGray)
         }

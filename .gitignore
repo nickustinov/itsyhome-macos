@@ -47,6 +47,9 @@ playground.xcworkspace
 !*Debug.xcconfig
 !*Release.xcconfig
 
+# Lokalise
+lokalise.yml
+
 # Project notes
 CLAUDE.md
 .vscode/

@@ -148,13 +148,13 @@ private class ProBannerView: ProTintBoxView {
         iconView.translatesAutoresizingMaskIntoConstraints = false
         addSubview(iconView)
 
-        let label = NSTextField(wrappingLabelWithString: "This feature is available to Itsyhome Pro subscribers.")
+        let label = NSTextField(wrappingLabelWithString: String(localized: "settings.pro.banner", defaultValue: "This feature is available to Itsyhome Pro subscribers.", bundle: .macOSBridge))
         label.font = .systemFont(ofSize: 12)
         label.textColor = .labelColor
         label.translatesAutoresizingMaskIntoConstraints = false
         addSubview(label)
 
-        let button = NSButton(title: "Get Pro", target: self, action: #selector(getProTapped))
+        let button = NSButton(title: String(localized: "settings.pro.get_pro_button", defaultValue: "Get Pro", bundle: .macOSBridge), target: self, action: #selector(getProTapped))
         button.bezelStyle = .rounded
         button.controlSize = .small
         button.translatesAutoresizingMaskIntoConstraints = false

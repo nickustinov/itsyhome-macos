@@ -129,7 +129,7 @@ class HASecuritySystemMenuItem: NSMenuItem, CharacteristicUpdatable, Characteris
         let fieldWidth = codeEntryWidth - 56
         codeField = BorderlessTextField(frame: NSRect(x: 10, y: 3, width: fieldWidth, height: 20))
         codeField.font = NSFont.monospacedDigitSystemFont(ofSize: 13, weight: .medium)
-        codeField.placeholderString = "Code"
+        codeField.placeholderString = String(localized: "device.security.code", defaultValue: "Code", bundle: .macOSBridge)
         codeField.textColor = DS.Colors.foreground
         codeEntryContainer.addSubview(codeField)
 

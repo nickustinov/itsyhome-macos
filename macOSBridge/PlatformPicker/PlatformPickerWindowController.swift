@@ -70,23 +70,23 @@ class PlatformPickerView: NSView {
     var onHomeKitSelected: (() -> Void)?
     var onHomeAssistantSelected: (() -> Void)?
 
-    private let titleLabel = NSTextField(labelWithString: "Welcome to Itsyhome")
-    private let subtitleLabel = NSTextField(labelWithString: "Choose your smart home platform")
+    private let titleLabel = NSTextField(labelWithString: String(localized: "onboarding.welcome", defaultValue: "Welcome to Itsyhome", bundle: .macOSBridge))
+    private let subtitleLabel = NSTextField(labelWithString: String(localized: "onboarding.choose_platform", defaultValue: "Choose your smart home platform", bundle: .macOSBridge))
     private let homeKitCard: PlatformCard
     private let homeAssistantCard: PlatformCard
-    private let footerLabel = NSTextField(labelWithString: "You can change this later in Settings")
+    private let footerLabel = NSTextField(labelWithString: String(localized: "onboarding.change_later", defaultValue: "You can change this later in Settings", bundle: .macOSBridge))
 
     override init(frame frameRect: NSRect) {
         let pluginBundle = Bundle(for: PlatformPickerView.self)
 
         homeKitCard = PlatformCard(
-            title: "HomeKit",
-            subtitle: "Apple's built-in smart home framework",
+            title: String(localized: "settings.general.homekit", defaultValue: "HomeKit", bundle: .macOSBridge),
+            subtitle: String(localized: "onboarding.homekit_subtitle", defaultValue: "Apple's built-in smart home framework", bundle: .macOSBridge),
             icon: pluginBundle.image(forResource: "homekit") ?? NSImage()
         )
         homeAssistantCard = PlatformCard(
-            title: "Home Assistant",
-            subtitle: "Open-source home automation",
+            title: String(localized: "settings.general.home_assistant", defaultValue: "Home Assistant", bundle: .macOSBridge),
+            subtitle: String(localized: "onboarding.home_assistant_subtitle", defaultValue: "Open-source home automation", bundle: .macOSBridge),
             icon: pluginBundle.image(forResource: "ha") ?? NSImage()
         )
 

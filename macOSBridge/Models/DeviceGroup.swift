@@ -58,14 +58,14 @@ struct DeviceGroup: Codable, Identifiable {
     /// Resolves device IDs to actual ServiceData objects
     func resolveServices(in data: MenuData) -> [ServiceData] {
         let allServices = data.accessories.flatMap { $0.services }
-        let serviceDict = Dictionary(uniqueKeysWithValues: allServices.map { ($0.uniqueIdentifier, $0) })
+        let serviceDict = Dictionary(allServices.map { ($0.uniqueIdentifier, $0) }, uniquingKeysWith: { _, last in last })
         return deviceIds.compactMap { serviceDict[$0] }
     }
 
     /// Infers an appropriate icon based on the devices in the group
     static func inferIcon(for deviceIds: [String], in data: MenuData) -> String {
         let allServices = data.accessories.flatMap { $0.services }
-        let serviceDict = Dictionary(uniqueKeysWithValues: allServices.map { ($0.uniqueIdentifier, $0) })
+        let serviceDict = Dictionary(allServices.map { ($0.uniqueIdentifier, $0) }, uniquingKeysWith: { _, last in last })
         let services = deviceIds.compactMap { serviceDict[$0] }
 
         guard let firstType = services.first?.serviceType else {

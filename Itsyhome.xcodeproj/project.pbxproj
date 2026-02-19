@@ -1960,6 +1960,7 @@
 		951B62D4E808D80E5BA388E2 /* ph.paragraph.svg in Resources */ = {isa = PBXBuildFile; fileRef = CE9B6F93832B18F7DD5F63E8 /* ph.paragraph.svg */; };
 		9522C427A55D592DDA1D4A12 /* ph.arrow-up-left.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = DAF8A39CB89B373F31ED6E35 /* ph.arrow-up-left.fill.svg */; };
 		95517C20A712767452EEA342 /* ph.belt.svg in Resources */ = {isa = PBXBuildFile; fileRef = 95E5095E341A3169DF07549F /* ph.belt.svg */; };
+		956A030C7D43F3A93AEACF14 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = FB711904CB21920C6FC21965 /* Localizable.xcstrings */; };
 		957E6D37B3935802512C9954 /* ph.wechat-logo.svg in Resources */ = {isa = PBXBuildFile; fileRef = 70B1136F86E54A722F32F127 /* ph.wechat-logo.svg */; };
 		958E5184257566B1A2C73A46 /* ph.google-photos-logo.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = EAFC04613F57EE3DB64E208D /* ph.google-photos-logo.fill.svg */; };
 		95C36CCD4FADD1E5D599FCF1 /* CloudSyncTranslatorDeviceGroupsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80A89008C02F5EDA5137756A /* CloudSyncTranslatorDeviceGroupsTests.swift */; };
@@ -2955,6 +2956,7 @@
 		E19B3B24C8A6EBC383DD4AC4 /* HAClimateMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38A3A735A61F384EE9973370 /* HAClimateMenuItem.swift */; };
 		E19EB0697A29FB223575BEFA /* macOSBridge.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 5735B31C003BD03DE4B28206 /* macOSBridge.bundle */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		E1A05F425508A3EB80769004 /* ph.skip-back.svg in Resources */ = {isa = PBXBuildFile; fileRef = 1100C52294B136BAAED6EB88 /* ph.skip-back.svg */; };
+		E1A8142E0DD300BA6D9C2B62 /* Bundle+Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 235CB44726480F81E5436B85 /* Bundle+Localization.swift */; };
 		E1AAD60DC5ACEA028C5AF68C /* ph.microphone.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 6B24E7E68718F7879EC0907B /* ph.microphone.fill.svg */; };
 		E1B18C95E855D4AA9E3B41D2 /* ph.seat.svg in Resources */ = {isa = PBXBuildFile; fileRef = 8CA4F668087477E930DDDD0B /* ph.seat.svg */; };
 		E1BF29D3A64381E43D97A484 /* ph.arrow-u-right-down.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 4D5E86C40AF49EB266BC0D1A /* ph.arrow-u-right-down.fill.svg */; };
@@ -3227,6 +3229,7 @@
 		F9907743CF81AB34533B7F5B /* ph.cross.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 62D0C5E83B3D3787E558EC47 /* ph.cross.fill.svg */; };
 		F994D9E819CAA2271CD97855 /* ph.washing-machine.svg in Resources */ = {isa = PBXBuildFile; fileRef = F2888D61E3A08217856C6E70 /* ph.washing-machine.svg */; };
 		F9A19D097F517D2FB1BF02A3 /* ph.caret-left.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = B6A5ACF9E3377B5AC94F622B /* ph.caret-left.fill.svg */; };
+		F9B4F51D9790479CE1F7E7A1 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = FB711904CB21920C6FC21965 /* Localizable.xcstrings */; };
 		F9CD6B60BACA5A75D520BCC2 /* ph.replit-logo.svg in Resources */ = {isa = PBXBuildFile; fileRef = F67A3D4D686F818796748192 /* ph.replit-logo.svg */; };
 		F9D98E5B92142462C6CF7258 /* ph.brackets-angle.svg in Resources */ = {isa = PBXBuildFile; fileRef = D4A334F40BEDE9C8C42B1B92 /* ph.brackets-angle.svg */; };
 		F9FEB594764D9A38E292CD89 /* ph.bluetooth.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = B77CD732EAFB3B94F25E1A46 /* ph.bluetooth.fill.svg */; };
@@ -3765,6 +3768,7 @@
 		23013B914799EACCBCE97D81 /* ph.asclepius.fill.svg */ = {isa = PBXFileReference; path = ph.asclepius.fill.svg; sourceTree = "<group>"; };
 		2337344935F9CFFB8219A7DB /* ph.book-open-user.svg */ = {isa = PBXFileReference; path = "ph.book-open-user.svg"; sourceTree = "<group>"; };
 		234A960F11DAA90A57E0DE55 /* ph.arrow-square-right.svg */ = {isa = PBXFileReference; path = "ph.arrow-square-right.svg"; sourceTree = "<group>"; };
+		235CB44726480F81E5436B85 /* Bundle+Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Bundle+Localization.swift"; sourceTree = "<group>"; };
 		23616F2ACC6BD6D13E07A6B7 /* ph.money-wavy.svg */ = {isa = PBXFileReference; path = "ph.money-wavy.svg"; sourceTree = "<group>"; };
 		236B5D79894E3BBE8B1C4DAF /* ph.receipt-x.fill.svg */ = {isa = PBXFileReference; path = "ph.receipt-x.fill.svg"; sourceTree = "<group>"; };
 		236C027186A6AE866AD39627 /* ph.cooking-pot.svg */ = {isa = PBXFileReference; path = "ph.cooking-pot.svg"; sourceTree = "<group>"; };
@@ -6501,6 +6505,7 @@
 		FB49967730973AEECBB4C5AC /* ph.greater-than-or-equal.svg */ = {isa = PBXFileReference; path = "ph.greater-than-or-equal.svg"; sourceTree = "<group>"; };
 		FB5974A6FB636AD718FAA092 /* ph.globe.fill.svg */ = {isa = PBXFileReference; path = ph.globe.fill.svg; sourceTree = "<group>"; };
 		FB6388E0BDBE696E0AE89584 /* ph.clock-clockwise.fill.svg */ = {isa = PBXFileReference; path = "ph.clock-clockwise.fill.svg"; sourceTree = "<group>"; };
+		FB711904CB21920C6FC21965 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		FB8AF12CF0FEA81DE8967AE6 /* ph.frame-corners.fill.svg */ = {isa = PBXFileReference; path = "ph.frame-corners.fill.svg"; sourceTree = "<group>"; };
 		FB9B3C2D5F47F73E35D56598 /* ph.tag.svg */ = {isa = PBXFileReference; path = ph.tag.svg; sourceTree = "<group>"; };
 		FBB4A08C2C5D0049D36DF220 /* ph.caret-circle-down.fill.svg */ = {isa = PBXFileReference; path = "ph.caret-circle-down.fill.svg"; sourceTree = "<group>"; };
@@ -6614,6 +6619,7 @@
 			isa = PBXGroup;
 			children = (
 				A554C4D26C15417928E429D4 /* Assets.xcassets */,
+				235CB44726480F81E5436B85 /* Bundle+Localization.swift */,
 				22C281E3CFA576C918B16C66 /* CameraPanelManager.swift */,
 				FED3835F8603DA9756A2B79B /* DebugMockAccessories.swift */,
 				D8DAE0D0C65A8D06C17611F3 /* HotkeyManager.swift */,
@@ -6793,6 +6799,7 @@
 			children = (
 				920C215C97573ED3512E5AC8 /* ha.png */,
 				7DCC58ED42CF6EB13A4D9E45 /* homekit.png */,
+				FB711904CB21920C6FC21965 /* Localizable.xcstrings */,
 				9742DADA3E4F1C888E25C036 /* PhosphorIcons */,
 				23CC2970C1660E13643F48E9 /* SecurityIcons */,
 			);
@@ -10118,7 +10125,18 @@
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				Base,
+				de,
 				en,
+				es,
+				fr,
+				it,
+				ja,
+				ko,
+				pl,
+				"pt-BR",
+				ru,
+				"zh-Hans",
+				"zh-Hant",
 			);
 			mainGroup = E4D0AC95AB41872138D6349D;
 			minimizedProjectReferenceProxies = 1;
@@ -10142,6 +10160,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				E003741ECCB38525B6A202D9 /* Assets.xcassets in Resources */,
+				F9B4F51D9790479CE1F7E7A1 /* Localizable.xcstrings in Resources */,
 				32C990A8296C641694730184 /* away.png in Resources */,
 				FB121B22D2209FAAA81A7B9B /* custom.png in Resources */,
 				BFB7FF361BA608E2BF30565E /* disarmed.png in Resources */,
@@ -13183,6 +13202,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				AE2684040DE50AEBB0A3A844 /* Assets.xcassets in Resources */,
+				956A030C7D43F3A93AEACF14 /* Localizable.xcstrings in Resources */,
 				909DD4904DA4FD8537727E7C /* PhosphorIcons in Resources */,
 				B8943C6757DEBB63CEC81BC3 /* SecurityIcons in Resources */,
 				5A3638D4094B33C580A6244B /* away.png in Resources */,
@@ -13266,6 +13286,7 @@
 				3B59DD36C2400864DCEE2CA3 /* BaseMenuItems.swift in Sources */,
 				CA8E1F973147B8CE2E58FA52 /* BlindMenuItem.swift in Sources */,
 				0C50A9F7E4B39D3073FCB0C2 /* BridgeProtocols.swift in Sources */,
+				E1A8142E0DD300BA6D9C2B62 /* Bundle+Localization.swift in Sources */,
 				CD46DAC3D441849FF023CC5A /* CameraPanelManager.swift in Sources */,
 				35DD801A88C9D8C99F06889A /* CamerasSection+TableDelegate.swift in Sources */,
 				11112BE937E38F4684A4A67E /* CamerasSection.swift in Sources */,
@@ -13519,7 +13540,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_MAC_ICON_IN_CATALYST_APP = YES;
 				CODE_SIGN_ENTITLEMENTS = Itsyhome/Itsyhome.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 224;
+				CURRENT_PROJECT_VERSION = 225;
 				DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER = NO;
 				INFOPLIST_FILE = Itsyhome/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Itsyhome;
@@ -13528,7 +13549,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.0.0;
+				MARKETING_VERSION = 2.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.nickustinov.itsyhome;
 				PRODUCT_NAME = Itsyhome;
 				SDKROOT = iphoneos;
@@ -13599,6 +13620,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.9;
 			};
@@ -13647,7 +13669,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_MAC_ICON_IN_CATALYST_APP = YES;
 				CODE_SIGN_ENTITLEMENTS = Itsyhome/Itsyhome.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 224;
+				CURRENT_PROJECT_VERSION = 225;
 				DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER = NO;
 				INFOPLIST_FILE = Itsyhome/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Itsyhome;
@@ -13656,7 +13678,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.0.0;
+				MARKETING_VERSION = 2.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.nickustinov.itsyhome;
 				PRODUCT_NAME = Itsyhome;
 				SDKROOT = iphoneos;
@@ -13720,6 +13742,7 @@
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.9;
 			};

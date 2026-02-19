@@ -18,9 +18,9 @@ extension MacOSController {
 
         // Build lookup maps
         let allServices = data.accessories.flatMap { $0.services }
-        let serviceLookup = Dictionary(uniqueKeysWithValues: allServices.map { ($0.uniqueIdentifier, $0) })
-        let roomLookup = Dictionary(uniqueKeysWithValues: data.rooms.map { ($0.uniqueIdentifier, $0) })
-        let sceneLookup = Dictionary(uniqueKeysWithValues: data.scenes.map { ($0.uniqueIdentifier, $0) })
+        let serviceLookup = Dictionary(allServices.map { ($0.uniqueIdentifier, $0) }, uniquingKeysWith: { _, last in last })
+        let roomLookup = Dictionary(data.rooms.map { ($0.uniqueIdentifier, $0) }, uniquingKeysWith: { _, last in last })
+        let sceneLookup = Dictionary(data.scenes.map { ($0.uniqueIdentifier, $0) }, uniquingKeysWith: { _, last in last })
         let deviceGroups = PreferencesManager.shared.deviceGroups
 
         // Build services by room, filtering out hidden services

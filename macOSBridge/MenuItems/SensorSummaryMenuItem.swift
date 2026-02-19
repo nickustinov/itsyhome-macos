@@ -71,7 +71,7 @@ class SensorSummaryMenuItem: NSMenuItem, CharacteristicUpdatable, Characteristic
 
         // Temperature title (top)
         let titleY = itemHeight - 10 - 12
-        tempTitleLabel = NSTextField(labelWithString: "Temperature")
+        tempTitleLabel = NSTextField(labelWithString: String(localized: "device.sensor.temperature", defaultValue: "Temperature", bundle: .macOSBridge))
         tempTitleLabel.frame = NSRect(x: currentX, y: titleY, width: 80, height: 12)
         tempTitleLabel.font = DS.Typography.labelSmall
         tempTitleLabel.textColor = .secondaryLabelColor
@@ -100,7 +100,7 @@ class SensorSummaryMenuItem: NSMenuItem, CharacteristicUpdatable, Characteristic
         currentX += iconSize + DS.Spacing.xs
 
         // Humidity title (top)
-        humidityTitleLabel = NSTextField(labelWithString: "Humidity")
+        humidityTitleLabel = NSTextField(labelWithString: String(localized: "device.sensor.humidity", defaultValue: "Humidity", bundle: .macOSBridge))
         humidityTitleLabel.frame = NSRect(x: currentX, y: titleY, width: 70, height: 12)
         humidityTitleLabel.font = DS.Typography.labelSmall
         humidityTitleLabel.textColor = .secondaryLabelColor

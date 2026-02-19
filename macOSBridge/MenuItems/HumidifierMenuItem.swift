@@ -188,13 +188,13 @@ class HumidifierMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
         modeContainer.layer?.backgroundColor = NSColor.secondaryLabelColor.withAlphaComponent(0.08).cgColor
         modeContainer.layer?.cornerRadius = modeContainerHeight / 2
 
-        modeButtonHumidify = ModeButton(title: "Humid", color: DS.Colors.info)  // Blue - adding moisture
+        modeButtonHumidify = ModeButton(title: String(localized: "device.humidifier.humid", defaultValue: "Humid", bundle: .macOSBridge), color: DS.Colors.info)  // Blue - adding moisture
         modeButtonHumidify.frame = NSRect(x: containerPadding, y: containerPadding, width: buttonWidth, height: buttonHeight)
         modeButtonHumidify.tag = 1
         modeButtonHumidify.isDisabled = !localCanHumidify
         modeContainer.addSubview(modeButtonHumidify)
 
-        modeButtonDehumidify = ModeButton(title: "Dry", color: DS.Colors.warning)  // Orange - removing moisture
+        modeButtonDehumidify = ModeButton(title: String(localized: "device.humidifier.dry", defaultValue: "Dry", bundle: .macOSBridge), color: DS.Colors.warning)  // Orange - removing moisture
         modeButtonDehumidify.frame = NSRect(x: containerPadding + buttonWidth, y: containerPadding, width: buttonWidth, height: buttonHeight)
         modeButtonDehumidify.tag = 2
         modeButtonDehumidify.isDisabled = !localCanDehumidify

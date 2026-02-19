@@ -84,7 +84,7 @@ class HALockMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresh
         containerView.addSubview(nameLabel)
 
         // Status label
-        statusLabel = NSTextField(labelWithString: "Locked")
+        statusLabel = NSTextField(labelWithString: String(localized: "device.lock.locked", defaultValue: "Locked", bundle: .macOSBridge))
         statusLabel.frame = NSRect(x: statusX, y: labelY - 1, width: statusWidth, height: 17)
         statusLabel.font = DS.Typography.labelSmall
         statusLabel.textColor = .secondaryLabelColor
@@ -143,11 +143,11 @@ class HALockMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresh
 
         // Update status label text (don't set textColor - let HighlightingMenuItemView handle it)
         switch currentState {
-        case "locked": statusLabel.stringValue = "Locked"
-        case "unlocked": statusLabel.stringValue = "Unlocked"
-        case "locking": statusLabel.stringValue = "Locking..."
-        case "unlocking": statusLabel.stringValue = "Unlocking..."
-        case "jammed": statusLabel.stringValue = "Jammed"
+        case "locked": statusLabel.stringValue = String(localized: "device.lock.locked", defaultValue: "Locked", bundle: .macOSBridge)
+        case "unlocked": statusLabel.stringValue = String(localized: "device.lock.unlocked", defaultValue: "Unlocked", bundle: .macOSBridge)
+        case "locking": statusLabel.stringValue = String(localized: "device.lock.locking", defaultValue: "Locking...", bundle: .macOSBridge)
+        case "unlocking": statusLabel.stringValue = String(localized: "device.lock.unlocking", defaultValue: "Unlocking...", bundle: .macOSBridge)
+        case "jammed": statusLabel.stringValue = String(localized: "device.lock.jammed", defaultValue: "Jammed", bundle: .macOSBridge)
         default: statusLabel.stringValue = currentState.capitalized
         }
 

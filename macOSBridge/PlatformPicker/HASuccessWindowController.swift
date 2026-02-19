@@ -105,7 +105,7 @@ class HASuccessView: NSView {
         addSubview(checkView)
 
         // Title
-        let titleLabel = NSTextField(labelWithString: "You're connected!")
+        let titleLabel = NSTextField(labelWithString: String(localized: "onboarding.connected", defaultValue: "You're connected!", bundle: .macOSBridge))
         titleLabel.font = NSFont.systemFont(ofSize: 26, weight: .bold)
         titleLabel.textColor = .labelColor
         titleLabel.alignment = .center
@@ -115,12 +115,9 @@ class HASuccessView: NSView {
         // Device count subtitle
         let devicesText: String
         if areaCount > 0 {
-            let deviceWord = deviceCount == 1 ? "device" : "devices"
-            let areaWord = areaCount == 1 ? "area" : "areas"
-            devicesText = "Itsyhome found \(deviceCount) \(deviceWord) in \(areaCount) \(areaWord)."
+            devicesText = String(localized: "onboarding.found_devices_areas", defaultValue: "Itsyhome found \(deviceCount) devices in \(areaCount) areas.", bundle: .macOSBridge)
         } else {
-            let deviceWord = deviceCount == 1 ? "device" : "devices"
-            devicesText = "Itsyhome found \(deviceCount) \(deviceWord)."
+            devicesText = String(localized: "onboarding.found_devices", defaultValue: "Itsyhome found \(deviceCount) devices.", bundle: .macOSBridge)
         }
         let subtitleLabel = NSTextField(labelWithString: devicesText)
         subtitleLabel.font = NSFont.systemFont(ofSize: 14, weight: .regular)
@@ -136,21 +133,21 @@ class HASuccessView: NSView {
         addSubview(separator)
 
         // "Rooms" header
-        let roomsHeader = NSTextField(labelWithString: "Organized by areas")
+        let roomsHeader = NSTextField(labelWithString: String(localized: "onboarding.organized_by_areas", defaultValue: "Organized by areas", bundle: .macOSBridge))
         roomsHeader.font = NSFont.systemFont(ofSize: 15, weight: .semibold)
         roomsHeader.textColor = .labelColor
         roomsHeader.translatesAutoresizingMaskIntoConstraints = false
         addSubview(roomsHeader)
 
         // Rooms body
-        let roomsBody = NSTextField(wrappingLabelWithString: "Your devices are automatically organized by area. Each area appears as a room submenu in Itsyhome.")
+        let roomsBody = NSTextField(wrappingLabelWithString: String(localized: "onboarding.areas_description", defaultValue: "Your devices are automatically organized by area. Each area appears as a room submenu in Itsyhome.", bundle: .macOSBridge))
         roomsBody.font = NSFont.systemFont(ofSize: 13, weight: .regular)
         roomsBody.textColor = .secondaryLabelColor
         roomsBody.translatesAutoresizingMaskIntoConstraints = false
         addSubview(roomsBody)
 
         // "Custom layout" header
-        let customHeader = NSTextField(labelWithString: "Custom layout")
+        let customHeader = NSTextField(labelWithString: String(localized: "onboarding.custom_layout", defaultValue: "Custom layout", bundle: .macOSBridge))
         customHeader.font = NSFont.systemFont(ofSize: 15, weight: .semibold)
         customHeader.textColor = .labelColor
         customHeader.translatesAutoresizingMaskIntoConstraints = false
@@ -163,7 +160,7 @@ class HASuccessView: NSView {
         addSubview(customBody)
 
         // Start exploring button
-        let startButton = NSButton(title: "Start exploring", target: self, action: #selector(finishTapped))
+        let startButton = NSButton(title: String(localized: "onboarding.start_exploring", defaultValue: "Start exploring", bundle: .macOSBridge), target: self, action: #selector(finishTapped))
         startButton.bezelStyle = .rounded
         startButton.keyEquivalent = "\r"
         startButton.font = NSFont.systemFont(ofSize: 14, weight: .semibold)

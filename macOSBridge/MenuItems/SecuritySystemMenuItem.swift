@@ -87,10 +87,10 @@ class SecuritySystemMenuItem: NSMenuItem, CharacteristicUpdatable, Characteristi
         let containerWidth = ModeButtonGroup.widthForButtons(count: 4, buttonWidth: 44)
         let modeContainer = ModeButtonGroup(frame: NSRect(x: labelX, y: DS.Spacing.sm + 3, width: containerWidth, height: 22))
 
-        modeButtonOff = modeContainer.addButton(title: "Off", color: DS.Colors.mutedForeground, tag: 3)
-        modeButtonStay = modeContainer.addButton(title: "Stay", color: DS.Colors.success, tag: 0)
-        modeButtonAway = modeContainer.addButton(title: "Away", color: DS.Colors.warning, tag: 1)
-        modeButtonNight = modeContainer.addButton(title: "Night", color: DS.Colors.info, tag: 2)
+        modeButtonOff = modeContainer.addButton(title: String(localized: "device.security.off", defaultValue: "Off", bundle: .macOSBridge), color: DS.Colors.mutedForeground, tag: 3)
+        modeButtonStay = modeContainer.addButton(title: String(localized: "device.security.stay", defaultValue: "Stay", bundle: .macOSBridge), color: DS.Colors.success, tag: 0)
+        modeButtonAway = modeContainer.addButton(title: String(localized: "device.security.away", defaultValue: "Away", bundle: .macOSBridge), color: DS.Colors.warning, tag: 1)
+        modeButtonNight = modeContainer.addButton(title: String(localized: "device.security.night", defaultValue: "Night", bundle: .macOSBridge), color: DS.Colors.info, tag: 2)
 
         containerView.addSubview(modeContainer)
 

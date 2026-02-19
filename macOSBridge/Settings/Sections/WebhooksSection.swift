@@ -94,7 +94,7 @@ class WebhooksSection: SettingsCard {
         stackView.addArrangedSubview(createSpacer(height: 12))
 
         // URL format section
-        let formatHeader = AccessorySectionHeader(title: "URL format")
+        let formatHeader = AccessorySectionHeader(title: String(localized: "settings.webhooks.url_format", defaultValue: "URL format", bundle: .macOSBridge))
         stackView.addArrangedSubview(formatHeader)
         formatHeader.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
         formatHeader.heightAnchor.constraint(equalToConstant: 32).isActive = true
@@ -108,7 +108,7 @@ class WebhooksSection: SettingsCard {
         stackView.addArrangedSubview(createSpacer(height: 12))
 
         // Control actions section
-        let actionsHeader = AccessorySectionHeader(title: "Control actions (examples)")
+        let actionsHeader = AccessorySectionHeader(title: String(localized: "settings.webhooks.control_actions", defaultValue: "Control actions (examples)", bundle: .macOSBridge))
         stackView.addArrangedSubview(actionsHeader)
         actionsHeader.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
         actionsHeader.heightAnchor.constraint(equalToConstant: 32).isActive = true
@@ -122,7 +122,7 @@ class WebhooksSection: SettingsCard {
         stackView.addArrangedSubview(createSpacer(height: 12))
 
         // Read endpoints section
-        let readHeader = AccessorySectionHeader(title: "Query endpoints")
+        let readHeader = AccessorySectionHeader(title: String(localized: "settings.webhooks.query_endpoints", defaultValue: "Query endpoints", bundle: .macOSBridge))
         stackView.addArrangedSubview(readHeader)
         readHeader.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
         readHeader.heightAnchor.constraint(equalToConstant: 32).isActive = true
@@ -155,7 +155,7 @@ class WebhooksSection: SettingsCard {
         labelStack.alignment = .centerY
         labelStack.translatesAutoresizingMaskIntoConstraints = false
 
-        let labelField = createLabel("Enable server", style: .body)
+        let labelField = createLabel(String(localized: "settings.webhooks.enable_server", defaultValue: "Enable server", bundle: .macOSBridge), style: .body)
         labelStack.addArrangedSubview(labelField)
 
         enableSwitch.controlSize = .mini
@@ -194,10 +194,10 @@ class WebhooksSection: SettingsCard {
 
         let labelWidth: CGFloat = 60
 
-        let statusTitle = createLabel("Status:", style: .body)
+        let statusTitle = createLabel(String(localized: "settings.webhooks.status_label", defaultValue: "Status:", bundle: .macOSBridge), style: .body)
         statusTitle.translatesAutoresizingMaskIntoConstraints = false
         statusTitle.widthAnchor.constraint(equalToConstant: labelWidth).isActive = true
-        statusLabel = createLabel("Stopped", style: .body)
+        statusLabel = createLabel(String(localized: "settings.webhooks.stopped", defaultValue: "Stopped", bundle: .macOSBridge), style: .body)
         statusRow.addArrangedSubview(statusTitle)
         statusRow.addArrangedSubview(statusLabel)
         stack.addArrangedSubview(statusRow)
@@ -208,7 +208,7 @@ class WebhooksSection: SettingsCard {
         addressRow.spacing = 6
         addressRow.alignment = .centerY
 
-        let addressTitle = createLabel("Address:", style: .body)
+        let addressTitle = createLabel(String(localized: "settings.webhooks.address_label", defaultValue: "Address:", bundle: .macOSBridge), style: .body)
         addressTitle.translatesAutoresizingMaskIntoConstraints = false
         addressTitle.widthAnchor.constraint(equalToConstant: labelWidth).isActive = true
         addressLabel = NSTextField(labelWithString: "—")
@@ -218,7 +218,7 @@ class WebhooksSection: SettingsCard {
         addressRow.addArrangedSubview(addressTitle)
         addressRow.addArrangedSubview(addressLabel)
 
-        let copyButton = NSButton(title: "Copy", target: self, action: #selector(copyAddress))
+        let copyButton = NSButton(title: String(localized: "common.copy", defaultValue: "Copy", bundle: .macOSBridge), target: self, action: #selector(copyAddress))
         copyButton.bezelStyle = .inline
         copyButton.controlSize = .mini
         copyButton.font = .systemFont(ofSize: 9)
@@ -232,7 +232,7 @@ class WebhooksSection: SettingsCard {
         portRow.spacing = 6
         portRow.alignment = .centerY
 
-        let portTitle = createLabel("Port:", style: .body)
+        let portTitle = createLabel(String(localized: "settings.webhooks.port_label", defaultValue: "Port:", bundle: .macOSBridge), style: .body)
         portTitle.translatesAutoresizingMaskIntoConstraints = false
         portTitle.widthAnchor.constraint(equalToConstant: labelWidth).isActive = true
         portField = NSTextField()
@@ -269,7 +269,7 @@ class WebhooksSection: SettingsCard {
             exampleLabel.isSelectable = true
             exampleLabel.lineBreakMode = .byTruncatingTail
 
-            let copyButton = NSButton(title: "Copy", target: self, action: #selector(copyURL(_:)))
+            let copyButton = NSButton(title: String(localized: "common.copy", defaultValue: "Copy", bundle: .macOSBridge), target: self, action: #selector(copyURL(_:)))
             copyButton.bezelStyle = .inline
             copyButton.controlSize = .mini
             copyButton.font = .systemFont(ofSize: 9)
@@ -305,7 +305,7 @@ class WebhooksSection: SettingsCard {
             pathLabel.isSelectable = true
             pathLabel.lineBreakMode = .byTruncatingTail
 
-            let copyButton = NSButton(title: "Copy", target: self, action: #selector(copyURL(_:)))
+            let copyButton = NSButton(title: String(localized: "common.copy", defaultValue: "Copy", bundle: .macOSBridge), target: self, action: #selector(copyURL(_:)))
             copyButton.bezelStyle = .inline
             copyButton.controlSize = .mini
             copyButton.font = .systemFont(ofSize: 9)
@@ -376,11 +376,11 @@ class WebhooksSection: SettingsCard {
 
         switch state {
         case .stopped:
-            statusLabel.stringValue = "Stopped"
+            statusLabel.stringValue = String(localized: "settings.webhooks.stopped", defaultValue: "Stopped", bundle: .macOSBridge)
             statusLabel.textColor = .secondaryLabelColor
             addressLabel.stringValue = "—"
         case .running:
-            statusLabel.stringValue = "Running"
+            statusLabel.stringValue = String(localized: "settings.webhooks.running", defaultValue: "Running", bundle: .macOSBridge)
             statusLabel.textColor = .systemGreen
             addressLabel.stringValue = addressString()
         case .error(let message):
@@ -451,7 +451,7 @@ class WebhooksSection: SettingsCard {
         NSPasteboard.general.setString(url, forType: .string)
 
         let originalTitle = sender.title
-        sender.title = "Copied!"
+        sender.title = String(localized: "common.copied", defaultValue: "Copied!", bundle: .macOSBridge)
         DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
             sender.title = originalTitle
         }

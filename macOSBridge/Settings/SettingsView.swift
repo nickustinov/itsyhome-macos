@@ -76,14 +76,14 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
 
         var title: String {
             switch self {
-            case .general: return "General"
-            case .homeAssistant: return "Home Assistant"
-            case .accessories: return "Home"
-            case .cameras: return "Cameras"
-            case .deeplinks: return "Deeplinks"
-            case .webhooks: return "Webhooks/CLI"
-            case .itsytv: return "Apple TV remote"
-            case .about: return "About"
+            case .general: return String(localized: "settings.general.title", defaultValue: "General", bundle: .macOSBridge)
+            case .homeAssistant: return String(localized: "settings.home_assistant.title", defaultValue: "Home Assistant", bundle: .macOSBridge)
+            case .accessories: return String(localized: "settings.home.title", defaultValue: "Home", bundle: .macOSBridge)
+            case .cameras: return String(localized: "settings.cameras.title", defaultValue: "Cameras", bundle: .macOSBridge)
+            case .deeplinks: return String(localized: "settings.deeplinks.title", defaultValue: "Deeplinks", bundle: .macOSBridge)
+            case .webhooks: return String(localized: "settings.webhooks.title", defaultValue: "Webhooks/CLI", bundle: .macOSBridge)
+            case .itsytv: return String(localized: "settings.itsytv.title", defaultValue: "Apple TV remote", bundle: .macOSBridge)
+            case .about: return String(localized: "settings.about.title", defaultValue: "About", bundle: .macOSBridge)
             }
         }
 

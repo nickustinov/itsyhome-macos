@@ -25,9 +25,9 @@ class DeeplinksSection: SettingsCard {
     ]
 
     private let targetFormats: [(format: String, description: String)] = [
-        ("Room/Device", "Device in specific room"),
-        ("Room/group.Name", "Group scoped to a room"),
-        ("group.Name", "Global group (all rooms)")
+        ("Room/Device", String(localized: "settings.deeplinks.device_in_room", defaultValue: "Device in specific room", bundle: .macOSBridge)),
+        ("Room/group.Name", String(localized: "settings.deeplinks.group_in_room", defaultValue: "Group scoped to a room", bundle: .macOSBridge)),
+        ("group.Name", String(localized: "settings.deeplinks.global_group", defaultValue: "Global group (all rooms)", bundle: .macOSBridge))
     ]
 
     override init(frame frameRect: NSRect) {
@@ -58,7 +58,7 @@ class DeeplinksSection: SettingsCard {
         stackView.addArrangedSubview(createSpacer(height: 4))
 
         // URL Format section
-        let formatHeader = AccessorySectionHeader(title: "URL format")
+        let formatHeader = AccessorySectionHeader(title: String(localized: "settings.deeplinks.url_format", defaultValue: "URL format", bundle: .macOSBridge))
         stackView.addArrangedSubview(formatHeader)
         formatHeader.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
         formatHeader.heightAnchor.constraint(equalToConstant: 32).isActive = true
@@ -72,7 +72,7 @@ class DeeplinksSection: SettingsCard {
         stackView.addArrangedSubview(createSpacer(height: 12))
 
         // Actions section
-        let actionsHeader = AccessorySectionHeader(title: "Actions (examples)")
+        let actionsHeader = AccessorySectionHeader(title: String(localized: "settings.deeplinks.actions", defaultValue: "Actions (examples)", bundle: .macOSBridge))
         stackView.addArrangedSubview(actionsHeader)
         actionsHeader.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
         actionsHeader.heightAnchor.constraint(equalToConstant: 32).isActive = true
@@ -86,7 +86,7 @@ class DeeplinksSection: SettingsCard {
         stackView.addArrangedSubview(createSpacer(height: 12))
 
         // Target formats section
-        let targetHeader = AccessorySectionHeader(title: "Target formats")
+        let targetHeader = AccessorySectionHeader(title: String(localized: "settings.deeplinks.target_formats", defaultValue: "Target formats", bundle: .macOSBridge))
         stackView.addArrangedSubview(targetHeader)
         targetHeader.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
         targetHeader.heightAnchor.constraint(equalToConstant: 32).isActive = true
@@ -125,7 +125,7 @@ class DeeplinksSection: SettingsCard {
             exampleLabel.lineBreakMode = .byTruncatingTail
             exampleLabel.setContentHuggingPriority(.init(1), for: .horizontal)
 
-            let copyButton = NSButton(title: "Copy", target: self, action: #selector(copyURL(_:)))
+            let copyButton = NSButton(title: String(localized: "common.copy", defaultValue: "Copy", bundle: .macOSBridge), target: self, action: #selector(copyURL(_:)))
             copyButton.bezelStyle = .inline
             copyButton.controlSize = .mini
             copyButton.font = .systemFont(ofSize: 9)
@@ -204,7 +204,7 @@ class DeeplinksSection: SettingsCard {
         NSPasteboard.general.setString(url, forType: .string)
 
         let originalTitle = sender.title
-        sender.title = "Copied!"
+        sender.title = String(localized: "common.copied", defaultValue: "Copied!", bundle: .macOSBridge)
         DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
             sender.title = originalTitle
         }

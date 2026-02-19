@@ -149,7 +149,7 @@ extension PinnedStatusItem {
         let showName = PreferencesManager.shared.pinnedItemShowsName(itemId: itemId)
 
         let showNameItem = NSMenuItem(
-            title: "Show name in menu bar",
+            title: String(localized: "pinned.show_name", defaultValue: "Show name in menu bar", bundle: .macOSBridge),
             action: #selector(toggleShowName(_:)),
             keyEquivalent: ""
         )
@@ -158,7 +158,7 @@ extension PinnedStatusItem {
         menu.addItem(showNameItem)
 
         let unpinItem = NSMenuItem(
-            title: "Unpin from menu bar",
+            title: String(localized: "pinned.unpin", defaultValue: "Unpin from menu bar", bundle: .macOSBridge),
             action: #selector(unpinItem(_:)),
             keyEquivalent: ""
         )

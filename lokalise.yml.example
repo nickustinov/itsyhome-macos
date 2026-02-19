@@ -1,0 +1,11 @@
+# Lokalise CLI v2 config
+# Copy to lokalise.yml and fill in your token.
+#
+# Push source strings:
+#   scripts/push-translations.sh
+#
+# Pull translations:
+#   scripts/pull-translations.sh
+
+token: "<your-api-token>"
+project-id: "450822706996d22dd20a70.53856511"

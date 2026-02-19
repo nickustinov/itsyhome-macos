@@ -113,15 +113,15 @@ class HAConnectView: NSView {
     var onCancel: (() -> Void)?
 
     private let iconView = NSImageView()
-    private let titleLabel = NSTextField(labelWithString: "Connect to Home Assistant")
-    private let urlLabel = NSTextField(labelWithString: "Server URL")
+    private let titleLabel = NSTextField(labelWithString: String(localized: "onboarding.connect_title", defaultValue: "Connect to Home Assistant", bundle: .macOSBridge))
+    private let urlLabel = NSTextField(labelWithString: String(localized: "onboarding.server_url", defaultValue: "Server URL", bundle: .macOSBridge))
     private let urlField = NSTextField()
-    private let tokenLabel = NSTextField(labelWithString: "Long-lived access token")
+    private let tokenLabel = NSTextField(labelWithString: String(localized: "onboarding.access_token", defaultValue: "Long-lived access token", bundle: .macOSBridge))
     private let tokenField = NSSecureTextField()
-    private let tokenHintLabel = NSTextField(labelWithString: "Get your token in HA > Profile > Security > Long-Lived Access Tokens")
+    private let tokenHintLabel = NSTextField(labelWithString: String(localized: "onboarding.token_hint", defaultValue: "Get your token in HA > Profile > Security > Long-Lived Access Tokens", bundle: .macOSBridge))
     private let errorLabel = NSTextField(labelWithString: "")
-    private let connectButton = NSButton(title: "Connect", target: nil, action: nil)
-    private let backButton = NSButton(title: "Back", target: nil, action: nil)
+    private let connectButton = NSButton(title: String(localized: "common.connect", defaultValue: "Connect", bundle: .macOSBridge), target: nil, action: nil)
+    private let backButton = NSButton(title: String(localized: "common.back", defaultValue: "Back", bundle: .macOSBridge), target: nil, action: nil)
     private let spinner = NSProgressIndicator()
 
     override init(frame frameRect: NSRect) {
@@ -155,11 +155,11 @@ class HAConnectView: NSView {
         if connecting {
             spinner.startAnimation(nil)
             spinner.isHidden = false
-            connectButton.title = "Connecting..."
+            connectButton.title = String(localized: "common.connecting", defaultValue: "Connecting...", bundle: .macOSBridge)
         } else {
             spinner.stopAnimation(nil)
             spinner.isHidden = true
-            connectButton.title = "Connect"
+            connectButton.title = String(localized: "common.connect", defaultValue: "Connect", bundle: .macOSBridge)
         }
     }
 
@@ -217,9 +217,9 @@ class HAConnectView: NSView {
         if let secureCell = tokenField.cell as? NSSecureTextFieldCell {
             secureCell.echosBullets = true
         }
-        tokenField.placeholderString = "Paste your token here"
+        tokenField.placeholderString = String(localized: "onboarding.paste_token", defaultValue: "Paste your token here", bundle: .macOSBridge)
         tokenField.placeholderAttributedString = NSAttributedString(
-            string: "Paste your token here",
+            string: String(localized: "onboarding.paste_token", defaultValue: "Paste your token here", bundle: .macOSBridge),
             attributes: [
                 .foregroundColor: NSColor.placeholderTextColor,
                 .font: NSFont.systemFont(ofSize: 14)
@@ -332,12 +332,12 @@ class HAConnectView: NSView {
         let accessToken = tokenField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
 
         if serverURL.isEmpty {
-            showError("Please enter a server URL")
+            showError(String(localized: "alert.enter_server_url", defaultValue: "Please enter a server URL", bundle: .macOSBridge))
             return
         }
 
         if accessToken.isEmpty {
-            showError("Please enter an access token")
+            showError(String(localized: "alert.enter_access_token", defaultValue: "Please enter an access token", bundle: .macOSBridge))
             return
         }
 

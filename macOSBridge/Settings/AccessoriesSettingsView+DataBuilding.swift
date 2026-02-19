@@ -25,9 +25,9 @@ extension AccessoriesSettingsView {
         }
 
         let preferences = PreferencesManager.shared
-        let sceneLookup = Dictionary(uniqueKeysWithValues: data.scenes.map { ($0.uniqueIdentifier, $0) })
-        let serviceLookup = Dictionary(uniqueKeysWithValues: data.accessories.flatMap { $0.services }.map { ($0.uniqueIdentifier, $0) })
-        let groupLookup = Dictionary(uniqueKeysWithValues: preferences.deviceGroups.map { ($0.id, $0) })
+        let sceneLookup = Dictionary(data.scenes.map { ($0.uniqueIdentifier, $0) }, uniquingKeysWith: { _, last in last })
+        let serviceLookup = Dictionary(data.accessories.flatMap { $0.services }.map { ($0.uniqueIdentifier, $0) }, uniquingKeysWith: { _, last in last })
+        let groupLookup = Dictionary(preferences.deviceGroups.map { ($0.id, $0) }, uniquingKeysWith: { _, last in last })
 
         var items: [FavouriteItem] = []
         for id in preferences.orderedFavouriteIds {

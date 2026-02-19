@@ -435,11 +435,11 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
         let loadingText: String
         switch PlatformManager.shared.selectedPlatform {
         case .homeAssistant:
-            loadingText = "Connecting to Home Assistant..."
+            loadingText = String(localized: "menu.loading.home_assistant", defaultValue: "Connecting to Home Assistant...", bundle: .macOSBridge)
         case .homeKit:
-            loadingText = "Loading HomeKit..."
+            loadingText = String(localized: "menu.loading.homekit", defaultValue: "Loading HomeKit...", bundle: .macOSBridge)
         case .none:
-            loadingText = "Select a platform in Settings..."
+            loadingText = String(localized: "menu.loading.select_platform", defaultValue: "Select a platform in Settings...", bundle: .macOSBridge)
         }
 
         let loadingItem = NSMenuItem(title: loadingText, action: nil, keyEquivalent: "")
@@ -521,10 +521,10 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
 
         DispatchQueue.main.async {
             let alert = NSAlert()
-            alert.messageText = "Itsyhome error"
+            alert.messageText = String(localized: "alert.error.title", defaultValue: "Itsyhome error", bundle: .macOSBridge)
             alert.informativeText = message
             alert.alertStyle = .warning
-            alert.addButton(withTitle: "OK")
+            alert.addButton(withTitle: String(localized: "common.ok", defaultValue: "OK", bundle: .macOSBridge))
             alert.runModal()
         }
     }
@@ -591,11 +591,11 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
 
     private func showProRequiredAlert() {
         let alert = NSAlert()
-        alert.messageText = "Itsyhome Pro required"
-        alert.informativeText = "Deeplinks are a Pro feature. Upgrade to Itsyhome Pro to control your devices from Shortcuts, Alfred, and other automation tools."
+        alert.messageText = String(localized: "alert.pro_required.title", defaultValue: "Itsyhome Pro required", bundle: .macOSBridge)
+        alert.informativeText = String(localized: "alert.pro_required.deeplinks_message", defaultValue: "Deeplinks are a Pro feature. Upgrade to Itsyhome Pro to control your devices from Shortcuts, Alfred, and other automation tools.", bundle: .macOSBridge)
         alert.alertStyle = .informational
-        alert.addButton(withTitle: "Upgrade")
-        alert.addButton(withTitle: "Later")
+        alert.addButton(withTitle: String(localized: "common.upgrade", defaultValue: "Upgrade", bundle: .macOSBridge))
+        alert.addButton(withTitle: String(localized: "common.later", defaultValue: "Later", bundle: .macOSBridge))
 
         if alert.runModal() == .alertFirstButtonReturn {
             SettingsWindowController.shared.showWindow(nil)
@@ -669,7 +669,7 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
         }
 
         let settingsIcon = PhosphorIcon.regular("gear")
-        let settingsItem = menuBuilder.createActionItem(title: "Settings...", icon: settingsIcon) { [weak self] in
+        let settingsItem = menuBuilder.createActionItem(title: String(localized: "menu.settings", defaultValue: "Settings...", bundle: .macOSBridge), icon: settingsIcon) { [weak self] in
             self?.openSettings(nil)
         }
         if disableSettings {
@@ -684,12 +684,12 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
         mainMenu.addItem(NSMenuItem.separator())
 
         let refreshIcon = PhosphorIcon.regular("arrows-clockwise")
-        let refreshItem = menuBuilder.createActionItem(title: "Refresh", icon: refreshIcon) { [weak self] in
+        let refreshItem = menuBuilder.createActionItem(title: String(localized: "menu.refresh", defaultValue: "Refresh", bundle: .macOSBridge), icon: refreshIcon) { [weak self] in
             self?.refreshHomeKit(nil)
         }
         mainMenu.addItem(refreshItem)
 
-        let quitItem = menuBuilder.createActionItem(title: "Quit", icon: nil) { [weak self] in
+        let quitItem = menuBuilder.createActionItem(title: String(localized: "menu.quit", defaultValue: "Quit", bundle: .macOSBridge), icon: nil) { [weak self] in
             self?.quit(nil)
         }
         mainMenu.addItem(quitItem)
@@ -697,7 +697,7 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
 
     private func addHomeSelector(homes: [HomeData], selectedId: String?) {
         let homeIcon = PhosphorIcon.regular("house")
-        let homeItem = menuBuilder.createSubmenuItem(title: "Home", icon: homeIcon)
+        let homeItem = menuBuilder.createSubmenuItem(title: String(localized: "menu.home", defaultValue: "Home", bundle: .macOSBridge), icon: homeIcon)
 
         let submenu = StayOpenMenu()
         for home in homes {
