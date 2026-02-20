@@ -2,6 +2,9 @@
 
 ## 2.1.0
 
+### Build 229
+- **Fix http connections blocked on App Store builds** – replaced `NSAllowsLocalNetworking` with `NSAllowsArbitraryLoads` in App Transport Security settings, matching the official HA companion app; the previous setting only covered `.local` domains and bare IPs, blocking users who connect to their HA instance via custom DNS names or hostnames with dots
+
 ### Build 228
 - **Fix WebRTC streaming for Nest cameras** – Nest cameras require an SDP offer with three m-lines in audio → video → application order; the app now fetches `camera/webrtc/get_client_config` to detect cameras that need a data channel (e.g. Nest), creates the data channel before generating the offer, and reorders the SDP m-lines to match the expected order
 
