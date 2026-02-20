@@ -2,6 +2,9 @@
 
 ## 2.1.0
 
+### Build 228
+- **Fix WebRTC streaming for Nest cameras** – Nest cameras require an SDP offer with three m-lines in audio → video → application order; the app now fetches `camera/webrtc/get_client_config` to detect cameras that need a data channel (e.g. Nest), creates the data channel before generating the offer, and reorders the SDP m-lines to match the expected order
+
 ### Build 227
 - **Fix cameras not showing without STREAM feature flag** – cameras from integrations like Frigate and Blue Iris that don't set the `supported_features` STREAM bit are now shown; the filter now only excludes cameras with state "unavailable"
 - **Camera debug endpoint** – new `/debug/cameras` webhook endpoint probes each camera's snapshot, HLS, and WebRTC support, with per-entity filtering via `/debug/cameras/{entity_id}`

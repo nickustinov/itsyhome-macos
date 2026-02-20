@@ -17,6 +17,7 @@ final class WebRTCStreamClient: NSObject {
 
     private var peerConnection: LKRTCPeerConnection?
     private var videoTrack: LKRTCVideoTrack?
+    private var dataChannel: LKRTCDataChannel?
     private let factory: LKRTCPeerConnectionFactory
 
     private(set) var videoView: UIView?
@@ -41,7 +42,7 @@ final class WebRTCStreamClient: NSObject {
 
     // MARK: - Connection
 
-    func connect(entityId: String, signaling: HACameraSignaling) async throws {
+    func connect(entityId: String, signaling: HACameraSignaling, dataChannelLabel: String? = nil) async throws {
         self.entityId = entityId
         self.signaling = signaling
 
@@ -62,15 +63,22 @@ final class WebRTCStreamClient: NSObject {
         }
         peerConnection = pc
 
+        // Create data channel before transceivers so m=application appears in the SDP
+        // (required by Nest cameras)
+        if let label = dataChannelLabel {
+            let dcConfig = LKRTCDataChannelConfiguration()
+            dataChannel = pc.dataChannel(forLabel: label, configuration: dcConfig)
+        }
+
+        // Add receive-only audio transceiver (audio first for Nest compatibility)
+        let audioTransceiverInit = LKRTCRtpTransceiverInit()
+        audioTransceiverInit.direction = .recvOnly
+        pc.addTransceiver(of: .audio, init: audioTransceiverInit)
+
         // Add receive-only video transceiver
         let videoTransceiverInit = LKRTCRtpTransceiverInit()
         videoTransceiverInit.direction = .recvOnly
         pc.addTransceiver(of: .video, init: videoTransceiverInit)
-
-        // Add receive-only audio transceiver
-        let audioTransceiverInit = LKRTCRtpTransceiverInit()
-        audioTransceiverInit.direction = .recvOnly
-        pc.addTransceiver(of: .audio, init: audioTransceiverInit)
 
         // Create SDP offer
         let offerConstraints = LKRTCMediaConstraints(
@@ -93,9 +101,16 @@ final class WebRTCStreamClient: NSObject {
             }
         }
 
+        // Ensure m-line order is audio → video → application for Nest compatibility
+        var offerSDP = offer.sdp
+        if dataChannel != nil {
+            offerSDP = ensureNestSDPOrder(offerSDP)
+        }
+        let reorderedOffer = LKRTCSessionDescription(type: .offer, sdp: offerSDP)
+
         // Set local description
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            pc.setLocalDescription(offer) { error in
+            pc.setLocalDescription(reorderedOffer) { error in
                 if let error = error {
                     continuation.resume(throwing: error)
                 } else {
@@ -107,7 +122,7 @@ final class WebRTCStreamClient: NSObject {
         logger.info("Sending WebRTC offer to HA for \(entityId)")
 
         // Send offer to HA and get answer
-        let answerSDP = try await signaling.sendWebRTCOffer(entityId: entityId, offer: offer.sdp)
+        let answerSDP = try await signaling.sendWebRTCOffer(entityId: entityId, offer: reorderedOffer.sdp)
 
         let answer = LKRTCSessionDescription(type: .answer, sdp: answerSDP)
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
@@ -157,10 +172,13 @@ final class WebRTCStreamClient: NSObject {
 
     func disconnect() {
         videoTrack = nil
+        dataChannel?.close()
+        dataChannel = nil
         peerConnection?.close()
         peerConnection = nil
         videoView = nil
     }
+
 }
 
 // MARK: - LKRTCPeerConnectionDelegate

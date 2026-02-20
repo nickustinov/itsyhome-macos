@@ -193,6 +193,16 @@ extension CameraViewController {
     private func tryWebRTCStream(entityId: String) async -> Bool {
         do {
             let signaling = try await createHASignaling()
+
+            // Fetch client config to check if a data channel is needed (e.g. Nest cameras)
+            let dataChannelLabel: String?
+            do {
+                dataChannelLabel = try await signaling.getWebRTCClientConfig(entityId: entityId)
+            } catch {
+                logger.info("WebRTC client config unavailable, proceeding without data channel")
+                dataChannelLabel = nil
+            }
+
             let client = WebRTCStreamClient()
             self.webrtcClient = client
 
@@ -204,7 +214,7 @@ extension CameraViewController {
                 }
             }
 
-            try await client.connect(entityId: entityId, signaling: signaling)
+            try await client.connect(entityId: entityId, signaling: signaling, dataChannelLabel: dataChannelLabel)
 
             self.streamSpinner.stopAnimating()
 

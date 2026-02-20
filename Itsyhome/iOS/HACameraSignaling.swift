@@ -172,6 +172,68 @@ final class HACameraSignaling: NSObject {
         }
     }
 
+    // MARK: - WebRTC client config
+
+    /// Fetches WebRTC client configuration for a camera entity.
+    /// Returns the data channel label if the integration requires one (e.g. Nest), `nil` otherwise.
+    func getWebRTCClientConfig(entityId: String) async throws -> String? {
+        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<String?, Error>) in
+            lock.lock()
+            let id = messageId
+            messageId += 1
+            pendingRequests[id] = { result in
+                switch result {
+                case .success(let response):
+                    if let dict = response as? [String: Any],
+                       let config = dict["configuration"] as? [String: Any],
+                       let label = config["dataChannel"] as? String {
+                        continuation.resume(returning: label)
+                    } else {
+                        continuation.resume(returning: nil)
+                    }
+                case .failure:
+                    // Config not available – not an error, just means no data channel needed
+                    continuation.resume(returning: nil)
+                }
+            }
+            lock.unlock()
+
+            let message: [String: Any] = [
+                "id": id,
+                "type": "camera/webrtc/get_client_config",
+                "entity_id": entityId
+            ]
+
+            guard let data = try? JSONSerialization.data(withJSONObject: message),
+                  let string = String(data: data, encoding: .utf8) else {
+                lock.lock()
+                pendingRequests.removeValue(forKey: id)
+                lock.unlock()
+                continuation.resume(returning: nil)
+                return
+            }
+
+            logger.info("Requesting WebRTC client config for \(entityId)")
+            webSocketTask?.send(.string(string)) { error in
+                if let error = error {
+                    logger.error("Client config request send error: \(error.localizedDescription)")
+                }
+            }
+
+            // Timeout
+            DispatchQueue.main.asyncAfter(deadline: .now() + 10) { [weak self] in
+                guard let self = self else { return }
+                self.lock.lock()
+                if let callback = self.pendingRequests.removeValue(forKey: id) {
+                    self.lock.unlock()
+                    callback(.failure(HomeAssistantClientError.timeout))
+                } else {
+                    self.lock.unlock()
+                }
+            }
+        }
+    }
+
     // MARK: - HLS streaming
 
     /// Requests an HLS stream URL for a camera entity.
