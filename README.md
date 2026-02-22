@@ -248,6 +248,14 @@ Features include color-coded icons per device type, dynamic state display, live 
 
 Source code: [itsyhome-streamdeck](https://github.com/nickustinov/itsyhome-streamdeck)
 
+### OpenClaw (AI agent)
+
+Control your smart home with natural language via [OpenClaw](https://openclaw.ai). The [itsyhome-control](https://clawhub.ai/skills/itsyhome-control) skill connects your AI agent to the webhook server, enabling commands like "turn off the living room lights" or "set bedroom brightness to 40%". Requires the webhook server to be enabled.
+
+```bash
+clawhub install itsyhome-control
+```
+
 ## Itsytv — the perfect companion
 
 <table>
