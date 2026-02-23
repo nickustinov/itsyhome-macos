@@ -8,6 +8,7 @@
 import Foundation
 import AppKit
 import Combine
+import Network
 
 final class StayOpenMenu: NSMenu {
 
@@ -43,6 +44,8 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
     private var homeAssistantBridge: HomeAssistantBridge?
     private var lastErrorMessage: String?
     private var lastErrorTime: Date?
+    private var networkMonitor: NWPathMonitor?
+    private var isConnectingToHA = false
 
     @objc public weak var iOSBridge: Mac2iOS?
 
@@ -70,6 +73,8 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
         swizzleCatalystWindowOrdering()
         Task { @MainActor in _ = ProManager.shared }
         StartupLogger.log("MacOSController init complete")
+
+        startNetworkMonitor()
 
         // Show platform picker if needed
         if PlatformManager.shared.needsOnboarding {
@@ -258,11 +263,45 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
         connectToHomeAssistant()
     }
 
+    private func startNetworkMonitor() {
+        let monitor = NWPathMonitor()
+        monitor.pathUpdateHandler = { [weak self] path in
+            guard let self else { return }
+            guard PlatformManager.shared.selectedPlatform == .homeAssistant else { return }
+            guard HAAuthManager.shared.isConfigured else { return }
+
+            if path.status == .unsatisfied, path.unsatisfiedReason == .localNetworkDenied {
+                DispatchQueue.main.async {
+                    StartupLogger.error("Local network access denied by system policy")
+                    self.showError(message: String(localized: "alert.error.local_network_denied", defaultValue: "Itsyhome needs local network access to reach Home Assistant. Enable it in System Settings \u{2192} Privacy & Security \u{2192} Local Network.", bundle: .macOSBridge))
+                }
+                return
+            }
+
+            guard path.status == .satisfied else { return }
+            guard self.homeAssistantPlatform?.isConnected != true else { return }
+            guard !self.isConnectingToHA else { return }
+
+            DispatchQueue.main.async {
+                StartupLogger.log("Network became available – connecting to Home Assistant")
+                self.disconnectFromHomeAssistant()
+                self.connectToHomeAssistant()
+            }
+        }
+        monitor.start(queue: DispatchQueue(label: "com.nickustinov.itsyhome.networkMonitor"))
+        networkMonitor = monitor
+    }
+
+    deinit {
+        networkMonitor?.cancel()
+    }
+
     private func connectToHomeAssistant() {
         guard PlatformManager.shared.selectedPlatform == .homeAssistant else { return }
         guard HAAuthManager.shared.isConfigured else { return }
 
         StartupLogger.log("Connecting to Home Assistant...")
+        isConnectingToHA = true
 
         if homeAssistantPlatform == nil {
             homeAssistantPlatform = HomeAssistantPlatform()
@@ -279,10 +318,19 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
             do {
                 try await homeAssistantPlatform?.connect()
                 StartupLogger.log("Connected to Home Assistant")
+                await MainActor.run { isConnectingToHA = false }
             } catch {
                 StartupLogger.error("Failed to connect to Home Assistant: \(error)")
-                await MainActor.run {
-                    showError(message: "Failed to connect to Home Assistant: \(error.localizedDescription)")
+                await MainActor.run { isConnectingToHA = false }
+                let nsError = error as NSError
+                let isNetworkError = nsError.domain == NSURLErrorDomain
+                    && [NSURLErrorNotConnectedToInternet,
+                        NSURLErrorNetworkConnectionLost,
+                        NSURLErrorDNSLookupFailed].contains(nsError.code)
+                if !isNetworkError {
+                    await MainActor.run {
+                        showError(message: "Failed to connect to Home Assistant: \(error.localizedDescription)")
+                    }
                 }
             }
         }

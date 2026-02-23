@@ -325,14 +325,21 @@ final class HomeAssistantClient: NSObject {
         isAuthenticated = false
         stopPingPong()
 
-        // Resume auth continuation if pending (connection failed before auth completed)
+        // Resume auth continuation and cancel all pending requests
         stateLock.lock()
         let continuation = authContinuation
         authContinuation = nil
+        let callbacks = pendingRequests
+        pendingRequests.removeAll()
         stateLock.unlock()
 
         if let continuation = continuation {
             continuation.resume(throwing: error ?? HomeAssistantClientError.connectionFailed("Connection lost"))
+        }
+
+        let disconnectError = error ?? HomeAssistantClientError.connectionFailed("Connection lost")
+        for (_, callback) in callbacks {
+            callback(.failure(disconnectError))
         }
 
         delegate?.clientDidDisconnect(self, error: error)
@@ -458,6 +465,15 @@ final class HomeAssistantClient: NSObject {
             // Send while holding lock to ensure messages go out in ID order
             sendLocked(fullMessage)
             stateLock.unlock()
+
+            // Timeout: whichever fires first (response or timeout) wins the removeValue race
+            DispatchQueue.main.asyncAfter(deadline: .now() + 30) { [weak self] in
+                guard let self else { return }
+                self.stateLock.lock()
+                let callback = self.pendingRequests.removeValue(forKey: id)
+                self.stateLock.unlock()
+                callback?(.failure(HomeAssistantClientError.timeout))
+            }
         }
     }
 
@@ -500,6 +516,15 @@ final class HomeAssistantClient: NSObject {
             }
             sendLocked(fullMessage)
             stateLock.unlock()
+
+            // Timeout: whichever fires first (response or timeout) wins the removeValue race
+            DispatchQueue.main.asyncAfter(deadline: .now() + 30) { [weak self] in
+                guard let self else { return }
+                self.stateLock.lock()
+                let callback = self.pendingRequests.removeValue(forKey: id)
+                self.stateLock.unlock()
+                callback?(.failure(HomeAssistantClientError.timeout))
+            }
         }
     }
 

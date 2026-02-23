@@ -2,6 +2,11 @@
 
 ## 2.1.0
 
+### Build 230
+- **Fix HA connection stuck on "Connecting" forever** – `sendAndWait()` now has a 30-second timeout so API calls no longer hang indefinitely if the server is slow or a response is lost; additionally, `handleDisconnection()` now cancels all pending requests when the WebSocket drops mid-session, matching the cleanup that `disconnect()` already performed
+- **Detect local network permission denied** – a network monitor now detects when macOS blocks local network access and shows a specific error directing the user to System Settings, instead of silently failing to connect
+- **Auto-reconnect when network becomes available** – the app automatically reconnects to Home Assistant when the network path changes to satisfied (e.g. after wake from sleep or Wi-Fi reconnect), and suppresses error alerts for transient network failures
+
 ### Build 229
 - **Fix http connections blocked on App Store builds** – replaced `NSAllowsLocalNetworking` with `NSAllowsArbitraryLoads` in App Transport Security settings, matching the official HA companion app; the previous setting only covered `.local` domains and bare IPs, blocking users who connect to their HA instance via custom DNS names or hostnames with dots
 
