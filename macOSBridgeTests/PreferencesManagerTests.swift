@@ -35,6 +35,7 @@ final class PreferencesManagerTests: XCTestCase {
         defaults.removeObject(forKey: "camerasEnabled")
         defaults.removeObject(forKey: "doorbellAutoClose")
         defaults.removeObject(forKey: "doorbellAutoCloseDelay")
+        defaults.removeObject(forKey: "temperatureUnit")
         prefs.currentHomeId = nil
         super.tearDown()
     }
@@ -74,6 +75,21 @@ final class PreferencesManagerTests: XCTestCase {
         XCTAssertEqual(prefs.doorbellAutoCloseDelay, 30)
         prefs.doorbellAutoCloseDelay = 300
         XCTAssertEqual(prefs.doorbellAutoCloseDelay, 300)
+    }
+
+    // MARK: - Temperature unit (global)
+
+    func testTemperatureUnitDefaultsToSystem() {
+        XCTAssertEqual(prefs.temperatureUnit, "system")
+    }
+
+    func testTemperatureUnitPersists() {
+        prefs.temperatureUnit = "celsius"
+        XCTAssertEqual(prefs.temperatureUnit, "celsius")
+        prefs.temperatureUnit = "fahrenheit"
+        XCTAssertEqual(prefs.temperatureUnit, "fahrenheit")
+        prefs.temperatureUnit = "system"
+        XCTAssertEqual(prefs.temperatureUnit, "system")
     }
 
     // MARK: - Hidden cameras (per-home)

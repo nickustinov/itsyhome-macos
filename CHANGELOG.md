@@ -2,6 +2,9 @@
 
 ## 2.1.0
 
+### Build 232
+- **Temperature unit setting** – new dropdown in General settings to override the system locale for temperature display; choose between System default, Celsius, or Fahrenheit
+
 ### Build 231
 - **Auto-close doorbell camera popup** – new setting to automatically close the camera popup after a doorbell ring, with configurable delay (30s, 1m, 2m, 5m) to help preserve battery on doorbell cameras; the timer cancels when the user interacts with the panel (click, move, or resize)
 

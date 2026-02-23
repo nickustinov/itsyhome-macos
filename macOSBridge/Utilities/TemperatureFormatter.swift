@@ -10,13 +10,20 @@ import Foundation
 
 enum TemperatureFormatter {
 
-    /// Whether the user's locale uses Fahrenheit
+    /// Whether temperatures should display in Fahrenheit
     static var usesFahrenheit: Bool {
-        let formatter = MeasurementFormatter()
-        formatter.locale = Locale.current
-        let temp = Measurement(value: 0, unit: UnitTemperature.celsius)
-        let formatted = formatter.string(from: temp)
-        return formatted.contains("°F")
+        switch PreferencesManager.shared.temperatureUnit {
+        case "celsius":
+            return false
+        case "fahrenheit":
+            return true
+        default:
+            let formatter = MeasurementFormatter()
+            formatter.locale = Locale.current
+            let temp = Measurement(value: 0, unit: UnitTemperature.celsius)
+            let formatted = formatter.string(from: temp)
+            return formatted.contains("°F")
+        }
     }
 
     /// Format a temperature value (in Celsius from HomeKit) for display

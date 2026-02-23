@@ -28,6 +28,7 @@ final class PreferencesManager {
         static let doorbellSound = "doorbellSound"
         static let doorbellAutoClose = "doorbellAutoClose"
         static let doorbellAutoCloseDelay = "doorbellAutoCloseDelay"
+        static let temperatureUnit = "temperatureUnit"
 
         // Per-home settings (use with homeKey helper)
         static let orderedFavouriteIds = "orderedFavouriteIds"
@@ -61,7 +62,8 @@ final class PreferencesManager {
             Keys.doorbellNotifications: true,
             Keys.doorbellSound: true,
             Keys.doorbellAutoClose: false,
-            Keys.doorbellAutoCloseDelay: 60
+            Keys.doorbellAutoCloseDelay: 60,
+            Keys.temperatureUnit: "system"
         ])
 
         // Sync launch at login state with system on init
@@ -139,6 +141,16 @@ final class PreferencesManager {
         get { defaults.bool(forKey: Keys.doorbellSound) }
         set {
             defaults.set(newValue, forKey: Keys.doorbellSound)
+            postNotification()
+        }
+    }
+
+    // MARK: - Temperature unit (global)
+
+    var temperatureUnit: String {
+        get { defaults.string(forKey: Keys.temperatureUnit) ?? "system" }
+        set {
+            defaults.set(newValue, forKey: Keys.temperatureUnit)
             postNotification()
         }
     }

@@ -11485,6 +11485,50 @@
         }
       }
     },
+    "settings.general.temperature_celsius" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Celsius (°C)"
+          }
+        }
+      }
+    },
+    "settings.general.temperature_fahrenheit" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Fahrenheit (°F)"
+          }
+        }
+      }
+    },
+    "settings.general.temperature_system" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "System default"
+          }
+        }
+      }
+    },
+    "settings.general.temperature_units" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Temperature units"
+          }
+        }
+      }
+    },
     "settings.general.title" : {
       "extractionState" : "manual",
       "localizations" : {
