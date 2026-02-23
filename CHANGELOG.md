@@ -2,6 +2,10 @@
 
 ## 2.1.0
 
+### Build 234
+- **Simple light controls** – new toggle in Settings → Advanced to show only the on/off switch for lights, hiding brightness, colour, and colour temperature controls
+- **Advanced settings tab** – moved temperature units and simple light controls into a dedicated Advanced tab to declutter General settings
+
 ### Build 233
 - **Entity category filter setting** – new dropdown in Settings → Home Assistant to choose which entity categories to hide: "Hide config and diagnostic" (default), "Hide config only", "Hide diagnostic only", or "Show all"; replaces the previous hardcoded filter that always hid all categorised entities
 

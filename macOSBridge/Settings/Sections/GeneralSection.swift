@@ -11,7 +11,6 @@ import Combine
 class GeneralSection: SettingsCard {
 
     private let launchSwitch = NSSwitch()
-    private let temperaturePopUp = NSPopUpButton()
     private let syncSwitch = NSSwitch()
     private var syncStatusLabel: NSTextField!
     private var syncProBadge: NSView!
@@ -64,22 +63,6 @@ class GeneralSection: SettingsCard {
         stackView.addArrangedSubview(launchBox)
         launchBox.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
 
-        // Temperature units box
-        let tempBox = createCardBox()
-        temperaturePopUp.removeAllItems()
-        temperaturePopUp.addItems(withTitles: [
-            String(localized: "settings.general.temperature_system", defaultValue: "System default", bundle: .macOSBridge),
-            String(localized: "settings.general.temperature_celsius", defaultValue: "Celsius (°C)", bundle: .macOSBridge),
-            String(localized: "settings.general.temperature_fahrenheit", defaultValue: "Fahrenheit (°F)", bundle: .macOSBridge)
-        ])
-        temperaturePopUp.controlSize = .small
-        temperaturePopUp.target = self
-        temperaturePopUp.action = #selector(temperatureUnitChanged)
-        let tempRow = createSettingRow(label: String(localized: "settings.general.temperature_units", defaultValue: "Temperature units", bundle: .macOSBridge), control: temperaturePopUp)
-        addContentToBox(tempBox, content: tempRow)
-        stackView.addArrangedSubview(tempBox)
-        tempBox.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
-
         // iCloud sync box
         let syncBox = createCardBox()
         syncSwitch.controlSize = .mini
@@ -89,6 +72,7 @@ class GeneralSection: SettingsCard {
         addContentToBox(syncBox, content: syncRow)
         stackView.addArrangedSubview(syncBox)
         syncBox.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
+
     }
 
     private func createPlatformPickerSection() -> NSView {
@@ -466,11 +450,6 @@ class GeneralSection: SettingsCard {
 
     private func loadPreferences() {
         launchSwitch.state = PreferencesManager.shared.launchAtLogin ? .on : .off
-        switch PreferencesManager.shared.temperatureUnit {
-        case "celsius": temperaturePopUp.selectItem(at: 1)
-        case "fahrenheit": temperaturePopUp.selectItem(at: 2)
-        default: temperaturePopUp.selectItem(at: 0)
-        }
         syncSwitch.state = CloudSyncManager.shared.isSyncEnabled ? .on : .off
         updateSyncUI()
     }
@@ -544,11 +523,6 @@ class GeneralSection: SettingsCard {
 
     @objc private func launchSwitchChanged(_ sender: NSSwitch) {
         PreferencesManager.shared.launchAtLogin = sender.state == .on
-    }
-
-    @objc private func temperatureUnitChanged(_ sender: NSPopUpButton) {
-        let values = ["system", "celsius", "fahrenheit"]
-        PreferencesManager.shared.temperatureUnit = values[sender.indexOfSelectedItem]
     }
 
     @objc private func syncSwitchChanged(_ sender: NSSwitch) {

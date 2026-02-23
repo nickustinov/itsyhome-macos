@@ -69,6 +69,7 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
         case homeAssistant
         case accessories
         case cameras
+        case advanced
         case deeplinks
         case webhooks
         case itsytv
@@ -80,6 +81,7 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
             case .homeAssistant: return String(localized: "settings.home_assistant.title", defaultValue: "Home Assistant", bundle: .macOSBridge)
             case .accessories: return String(localized: "settings.home.title", defaultValue: "Home", bundle: .macOSBridge)
             case .cameras: return String(localized: "settings.cameras.title", defaultValue: "Cameras", bundle: .macOSBridge)
+            case .advanced: return String(localized: "settings.advanced.title", defaultValue: "Advanced", bundle: .macOSBridge)
             case .deeplinks: return String(localized: "settings.deeplinks.title", defaultValue: "Deeplinks", bundle: .macOSBridge)
             case .webhooks: return String(localized: "settings.webhooks.title", defaultValue: "Webhooks/CLI", bundle: .macOSBridge)
             case .itsytv: return String(localized: "settings.itsytv.title", defaultValue: "Apple TV remote", bundle: .macOSBridge)
@@ -93,6 +95,7 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
             case .homeAssistant: return "plug"
             case .accessories: return "house"
             case .cameras: return "security-camera"
+            case .advanced: return "sliders-horizontal"
             case .deeplinks: return "link"
             case .webhooks: return "globe"
             case .itsytv: return "television"
@@ -132,6 +135,7 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
     private var homeAssistantSection: HomeAssistantSection?
     private var accessoriesSection: AccessoriesSettingsView?
     private var camerasSection: CamerasSection?
+    private var advancedSection: AdvancedSection?
     private var deeplinksSection: DeeplinksSection?
     private var webhooksSection: WebhooksSection?
     private var itsytvSection: ItsytvSection?
@@ -294,6 +298,12 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
                 }
             }
             contentView = camerasSection!
+
+        case .advanced:
+            if advancedSection == nil {
+                advancedSection = AdvancedSection()
+            }
+            contentView = advancedSection!
 
         case .deeplinks:
             if deeplinksSection == nil {

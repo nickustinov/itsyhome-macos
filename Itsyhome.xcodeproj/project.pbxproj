@@ -1155,6 +1155,7 @@
 		5887E8FF84C6D10F5EB1A5C3 /* ph.lamp-pendant.svg in Resources */ = {isa = PBXBuildFile; fileRef = 97A272A7309C096EE22F723E /* ph.lamp-pendant.svg */; };
 		588EE70B8CF090449F98C51E /* ph.chat-dots.svg in Resources */ = {isa = PBXBuildFile; fileRef = 2B4F0C2667EB078F7D1DE05C /* ph.chat-dots.svg */; };
 		58C7566C2E910BBC5D7FBF31 /* ph.seal.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 40C73A418A15A7101A565640 /* ph.seal.fill.svg */; };
+		58F2E76BE45DD0ACB598D99A /* AdvancedSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D3F7957F56A79CE0D4AA33A /* AdvancedSection.swift */; };
 		58F805734EC43A81C3C2FBFF /* ph.sim-card.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = BEDE1B574958342A15AE4908 /* ph.sim-card.fill.svg */; };
 		5910186AA2B8E9AFB44D82D9 /* ph.hand-eye.svg in Resources */ = {isa = PBXBuildFile; fileRef = 0576DE58DB62C03AF252A4A1 /* ph.hand-eye.svg */; };
 		59175897F6F17BE9DC58F235 /* ph.currency-cny.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = F5528EA7CB776DDD762DB0DC /* ph.currency-cny.fill.svg */; };
@@ -3899,6 +3900,7 @@
 		2CE3506C818CB76C8AF2912C /* ph.intersection.fill.svg */ = {isa = PBXFileReference; path = ph.intersection.fill.svg; sourceTree = "<group>"; };
 		2D17ABE17363737E66C5D058 /* ph.stack-overflow-logo.svg */ = {isa = PBXFileReference; path = "ph.stack-overflow-logo.svg"; sourceTree = "<group>"; };
 		2D1CA94122180ED8C985EAA6 /* ph.magnet-straight.svg */ = {isa = PBXFileReference; path = "ph.magnet-straight.svg"; sourceTree = "<group>"; };
+		2D3F7957F56A79CE0D4AA33A /* AdvancedSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdvancedSection.swift; sourceTree = "<group>"; };
 		2D61958D304F67B38F2C63B4 /* ph.list-plus.svg */ = {isa = PBXFileReference; path = "ph.list-plus.svg"; sourceTree = "<group>"; };
 		2D6C0EA84CB31ACDAFEE5598 /* ph.discord-logo.svg */ = {isa = PBXFileReference; path = "ph.discord-logo.svg"; sourceTree = "<group>"; };
 		2D91EF632A57B011883D1399 /* ph.file-text.svg */ = {isa = PBXFileReference; path = "ph.file-text.svg"; sourceTree = "<group>"; };
@@ -6692,6 +6694,7 @@
 			isa = PBXGroup;
 			children = (
 				BB02A6E6A0F93A3A51FBACC1 /* AboutSection.swift */,
+				2D3F7957F56A79CE0D4AA33A /* AdvancedSection.swift */,
 				0120D24898978AAE26F2A54D /* CamerasSection.swift */,
 				0F9EE2F37DB271A185EC2CF7 /* CamerasSection+TableDelegate.swift */,
 				2015876131A8AE52D26618FC /* DeeplinksSection.swift */,
@@ -13310,6 +13313,7 @@
 				23C223BDBF39445BABE3E41E /* AccessoryRowView.swift in Sources */,
 				19DBF4D900CC57B5CA26166C /* ActionEngine.swift in Sources */,
 				2780E8A3CC3916038B2D93EF /* ActionParser.swift in Sources */,
+				58F2E76BE45DD0ACB598D99A /* AdvancedSection.swift in Sources */,
 				772EAC65582AA05AFFA09210 /* AirPurifierMenuItem.swift in Sources */,
 				3B59DD36C2400864DCEE2CA3 /* BaseMenuItems.swift in Sources */,
 				CA8E1F973147B8CE2E58FA52 /* BlindMenuItem.swift in Sources */,
@@ -13578,7 +13582,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_MAC_ICON_IN_CATALYST_APP = YES;
 				CODE_SIGN_ENTITLEMENTS = Itsyhome/Itsyhome.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 233;
+				CURRENT_PROJECT_VERSION = 234;
 				DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER = NO;
 				INFOPLIST_FILE = Itsyhome/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Itsyhome;
@@ -13707,7 +13711,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_MAC_ICON_IN_CATALYST_APP = YES;
 				CODE_SIGN_ENTITLEMENTS = Itsyhome/Itsyhome.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 233;
+				CURRENT_PROJECT_VERSION = 234;
 				DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER = NO;
 				INFOPLIST_FILE = Itsyhome/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Itsyhome;

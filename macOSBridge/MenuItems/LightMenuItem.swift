@@ -73,9 +73,10 @@ class LightMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
         if let max = serviceData.colorTemperatureMax { self.colorTempMax = max }
         self.colorTemp = (self.colorTempMin + self.colorTempMax) / 2
 
-        self.hasBrightness = brightnessCharacteristicId != nil
-        self.hasRGB = hueCharacteristicId != nil && saturationCharacteristicId != nil
-        self.hasColorTemp = colorTempCharacteristicId != nil
+        let simpleLights = UserDefaults.standard.bool(forKey: "simpleLightControls")
+        self.hasBrightness = brightnessCharacteristicId != nil && !simpleLights
+        self.hasRGB = hueCharacteristicId != nil && saturationCharacteristicId != nil && !simpleLights
+        self.hasColorTemp = colorTempCharacteristicId != nil && !simpleLights
 
         let height: CGFloat = collapsedHeight
         containerView = HighlightingMenuItemView(frame: NSRect(x: 0, y: 0, width: DS.ControlSize.menuItemWidth, height: height))

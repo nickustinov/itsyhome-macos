@@ -9483,6 +9483,17 @@
         }
       }
     },
+    "settings.advanced.title" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Advanced"
+          }
+        }
+      }
+    },
     "settings.cameras.add_accessory" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -11250,6 +11261,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "智慧家庭平台"
+          }
+        }
+      }
+    },
+    "settings.general.simple_light_controls" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Simple light controls"
+          }
+        }
+      }
+    },
+    "settings.general.simple_light_controls_subtitle" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Show only on/off toggle for lights, hiding brightness, colour, and colour temperature controls."
           }
         }
       }
