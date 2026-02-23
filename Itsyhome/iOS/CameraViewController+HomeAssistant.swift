@@ -35,7 +35,7 @@ extension CameraViewController {
         // Resolve HA overlay data
         resolveHAOverlayData()
 
-        if webrtcClient == nil {
+        if !hasActiveHAStream {
             let height = computeGridHeight()
             macOSController?.resizeCameraPanel(width: Self.gridWidth, height: height, aspectRatio: Self.defaultAspectRatio, animated: false)
         }
@@ -172,8 +172,10 @@ extension CameraViewController {
                     logger.info("HLS failed, trying WebRTC for \(entityId)")
                     let webrtcSuccess = await tryWebRTCStream(entityId: entityId)
                     if !webrtcSuccess {
-                        self.streamSpinner.stopAnimating()
-                        self.backToGrid()
+                        if !self.trySnapshotStream(entityId: entityId) {
+                            self.streamSpinner.stopAnimating()
+                            self.backToGrid()
+                        }
                     }
                 }
             } else {
@@ -182,8 +184,10 @@ extension CameraViewController {
                     logger.info("WebRTC failed, trying HLS for \(entityId)")
                     let hlsSuccess = await tryHLSStream(entityId: entityId)
                     if !hlsSuccess {
-                        self.streamSpinner.stopAnimating()
-                        self.backToGrid()
+                        if !self.trySnapshotStream(entityId: entityId) {
+                            self.streamSpinner.stopAnimating()
+                            self.backToGrid()
+                        }
                     }
                 }
             }
@@ -328,8 +332,84 @@ extension CameraViewController {
         hlsPlayer?.stop()
         hlsPlayer = nil
 
+        snapshotStreamTimer?.invalidate()
+        snapshotStreamTimer = nil
+        snapshotStreamImageView?.removeFromSuperview()
+        snapshotStreamImageView = nil
+
         haSignaling?.disconnect()
         haSignaling = nil
+    }
+
+    // MARK: - Snapshot stream fallback
+
+    func trySnapshotStream(entityId: String) -> Bool {
+        guard let serverURL = HAAuthManager.shared.serverURL,
+              let token = HAAuthManager.shared.accessToken else { return false }
+
+        let imageView = UIImageView()
+        imageView.contentMode = .scaleAspectFit
+        imageView.backgroundColor = .black
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        streamContainerView.insertSubview(imageView, at: 0)
+
+        NSLayoutConstraint.activate([
+            imageView.topAnchor.constraint(equalTo: streamContainerView.topAnchor),
+            imageView.leadingAnchor.constraint(equalTo: streamContainerView.leadingAnchor),
+            imageView.trailingAnchor.constraint(equalTo: streamContainerView.trailingAnchor),
+            imageView.bottomAnchor.constraint(equalTo: streamContainerView.bottomAnchor)
+        ])
+
+        snapshotStreamImageView = imageView
+
+        // Use cached snapshot as initial image while first poll loads
+        if let cameraId = activeHACameraId, let cached = haSnapshotImages[cameraId] {
+            imageView.image = cached
+            streamSpinner.stopAnimating()
+        }
+
+        // Start 1-second polling timer
+        snapshotStreamTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+            self?.fetchSnapshotStreamImage(entityId: entityId, serverURL: serverURL, token: token)
+        }
+
+        // Fetch immediately
+        fetchSnapshotStreamImage(entityId: entityId, serverURL: serverURL, token: token)
+
+        audioControlsStack.isHidden = true
+        logger.info("Started snapshot polling fallback for \(entityId)")
+        return true
+    }
+
+    private func fetchSnapshotStreamImage(entityId: String, serverURL: URL, token: String) {
+        let snapshotURL = serverURL
+            .appendingPathComponent("api/camera_proxy")
+            .appendingPathComponent(entityId)
+
+        var request = URLRequest(url: snapshotURL)
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.timeoutInterval = 5
+
+        URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
+            guard let self = self else { return }
+
+            guard let data = data,
+                  let httpResponse = response as? HTTPURLResponse,
+                  200..<300 ~= httpResponse.statusCode,
+                  let image = UIImage(data: data) else {
+                return
+            }
+
+            DispatchQueue.main.async {
+                self.snapshotStreamImageView?.image = image
+                self.streamSpinner.stopAnimating()
+
+                // Update aspect ratio from fresh snapshot
+                if let cameraId = self.activeHACameraId {
+                    self.cacheAspectRatio(from: image, for: cameraId)
+                }
+            }
+        }.resume()
     }
 
     private func createHASignaling() async throws -> HACameraSignaling {

@@ -2,6 +2,9 @@
 
 ## 2.1.0
 
+### Build 235
+- **Snapshot polling fallback for cameras** – cameras that don't support WebRTC or HLS streaming (e.g. some Frigate setups) now fall back to polling `/api/camera_proxy` for JPEG snapshots at 1-second intervals, matching Home Assistant's own dashboard behaviour; previously these cameras would immediately return to the grid
+
 ### Build 234
 - **Simple light controls** – new toggle in Settings → Advanced to show only the on/off switch for lights, hiding brightness, colour, and colour temperature controls
 - **Advanced settings tab** – moved temperature units and simple light controls into a dedicated Advanced tab to declutter General settings

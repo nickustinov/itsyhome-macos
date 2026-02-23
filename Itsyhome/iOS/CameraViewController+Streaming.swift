@@ -118,6 +118,12 @@ extension CameraViewController {
         hlsPlayer?.stop()
         hlsPlayer = nil
 
+        // HA snapshot polling cleanup
+        snapshotStreamTimer?.invalidate()
+        snapshotStreamTimer = nil
+        snapshotStreamImageView?.removeFromSuperview()
+        snapshotStreamImageView = nil
+
         haSignaling?.disconnect()
         haSignaling = nil
         activeHACameraId = nil

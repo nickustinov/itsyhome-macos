@@ -40,7 +40,7 @@ extension CameraViewController {
 
         cameraAspectRatios[uuid] = ratio
 
-        if activeStreamControl == nil && webrtcClient == nil {
+        if activeStreamControl == nil && !hasActiveHAStream {
             collectionView.collectionViewLayout.invalidateLayout()
             let height = computeGridHeight()
             updatePanelSize(width: Self.gridWidth, height: height, animated: false)
@@ -74,7 +74,7 @@ extension CameraViewController {
         NSLog("[Itsyhome] Camera \"%@\" cached ratio=%.2f stream=%d", name, ratio, fromStream ? 1 : 0)
 
         // Reload grid layout if we're in grid mode (not streaming)
-        if activeStreamControl == nil && webrtcClient == nil {
+        if activeStreamControl == nil && !hasActiveHAStream {
             collectionView.collectionViewLayout.invalidateLayout()
             let height = computeGridHeight()
             updatePanelSize(width: Self.gridWidth, height: height, animated: false)

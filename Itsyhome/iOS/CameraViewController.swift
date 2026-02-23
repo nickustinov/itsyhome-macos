@@ -94,12 +94,18 @@ class CameraViewController: UIViewController {
     var isDoorbellMode = false
     var hasLoadedInitialData = false
 
-    // HA streaming state (WebRTC or HLS)
+    // HA streaming state (WebRTC, HLS, or snapshot polling)
     var webrtcClient: WebRTCStreamClient?
     var hlsPlayer: HLSStreamPlayer?
     var haSignaling: HACameraSignaling?
     var activeHACameraId: UUID?
     var activeHAEntityId: String?
+    var snapshotStreamImageView: UIImageView?
+    var snapshotStreamTimer: Timer?
+
+    var hasActiveHAStream: Bool {
+        webrtcClient != nil || hlsPlayer != nil || snapshotStreamTimer != nil
+    }
 
     /// Resolved overlay data per camera: [cameraUUID: [(characteristic, service name, service type)]]
     var overlayData: [UUID: [(characteristic: HMCharacteristic, name: String, serviceType: String)]] = [:]
@@ -168,7 +174,7 @@ class CameraViewController: UIViewController {
     }
 
     @objc private func preferencesDidChange() {
-        guard activeStreamControl == nil && webrtcClient == nil else { return }
+        guard activeStreamControl == nil && !hasActiveHAStream else { return }
         loadCameras()
         emptyLabel.isHidden = cameraCount > 0
         collectionView.isHidden = cameraCount == 0
@@ -179,7 +185,7 @@ class CameraViewController: UIViewController {
     }
 
     @objc private func homeDidChange() {
-        if activeStreamControl != nil || webrtcClient != nil {
+        if activeStreamControl != nil || hasActiveHAStream {
             backToGrid()
         }
         loadCameras()
@@ -197,7 +203,7 @@ class CameraViewController: UIViewController {
             streamDoorbellCamera(id: doorbellId)
             return
         }
-        guard activeStreamControl == nil && webrtcClient == nil else { return }
+        guard activeStreamControl == nil && !hasActiveHAStream else { return }
         takeAllSnapshots()
         if isHomeAssistant {
             refreshHAOverlayStates()
@@ -209,7 +215,7 @@ class CameraViewController: UIViewController {
     @objc private func panelDidHide() {
         stopSnapshotTimer()
         stopTimestampTimer()
-        if activeStreamControl != nil || webrtcClient != nil || hlsPlayer != nil {
+        if activeStreamControl != nil || hasActiveHAStream {
             backToGrid()
         }
     }
@@ -255,9 +261,15 @@ class CameraViewController: UIViewController {
             }
 
             // If streaming another camera, stop it first
-            if webrtcClient != nil {
+            if hasActiveHAStream {
                 webrtcClient?.disconnect()
                 webrtcClient = nil
+                hlsPlayer?.stop()
+                hlsPlayer = nil
+                snapshotStreamTimer?.invalidate()
+                snapshotStreamTimer = nil
+                snapshotStreamImageView?.removeFromSuperview()
+                snapshotStreamImageView = nil
                 haSignaling?.disconnect()
                 haSignaling = nil
             }
@@ -319,7 +331,7 @@ class CameraViewController: UIViewController {
         }
 
         // Don't reset to grid if a stream is already active (e.g. doorbell triggered from panelDidShow)
-        guard activeStreamControl == nil && webrtcClient == nil else { return }
+        guard activeStreamControl == nil && !hasActiveHAStream else { return }
 
         let height = computeGridHeight()
         updatePanelSize(width: Self.gridWidth, height: height, animated: false)
@@ -513,6 +525,12 @@ class CameraViewController: UIViewController {
         activeStreamAccessory = nil
         webrtcClient?.disconnect()
         webrtcClient = nil
+        hlsPlayer?.stop()
+        hlsPlayer = nil
+        snapshotStreamTimer?.invalidate()
+        snapshotStreamTimer = nil
+        snapshotStreamImageView?.removeFromSuperview()
+        snapshotStreamImageView = nil
         haSignaling?.disconnect()
         haSignaling = nil
         activeHACameraId = nil
