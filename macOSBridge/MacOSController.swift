@@ -46,6 +46,7 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
     private var lastErrorTime: Date?
     private var networkMonitor: NWPathMonitor?
     private var isConnectingToHA = false
+    private var lastEntityCategoryFilter: String = UserDefaults.standard.string(forKey: "entityCategoryFilter") ?? "hideAll"
 
     @objc public weak var iOSBridge: Mac2iOS?
 
@@ -432,6 +433,15 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
     }
 
     @objc private func preferencesDidChange() {
+        // Reload HA data if entity category filter changed
+        let currentFilter = PreferencesManager.shared.entityCategoryFilter
+        if currentFilter != lastEntityCategoryFilter {
+            lastEntityCategoryFilter = currentFilter
+            if PlatformManager.shared.selectedPlatform == .homeAssistant {
+                homeAssistantPlatform?.reloadData()
+            }
+        }
+
         // Immediately update camera status item visibility
         if let data = currentMenuData {
             let camerasEnabled = PreferencesManager.shared.camerasEnabled

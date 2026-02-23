@@ -11760,6 +11760,61 @@
         }
       }
     },
+    "settings.home_assistant.entity_categories" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Entity categories"
+          }
+        }
+      }
+    },
+    "settings.home_assistant.entity_filter_hide_all" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Hide config and diagnostic"
+          }
+        }
+      }
+    },
+    "settings.home_assistant.entity_filter_hide_config" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Hide config only"
+          }
+        }
+      }
+    },
+    "settings.home_assistant.entity_filter_hide_diagnostic" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Hide diagnostic only"
+          }
+        }
+      }
+    },
+    "settings.home_assistant.entity_filter_show_all" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Show all"
+          }
+        }
+      }
+    },
     "settings.home_assistant.not_connected" : {
       "extractionState" : "manual",
       "localizations" : {

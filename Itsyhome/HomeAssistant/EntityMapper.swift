@@ -153,14 +153,31 @@ final class EntityMapper {
         }
         logger.info("Entity domains: \(domainCounts)")
 
+        let entityFilter = UserDefaults.standard.string(forKey: "entityCategoryFilter") ?? "hideAll"
+
         for (entityId, state) in entityStates {
             // Skip unsupported domains
             guard isSupportedDomain(state.domain) else { continue }
 
-            // Skip hidden/disabled entities
-            if let registry = entityRegistry[entityId], (registry.disabled || registry.hidden) {
-                logger.debug("Skipping hidden/disabled: \(entityId)")
-                continue
+            // Skip hidden/disabled entities and filter by entity category
+            if let registry = entityRegistry[entityId] {
+                if registry.disabled || registry.hidden {
+                    logger.debug("Skipping hidden/disabled: \(entityId)")
+                    continue
+                }
+                if let category = registry.entityCategory {
+                    let shouldHide: Bool
+                    switch entityFilter {
+                    case "hideAll": shouldHide = true
+                    case "hideConfig": shouldHide = (category == "config")
+                    case "hideDiagnostic": shouldHide = (category == "diagnostic")
+                    default: shouldHide = false
+                    }
+                    if shouldHide {
+                        logger.debug("Skipping \(category) entity: \(entityId)")
+                        continue
+                    }
+                }
             }
 
             let deviceId = entityRegistry[entityId]?.deviceId

@@ -2,6 +2,9 @@
 
 ## 2.1.0
 
+### Build 233
+- **Entity category filter setting** – new dropdown in Settings → Home Assistant to choose which entity categories to hide: "Hide config and diagnostic" (default), "Hide config only", "Hide diagnostic only", or "Show all"; replaces the previous hardcoded filter that always hid all categorised entities
+
 ### Build 232
 - **Temperature unit setting** – new dropdown in General settings to override the system locale for temperature display; choose between System default, Celsius, or Fahrenheit
 

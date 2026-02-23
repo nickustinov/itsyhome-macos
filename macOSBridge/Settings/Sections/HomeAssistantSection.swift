@@ -11,6 +11,7 @@ class HomeAssistantSection: SettingsCard, NSTextFieldDelegate {
 
     private let serverURLField = NSTextField()
     private let accessTokenField = NSSecureTextField()
+    private let entityCategoryPopUp = NSPopUpButton()
     private let statusIndicator = NSImageView()
     private let statusLabel = NSTextField(labelWithString: String(localized: "settings.home_assistant.not_connected", defaultValue: "Not connected", bundle: .macOSBridge))
     private let connectButton = NSButton()
@@ -22,6 +23,7 @@ class HomeAssistantSection: SettingsCard, NSTextFieldDelegate {
         super.init(frame: frameRect)
         setupContent()
         loadCredentials()
+        loadPreferences()
         updateUI()
         setupNotifications()
         setupTextFieldDelegates()
@@ -80,6 +82,26 @@ class HomeAssistantSection: SettingsCard, NSTextFieldDelegate {
         addContentToBox(actionsBox, content: actionsContent)
         stackView.addArrangedSubview(actionsBox)
         actionsBox.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
+
+        // Entity category filter box
+        let filterBox = createCardBox()
+        entityCategoryPopUp.removeAllItems()
+        entityCategoryPopUp.addItems(withTitles: [
+            String(localized: "settings.home_assistant.entity_filter_hide_all", defaultValue: "Hide config and diagnostic", bundle: .macOSBridge),
+            String(localized: "settings.home_assistant.entity_filter_hide_config", defaultValue: "Hide config only", bundle: .macOSBridge),
+            String(localized: "settings.home_assistant.entity_filter_hide_diagnostic", defaultValue: "Hide diagnostic only", bundle: .macOSBridge),
+            String(localized: "settings.home_assistant.entity_filter_show_all", defaultValue: "Show all", bundle: .macOSBridge)
+        ])
+        entityCategoryPopUp.controlSize = .small
+        entityCategoryPopUp.target = self
+        entityCategoryPopUp.action = #selector(entityCategoryFilterChanged)
+        let filterRow = createSettingRow(
+            label: String(localized: "settings.home_assistant.entity_categories", defaultValue: "Entity categories", bundle: .macOSBridge),
+            control: entityCategoryPopUp
+        )
+        addContentToBox(filterBox, content: filterRow)
+        stackView.addArrangedSubview(filterBox)
+        filterBox.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
     }
 
     private func createStatusSection() -> NSView {
@@ -314,6 +336,43 @@ class HomeAssistantSection: SettingsCard, NSTextFieldDelegate {
             // Notify the app to disconnect
             NotificationCenter.default.post(name: NSNotification.Name("HomeAssistantCredentialsChanged"), object: nil)
         }
+    }
+
+    private func loadPreferences() {
+        switch PreferencesManager.shared.entityCategoryFilter {
+        case "hideConfig": entityCategoryPopUp.selectItem(at: 1)
+        case "hideDiagnostic": entityCategoryPopUp.selectItem(at: 2)
+        case "showAll": entityCategoryPopUp.selectItem(at: 3)
+        default: entityCategoryPopUp.selectItem(at: 0)
+        }
+    }
+
+    @objc private func entityCategoryFilterChanged(_ sender: NSPopUpButton) {
+        let values = ["hideAll", "hideConfig", "hideDiagnostic", "showAll"]
+        PreferencesManager.shared.entityCategoryFilter = values[sender.indexOfSelectedItem]
+    }
+
+    private func createSettingRow(label: String, control: NSView) -> NSView {
+        let container = NSView()
+        container.translatesAutoresizingMaskIntoConstraints = false
+
+        let labelField = createLabel(label, style: .body)
+        labelField.translatesAutoresizingMaskIntoConstraints = false
+        control.translatesAutoresizingMaskIntoConstraints = false
+
+        container.addSubview(labelField)
+        container.addSubview(control)
+
+        NSLayoutConstraint.activate([
+            container.heightAnchor.constraint(equalToConstant: 36),
+            labelField.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            labelField.centerYAnchor.constraint(equalTo: container.centerYAnchor),
+            labelField.trailingAnchor.constraint(lessThanOrEqualTo: control.leadingAnchor, constant: -16),
+            control.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+            control.centerYAnchor.constraint(equalTo: container.centerYAnchor)
+        ])
+
+        return container
     }
 
     private func showAlert(title: String, message: String) {

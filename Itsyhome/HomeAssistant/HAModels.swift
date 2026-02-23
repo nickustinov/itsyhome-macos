@@ -156,6 +156,7 @@ struct HAEntityRegistryEntry {
     let platform: String
     let disabled: Bool
     let hidden: Bool
+    let entityCategory: String?
     let labels: [String]
 
     init?(json: [String: Any]) {
@@ -173,6 +174,7 @@ struct HAEntityRegistryEntry {
         self.platform = platform
         self.disabled = (json["disabled_by"] as? String) != nil
         self.hidden = (json["hidden_by"] as? String) != nil
+        self.entityCategory = json["entity_category"] as? String
         self.labels = json["labels"] as? [String] ?? []
     }
 }

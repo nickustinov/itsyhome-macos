@@ -29,6 +29,7 @@ final class PreferencesManager {
         static let doorbellAutoClose = "doorbellAutoClose"
         static let doorbellAutoCloseDelay = "doorbellAutoCloseDelay"
         static let temperatureUnit = "temperatureUnit"
+        static let entityCategoryFilter = "entityCategoryFilter"
 
         // Per-home settings (use with homeKey helper)
         static let orderedFavouriteIds = "orderedFavouriteIds"
@@ -63,7 +64,8 @@ final class PreferencesManager {
             Keys.doorbellSound: true,
             Keys.doorbellAutoClose: false,
             Keys.doorbellAutoCloseDelay: 60,
-            Keys.temperatureUnit: "system"
+            Keys.temperatureUnit: "system",
+            Keys.entityCategoryFilter: "hideAll"
         ])
 
         // Sync launch at login state with system on init
@@ -151,6 +153,16 @@ final class PreferencesManager {
         get { defaults.string(forKey: Keys.temperatureUnit) ?? "system" }
         set {
             defaults.set(newValue, forKey: Keys.temperatureUnit)
+            postNotification()
+        }
+    }
+
+    // MARK: - Entity category filter (global)
+
+    var entityCategoryFilter: String {
+        get { defaults.string(forKey: Keys.entityCategoryFilter) ?? "hideAll" }
+        set {
+            defaults.set(newValue, forKey: Keys.entityCategoryFilter)
             postNotification()
         }
     }
