@@ -33,6 +33,8 @@ final class PreferencesManagerTests: XCTestCase {
             defaults.removeObject(forKey: "\(suffix)_\(testHomeId)")
         }
         defaults.removeObject(forKey: "camerasEnabled")
+        defaults.removeObject(forKey: "doorbellAutoClose")
+        defaults.removeObject(forKey: "doorbellAutoCloseDelay")
         prefs.currentHomeId = nil
         super.tearDown()
     }
@@ -48,6 +50,30 @@ final class PreferencesManagerTests: XCTestCase {
         XCTAssertTrue(prefs.camerasEnabled)
         prefs.camerasEnabled = false
         XCTAssertFalse(prefs.camerasEnabled)
+    }
+
+    // MARK: - Doorbell auto-close (global)
+
+    func testDoorbellAutoCloseDefaultsFalse() {
+        XCTAssertFalse(prefs.doorbellAutoClose)
+    }
+
+    func testDoorbellAutoClosePersists() {
+        prefs.doorbellAutoClose = true
+        XCTAssertTrue(prefs.doorbellAutoClose)
+        prefs.doorbellAutoClose = false
+        XCTAssertFalse(prefs.doorbellAutoClose)
+    }
+
+    func testDoorbellAutoCloseDelayDefaultsTo60() {
+        XCTAssertEqual(prefs.doorbellAutoCloseDelay, 60)
+    }
+
+    func testDoorbellAutoCloseDelayPersists() {
+        prefs.doorbellAutoCloseDelay = 30
+        XCTAssertEqual(prefs.doorbellAutoCloseDelay, 30)
+        prefs.doorbellAutoCloseDelay = 300
+        XCTAssertEqual(prefs.doorbellAutoCloseDelay, 300)
     }
 
     // MARK: - Hidden cameras (per-home)

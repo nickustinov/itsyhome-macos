@@ -26,6 +26,8 @@ final class PreferencesManager {
         static let camerasEnabled = "camerasEnabled"
         static let doorbellNotifications = "doorbellNotifications"
         static let doorbellSound = "doorbellSound"
+        static let doorbellAutoClose = "doorbellAutoClose"
+        static let doorbellAutoCloseDelay = "doorbellAutoCloseDelay"
 
         // Per-home settings (use with homeKey helper)
         static let orderedFavouriteIds = "orderedFavouriteIds"
@@ -57,7 +59,9 @@ final class PreferencesManager {
         defaults.register(defaults: [
             Keys.launchAtLogin: false,
             Keys.doorbellNotifications: true,
-            Keys.doorbellSound: true
+            Keys.doorbellSound: true,
+            Keys.doorbellAutoClose: false,
+            Keys.doorbellAutoCloseDelay: 60
         ])
 
         // Sync launch at login state with system on init
@@ -135,6 +139,24 @@ final class PreferencesManager {
         get { defaults.bool(forKey: Keys.doorbellSound) }
         set {
             defaults.set(newValue, forKey: Keys.doorbellSound)
+            postNotification()
+        }
+    }
+
+    // MARK: - Doorbell auto-close (global)
+
+    var doorbellAutoClose: Bool {
+        get { defaults.bool(forKey: Keys.doorbellAutoClose) }
+        set {
+            defaults.set(newValue, forKey: Keys.doorbellAutoClose)
+            postNotification()
+        }
+    }
+
+    var doorbellAutoCloseDelay: Int {
+        get { defaults.integer(forKey: Keys.doorbellAutoCloseDelay) }
+        set {
+            defaults.set(newValue, forKey: Keys.doorbellAutoCloseDelay)
             postNotification()
         }
     }

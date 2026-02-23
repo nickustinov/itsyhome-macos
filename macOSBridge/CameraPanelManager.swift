@@ -32,6 +32,8 @@ final class CameraPanelManager {
     private var activeCameraId: UUID?
     private var moveObserver: NSObjectProtocol?
     private var resizeObserver: NSObjectProtocol?
+    private var autoCloseTimer: DispatchWorkItem?
+    private var autoCloseClickMonitor: Any?
 
     weak var delegate: CameraPanelManagerDelegate?
 
@@ -93,6 +95,7 @@ final class CameraPanelManager {
     }
 
     func dismissCameraPanel() {
+        cancelAutoCloseTimer()
         activeCameraId = nil
         isPinned = false
         isDoorbellMode = false
@@ -141,6 +144,7 @@ final class CameraPanelManager {
             // Panel already visible — just pin it and reposition
             setCameraPinned(true)
             positionCameraPanelTopRight(existing, width: cameraPanelSize.width, height: cameraPanelSize.height)
+            startAutoCloseTimer()
             return
         }
 
@@ -205,6 +209,7 @@ final class CameraPanelManager {
             window.makeKeyAndOrderFront(nil)
             setupClickOutsideMonitor()
             cameraStatusItem?.button?.highlight(true)
+            startAutoCloseTimer()
             return
         }
 
@@ -328,12 +333,13 @@ final class CameraPanelManager {
         cameraWindow.contentView?.layer?.cornerRadius = 10
         cameraWindow.contentView?.layer?.masksToBounds = true
 
-        // Save frame when user moves or resizes the window
+        // Save frame when user moves or resizes the window, cancel auto-close on interaction
         moveObserver = NotificationCenter.default.addObserver(
             forName: NSWindow.didMoveNotification,
             object: cameraWindow,
             queue: .main
         ) { [weak self] _ in
+            self?.cancelAutoCloseTimer()
             self?.saveCurrentFrame()
         }
         resizeObserver = NotificationCenter.default.addObserver(
@@ -341,7 +347,17 @@ final class CameraPanelManager {
             object: cameraWindow,
             queue: .main
         ) { [weak self] _ in
+            self?.cancelAutoCloseTimer()
             self?.saveCurrentFrame()
+        }
+
+        // Cancel auto-close when user clicks inside the camera panel
+        autoCloseClickMonitor = NSEvent.addLocalMonitorForEvents(matching: .leftMouseDown) { [weak self] event in
+            guard let self = self else { return event }
+            if event.window == cameraWindow {
+                self.cancelAutoCloseTimer()
+            }
+            return event
         }
 
         // Window stays hidden — will be shown by showCameraPanel() on user click
@@ -388,6 +404,24 @@ final class CameraPanelManager {
         let x = visibleFrame.maxX - width - padding
         let y = visibleFrame.maxY - height - padding
         window.setFrame(NSRect(x: x, y: y, width: width, height: height), display: true)
+    }
+
+    // MARK: - Auto-close timer
+
+    private func startAutoCloseTimer() {
+        cancelAutoCloseTimer()
+        guard PreferencesManager.shared.doorbellAutoClose else { return }
+        let delay = PreferencesManager.shared.doorbellAutoCloseDelay
+        let workItem = DispatchWorkItem { [weak self] in
+            self?.dismissCameraPanel()
+        }
+        autoCloseTimer = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(delay), execute: workItem)
+    }
+
+    private func cancelAutoCloseTimer() {
+        autoCloseTimer?.cancel()
+        autoCloseTimer = nil
     }
 
     // MARK: - Click Outside Monitor

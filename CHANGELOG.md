@@ -2,6 +2,9 @@
 
 ## 2.1.0
 
+### Build 231
+- **Auto-close doorbell camera popup** – new setting to automatically close the camera popup after a doorbell ring, with configurable delay (30s, 1m, 2m, 5m) to help preserve battery on doorbell cameras; the timer cancels when the user interacts with the panel (click, move, or resize)
+
 ### Build 230
 - **Fix HA connection stuck on "Connecting" forever** – `sendAndWait()` now has a 30-second timeout so API calls no longer hang indefinitely if the server is slow or a response is lost; additionally, `handleDisconnection()` now cancels all pending requests when the WebSocket drops mid-session, matching the cleanup that `disconnect()` already performed
 - **Detect local network permission denied** – a network monitor now detects when macOS blocks local network access and shows a specific error directing the user to System Settings, instead of silently failing to connect

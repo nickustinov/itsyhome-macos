@@ -18,6 +18,8 @@ class CamerasSection: NSView {
     private let cameraSwitch = NSSwitch()
     private let doorbellSwitch = NSSwitch()
     private let doorbellSoundSwitch = NSSwitch()
+    private let autoCloseSwitch = NSSwitch()
+    private let autoCloseDelayPopup = NSPopUpButton()
     private(set) var camerasTableView: NSTableView?
     private var menuData: MenuData?
     private(set) var cameras: [CameraData] = []
@@ -152,6 +154,61 @@ class CamerasSection: NSView {
         )
         doorbellStack.addArrangedSubview(soundRow)
         soundRow.widthAnchor.constraint(equalTo: doorbellStack.widthAnchor).isActive = true
+
+        let separator2 = NSBox()
+        separator2.boxType = .separator
+        separator2.translatesAutoresizingMaskIntoConstraints = false
+        doorbellStack.addArrangedSubview(separator2)
+        separator2.widthAnchor.constraint(equalTo: doorbellStack.widthAnchor).isActive = true
+
+        autoCloseSwitch.controlSize = .mini
+        autoCloseSwitch.target = self
+        autoCloseSwitch.action = #selector(autoCloseSwitchChanged)
+        autoCloseSwitch.isEnabled = isPro && camerasOn
+        autoCloseSwitch.state = PreferencesManager.shared.doorbellAutoClose ? .on : .off
+
+        let autoCloseRow = createSettingRow(
+            label: String(localized: "settings.cameras.auto_close_doorbell", defaultValue: "Auto-close doorbell camera", bundle: .macOSBridge),
+            subtitle: String(localized: "settings.cameras.auto_close_doorbell_description", defaultValue: "Automatically close the camera popup after a doorbell ring.", bundle: .macOSBridge),
+            control: autoCloseSwitch
+        )
+        doorbellStack.addArrangedSubview(autoCloseRow)
+        autoCloseRow.widthAnchor.constraint(equalTo: doorbellStack.widthAnchor).isActive = true
+
+        let separator3 = NSBox()
+        separator3.boxType = .separator
+        separator3.translatesAutoresizingMaskIntoConstraints = false
+        doorbellStack.addArrangedSubview(separator3)
+        separator3.widthAnchor.constraint(equalTo: doorbellStack.widthAnchor).isActive = true
+
+        let delayOptions: [(String, Int)] = [
+            (String(localized: "settings.cameras.delay_30s", defaultValue: "30 seconds", bundle: .macOSBridge), 30),
+            (String(localized: "settings.cameras.delay_1m", defaultValue: "1 minute", bundle: .macOSBridge), 60),
+            (String(localized: "settings.cameras.delay_2m", defaultValue: "2 minutes", bundle: .macOSBridge), 120),
+            (String(localized: "settings.cameras.delay_5m", defaultValue: "5 minutes", bundle: .macOSBridge), 300)
+        ]
+
+        autoCloseDelayPopup.removeAllItems()
+        for (title, _) in delayOptions {
+            autoCloseDelayPopup.addItem(withTitle: title)
+        }
+
+        let currentDelay = PreferencesManager.shared.doorbellAutoCloseDelay
+        if let index = delayOptions.firstIndex(where: { $0.1 == currentDelay }) {
+            autoCloseDelayPopup.selectItem(at: index)
+        }
+
+        autoCloseDelayPopup.controlSize = .small
+        autoCloseDelayPopup.target = self
+        autoCloseDelayPopup.action = #selector(autoCloseDelayChanged)
+        autoCloseDelayPopup.isEnabled = isPro && camerasOn && PreferencesManager.shared.doorbellAutoClose
+
+        let delayRow = createSettingRow(
+            label: String(localized: "settings.cameras.close_after", defaultValue: "Close after", bundle: .macOSBridge),
+            control: autoCloseDelayPopup
+        )
+        doorbellStack.addArrangedSubview(delayRow)
+        delayRow.widthAnchor.constraint(equalTo: doorbellStack.widthAnchor).isActive = true
 
         doorbellBox.addSubview(doorbellStack)
         NSLayoutConstraint.activate([
@@ -429,6 +486,18 @@ class CamerasSection: NSView {
 
     @objc private func doorbellSoundSwitchChanged(_ sender: NSSwitch) {
         PreferencesManager.shared.doorbellSound = sender.state == .on
+    }
+
+    @objc private func autoCloseSwitchChanged(_ sender: NSSwitch) {
+        PreferencesManager.shared.doorbellAutoClose = sender.state == .on
+        autoCloseDelayPopup.isEnabled = sender.state == .on
+    }
+
+    @objc private func autoCloseDelayChanged(_ sender: NSPopUpButton) {
+        let delays = [30, 60, 120, 300]
+        let index = sender.indexOfSelectedItem
+        guard index >= 0, index < delays.count else { return }
+        PreferencesManager.shared.doorbellAutoCloseDelay = delays[index]
     }
 
     @objc private func eyeTapped(_ sender: NSButton) {

@@ -9560,6 +9560,83 @@
         }
       }
     },
+    "settings.cameras.auto_close_doorbell" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Auto-close doorbell camera"
+          }
+        }
+      }
+    },
+    "settings.cameras.auto_close_doorbell_description" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Automatically close the camera popup after a doorbell ring."
+          }
+        }
+      }
+    },
+    "settings.cameras.close_after" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Close after"
+          }
+        }
+      }
+    },
+    "settings.cameras.delay_1m" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "1 minute"
+          }
+        }
+      }
+    },
+    "settings.cameras.delay_2m" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "2 minutes"
+          }
+        }
+      }
+    },
+    "settings.cameras.delay_5m" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "5 minutes"
+          }
+        }
+      }
+    },
+    "settings.cameras.delay_30s" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "30 seconds"
+          }
+        }
+      }
+    },
     "settings.cameras.doorbell_on_ring" : {
       "extractionState" : "manual",
       "localizations" : {
