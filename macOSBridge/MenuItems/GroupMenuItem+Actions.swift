@@ -23,6 +23,12 @@ extension GroupMenuItem {
                 deviceStates[id] = isOn
                 bridge.writeCharacteristic(identifier: id, value: isOn ? 1 : 0)
                 notifyLocalChange(characteristicId: id, value: isOn ? 1 : 0)
+            } else if let idString = service.lockTargetStateId, let id = UUID(uuidString: idString) {
+                bridge.writeCharacteristic(identifier: id, value: isOn ? 1 : 0)
+                if let currentIdString = service.lockCurrentStateId, let currentId = UUID(uuidString: currentIdString) {
+                    deviceStates[currentId] = isOn
+                    notifyLocalChange(characteristicId: currentId, value: isOn ? 1 : 0)
+                }
             }
         }
 

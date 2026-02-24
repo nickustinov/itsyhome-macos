@@ -2,6 +2,9 @@
 
 ## 2.1.0
 
+### Build 236
+- **Fix lock groups not toggling** – groups containing locks did nothing when toggled because the group code only handled power and active characteristics; added lock state reading on init and lock target writing on toggle, so lock groups now correctly lock/unlock all members
+
 ### Build 235
 - **Snapshot polling fallback for cameras** – cameras that don't support WebRTC or HLS streaming (e.g. some Frigate setups) now fall back to polling `/api/camera_proxy` for JPEG snapshots at 1-second intervals, matching Home Assistant's own dashboard behaviour; previously these cameras would immediately return to the grid
 

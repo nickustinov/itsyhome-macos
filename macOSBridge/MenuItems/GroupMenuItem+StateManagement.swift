@@ -50,6 +50,15 @@ extension GroupMenuItem {
                     deviceStates[id] = false
                 }
                 characteristicToService[id] = service.uniqueIdentifier
+            } else if let idString = service.lockCurrentStateId, let id = UUID(uuidString: idString) {
+                // Locks: 1 = locked (on), 0 = unlocked (off)
+                if let cachedValue = bridge?.getCharacteristicValue(identifier: id),
+                   let intValue = ValueConversion.toInt(cachedValue) {
+                    deviceStates[id] = intValue == 1
+                } else {
+                    deviceStates[id] = true
+                }
+                characteristicToService[id] = service.uniqueIdentifier
             }
 
             // For lights: track brightness and color characteristics

@@ -169,6 +169,12 @@ class GroupMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
                         self.deviceStates[id] = newState
                         self.bridge?.writeCharacteristic(identifier: id, value: newState ? 1 : 0)
                         self.notifyLocalChange(characteristicId: id, value: newState ? 1 : 0)
+                    } else if let idString = service.lockTargetStateId, let id = UUID(uuidString: idString) {
+                        self.bridge?.writeCharacteristic(identifier: id, value: newState ? 1 : 0)
+                        if let currentIdString = service.lockCurrentStateId, let currentId = UUID(uuidString: currentIdString) {
+                            self.deviceStates[currentId] = newState
+                            self.notifyLocalChange(characteristicId: currentId, value: newState ? 1 : 0)
+                        }
                     }
                 }
                 self.updateUI()

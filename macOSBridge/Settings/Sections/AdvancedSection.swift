@@ -46,7 +46,7 @@ class AdvancedSection: SettingsCard {
         simpleLightSwitch.action = #selector(simpleLightSwitchChanged)
         let simpleLightRow = createSettingRow(
             label: String(localized: "settings.general.simple_light_controls", defaultValue: "Simple light controls", bundle: .macOSBridge),
-            subtitle: String(localized: "settings.general.simple_light_controls_subtitle", defaultValue: "Show only on/off toggle for lights, hiding brightness, colour, and colour temperature controls.", bundle: .macOSBridge),
+            subtitle: String(localized: "settings.general.simple_light_controls_subtitle", defaultValue: "Hide brightness and colour controls for lights.", bundle: .macOSBridge),
             control: simpleLightSwitch
         )
         addContentToBox(lightBox, content: simpleLightRow)
