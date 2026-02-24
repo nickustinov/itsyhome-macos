@@ -3070,6 +3070,7 @@
 		EA864B1152CD6EFC13060060 /* ph.crown-simple.svg in Resources */ = {isa = PBXBuildFile; fileRef = 70C06105128F4D4324575892 /* ph.crown-simple.svg */; };
 		EAF19A1EE5E23159BB871F69 /* ph.wifi-low.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 7B2D949A08760C17106489C7 /* ph.wifi-low.fill.svg */; };
 		EB0310D262952979C833BCE2 /* ph.dev-to-logo.svg in Resources */ = {isa = PBXBuildFile; fileRef = C1E9B3B6F7A944548064E6B7 /* ph.dev-to-logo.svg */; };
+		EB177BFC46F5251C608A5E6E /* ServiceDataTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5886C22FD69CFE8D168F619B /* ServiceDataTests.swift */; };
 		EB2C3DBFD616AA7FF2681019 /* ph.pencil-ruler.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = B6816C2B5493AC6EE2E50065 /* ph.pencil-ruler.fill.svg */; };
 		EB36CE4D45A0897FCE82A8A0 /* ph.seal-warning.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = EF7FFBCD95DD3D3CA7C79ACC /* ph.seal-warning.fill.svg */; };
 		EB3C821EDCA06A65600C2E6F /* ph.dots-three-circle.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = C23373E5E63FC4FB37B1599C /* ph.dots-three-circle.fill.svg */; };
@@ -4447,6 +4448,7 @@
 		580BDD07FC7DA50A0790E0F0 /* ph.film-strip.fill.svg */ = {isa = PBXFileReference; path = "ph.film-strip.fill.svg"; sourceTree = "<group>"; };
 		582041E04083EE66B547FA86 /* ph.heart-straight.fill.svg */ = {isa = PBXFileReference; path = "ph.heart-straight.fill.svg"; sourceTree = "<group>"; };
 		58674E6D95A0A321BE2FDF99 /* ph.tote.fill.svg */ = {isa = PBXFileReference; path = ph.tote.fill.svg; sourceTree = "<group>"; };
+		5886C22FD69CFE8D168F619B /* ServiceDataTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceDataTests.swift; sourceTree = "<group>"; };
 		5890939818345F46B87FF40B /* ph.device-tablet-camera.svg */ = {isa = PBXFileReference; path = "ph.device-tablet-camera.svg"; sourceTree = "<group>"; };
 		58AD09E7E070CEF046E71854 /* ph.handbag.svg */ = {isa = PBXFileReference; path = ph.handbag.svg; sourceTree = "<group>"; };
 		58B4BA1D418D1CEE8DE3DF01 /* ph.sailboat.fill.svg */ = {isa = PBXFileReference; path = ph.sailboat.fill.svg; sourceTree = "<group>"; };
@@ -9936,6 +9938,7 @@
 				8D6209D5D4AF8B8C8228A9CB /* ProStatusCacheTests.swift */,
 				6FA15C35EE0393A2B3CB900A /* SceneMenuItemTests.swift */,
 				BBD728ACD46FED845464BDCA /* SecuritySystemMenuItemTests.swift */,
+				5886C22FD69CFE8D168F619B /* ServiceDataTests.swift */,
 				2F34BC0FC06EE9C93C6BC637 /* SwitchMenuItemTests.swift */,
 				A4588D4410C203F9FB823FC5 /* ThermostatMenuItemTests.swift */,
 				4C1BB4554FA59FCE166E2B86 /* ValueConversionTests.swift */,
@@ -13533,6 +13536,7 @@
 				0D1340AA633BF40EC7B797C4 /* SecuritySystemMenuItem.swift in Sources */,
 				02A44E3CB567D2F45BD9E9AD /* SecuritySystemMenuItemTests.swift in Sources */,
 				4DE21C1DE370423C77BB118D /* SensorSummaryMenuItem.swift in Sources */,
+				EB177BFC46F5251C608A5E6E /* ServiceDataTests.swift in Sources */,
 				9F6ADB69D964B6EDECD22CF9 /* SlatMenuItem.swift in Sources */,
 				B6EE15CB1D179D13C4AC7D23 /* SmartHomePlatform.swift in Sources */,
 				9907F04B32E92E6D358D63FD /* StartupLogger.swift in Sources */,
@@ -13582,7 +13586,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_MAC_ICON_IN_CATALYST_APP = YES;
 				CODE_SIGN_ENTITLEMENTS = Itsyhome/Itsyhome.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 236;
+				CURRENT_PROJECT_VERSION = 237;
 				DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER = NO;
 				INFOPLIST_FILE = Itsyhome/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Itsyhome;
@@ -13711,7 +13715,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_MAC_ICON_IN_CATALYST_APP = YES;
 				CODE_SIGN_ENTITLEMENTS = Itsyhome/Itsyhome.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 236;
+				CURRENT_PROJECT_VERSION = 237;
 				DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER = NO;
 				INFOPLIST_FILE = Itsyhome/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Itsyhome;

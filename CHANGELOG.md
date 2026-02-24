@@ -2,6 +2,9 @@
 
 ## 2.1.0
 
+### Build 237
+- **Fix incorrect accessory name normalization** – room name stripping now requires a space after the room name, so "Garagenlicht" is no longer incorrectly shortened to "nlicht" in the "Garage" room; only space-separated prefixes like "Living Room AC" → "AC" are stripped
+
 ### Build 236
 - **Fix lock groups not toggling** – groups containing locks did nothing when toggled because the group code only handled power and active characteristics; added lock state reading on init and lock target writing on toggle, so lock groups now correctly lock/unlock all members
 

@@ -279,7 +279,10 @@ public struct ServiceData: Codable {
         let trimmed = copy.name.trimmingCharacters(in: .whitespaces)
         let roomPrefix = roomName.trimmingCharacters(in: .whitespaces)
         if trimmed.lowercased().hasPrefix(roomPrefix.lowercased()) {
-            let remainder = trimmed.dropFirst(roomPrefix.count).trimmingCharacters(in: .whitespaces)
+            let afterPrefix = trimmed.dropFirst(roomPrefix.count)
+            // Only strip when room name is followed by a space (word boundary)
+            guard afterPrefix.first == " " else { return copy }
+            let remainder = afterPrefix.trimmingCharacters(in: .whitespaces)
             if !remainder.isEmpty {
                 copy.name = remainder
             }
