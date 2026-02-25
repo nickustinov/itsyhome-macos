@@ -2,6 +2,9 @@
 
 ## 2.1.0
 
+### Build 238
+- **Fix WebRTC streaming for Nest cameras** – the data channel label from `get_client_config` was looked up inside the `configuration` sub-object instead of at the top level of the response, so it was never found; without the data channel the SDP offer lacked the required `m=application` line and Nest rejected it with "Invalid offer SDP"
+
 ### Build 237
 - **Fix incorrect accessory name normalization** – room name stripping now requires a space after the room name, so "Garagenlicht" is no longer incorrectly shortened to "nlicht" in the "Garage" room; only space-separated prefixes like "Living Room AC" → "AC" are stripped
 

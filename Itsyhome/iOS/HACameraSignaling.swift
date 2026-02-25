@@ -185,8 +185,7 @@ final class HACameraSignaling: NSObject {
                 switch result {
                 case .success(let response):
                     if let dict = response as? [String: Any],
-                       let config = dict["configuration"] as? [String: Any],
-                       let label = config["dataChannel"] as? String {
+                       let label = dict["dataChannel"] as? String {
                         continuation.resume(returning: label)
                     } else {
                         continuation.resume(returning: nil)
