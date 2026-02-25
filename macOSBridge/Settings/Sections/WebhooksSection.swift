@@ -136,7 +136,7 @@ class WebhooksSection: SettingsCard {
         stackView.addArrangedSubview(createSpacer(height: 8))
 
         // CLI tip
-        let tipLabel = createLabel("Install CLI: brew install itsyhome — then run itsyhome config to connect.", style: .caption)
+        let tipLabel = createLabel("Install CLI: brew install nickustinov/tap/itsyhome — then run itsyhome config to connect.", style: .caption)
         tipLabel.textColor = .tertiaryLabelColor
         stackView.addArrangedSubview(tipLabel)
 
