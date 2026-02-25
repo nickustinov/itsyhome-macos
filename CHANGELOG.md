@@ -3,6 +3,7 @@
 ## 2.1.0
 
 ### Build 238
+- **Security system arm/disarm via webhooks and URL schemes** – security systems can now be armed to a specific mode (stay, away, night) or disarmed through webhooks (`/arm/stay/Room/Alarm`, `/disarm/Room/Alarm`), URL schemes (`itsyhome://arm/stay/Room/Alarm`), and commands (`arm stay Room/Alarm`, `disarm Room/Alarm`); previously only toggle was supported, which could only flip between disarmed and stay
 - **Fix WebRTC streaming for Nest cameras** – the data channel label from `get_client_config` was looked up inside the `configuration` sub-object instead of at the top level of the response, so it was never found; without the data channel the SDP offer lacked the required `m=application` line and Nest rejected it with "Invalid offer SDP"
 
 ### Build 237

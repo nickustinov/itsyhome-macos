@@ -35,8 +35,11 @@ enum URLSchemeHandler {
 
     private static func parseAction(_ action: String, components: [String]) -> String? {
         switch action {
-        case "toggle", "on", "off", "lock", "unlock", "open", "close":
+        case "toggle", "on", "off", "lock", "unlock", "open", "close", "disarm":
             return parseSimpleAction(action, components: components)
+
+        case "arm":
+            return parseArmAction(components: components)
 
         case "brightness":
             return parseValueAction("brightness", components: components)
@@ -94,6 +97,18 @@ enum URLSchemeHandler {
         let target = components.dropFirst(2).joined(separator: "/").removingPercentEncoding
             ?? components.dropFirst(2).joined(separator: "/")
         return "set color \(hue) \(saturation) \(target)"
+    }
+
+    /// Parse arm action with mode
+    /// URL: itsyhome://arm/stay/Room/Device → "arm stay Room/Device"
+    private static func parseArmAction(components: [String]) -> String? {
+        guard components.count >= 2 else {
+            return nil
+        }
+        let mode = components[0]
+        let target = components.dropFirst().joined(separator: "/").removingPercentEncoding
+            ?? components.dropFirst().joined(separator: "/")
+        return "arm \(mode) \(target)"
     }
 
     /// Parse scene action

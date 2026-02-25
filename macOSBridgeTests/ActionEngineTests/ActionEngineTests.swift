@@ -20,6 +20,8 @@ final class ActionEngineTests: XCTestCase {
     private let brightnessId = UUID()
     private let lockId = UUID()
     private let lockTargetStateId = UUID()
+    private let securityId = UUID()
+    private let securityTargetStateId = UUID()
     private let sceneId = UUID()
 
     override func setUp() {
@@ -53,6 +55,16 @@ final class ActionEngineTests: XCTestCase {
             lockTargetStateId: lockTargetStateId
         )
 
+        let security = ServiceData(
+            uniqueIdentifier: securityId,
+            name: "Room/Test Alarm",
+            serviceType: ServiceTypes.securitySystem,
+            accessoryName: "Room/Test Alarm",
+            roomIdentifier: roomId,
+            securitySystemCurrentStateId: UUID(),
+            securitySystemTargetStateId: securityTargetStateId
+        )
+
         let accessories = [
             AccessoryData(
                 uniqueIdentifier: UUID(),
@@ -66,6 +78,13 @@ final class ActionEngineTests: XCTestCase {
                 name: "Room/Test Lock",
                 roomIdentifier: roomId,
                 services: [lock],
+                isReachable: true
+            ),
+            AccessoryData(
+                uniqueIdentifier: UUID(),
+                name: "Room/Test Alarm",
+                roomIdentifier: roomId,
+                services: [security],
                 isReachable: true
             )
         ]
@@ -179,6 +198,46 @@ final class ActionEngineTests: XCTestCase {
 
         XCTAssertEqual(result, .success)
         XCTAssertEqual(mockBridge.writtenCharacteristics[lockTargetStateId] as? Int, 0)
+    }
+
+    // MARK: - Security system tests
+
+    func testArmStayWritesCorrectValue() {
+        let result = engine.execute(target: "Room/Test Alarm", action: .arm(.stay))
+
+        XCTAssertEqual(result, .success)
+        XCTAssertEqual(mockBridge.writtenCharacteristics[securityTargetStateId] as? Int, 0)
+    }
+
+    func testArmAwayWritesCorrectValue() {
+        let result = engine.execute(target: "Room/Test Alarm", action: .arm(.away))
+
+        XCTAssertEqual(result, .success)
+        XCTAssertEqual(mockBridge.writtenCharacteristics[securityTargetStateId] as? Int, 1)
+    }
+
+    func testArmNightWritesCorrectValue() {
+        let result = engine.execute(target: "Room/Test Alarm", action: .arm(.night))
+
+        XCTAssertEqual(result, .success)
+        XCTAssertEqual(mockBridge.writtenCharacteristics[securityTargetStateId] as? Int, 2)
+    }
+
+    func testDisarmWritesCorrectValue() {
+        let result = engine.execute(target: "Room/Test Alarm", action: .disarm)
+
+        XCTAssertEqual(result, .success)
+        XCTAssertEqual(mockBridge.writtenCharacteristics[securityTargetStateId] as? Int, 3)
+    }
+
+    func testArmOnNonSecuritySystemFails() {
+        let result = engine.execute(target: "Room/Test Light", action: .arm(.stay))
+
+        if case .error(.executionFailed) = result {
+            // Expected
+        } else {
+            XCTFail("Expected executionFailed error")
+        }
     }
 
     // MARK: - Scene tests

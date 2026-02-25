@@ -36,6 +36,10 @@ enum Action: Equatable {
     case lock
     case unlock
 
+    // Security system
+    case arm(SecurityMode)
+    case disarm
+
     // Scene
     case executeScene
 }
@@ -45,6 +49,12 @@ enum ThermostatMode: Int {
     case heat = 1
     case cool = 2
     case auto = 3
+}
+
+enum SecurityMode: Int {
+    case stay = 0
+    case away = 1
+    case night = 2
 }
 
 // MARK: - Result types
@@ -193,6 +203,10 @@ class ActionEngine {
             return executeLockState(locked: true, on: service, bridge: bridge)
         case .unlock:
             return executeLockState(locked: false, on: service, bridge: bridge)
+        case .arm(let mode):
+            return executeSecurityArm(mode, on: service, bridge: bridge)
+        case .disarm:
+            return executeSecurityDisarm(on: service, bridge: bridge)
         case .executeScene:
             return false // Scenes handled separately
         }
@@ -389,6 +403,23 @@ class ActionEngine {
         }
         // 0 = unsecured (unlocked), 1 = secured (locked)
         writeCharacteristic(identifier: id, value: locked ? 1 : 0, bridge: bridge)
+        return true
+    }
+
+    private func executeSecurityArm(_ mode: SecurityMode, on service: ServiceData, bridge: Mac2iOS) -> Bool {
+        guard let idString = service.securitySystemTargetStateId, let id = UUID(uuidString: idString) else {
+            return false
+        }
+        writeCharacteristic(identifier: id, value: mode.rawValue, bridge: bridge)
+        return true
+    }
+
+    private func executeSecurityDisarm(on service: ServiceData, bridge: Mac2iOS) -> Bool {
+        guard let idString = service.securitySystemTargetStateId, let id = UUID(uuidString: idString) else {
+            return false
+        }
+        // 3 = disarmed
+        writeCharacteristic(identifier: id, value: 3, bridge: bridge)
         return true
     }
 }

@@ -78,6 +78,12 @@ enum ActionParser {
         case "unlock":
             return parseSimpleAction(tokens: tokens, action: .unlock)
 
+        case "arm":
+            return parseArmCommand(tokens: tokens)
+
+        case "disarm":
+            return parseSimpleAction(tokens: tokens, action: .disarm)
+
         case "open":
             return parseSimpleAction(tokens: tokens, action: .setPosition(100))
 
@@ -97,6 +103,30 @@ enum ActionParser {
         }
         let target = tokens.dropFirst().joined(separator: " ")
         return .success(ParsedCommand(target: target, action: action))
+    }
+
+    private static func parseArmCommand(tokens: [String]) -> Result<ParsedCommand, ParseError> {
+        // "arm stay room/alarm" or "arm away room/alarm" or "arm night room/alarm"
+        guard tokens.count >= 3 else {
+            return .failure(.missingTarget)
+        }
+
+        let modeName = tokens[1]
+        let mode: SecurityMode
+
+        switch modeName {
+        case "stay":
+            mode = .stay
+        case "away":
+            mode = .away
+        case "night":
+            mode = .night
+        default:
+            return .failure(.invalidValue(modeName))
+        }
+
+        let target = tokens.dropFirst(2).joined(separator: " ")
+        return .success(ParsedCommand(target: target, action: .arm(mode)))
     }
 
     private static func parseTurnCommand(tokens: [String]) -> Result<ParsedCommand, ParseError> {

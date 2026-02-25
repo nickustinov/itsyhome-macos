@@ -120,6 +120,10 @@ itsyhome://<action>/<target>
 | Unlock | `itsyhome://unlock/<Room>/<Device>` | `itsyhome://unlock/Front%20Door` |
 | Open | `itsyhome://open/<Room>/<Device>` | `itsyhome://open/Garage/Door` |
 | Close | `itsyhome://close/<Room>/<Device>` | `itsyhome://close/Bedroom/Blinds` |
+| Arm stay | `itsyhome://arm/stay/<Room>/<Device>` | `itsyhome://arm/stay/Hall/Alarm` |
+| Arm away | `itsyhome://arm/away/<Room>/<Device>` | `itsyhome://arm/away/Hall/Alarm` |
+| Arm night | `itsyhome://arm/night/<Room>/<Device>` | `itsyhome://arm/night/Hall/Alarm` |
+| Disarm | `itsyhome://disarm/<Room>/<Device>` | `itsyhome://disarm/Hall/Alarm` |
 
 **Target formats:**
 
@@ -160,6 +164,10 @@ curl http://localhost:8423/lock/Front%20Door
 curl http://localhost:8423/unlock/Front%20Door
 curl http://localhost:8423/open/Garage/Door
 curl http://localhost:8423/close/Bedroom/Blinds
+curl http://localhost:8423/arm/stay/Hall/Alarm
+curl http://localhost:8423/arm/away/Hall/Alarm
+curl http://localhost:8423/arm/night/Hall/Alarm
+curl http://localhost:8423/disarm/Hall/Alarm
 ```
 
 **Query endpoints:**

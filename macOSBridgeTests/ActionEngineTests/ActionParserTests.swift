@@ -255,6 +255,78 @@ final class ActionParserTests: XCTestCase {
         }
     }
 
+    // MARK: - Arm/disarm tests
+
+    func testParseArmStay() {
+        let result = ActionParser.parse("arm stay room/alarm")
+
+        switch result {
+        case .success(let command):
+            XCTAssertEqual(command.target, "room/alarm")
+            XCTAssertEqual(command.action, .arm(.stay))
+        case .failure(let error):
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+
+    func testParseArmAway() {
+        let result = ActionParser.parse("arm away room/alarm")
+
+        switch result {
+        case .success(let command):
+            XCTAssertEqual(command.target, "room/alarm")
+            XCTAssertEqual(command.action, .arm(.away))
+        case .failure(let error):
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+
+    func testParseArmNight() {
+        let result = ActionParser.parse("arm night room/alarm")
+
+        switch result {
+        case .success(let command):
+            XCTAssertEqual(command.target, "room/alarm")
+            XCTAssertEqual(command.action, .arm(.night))
+        case .failure(let error):
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+
+    func testParseArmInvalidMode() {
+        let result = ActionParser.parse("arm party room/alarm")
+
+        switch result {
+        case .success:
+            XCTFail("Expected failure")
+        case .failure(let error):
+            XCTAssertEqual(error, .invalidValue("party"))
+        }
+    }
+
+    func testParseDisarm() {
+        let result = ActionParser.parse("disarm room/alarm")
+
+        switch result {
+        case .success(let command):
+            XCTAssertEqual(command.target, "room/alarm")
+            XCTAssertEqual(command.action, .disarm)
+        case .failure(let error):
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+
+    func testParseDisarmMissingTarget() {
+        let result = ActionParser.parse("disarm")
+
+        switch result {
+        case .success:
+            XCTFail("Expected failure")
+        case .failure(let error):
+            XCTAssertEqual(error, .missingTarget)
+        }
+    }
+
     // MARK: - Open/close tests
 
     func testParseOpen() {

@@ -109,6 +109,44 @@ final class URLSchemeHandlerTests: XCTestCase {
         XCTAssertEqual(result, "execute Good Morning")
     }
 
+    // MARK: - Security system action tests
+
+    func testHandleArmStay() {
+        let url = URL(string: "itsyhome://arm/stay/Room/Alarm")!
+        let result = URLSchemeHandler.handle(url)
+
+        XCTAssertEqual(result, "arm stay Room/Alarm")
+    }
+
+    func testHandleArmAway() {
+        let url = URL(string: "itsyhome://arm/away/Room/Alarm")!
+        let result = URLSchemeHandler.handle(url)
+
+        XCTAssertEqual(result, "arm away Room/Alarm")
+    }
+
+    func testHandleArmNight() {
+        let url = URL(string: "itsyhome://arm/night/Room/Alarm")!
+        let result = URLSchemeHandler.handle(url)
+
+        XCTAssertEqual(result, "arm night Room/Alarm")
+    }
+
+    func testHandleDisarm() {
+        let url = URL(string: "itsyhome://disarm/Room/Alarm")!
+        let result = URLSchemeHandler.handle(url)
+
+        XCTAssertEqual(result, "disarm Room/Alarm")
+    }
+
+    func testHandleArmNoMode() {
+        let url = URL(string: "itsyhome://arm/Room/Alarm")!
+        let result = URLSchemeHandler.handle(url)
+
+        // Mode becomes first path component – parses as "arm Room Alarm"
+        XCTAssertEqual(result, "arm Room Alarm")
+    }
+
     // MARK: - Device name only tests
 
     func testHandleToggleDeviceOnly() {
