@@ -1,6 +1,20 @@
 # Changelog
 
+## 2.2.0
+
+### Build 242
+- **Suppress transient error alerts after wake from sleep** – timeout, connection, and disconnection errors during Home Assistant reconnection are no longer shown as alerts; the app already retries automatically, so the error dialog was just noise after opening a laptop lid
+
+### Build 241
+- **Add security system state to webhook info endpoint** – the `/info/` webhook now returns `securityState` for security system devices (e.g. "disarmed", "stay", "away", "night", "triggered"); previously the state was missing even though the menu bar displayed it correctly
+
+### Build 240
+- **Fix "Message too long" error on large HA installations** – increased the WebSocket maximum message size from the default 1 MB to 16 MB, so `get_states` and other large responses no longer cause a disconnect on Home Assistant instances with many entities
+
 ## 2.1.0
+
+### Build 239
+- Bump build version
 
 ### Build 238
 - **Security system arm/disarm via webhooks and URL schemes** – security systems can now be armed to a specific mode (stay, away, night) or disarmed through webhooks (`/arm/stay/Room/Alarm`, `/disarm/Room/Alarm`), URL schemes (`itsyhome://arm/stay/Room/Alarm`), and commands (`arm stay Room/Alarm`, `disarm Room/Alarm`); previously only toggle was supported, which could only flip between disarmed and stay

@@ -81,6 +81,25 @@ enum DoorState: Int {
     }
 }
 
+/// Security system states (HMCharacteristicValueCurrentSecuritySystemState)
+enum SecuritySystemState: Int {
+    case stay = 0
+    case away = 1
+    case night = 2
+    case disarmed = 3
+    case triggered = 4
+
+    var label: String {
+        switch self {
+        case .stay: return "stay"
+        case .away: return "away"
+        case .night: return "night"
+        case .disarmed: return "disarmed"
+        case .triggered: return "triggered"
+        }
+    }
+}
+
 /// Lock states (HMCharacteristicValueLockMechanismState)
 enum LockState: Int {
     case unsecured = 0

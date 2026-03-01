@@ -328,7 +328,18 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
                     && [NSURLErrorNotConnectedToInternet,
                         NSURLErrorNetworkConnectionLost,
                         NSURLErrorDNSLookupFailed].contains(nsError.code)
-                if !isNetworkError {
+                let isTransientError: Bool
+                if let haError = error as? HomeAssistantClientError {
+                    switch haError {
+                    case .timeout, .notConnected, .connectionFailed:
+                        isTransientError = true
+                    default:
+                        isTransientError = false
+                    }
+                } else {
+                    isTransientError = false
+                }
+                if !isNetworkError && !isTransientError {
                     await MainActor.run {
                         showError(message: "Failed to connect to Home Assistant: \(error.localizedDescription)")
                     }

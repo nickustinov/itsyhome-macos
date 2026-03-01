@@ -368,12 +368,21 @@ extension WebhookServer {
         if let value = getValue(service.rotationSpeedId) {
             state.speed = doubleValue(value)
         }
+        if let value = getValue(service.securitySystemCurrentStateId) {
+            if let strValue = value as? String {
+                // HA sends raw state strings: armed_home, armed_away, armed_night, disarmed, triggered, etc.
+                state.securityState = strValue
+            } else {
+                state.securityState = SecuritySystemState(rawValue: intValue(value))?.label ?? "disarmed"
+            }
+        }
 
         // Check if state has any values
         let hasState = state.on != nil || state.brightness != nil || state.position != nil ||
                        state.temperature != nil || state.targetTemperature != nil || state.mode != nil ||
                        state.humidity != nil || state.hue != nil || state.saturation != nil ||
-                       state.locked != nil || state.doorState != nil || state.speed != nil
+                       state.locked != nil || state.doorState != nil || state.speed != nil ||
+                       state.securityState != nil
 
         return ServiceInfoResponse(
             name: service.name,

@@ -134,6 +134,7 @@ final class HomeAssistantClient: NSObject {
         logger.info("Connecting to Home Assistant at \(self.serverURL.absoluteString, privacy: .public)")
 
         webSocketTask = urlSession.webSocketTask(with: serverURL)
+        webSocketTask?.maximumMessageSize = 16 * 1024 * 1024
         webSocketTask?.resume()
 
         // Start receiving messages

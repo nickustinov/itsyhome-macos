@@ -86,6 +86,7 @@ struct ServiceState: Encodable {
     var locked: Bool?
     var doorState: String?
     var speed: Double?
+    var securityState: String?
 }
 
 struct SceneInfoResponse: Encodable {
