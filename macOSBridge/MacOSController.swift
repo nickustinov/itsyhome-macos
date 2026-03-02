@@ -267,23 +267,21 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
     private func startNetworkMonitor() {
         let monitor = NWPathMonitor()
         monitor.pathUpdateHandler = { [weak self] path in
-            guard let self else { return }
-            guard PlatformManager.shared.selectedPlatform == .homeAssistant else { return }
-            guard HAAuthManager.shared.isConfigured else { return }
+            DispatchQueue.main.async {
+                guard let self else { return }
+                guard PlatformManager.shared.selectedPlatform == .homeAssistant else { return }
+                guard HAAuthManager.shared.isConfigured else { return }
 
-            if path.status == .unsatisfied, path.unsatisfiedReason == .localNetworkDenied {
-                DispatchQueue.main.async {
+                if path.status == .unsatisfied, path.unsatisfiedReason == .localNetworkDenied {
                     StartupLogger.error("Local network access denied by system policy")
                     self.showError(message: String(localized: "alert.error.local_network_denied", defaultValue: "Itsyhome needs local network access to reach Home Assistant. Enable it in System Settings \u{2192} Privacy & Security \u{2192} Local Network.", bundle: .macOSBridge))
+                    return
                 }
-                return
-            }
 
-            guard path.status == .satisfied else { return }
-            guard self.homeAssistantPlatform?.isConnected != true else { return }
-            guard !self.isConnectingToHA else { return }
+                guard path.status == .satisfied else { return }
+                guard self.homeAssistantPlatform?.isConnected != true else { return }
+                guard !self.isConnectingToHA else { return }
 
-            DispatchQueue.main.async {
                 StartupLogger.log("Network became available – connecting to Home Assistant")
                 self.disconnectFromHomeAssistant()
                 self.connectToHomeAssistant()

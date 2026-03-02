@@ -2,6 +2,9 @@
 
 ## 2.2.0
 
+### Build 243
+- **Fix crash on wake from sleep in network monitor** – the `NWPathMonitor` callback accessed mutable properties (`homeAssistantPlatform`, `isConnectingToHA`) on a background queue while `handleSystemWake` modified them on the main thread; moved all property access into the main queue dispatch to eliminate the data race
+
 ### Build 242
 - **Suppress transient error alerts after wake from sleep** – timeout, connection, and disconnection errors during Home Assistant reconnection are no longer shown as alerts; the app already retries automatically, so the error dialog was just noise after opening a laptop lid
 
