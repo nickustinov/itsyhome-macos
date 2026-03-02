@@ -19,6 +19,10 @@ extension WebhookServer {
         case "status":
             handleStatus(connection: connection, engine: engine)
             return true
+        case "refresh":
+            engine.bridge?.reloadHomeKit()
+            sendResponse(connection: connection, status: 200, body: encode(APIResponse.success))
+            return true
         case "list":
             guard components.count >= 2 else {
                 sendResponse(connection: connection, status: 400, body: encode(APIResponse.error("Usage: /list/rooms|devices|scenes|groups")))

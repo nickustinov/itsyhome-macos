@@ -2,6 +2,9 @@
 
 ## 2.2.0
 
+### Build 244
+- **Add `/refresh` webhook endpoint** – triggers the same full data reload as the Refresh button in the menu bar; useful when webhook queries return stale HomeKit values for devices like Ecobee thermostats that don't always push characteristic updates reliably
+
 ### Build 243
 - **Fix crash on wake from sleep in network monitor** – the `NWPathMonitor` callback accessed mutable properties (`homeAssistantPlatform`, `isConnectingToHA`) on a background queue while `handleSystemWake` modified them on the main thread; moved all property access into the main queue dispatch to eliminate the data race
 
