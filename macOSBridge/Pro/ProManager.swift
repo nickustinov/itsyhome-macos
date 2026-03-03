@@ -145,7 +145,7 @@ final class ProStatusCache: @unchecked Sendable {
     static let shared = ProStatusCache()
 
     // Set to true for TestFlight builds, false for App Store
-    static let debugOverride = false
+    static let debugOverride = true
 
     private let lock = NSLock()
     private var _isPro: Bool = false

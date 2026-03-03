@@ -201,7 +201,7 @@ final class EntityMapper {
             guard !services.isEmpty else { continue }
 
             let device = deviceId.flatMap { devices[$0] }
-            let areaId = resolveAreaId(for: states.first!, deviceId: deviceId)
+            let areaId = resolveAreaId(deviceId: deviceId, states: states)
             let roomUUID = areaId.flatMap { deterministicUUID(for: $0) }
 
             let accessoryId = deviceId.flatMap { deterministicUUID(for: $0) }
@@ -502,17 +502,32 @@ final class EntityMapper {
         }
     }
 
-    private func resolveAreaId(for state: HAEntityState, deviceId: String?) -> String? {
-        // First check entity's direct area
-        if let entityArea = entityRegistry[state.entityId]?.areaId {
-            return entityArea
+    /// Resolve area for a device group (used in generateAccessories).
+    /// Prioritises device area for stability – entity-level area only used as fallback for deviceless entities.
+    private func resolveAreaId(deviceId: String?, states: [HAEntityState]) -> String? {
+        // For device-grouped entities, use the device's area (stable across syncs)
+        if let deviceId = deviceId, let device = devices[deviceId], let deviceArea = device.areaId {
+            return deviceArea
         }
 
-        // Then check device's area
-        if let deviceId = deviceId, let device = devices[deviceId] {
-            if let deviceArea = device.areaId {
-                return deviceArea
-            }
+        // For standalone entities (no device), use the entity's own area
+        if let first = states.first {
+            return entityRegistry[first.entityId]?.areaId
+        }
+
+        return nil
+    }
+
+    /// Resolve area for a single entity (used in mapEntityToService for per-service room assignment).
+    private func resolveAreaId(for state: HAEntityState, deviceId: String?) -> String? {
+        // First check device's area (consistent with device group resolution)
+        if let deviceId = deviceId, let device = devices[deviceId], let deviceArea = device.areaId {
+            return deviceArea
+        }
+
+        // Then check entity's direct area
+        if let entityArea = entityRegistry[state.entityId]?.areaId {
+            return entityArea
         }
 
         return nil
