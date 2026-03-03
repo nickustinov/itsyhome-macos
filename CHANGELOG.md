@@ -4,6 +4,7 @@
 
 ### Build 246
 - **Fix Home Assistant entities grouped in wrong rooms** – room assignment for multi-entity devices (e.g. ESPSomfy RTS) was based on whichever entity happened to be iterated first from a dictionary, which changed randomly on each sync; now uses the device's own area directly, falling back to entity-level area only for standalone entities without a device
+- **Fix invisible window interfering with tiling window managers** – the hidden 1×1 Catalyst window was ordered into the window list at launch, causing AeroSpace and similar tiling WMs to tile an invisible window; now blocked from ordering entirely and only briefly allowed when StoreKit needs a presentation context for purchases or restores
 
 ### Build 244
 - **Add `/refresh` webhook endpoint** – triggers the same full data reload as the Refresh button in the menu bar; useful when webhook queries return stale HomeKit values for devices like Ecobee thermostats that don't always push characteristic updates reliably

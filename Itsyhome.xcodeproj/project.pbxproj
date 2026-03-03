@@ -648,6 +648,7 @@
 		2FDA9CD9D1A1F932C0BA102E /* ph.newspaper-clipping.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 092157C1BA3A4A4462A188EA /* ph.newspaper-clipping.fill.svg */; };
 		2FEEAD379C118058C102B7F3 /* ph.invoice.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 88DA3E896358B58290AD7D15 /* ph.invoice.fill.svg */; };
 		2FEFCA7773D6B41301057608 /* ph.acorn.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 6D9D6A8BBD542FC662F551CF /* ph.acorn.fill.svg */; };
+		2FF4488A60BE0B4D5F1777F7 /* CatalystWindowGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF603BD91090E8FB1B5015E9 /* CatalystWindowGate.swift */; };
 		3041F591E28C5E4DCEEF5759 /* SceneMenuItemTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FA15C35EE0393A2B3CB900A /* SceneMenuItemTests.swift */; };
 		30549C4EF0E08AB27830B26A /* ph.trash-simple.svg in Resources */ = {isa = PBXBuildFile; fileRef = C43BA38E65A3B45A625B45AE /* ph.trash-simple.svg */; };
 		307A52DBAB65B94228A63AAA /* ph.arrows-in-cardinal.svg in Resources */ = {isa = PBXBuildFile; fileRef = 78E172F72DC9936B6CD4A16C /* ph.arrows-in-cardinal.svg */; };
@@ -827,6 +828,7 @@
 		3F230A11731192155E402E47 /* ph.toilet-paper.svg in Resources */ = {isa = PBXBuildFile; fileRef = E497D75D2E7A5A027B7BB620 /* ph.toilet-paper.svg */; };
 		3F29A2F64D833524FBB509ED /* ph.calendar-slash.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 9D424893FBA0F18C73752EC0 /* ph.calendar-slash.fill.svg */; };
 		3F331AF76B1BA48D2AC9BABB /* ph.gps.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 92C6EE42E3B92C0F5C5ADE4F /* ph.gps.fill.svg */; };
+		3F5D80916E00A5334801D0C0 /* CatalystWindowGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF603BD91090E8FB1B5015E9 /* CatalystWindowGate.swift */; };
 		3F6AE429AA6B54280BC23262 /* ph.bluetooth-x.svg in Resources */ = {isa = PBXBuildFile; fileRef = AFC908B01E77324B641AC41D /* ph.bluetooth-x.svg */; };
 		3F785D6541BB237B451465AA /* ph.suitcase-rolling.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 2BB007D6337F471AEB0992E4 /* ph.suitcase-rolling.fill.svg */; };
 		3FA89AA7EA4CA489D31191F9 /* ph.film-slate.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 600F8D882921698662388A24 /* ph.film-slate.fill.svg */; };
@@ -5582,6 +5584,7 @@
 		AF5203D05FB3291178B67ADA /* ph.speaker-simple-high.fill.svg */ = {isa = PBXFileReference; path = "ph.speaker-simple-high.fill.svg"; sourceTree = "<group>"; };
 		AF5432FFB5D33BAAC425C6CE /* ph.nut.svg */ = {isa = PBXFileReference; path = ph.nut.svg; sourceTree = "<group>"; };
 		AF5BA0FD598B5E6531AF79E5 /* ph.usb.fill.svg */ = {isa = PBXFileReference; path = ph.usb.fill.svg; sourceTree = "<group>"; };
+		AF603BD91090E8FB1B5015E9 /* CatalystWindowGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalystWindowGate.swift; sourceTree = "<group>"; };
 		AF607FEE12E046B169AB79FD /* ph.chat-centered.svg */ = {isa = PBXFileReference; path = "ph.chat-centered.svg"; sourceTree = "<group>"; };
 		AF7E5504D8DC2377FF0AE668 /* ph.moon.fill.svg */ = {isa = PBXFileReference; path = ph.moon.fill.svg; sourceTree = "<group>"; };
 		AF8DA41D81DB28026A044614 /* ph.circuitry.svg */ = {isa = PBXFileReference; path = ph.circuitry.svg; sourceTree = "<group>"; };
@@ -6722,6 +6725,7 @@
 		2BE0077BC968DC12164CC138 /* Pro */ = {
 			isa = PBXGroup;
 			children = (
+				AF603BD91090E8FB1B5015E9 /* CatalystWindowGate.swift */,
 				2E663466EEEB0E7EAA36C4C8 /* ProManager.swift */,
 				6EF08A602DCF69DA079C553B /* ProProducts.swift */,
 			);
@@ -13325,6 +13329,7 @@
 				CD46DAC3D441849FF023CC5A /* CameraPanelManager.swift in Sources */,
 				35DD801A88C9D8C99F06889A /* CamerasSection+TableDelegate.swift in Sources */,
 				11112BE937E38F4684A4A67E /* CamerasSection.swift in Sources */,
+				2FF4488A60BE0B4D5F1777F7 /* CatalystWindowGate.swift in Sources */,
 				E53F247D68A3464066E31310 /* CloudSyncManager.swift in Sources */,
 				099D30F6620813668F633D46 /* CloudSyncTranslator.swift in Sources */,
 				CE60FBDD7DA3242E781072D4 /* ColorConversion.swift in Sources */,
@@ -13444,6 +13449,7 @@
 				CB2495B718EDDDF5D1B94AC7 /* BlindMenuItemTests.swift in Sources */,
 				67926ADF4BFE82DCEF6BB9D1 /* BridgeProtocols.swift in Sources */,
 				858EF267E61FE0324A42C646 /* Bundle+Localization.swift in Sources */,
+				3F5D80916E00A5334801D0C0 /* CatalystWindowGate.swift in Sources */,
 				53ECA3675440CD9BAC4279B3 /* CloudSyncManager.swift in Sources */,
 				985B67023A87C83880C511BE /* CloudSyncManagerTests.swift in Sources */,
 				111E21896B8031FB1B180CDD /* CloudSyncTranslator.swift in Sources */,

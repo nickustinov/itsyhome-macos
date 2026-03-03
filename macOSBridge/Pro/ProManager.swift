@@ -53,8 +53,16 @@ final class ProManager: ObservableObject {
 
     func purchase(_ product: Product) async throws -> Bool {
         isLoading = true
-        defer { isLoading = false }
+        defer {
+            isLoading = false
+            CatalystWindowGate.allowOrdering = false
+            CatalystWindowGate.hideCatalystWindow()
+        }
 
+        // Allow the hidden Catalyst window to order front so StoreKit
+        // has a presentation context for the purchase sheet.
+        CatalystWindowGate.allowOrdering = true
+        CatalystWindowGate.orderCatalystWindow()
         let result = try await product.purchase()
 
         switch result {
@@ -79,8 +87,14 @@ final class ProManager: ObservableObject {
 
     func restore() async {
         isLoading = true
-        defer { isLoading = false }
+        defer {
+            isLoading = false
+            CatalystWindowGate.allowOrdering = false
+            CatalystWindowGate.hideCatalystWindow()
+        }
 
+        CatalystWindowGate.allowOrdering = true
+        CatalystWindowGate.orderCatalystWindow()
         try? await AppStore.sync()
         await updateProStatus()
     }
@@ -145,7 +159,7 @@ final class ProStatusCache: @unchecked Sendable {
     static let shared = ProStatusCache()
 
     // Set to true for TestFlight builds, false for App Store
-    static let debugOverride = true
+    static let debugOverride = false
 
     private let lock = NSLock()
     private var _isPro: Bool = false

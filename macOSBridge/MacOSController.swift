@@ -880,11 +880,11 @@ extension MacOSController: CameraPanelManagerDelegate {
 
 extension NSWindow {
     @objc func itsyhome_makeKeyAndOrderFront(_ sender: Any?) {
-        // For the hidden 1×1 Catalyst window: mark it as transient so
-        // Mission Control ignores it, but still order it so the window
-        // scene stays connected (required by StoreKit for purchase sheets).
+        // Block the hidden 1×1 Catalyst window from being ordered unless
+        // explicitly allowed (e.g. during a StoreKit purchase).
         if frame.size.width <= 1 || frame.size.height <= 1 {
-            collectionBehavior.insert(.transient)
+            let allowed = MainActor.assumeIsolated { CatalystWindowGate.allowOrdering }
+            if !allowed { return }
         }
         // Calls through to the original (swapped) implementation
         itsyhome_makeKeyAndOrderFront(sender)
