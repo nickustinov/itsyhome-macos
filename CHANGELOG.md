@@ -1,6 +1,9 @@
 # Changelog
 
-## 2.2.0
+## 2.3.0
+
+### Build 247
+- **Fix thermostat not remembering last active mode** – devices like Tado Smart AC report `targetHeatingCoolingState: 0` when off, so after a menu rebuild the last active mode defaulted to Heat; now persists the last non-off mode to UserDefaults per device so the correct mode is restored on toggle
 
 ### Build 246
 - **Fix Home Assistant entities grouped in wrong rooms** – room assignment for multi-entity devices (e.g. ESPSomfy RTS) was based on whichever entity happened to be iterated first from a dictionary, which changed randomly on each sync; now uses the device's own area directly, falling back to entity-level area only for standalone entities without a device

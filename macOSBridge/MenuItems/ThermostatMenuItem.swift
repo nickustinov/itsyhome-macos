@@ -165,8 +165,11 @@ class ThermostatMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
             modeContainer.isHidden = true
         }
 
-        // Set initial last active mode to first valid active mode
-        if let firstActive = activeModes.first {
+        // Restore last active mode from UserDefaults, fall back to first valid active mode
+        let persistedMode = UserDefaults.standard.integer(forKey: "thermostatLastMode_\(serviceData.uniqueIdentifier)")
+        if persistedMode != 0 && activeModes.contains(persistedMode) {
+            lastActiveMode = persistedMode
+        } else if let firstActive = activeModes.first {
             lastActiveMode = firstActive
         }
 
@@ -382,6 +385,7 @@ class ThermostatMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
         targetState = mode
         if mode != 0 {
             lastActiveMode = mode
+            UserDefaults.standard.set(mode, forKey: "thermostatLastMode_\(serviceData.uniqueIdentifier)")
         }
         updateModeButtons()
         updateUI()
