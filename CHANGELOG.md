@@ -11,77 +11,36 @@
 ### Build 247
 - **Fix thermostat not remembering last active mode** – devices like Tado Smart AC report `targetHeatingCoolingState: 0` when off, so after a menu rebuild the last active mode defaulted to Heat; now persists the last non-off mode to UserDefaults per device so the correct mode is restored on toggle
 
-### Build 246
+## 2.2.0
 - **Fix Home Assistant entities grouped in wrong rooms** – room assignment for multi-entity devices (e.g. ESPSomfy RTS) was based on whichever entity happened to be iterated first from a dictionary, which changed randomly on each sync; now uses the device's own area directly, falling back to entity-level area only for standalone entities without a device
 - **Fix invisible window interfering with tiling window managers** – the hidden 1×1 Catalyst window was ordered into the window list at launch, causing AeroSpace and similar tiling WMs to tile an invisible window; now blocked from ordering entirely and only briefly allowed when StoreKit needs a presentation context for purchases or restores
-
-### Build 244
 - **Add `/refresh` webhook endpoint** – triggers the same full data reload as the Refresh button in the menu bar; useful when webhook queries return stale HomeKit values for devices like Ecobee thermostats that don't always push characteristic updates reliably
-
-### Build 243
-- **Fix crash on wake from sleep in network monitor** – the `NWPathMonitor` callback accessed mutable properties (`homeAssistantPlatform`, `isConnectingToHA`) on a background queue while `handleSystemWake` modified them on the main thread; moved all property access into the main queue dispatch to eliminate the data race
-
-### Build 242
-- **Suppress transient error alerts after wake from sleep** – timeout, connection, and disconnection errors during Home Assistant reconnection are no longer shown as alerts; the app already retries automatically, so the error dialog was just noise after opening a laptop lid
-
-### Build 241
-- **Add security system state to webhook info endpoint** – the `/info/` webhook now returns `securityState` for security system devices (e.g. "disarmed", "stay", "away", "night", "triggered"); previously the state was missing even though the menu bar displayed it correctly
-
-### Build 240
-- **Fix "Message too long" error on large HA installations** – increased the WebSocket maximum message size from the default 1 MB to 16 MB, so `get_states` and other large responses no longer cause a disconnect on Home Assistant instances with many entities
+- **Fix crash on wake from sleep in network monitor** – moved all mutable property access into the main queue dispatch to eliminate a data race between the `NWPathMonitor` callback and `handleSystemWake`
+- **Suppress transient error alerts after wake from sleep** – timeout, connection, and disconnection errors during Home Assistant reconnection are no longer shown as alerts
+- **Add security system state to webhook info endpoint** – the `/info/` webhook now returns `securityState` for security system devices
+- **Fix "Message too long" error on large HA installations** – increased the WebSocket maximum message size from 1 MB to 16 MB
 
 ## 2.1.0
-
-### Build 239
-- Bump build version
-
-### Build 238
-- **Security system arm/disarm via webhooks and URL schemes** – security systems can now be armed to a specific mode (stay, away, night) or disarmed through webhooks (`/arm/stay/Room/Alarm`, `/disarm/Room/Alarm`), URL schemes (`itsyhome://arm/stay/Room/Alarm`), and commands (`arm stay Room/Alarm`, `disarm Room/Alarm`); previously only toggle was supported, which could only flip between disarmed and stay
-- **Fix WebRTC streaming for Nest cameras** – the data channel label from `get_client_config` was looked up inside the `configuration` sub-object instead of at the top level of the response, so it was never found; without the data channel the SDP offer lacked the required `m=application` line and Nest rejected it with "Invalid offer SDP"
-
-### Build 237
-- **Fix incorrect accessory name normalization** – room name stripping now requires a space after the room name, so "Garagenlicht" is no longer incorrectly shortened to "nlicht" in the "Garage" room; only space-separated prefixes like "Living Room AC" → "AC" are stripped
-
-### Build 236
-- **Fix lock groups not toggling** – groups containing locks did nothing when toggled because the group code only handled power and active characteristics; added lock state reading on init and lock target writing on toggle, so lock groups now correctly lock/unlock all members
-
-### Build 235
-- **Snapshot polling fallback for cameras** – cameras that don't support WebRTC or HLS streaming (e.g. some Frigate setups) now fall back to polling `/api/camera_proxy` for JPEG snapshots at 1-second intervals, matching Home Assistant's own dashboard behaviour; previously these cameras would immediately return to the grid
-
-### Build 234
-- **Simple light controls** – new toggle in Settings → Advanced to show only the on/off switch for lights, hiding brightness, colour, and colour temperature controls
-- **Advanced settings tab** – moved temperature units and simple light controls into a dedicated Advanced tab to declutter General settings
-
-### Build 233
-- **Entity category filter setting** – new dropdown in Settings → Home Assistant to choose which entity categories to hide: "Hide config and diagnostic" (default), "Hide config only", "Hide diagnostic only", or "Show all"; replaces the previous hardcoded filter that always hid all categorised entities
-
-### Build 232
-- **Temperature unit setting** – new dropdown in General settings to override the system locale for temperature display; choose between System default, Celsius, or Fahrenheit
-
-### Build 231
-- **Auto-close doorbell camera popup** – new setting to automatically close the camera popup after a doorbell ring, with configurable delay (30s, 1m, 2m, 5m) to help preserve battery on doorbell cameras; the timer cancels when the user interacts with the panel (click, move, or resize)
-
-### Build 230
-- **Fix HA connection stuck on "Connecting" forever** – `sendAndWait()` now has a 30-second timeout so API calls no longer hang indefinitely if the server is slow or a response is lost; additionally, `handleDisconnection()` now cancels all pending requests when the WebSocket drops mid-session, matching the cleanup that `disconnect()` already performed
-- **Detect local network permission denied** – a network monitor now detects when macOS blocks local network access and shows a specific error directing the user to System Settings, instead of silently failing to connect
-- **Auto-reconnect when network becomes available** – the app automatically reconnects to Home Assistant when the network path changes to satisfied (e.g. after wake from sleep or Wi-Fi reconnect), and suppresses error alerts for transient network failures
-
-### Build 229
-- **Fix http connections blocked on App Store builds** – replaced `NSAllowsLocalNetworking` with `NSAllowsArbitraryLoads` in App Transport Security settings, matching the official HA companion app; the previous setting only covered `.local` domains and bare IPs, blocking users who connect to their HA instance via custom DNS names or hostnames with dots
-
-### Build 228
-- **Fix WebRTC streaming for Nest cameras** – Nest cameras require an SDP offer with three m-lines in audio → video → application order; the app now fetches `camera/webrtc/get_client_config` to detect cameras that need a data channel (e.g. Nest), creates the data channel before generating the offer, and reorders the SDP m-lines to match the expected order
-
-### Build 227
-- **Fix cameras not showing without STREAM feature flag** – cameras from integrations like Frigate and Blue Iris that don't set the `supported_features` STREAM bit are now shown; the filter now only excludes cameras with state "unavailable"
-- **Camera debug endpoint** – new `/debug/cameras` webhook endpoint probes each camera's snapshot, HLS, and WebRTC support, with per-entity filtering via `/debug/cameras/{entity_id}`
-
-### Build 226
-- **Fix swing button shown on A/C units without "off" swing mode** – the swing toggle is now hidden for climate entities whose available swing modes don't include "off", since the button can only toggle between off and on
-
-### Build 225
-- **Localization** – added full localization support with translations for 12 languages: Spanish, French, German, Italian, Portuguese (Brazil), Russian, Polish, Japanese, Korean, Chinese Simplified, Chinese Traditional
-- **Fix crash on launch for some Home Assistant setups** – building the favourites menu with `Dictionary(uniqueKeysWithValues:)` crashed when duplicate service identifiers were present; replaced with duplicate-safe dictionary construction
+- **Security system arm/disarm via webhooks and URL schemes** – security systems can now be armed to a specific mode (stay, away, night) or disarmed through webhooks, URL schemes, and commands; previously only toggle was supported
+- **Fix WebRTC streaming for Nest cameras** – the data channel label from `get_client_config` was looked up inside the `configuration` sub-object instead of at the top level; without the data channel the SDP offer lacked the required `m=application` line and Nest rejected it
+- **Fix incorrect accessory name normalization** – room name stripping now requires a space after the room name, so "Garagenlicht" is no longer incorrectly shortened to "nlicht" in the "Garage" room
+- **Fix lock groups not toggling** – added lock state reading on init and lock target writing on toggle, so lock groups now correctly lock/unlock all members
+- **Snapshot polling fallback for cameras** – cameras that don't support WebRTC or HLS now fall back to polling `/api/camera_proxy` for JPEG snapshots at 1-second intervals
+- **Simple light controls** – new toggle in Settings → Advanced to show only the on/off switch for lights
+- **Advanced settings tab** – moved temperature units and simple light controls into a dedicated Advanced tab
+- **Entity category filter setting** – new dropdown in Settings → Home Assistant to choose which entity categories to hide
+- **Temperature unit setting** – new dropdown in General settings to override the system locale for temperature display
+- **Auto-close doorbell camera popup** – new setting to automatically close the camera popup after a doorbell ring, with configurable delay
+- **Fix HA connection stuck on "Connecting" forever** – `sendAndWait()` now has a 30-second timeout; `handleDisconnection()` now cancels all pending requests when the WebSocket drops
+- **Detect local network permission denied** – shows a specific error directing the user to System Settings instead of silently failing
+- **Auto-reconnect when network becomes available** – automatically reconnects to Home Assistant when the network path changes to satisfied
+- **Fix http connections blocked on App Store builds** – replaced `NSAllowsLocalNetworking` with `NSAllowsArbitraryLoads` in ATS settings
+- **Fix WebRTC streaming for Nest cameras** – the app now fetches `camera/webrtc/get_client_config` to detect cameras that need a data channel and reorders SDP m-lines
+- **Fix cameras not showing without STREAM feature flag** – the filter now only excludes cameras with state "unavailable"
+- **Camera debug endpoint** – new `/debug/cameras` webhook endpoint probes each camera's snapshot, HLS, and WebRTC support
+- **Fix swing button shown on A/C units without "off" swing mode** – hidden for climate entities whose available swing modes don't include "off"
+- **Localization** – translations for 12 languages
+- **Fix crash on launch for some Home Assistant setups** – replaced duplicate-unsafe dictionary construction
 
 ## 2.0.0
 - **Home Assistant support** – connect to a Home Assistant instance as an alternative to HomeKit, with support for climate, lights, fans, covers, locks, humidifiers, valves, garage doors, security systems, cameras (snapshots, WebRTC, and HLS streaming), and scenes
