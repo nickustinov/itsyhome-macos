@@ -224,12 +224,14 @@ extension CameraViewController {
 
             if let videoView = client.videoView {
                 videoView.translatesAutoresizingMaskIntoConstraints = false
-                self.streamContainerView.insertSubview(videoView, at: 0)
+                self.zoomScrollView.insertSubview(videoView, at: 0)
                 NSLayoutConstraint.activate([
-                    videoView.topAnchor.constraint(equalTo: self.streamContainerView.topAnchor),
-                    videoView.leadingAnchor.constraint(equalTo: self.streamContainerView.leadingAnchor),
-                    videoView.trailingAnchor.constraint(equalTo: self.streamContainerView.trailingAnchor),
-                    videoView.bottomAnchor.constraint(equalTo: self.streamContainerView.bottomAnchor)
+                    videoView.topAnchor.constraint(equalTo: self.zoomScrollView.contentLayoutGuide.topAnchor),
+                    videoView.leadingAnchor.constraint(equalTo: self.zoomScrollView.contentLayoutGuide.leadingAnchor),
+                    videoView.trailingAnchor.constraint(equalTo: self.zoomScrollView.contentLayoutGuide.trailingAnchor),
+                    videoView.bottomAnchor.constraint(equalTo: self.zoomScrollView.contentLayoutGuide.bottomAnchor),
+                    videoView.widthAnchor.constraint(equalTo: self.zoomScrollView.frameLayoutGuide.widthAnchor),
+                    videoView.heightAnchor.constraint(equalTo: self.zoomScrollView.frameLayoutGuide.heightAnchor)
                 ])
             }
 
@@ -289,12 +291,14 @@ extension CameraViewController {
             if let videoView = player.view {
                 logger.info("[HLS \(elapsed())] Adding video view to container")
                 videoView.translatesAutoresizingMaskIntoConstraints = false
-                self.streamContainerView.insertSubview(videoView, at: 0)
+                self.zoomScrollView.insertSubview(videoView, at: 0)
                 NSLayoutConstraint.activate([
-                    videoView.topAnchor.constraint(equalTo: self.streamContainerView.topAnchor),
-                    videoView.leadingAnchor.constraint(equalTo: self.streamContainerView.leadingAnchor),
-                    videoView.trailingAnchor.constraint(equalTo: self.streamContainerView.trailingAnchor),
-                    videoView.bottomAnchor.constraint(equalTo: self.streamContainerView.bottomAnchor)
+                    videoView.topAnchor.constraint(equalTo: self.zoomScrollView.contentLayoutGuide.topAnchor),
+                    videoView.leadingAnchor.constraint(equalTo: self.zoomScrollView.contentLayoutGuide.leadingAnchor),
+                    videoView.trailingAnchor.constraint(equalTo: self.zoomScrollView.contentLayoutGuide.trailingAnchor),
+                    videoView.bottomAnchor.constraint(equalTo: self.zoomScrollView.contentLayoutGuide.bottomAnchor),
+                    videoView.widthAnchor.constraint(equalTo: self.zoomScrollView.frameLayoutGuide.widthAnchor),
+                    videoView.heightAnchor.constraint(equalTo: self.zoomScrollView.frameLayoutGuide.heightAnchor)
                 ])
                 // Bring spinner to front so it's visible over video
                 self.streamContainerView.bringSubviewToFront(self.streamSpinner)
@@ -351,13 +355,15 @@ extension CameraViewController {
         imageView.contentMode = .scaleAspectFit
         imageView.backgroundColor = .black
         imageView.translatesAutoresizingMaskIntoConstraints = false
-        streamContainerView.insertSubview(imageView, at: 0)
+        zoomScrollView.insertSubview(imageView, at: 0)
 
         NSLayoutConstraint.activate([
-            imageView.topAnchor.constraint(equalTo: streamContainerView.topAnchor),
-            imageView.leadingAnchor.constraint(equalTo: streamContainerView.leadingAnchor),
-            imageView.trailingAnchor.constraint(equalTo: streamContainerView.trailingAnchor),
-            imageView.bottomAnchor.constraint(equalTo: streamContainerView.bottomAnchor)
+            imageView.topAnchor.constraint(equalTo: zoomScrollView.contentLayoutGuide.topAnchor),
+            imageView.leadingAnchor.constraint(equalTo: zoomScrollView.contentLayoutGuide.leadingAnchor),
+            imageView.trailingAnchor.constraint(equalTo: zoomScrollView.contentLayoutGuide.trailingAnchor),
+            imageView.bottomAnchor.constraint(equalTo: zoomScrollView.contentLayoutGuide.bottomAnchor),
+            imageView.widthAnchor.constraint(equalTo: zoomScrollView.frameLayoutGuide.widthAnchor),
+            imageView.heightAnchor.constraint(equalTo: zoomScrollView.frameLayoutGuide.heightAnchor)
         ])
 
         snapshotStreamImageView = imageView

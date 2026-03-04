@@ -2,6 +2,9 @@
 
 ## 2.3.0
 
+### Build 249
+- **Add double-click zoom for camera streams** – double-click on a camera stream to zoom in at 2× toward the click point, double-click again to zoom out; trackpad pinch-to-zoom also supported (1×–3×), pan while zoomed; overlays and controls stay fixed above the video; zoom resets when switching cameras or closing the stream (#76)
+
 ### Build 248
 - **Add SSID-based auto-switching (Pro)** – automatically switch HomeKit home or Home Assistant server URL (with optional per-network access token) based on the current WiFi network; opt-in via Settings → Networks, requires Location Services permission for SSID reading
 

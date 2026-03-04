@@ -21,6 +21,7 @@ class CameraViewController: UIViewController {
     var collectionView: UICollectionView!
     var emptyLabel: UILabel!
     var streamContainerView: UIView!
+    var zoomScrollView: UIScrollView!
     var streamCameraView: HMCameraView!
     var streamSpinner: UIActivityIndicatorView!
     var backButton: UIButton!
@@ -402,6 +403,29 @@ class CameraViewController: UIViewController {
             streamContainerView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
 
+        // Zoom scroll view sits at the bottom of streamContainerView's subview stack
+        zoomScrollView = UIScrollView()
+        zoomScrollView.translatesAutoresizingMaskIntoConstraints = false
+        zoomScrollView.minimumZoomScale = 1.0
+        zoomScrollView.maximumZoomScale = 3.0
+        zoomScrollView.bouncesZoom = true
+        zoomScrollView.showsHorizontalScrollIndicator = false
+        zoomScrollView.showsVerticalScrollIndicator = false
+        zoomScrollView.delegate = self
+        streamContainerView.insertSubview(zoomScrollView, at: 0)
+
+        NSLayoutConstraint.activate([
+            zoomScrollView.topAnchor.constraint(equalTo: streamContainerView.topAnchor),
+            zoomScrollView.leadingAnchor.constraint(equalTo: streamContainerView.leadingAnchor),
+            zoomScrollView.trailingAnchor.constraint(equalTo: streamContainerView.trailingAnchor),
+            zoomScrollView.bottomAnchor.constraint(equalTo: streamContainerView.bottomAnchor)
+        ])
+
+        // Double-tap to zoom in/out
+        let doubleTap = UITapGestureRecognizer(target: self, action: #selector(handleZoomDoubleTap(_:)))
+        doubleTap.numberOfTapsRequired = 2
+        zoomScrollView.addGestureRecognizer(doubleTap)
+
         streamSpinner = UIActivityIndicatorView(style: .medium)
         streamSpinner.color = .white
         streamSpinner.translatesAutoresizingMaskIntoConstraints = false
@@ -413,16 +437,19 @@ class CameraViewController: UIViewController {
             streamSpinner.centerYAnchor.constraint(equalTo: streamContainerView.centerYAnchor)
         ])
 
+        // HMCameraView for HomeKit streams – lives inside zoomScrollView
         streamCameraView = HMCameraView()
         streamCameraView.translatesAutoresizingMaskIntoConstraints = false
         streamCameraView.isUserInteractionEnabled = false
-        streamContainerView.addSubview(streamCameraView)
+        zoomScrollView.addSubview(streamCameraView)
 
         NSLayoutConstraint.activate([
-            streamCameraView.topAnchor.constraint(equalTo: streamContainerView.topAnchor),
-            streamCameraView.leadingAnchor.constraint(equalTo: streamContainerView.leadingAnchor),
-            streamCameraView.trailingAnchor.constraint(equalTo: streamContainerView.trailingAnchor),
-            streamCameraView.bottomAnchor.constraint(equalTo: streamContainerView.bottomAnchor)
+            streamCameraView.topAnchor.constraint(equalTo: zoomScrollView.contentLayoutGuide.topAnchor),
+            streamCameraView.leadingAnchor.constraint(equalTo: zoomScrollView.contentLayoutGuide.leadingAnchor),
+            streamCameraView.trailingAnchor.constraint(equalTo: zoomScrollView.contentLayoutGuide.trailingAnchor),
+            streamCameraView.bottomAnchor.constraint(equalTo: zoomScrollView.contentLayoutGuide.bottomAnchor),
+            streamCameraView.widthAnchor.constraint(equalTo: zoomScrollView.frameLayoutGuide.widthAnchor),
+            streamCameraView.heightAnchor.constraint(equalTo: zoomScrollView.frameLayoutGuide.heightAnchor)
         ])
 
         backButton = UIButton(type: .custom)
@@ -543,6 +570,51 @@ class CameraViewController: UIViewController {
         let iconName = isPinned ? "pin.fill" : "pin"
         pinButton.setImage(UIImage(systemName: iconName)?.withTintColor(.white, renderingMode: .alwaysOriginal), for: .normal)
         macOSController?.setCameraPanelPinned(isPinned)
+    }
+}
+
+// MARK: - Zoom
+
+extension CameraViewController {
+
+    @objc func handleZoomDoubleTap(_ gesture: UITapGestureRecognizer) {
+        if zoomScrollView.zoomScale > zoomScrollView.minimumZoomScale {
+            zoomScrollView.setZoomScale(1.0, animated: true)
+        } else {
+            let location = gesture.location(in: zoomScrollView)
+            let zoomScale: CGFloat = 2.0
+            let size = CGSize(
+                width: zoomScrollView.bounds.width / zoomScale,
+                height: zoomScrollView.bounds.height / zoomScale
+            )
+            let origin = CGPoint(
+                x: location.x - size.width / 2,
+                y: location.y - size.height / 2
+            )
+            zoomScrollView.zoom(to: CGRect(origin: origin, size: size), animated: true)
+        }
+    }
+}
+
+// MARK: - UIScrollViewDelegate (zoom)
+
+extension CameraViewController: UIScrollViewDelegate {
+
+    func viewForZooming(in scrollView: UIScrollView) -> UIView? {
+        // Return whichever video view is currently showing
+        if let webrtcView = webrtcClient?.videoView, webrtcView.superview == zoomScrollView {
+            return webrtcView
+        }
+        if let hlsView = hlsPlayer?.view, hlsView.superview == zoomScrollView {
+            return hlsView
+        }
+        if let snapshotView = snapshotStreamImageView, snapshotView.superview == zoomScrollView {
+            return snapshotView
+        }
+        if streamCameraView.superview == zoomScrollView {
+            return streamCameraView
+        }
+        return nil
     }
 }
 

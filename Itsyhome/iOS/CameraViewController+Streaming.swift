@@ -97,6 +97,9 @@ extension CameraViewController {
 
     /// Clean up both HK and HA streams
     private func cleanupActiveStream() {
+        // Reset zoom
+        zoomScrollView.setZoomScale(1.0, animated: false)
+
         // HK cleanup
         activeStreamControl?.stopStream()
         activeStreamControl = nil
