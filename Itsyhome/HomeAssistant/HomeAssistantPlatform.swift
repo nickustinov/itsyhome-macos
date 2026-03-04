@@ -63,8 +63,8 @@ final class HomeAssistantPlatform: SmartHomePlatform {
     // MARK: - Connection
 
     func connect() async throws {
-        guard let serverURL = HAAuthManager.shared.serverURL,
-              let accessToken = HAAuthManager.shared.accessToken else {
+        guard let serverURL = HAAuthManager.shared.effectiveServerURL,
+              let accessToken = HAAuthManager.shared.effectiveAccessToken else {
             throw HAAuthError.notConfigured
         }
 

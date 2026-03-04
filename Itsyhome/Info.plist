@@ -41,6 +41,8 @@
 	<string>$(MACOSX_DEPLOYMENT_TARGET)</string>
 	<key>NSHomeKitUsageDescription</key>
 	<string>Itsyhome needs access to HomeKit to control your smart home devices from the menu bar.</string>
+	<key>NSLocationUsageDescription</key>
+	<string>Itsyhome uses your location to detect your WiFi network and automatically switch between homes or servers.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Itsyhome needs microphone access to talk through your camera.</string>
 	<key>UIApplicationSceneManifest</key>

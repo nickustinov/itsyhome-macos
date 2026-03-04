@@ -62,6 +62,7 @@ targets:
         com.apple.developer.ubiquity-kvstore-identifier: "$(TeamIdentifierPrefix)$(CFBundleIdentifier)"
         com.apple.security.network.client: true
         com.apple.security.network.server: true
+        com.apple.security.personal-information.location: true
     dependencies:
       - target: macOSBridge
         platformFilter: maccatalyst
@@ -99,6 +100,11 @@ targets:
       - path: macOSBridge/Resources/SecurityIcons
         buildPhase: resources
         type: folder
+    dependencies:
+      - sdk: CoreWLAN.framework
+        embed: false
+      - sdk: CoreLocation.framework
+        embed: false
 
   # Unit tests for macOSBridge
   macOSBridgeTests:
@@ -132,6 +138,7 @@ targets:
       - path: macOSBridge/Settings/PreferencesManager+Groups.swift
       - path: macOSBridge/Settings/PreferencesManager+Shortcuts.swift
       - path: macOSBridge/Settings/PreferencesManager+Icons.swift
+      - path: macOSBridge/Settings/PreferencesManager+Networks.swift
       - path: Itsyhome/Shared
         buildPhase: sources
       - path: Itsyhome/HomeAssistant

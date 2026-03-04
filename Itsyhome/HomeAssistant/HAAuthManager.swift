@@ -56,6 +56,20 @@ final class HAAuthManager {
         }
     }
 
+    /// Transient overrides set by network auto-switch. Not persisted.
+    var effectiveServerURLOverride: URL?
+    var effectiveAccessTokenOverride: String?
+
+    /// The URL to connect to: override if set, otherwise saved serverURL.
+    var effectiveServerURL: URL? {
+        effectiveServerURLOverride ?? serverURL
+    }
+
+    /// The token to use: override if set, otherwise saved accessToken.
+    var effectiveAccessToken: String? {
+        effectiveAccessTokenOverride ?? accessToken
+    }
+
     /// Whether credentials are configured
     var isConfigured: Bool {
         serverURL != nil && accessToken != nil

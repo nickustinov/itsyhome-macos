@@ -2,6 +2,9 @@
 
 ## 2.3.0
 
+### Build 248
+- **Add SSID-based auto-switching (Pro)** – automatically switch HomeKit home or Home Assistant server URL (with optional per-network access token) based on the current WiFi network; opt-in via Settings → Networks, requires Location Services permission for SSID reading
+
 ### Build 247
 - **Fix thermostat not remembering last active mode** – devices like Tado Smart AC report `targetHeatingCoolingState: 0` when off, so after a menu rebuild the last active mode defaulted to Heat; now persists the last non-off mode to UserDefaults per device so the correct mode is restored on toggle
 

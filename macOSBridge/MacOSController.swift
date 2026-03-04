@@ -23,7 +23,7 @@ final class StayOpenMenu: NSMenu {
 }
 
 @objc(MacOSController)
-public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerDelegate, HAConnectDelegate, HASuccessDelegate, SmartHomePlatformDelegate {
+public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerDelegate, HAConnectDelegate, HASuccessDelegate, SmartHomePlatformDelegate, NetworkLocationManagerDelegate {
 
     // MARK: - Properties
 
@@ -76,6 +76,7 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
         StartupLogger.log("MacOSController init complete")
 
         startNetworkMonitor()
+        setupNetworkAutoSwitch()
 
         // Show platform picker if needed
         if PlatformManager.shared.needsOnboarding {
@@ -255,6 +256,14 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
     }
 
     @objc private func handleSystemWake() {
+        // Re-evaluate SSID after wake (WiFi may reconnect)
+        if ProStatusCache.shared.isPro && PreferencesManager.shared.networkAutoSwitchEnabled {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
+                guard self != nil else { return }
+                NetworkLocationManager.shared.reevaluateSSID()
+            }
+        }
+
         guard PlatformManager.shared.selectedPlatform == .homeAssistant else { return }
         guard HAAuthManager.shared.isConfigured else { return }
         guard homeAssistantPlatform?.isConnected != true else { return }
@@ -282,6 +291,13 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
                 guard self.homeAssistantPlatform?.isConnected != true else { return }
                 guard !self.isConnectingToHA else { return }
 
+                // Re-evaluate SSID when network changes
+                if ProStatusCache.shared.isPro && PreferencesManager.shared.networkAutoSwitchEnabled {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                        NetworkLocationManager.shared.reevaluateSSID()
+                    }
+                }
+
                 StartupLogger.log("Network became available – connecting to Home Assistant")
                 self.disconnectFromHomeAssistant()
                 self.connectToHomeAssistant()
@@ -289,6 +305,74 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
         }
         monitor.start(queue: DispatchQueue(label: "com.nickustinov.itsyhome.networkMonitor"))
         networkMonitor = monitor
+    }
+
+    // MARK: - Network auto-switch
+
+    private func setupNetworkAutoSwitch() {
+        guard ProStatusCache.shared.isPro else { return }
+        guard PreferencesManager.shared.networkAutoSwitchEnabled else { return }
+        NetworkLocationManager.shared.delegate = self
+        NetworkLocationManager.shared.startMonitoring()
+        // Apply current SSID rule immediately
+        if let ssid = NetworkLocationManager.shared.currentSSID {
+            applySSIDRule(for: ssid)
+        }
+    }
+
+    func networkLocationManager(_ manager: NetworkLocationManager, didChangeSSID ssid: String?) {
+        guard let ssid else {
+            // No network – clear HA overrides
+            if PlatformManager.shared.selectedPlatform == .homeAssistant {
+                HAAuthManager.shared.effectiveServerURLOverride = nil
+                HAAuthManager.shared.effectiveAccessTokenOverride = nil
+            }
+            return
+        }
+        applySSIDRule(for: ssid)
+    }
+
+    private func applySSIDRule(for ssid: String) {
+        let platform = PlatformManager.shared.selectedPlatform
+
+        if platform == .homeKit {
+            if let rule = PreferencesManager.shared.homeKitRule(for: ssid) {
+                guard let currentHome = iOSBridge?.selectedHomeIdentifier else { return }
+                let ruleHomeUUID = UUID(uuidString: rule.homeId)
+                if currentHome != ruleHomeUUID {
+                    StartupLogger.log("SSID '\(ssid)' matched – switching to home '\(rule.homeName)'")
+                    if let uuid = ruleHomeUUID {
+                        iOSBridge?.selectedHomeIdentifier = uuid
+                    }
+                }
+            }
+        } else if platform == .homeAssistant {
+            if let rule = PreferencesManager.shared.haRule(for: ssid) {
+                let newURL = URL(string: rule.serverURL)
+                let currentOverride = HAAuthManager.shared.effectiveServerURLOverride
+                let currentTokenOverride = HAAuthManager.shared.effectiveAccessTokenOverride
+                if currentOverride != newURL || currentTokenOverride != rule.accessToken {
+                    StartupLogger.log("SSID '\(ssid)' matched – switching HA server to '\(rule.serverURL)'")
+                    HAAuthManager.shared.effectiveServerURLOverride = newURL
+                    HAAuthManager.shared.effectiveAccessTokenOverride = rule.accessToken
+                    reconnectHomeAssistant()
+                }
+            } else {
+                // No rule for this SSID – clear overrides (use defaults)
+                if HAAuthManager.shared.effectiveServerURLOverride != nil || HAAuthManager.shared.effectiveAccessTokenOverride != nil {
+                    StartupLogger.log("SSID '\(ssid)' has no rule – reverting to default HA server")
+                    HAAuthManager.shared.effectiveServerURLOverride = nil
+                    HAAuthManager.shared.effectiveAccessTokenOverride = nil
+                    reconnectHomeAssistant()
+                }
+            }
+        }
+    }
+
+    private func reconnectHomeAssistant() {
+        guard HAAuthManager.shared.isConfigured else { return }
+        disconnectFromHomeAssistant()
+        connectToHomeAssistant()
     }
 
     deinit {
@@ -442,6 +526,16 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
     }
 
     @objc private func preferencesDidChange() {
+        // Update network auto-switch monitoring (Pro only)
+        if ProStatusCache.shared.isPro && PreferencesManager.shared.networkAutoSwitchEnabled {
+            NetworkLocationManager.shared.delegate = self
+            if NetworkLocationManager.shared.hasLocationPermission {
+                NetworkLocationManager.shared.startMonitoring()
+            }
+        } else {
+            NetworkLocationManager.shared.stopMonitoring()
+        }
+
         // Reload HA data if entity category filter changed
         let currentFilter = PreferencesManager.shared.entityCategoryFilter
         if currentFilter != lastEntityCategoryFilter {

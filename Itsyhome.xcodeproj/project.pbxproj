@@ -48,6 +48,7 @@
 		0322F99BEB27B5E433FE07E6 /* ph.chart-line-up.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 371263C42F6E7CE9990434B6 /* ph.chart-line-up.fill.svg */; };
 		0328399AB414B591DDEB81A8 /* ph.volleyball.svg in Resources */ = {isa = PBXBuildFile; fileRef = 0D8FDF72876CE192E64DC68F /* ph.volleyball.svg */; };
 		0347394984A818986F6159E4 /* ph.note.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = B660F2E09C00A76AAAD02855 /* ph.note.fill.svg */; };
+		035572FA920FC6508BA8698C /* NetworkLocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61A94182130B246D657251F2 /* NetworkLocationManager.swift */; };
 		035E9589B6CC7DA788E958BC /* ph.align-center-vertical-simple.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 22DFF2912D8C78406B56A0AC /* ph.align-center-vertical-simple.fill.svg */; };
 		03B34E123501ABE2EAC1D152 /* ph.projector-screen-chart.svg in Resources */ = {isa = PBXBuildFile; fileRef = 293C04257AB8882257B294FC /* ph.projector-screen-chart.svg */; };
 		03FAD0CD521857A5F04D8029 /* ph.arrow-bend-right-up.svg in Resources */ = {isa = PBXBuildFile; fileRef = F91A2DD2B338AC73EA44DAA4 /* ph.arrow-bend-right-up.svg */; };
@@ -1142,6 +1143,7 @@
 		5734F7DFEFBBB647EFF58071 /* ph.scales.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 31C33FA3CC629E041AF88B62 /* ph.scales.fill.svg */; };
 		574F00C80AF6EC9DD6DF18DD /* ph.browsers.svg in Resources */ = {isa = PBXBuildFile; fileRef = 81D726DF61B8B19ABF120463 /* ph.browsers.svg */; };
 		5770817D56F4A90F23A93D05 /* ph.google-chrome-logo.svg in Resources */ = {isa = PBXBuildFile; fileRef = 468848692D13D1944A559383 /* ph.google-chrome-logo.svg */; };
+		577D81D9B7F847D199BC05CF /* CoreLocation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6E8F5AEEB7520B0281A61D35 /* CoreLocation.framework */; };
 		579C8E05895073A35A2DA34A /* ph.house.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = BF28F517B85FD876996B9C81 /* ph.house.fill.svg */; };
 		57D8D21AA746925E060F7F0C /* ph.chat-teardrop-slash.svg in Resources */ = {isa = PBXBuildFile; fileRef = 3AEA3766B07A9BAACE9C3C95 /* ph.chat-teardrop-slash.svg */; };
 		57DDEA0A66FA582B7D084B78 /* ph.tipi.svg in Resources */ = {isa = PBXBuildFile; fileRef = 2772AC15D4B58D448A684FA2 /* ph.tipi.svg */; };
@@ -1612,6 +1614,7 @@
 		7B44713CA033832E13E5BD78 /* ph.pill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 71A73440CAC44B9FAF43DEB4 /* ph.pill.svg */; };
 		7B47B429F036261F505788F8 /* ph.hand-deposit.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 29F57716ACF0F6400C3BCDA6 /* ph.hand-deposit.fill.svg */; };
 		7B4C6A94EB1027876C78AA09 /* ph.power.svg in Resources */ = {isa = PBXBuildFile; fileRef = 6CE5BFE2C9EFCD13A3225B31 /* ph.power.svg */; };
+		7B72DBE8A2AC4130A9A2C2D5 /* NetworkAutoSwitchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B014E69ABBED5CF37466EEA4 /* NetworkAutoSwitchTests.swift */; };
 		7B773C43C5117A04465A9A4C /* ph.door.svg in Resources */ = {isa = PBXBuildFile; fileRef = A690DAB6F4DA26F9D65605B1 /* ph.door.svg */; };
 		7B8DD9AECC4738022DC28B46 /* ph.snapchat-logo.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = E53477F0FD27D953F16ED5EB /* ph.snapchat-logo.fill.svg */; };
 		7BA19EA1885D6C9578FB27B0 /* ph.stack-overflow-logo.svg in Resources */ = {isa = PBXBuildFile; fileRef = 2D17ABE17363737E66C5D058 /* ph.stack-overflow-logo.svg */; };
@@ -1672,6 +1675,7 @@
 		7F9C4F757B898A55103A96C6 /* ph.chat-teardrop-text.svg in Resources */ = {isa = PBXBuildFile; fileRef = F63A2BD4653EE833F910FADA /* ph.chat-teardrop-text.svg */; };
 		7FA20C4DF07880ABE3ECC592 /* ph.steps.svg in Resources */ = {isa = PBXBuildFile; fileRef = CB2210EDC8A927820FEE880C /* ph.steps.svg */; };
 		7FAAD3C5A3F2142054241E98 /* ph.number-circle-eight.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 33A509BE1883107D889294AB /* ph.number-circle-eight.fill.svg */; };
+		7FAC7748DBB4CDD30527B4F4 /* PreferencesManager+Networks.swift in Sources */ = {isa = PBXBuildFile; fileRef = E805BB50E232D2FBBBDCE6C2 /* PreferencesManager+Networks.swift */; };
 		7FB7A7DCE3538FC8F2AD790F /* ph.number-six.svg in Resources */ = {isa = PBXBuildFile; fileRef = 15047E259F73273C85869385 /* ph.number-six.svg */; };
 		7FCE46E855A62423DC377FF6 /* ph.file-video.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 81E0A8E443FC39DD97C7D385 /* ph.file-video.fill.svg */; };
 		7FDFCB407F49F547D81CA5BB /* ph.patreon-logo.svg in Resources */ = {isa = PBXBuildFile; fileRef = C1539D83294D75F085DEB93E /* ph.patreon-logo.svg */; };
@@ -1693,6 +1697,7 @@
 		80BA4CBB1ADDA67E5A9ABB5A /* FanMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE776817A51695FBA936B1 /* FanMenuItem.swift */; };
 		80C306C9CFE691EBCE81F0DB /* ph.arrow-arc-right.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = A45673BEEA16FA27F9774CCD /* ph.arrow-arc-right.fill.svg */; };
 		80D15ACBAAFDE409B86B6EDC /* ph.house-line.svg in Resources */ = {isa = PBXBuildFile; fileRef = D1F2ABC93F5C63A7FE96A015 /* ph.house-line.svg */; };
+		80E5B83D66173C19DB6A4EB4 /* NetworksSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = A793D4567D7D01049F5AAECA /* NetworksSection.swift */; };
 		80F405EF21BC197AEC058172 /* ph.youtube-logo.svg in Resources */ = {isa = PBXBuildFile; fileRef = 126C60A8CDE7F55914762862 /* ph.youtube-logo.svg */; };
 		8129956FBE228E2DFFB7E450 /* ph.floppy-disk.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 571D3D24E7BE5631A889AF7E /* ph.floppy-disk.fill.svg */; };
 		8136EA591529C59485C82F83 /* ph.tree-view.svg in Resources */ = {isa = PBXBuildFile; fileRef = 901123CB8FF4AA4D6CDC01D2 /* ph.tree-view.svg */; };
@@ -1821,6 +1826,7 @@
 		8A6D071DD9825DD27DFCF5EB /* ph.arrow-circle-left.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = C4AE6104FA17B0B646716E04 /* ph.arrow-circle-left.fill.svg */; };
 		8A981E2DE87BBCBAE17E48A1 /* ph.selection-inverse.svg in Resources */ = {isa = PBXBuildFile; fileRef = A8119A77924BF22DCA68D5CD /* ph.selection-inverse.svg */; };
 		8AA4343A75593E50AD60AB57 /* ph.joystick.svg in Resources */ = {isa = PBXBuildFile; fileRef = 8B810A7791C4DED9994604EC /* ph.joystick.svg */; };
+		8AADEBE97BE3BAED709D6500 /* NetworkLocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61A94182130B246D657251F2 /* NetworkLocationManager.swift */; };
 		8AB3EA29E6CBB5D082A73D05 /* ph.medal.svg in Resources */ = {isa = PBXBuildFile; fileRef = 44C9CE75A21A168DB68B534D /* ph.medal.svg */; };
 		8ACE76AE9603FD766E561562 /* ph.chat-slash.svg in Resources */ = {isa = PBXBuildFile; fileRef = 70A2365FE65BC5322F00F3DB /* ph.chat-slash.svg */; };
 		8ADC412402B80C311AC5017D /* ph.student.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = C06A0067C8F80C05088CB8BC /* ph.student.fill.svg */; };
@@ -2135,6 +2141,7 @@
 		A1D1D1827DF55045CA77FFC5 /* ph.keyboard.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = CF44861FA71D40A4CB9A2177 /* ph.keyboard.fill.svg */; };
 		A1D7940D97CF2EA03E085EB5 /* ph.swap.svg in Resources */ = {isa = PBXBuildFile; fileRef = B661D82DA12E7E02D86B078D /* ph.swap.svg */; };
 		A1DD4E998B88E8B0FFE27777 /* ph.bookmark.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 1298FB99E05410A28464622E /* ph.bookmark.fill.svg */; };
+		A1E1641C521B8DCF16DC2155 /* PreferencesManager+Networks.swift in Sources */ = {isa = PBXBuildFile; fileRef = E805BB50E232D2FBBBDCE6C2 /* PreferencesManager+Networks.swift */; };
 		A1F8F8673550579887C0FB1E /* ph.contactless-payment.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 7AF3987D39A9B1150D28D578 /* ph.contactless-payment.fill.svg */; };
 		A1FB75BA11479CE884903410 /* ph.database.svg in Resources */ = {isa = PBXBuildFile; fileRef = ABF8D07AC50D9197E6F9C390 /* ph.database.svg */; };
 		A20E38D0ED552CA1F0C4EA67 /* ph.sketch-logo.svg in Resources */ = {isa = PBXBuildFile; fileRef = A3EFC910EFC831480FD96EC7 /* ph.sketch-logo.svg */; };
@@ -2771,6 +2778,7 @@
 		D2976BA75AF2F565B30F6EAF /* ph.shield-slash.svg in Resources */ = {isa = PBXBuildFile; fileRef = 9C21B34A85C6EA278558ED26 /* ph.shield-slash.svg */; };
 		D29A8976370B4F9244B561F2 /* ph.sign-in.svg in Resources */ = {isa = PBXBuildFile; fileRef = 63118DDE3D08BD90B1623922 /* ph.sign-in.svg */; };
 		D29B64CDE25463505906D675 /* ph.alien.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 06610D0CB5F64EF9BFAC2900 /* ph.alien.fill.svg */; };
+		D2AAE6C09917F8A2C000CDA7 /* CoreWLAN.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D20429F23D14E450863DD629 /* CoreWLAN.framework */; };
 		D2B195708119ACF44FE232C2 /* ph.arrow-line-left.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = A66EF8B918034519C7BA7C94 /* ph.arrow-line-left.fill.svg */; };
 		D2C3E5A385CD052BD0586A9B /* ph.bluetooth.svg in Resources */ = {isa = PBXBuildFile; fileRef = A9E758E2BAD366D8A70DA669 /* ph.bluetooth.svg */; };
 		D2E3812F9EEF291308CF7A7D /* ph.graph.svg in Resources */ = {isa = PBXBuildFile; fileRef = E1C792E3725E7D76ADDD0909 /* ph.graph.svg */; };
@@ -4570,6 +4578,7 @@
 		6167451DE9483784177BE96A /* ph.snowflake.fill.svg */ = {isa = PBXFileReference; path = ph.snowflake.fill.svg; sourceTree = "<group>"; };
 		618520A0281D8A9E049D5604 /* ph.chat-text.svg */ = {isa = PBXFileReference; path = "ph.chat-text.svg"; sourceTree = "<group>"; };
 		61876203F42032997EE803C4 /* ph.file-arrow-down.svg */ = {isa = PBXFileReference; path = "ph.file-arrow-down.svg"; sourceTree = "<group>"; };
+		61A94182130B246D657251F2 /* NetworkLocationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkLocationManager.swift; sourceTree = "<group>"; };
 		61B263037F1FF39B09D40B93 /* ph.music-notes-simple.svg */ = {isa = PBXFileReference; path = "ph.music-notes-simple.svg"; sourceTree = "<group>"; };
 		61BDA3A96B6640AA841E166A /* ph.sun-horizon.svg */ = {isa = PBXFileReference; path = "ph.sun-horizon.svg"; sourceTree = "<group>"; };
 		61C934F168463E73E1557045 /* ph.hourglass.fill.svg */ = {isa = PBXFileReference; path = ph.hourglass.fill.svg; sourceTree = "<group>"; };
@@ -4752,6 +4761,7 @@
 		6E55FB5FBC94B948CA1726D9 /* ph.bell-simple-z.svg */ = {isa = PBXFileReference; path = "ph.bell-simple-z.svg"; sourceTree = "<group>"; };
 		6E63CC5B361CF917FB5F5402 /* ph.number-square-eight.svg */ = {isa = PBXFileReference; path = "ph.number-square-eight.svg"; sourceTree = "<group>"; };
 		6E7ABC85ABC1BB28255D7E7F /* ph.barricade.svg */ = {isa = PBXFileReference; path = ph.barricade.svg; sourceTree = "<group>"; };
+		6E8F5AEEB7520B0281A61D35 /* CoreLocation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreLocation.framework; path = System/Library/Frameworks/CoreLocation.framework; sourceTree = SDKROOT; };
 		6E91BDBE3488DBA143F20058 /* ph.subtract.fill.svg */ = {isa = PBXFileReference; path = ph.subtract.fill.svg; sourceTree = "<group>"; };
 		6E9D63FAAEF5B2557AEE1D3D /* ph.person-simple-hike.fill.svg */ = {isa = PBXFileReference; path = "ph.person-simple-hike.fill.svg"; sourceTree = "<group>"; };
 		6EA4B81867F68D894440ED5D /* ph.train-simple.svg */ = {isa = PBXFileReference; path = "ph.train-simple.svg"; sourceTree = "<group>"; };
@@ -5474,6 +5484,7 @@
 		A74A978E2379F67E34C87ECC /* ph.dice-six.svg */ = {isa = PBXFileReference; path = "ph.dice-six.svg"; sourceTree = "<group>"; };
 		A758448B4888B6DADD90BB4C /* ph.matrix-logo.fill.svg */ = {isa = PBXFileReference; path = "ph.matrix-logo.fill.svg"; sourceTree = "<group>"; };
 		A78185BBC5FB3C880855D453 /* ph.spray-bottle.svg */ = {isa = PBXFileReference; path = "ph.spray-bottle.svg"; sourceTree = "<group>"; };
+		A793D4567D7D01049F5AAECA /* NetworksSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworksSection.swift; sourceTree = "<group>"; };
 		A7B3F6BC02B0649FD62EAE24 /* ph.person-simple-tai-chi.svg */ = {isa = PBXFileReference; path = "ph.person-simple-tai-chi.svg"; sourceTree = "<group>"; };
 		A7C94DB3A0CCA944E15E0E73 /* ph.text-underline.fill.svg */ = {isa = PBXFileReference; path = "ph.text-underline.fill.svg"; sourceTree = "<group>"; };
 		A7D22D91B8EABF85DAA82447 /* ph.hand-arrow-up.fill.svg */ = {isa = PBXFileReference; path = "ph.hand-arrow-up.fill.svg"; sourceTree = "<group>"; };
@@ -5593,6 +5604,7 @@
 		AFC908B01E77324B641AC41D /* ph.bluetooth-x.svg */ = {isa = PBXFileReference; path = "ph.bluetooth-x.svg"; sourceTree = "<group>"; };
 		AFCFE6656CE9A73CEA383F3D /* ph.briefcase-metal.fill.svg */ = {isa = PBXFileReference; path = "ph.briefcase-metal.fill.svg"; sourceTree = "<group>"; };
 		AFFF50FE92C7137DE82A4A69 /* macOSBridgeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = macOSBridgeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		B014E69ABBED5CF37466EEA4 /* NetworkAutoSwitchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkAutoSwitchTests.swift; sourceTree = "<group>"; };
 		B02E2F9A4DDEFA915B388027 /* ph.visor.svg */ = {isa = PBXFileReference; path = ph.visor.svg; sourceTree = "<group>"; };
 		B040302549927220247AC631 /* ph.perspective.svg */ = {isa = PBXFileReference; path = ph.perspective.svg; sourceTree = "<group>"; };
 		B04C476C901628C8248327B8 /* ph.gps-slash.fill.svg */ = {isa = PBXFileReference; path = "ph.gps-slash.fill.svg"; sourceTree = "<group>"; };
@@ -6028,6 +6040,7 @@
 		D1DF6F1C670539ACA423F3D0 /* ph.chart-pie-slice.svg */ = {isa = PBXFileReference; path = "ph.chart-pie-slice.svg"; sourceTree = "<group>"; };
 		D1F2ABC93F5C63A7FE96A015 /* ph.house-line.svg */ = {isa = PBXFileReference; path = "ph.house-line.svg"; sourceTree = "<group>"; };
 		D1FF3C627C82E2A23E29C274 /* ph.car-battery.fill.svg */ = {isa = PBXFileReference; path = "ph.car-battery.fill.svg"; sourceTree = "<group>"; };
+		D20429F23D14E450863DD629 /* CoreWLAN.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreWLAN.framework; path = System/Library/Frameworks/CoreWLAN.framework; sourceTree = SDKROOT; };
 		D20E4D5F1861F6EE403233E8 /* ph.path.svg */ = {isa = PBXFileReference; path = ph.path.svg; sourceTree = "<group>"; };
 		D229D081D66A1F64F0BF4E15 /* ph.text-outdent.svg */ = {isa = PBXFileReference; path = "ph.text-outdent.svg"; sourceTree = "<group>"; };
 		D23BBC1F3C15078AAB5D3DE3 /* ph.member-of.fill.svg */ = {isa = PBXFileReference; path = "ph.member-of.fill.svg"; sourceTree = "<group>"; };
@@ -6292,6 +6305,7 @@
 		E7B12F54808CB6F69D7EBCAB /* ph.tennis-ball.fill.svg */ = {isa = PBXFileReference; path = "ph.tennis-ball.fill.svg"; sourceTree = "<group>"; };
 		E7C328BA0F58765E91E285D8 /* HAURLValidatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HAURLValidatorTests.swift; sourceTree = "<group>"; };
 		E7C7DFB1ECDC253DDE1D5AE4 /* ph.arrow-u-down-left.fill.svg */ = {isa = PBXFileReference; path = "ph.arrow-u-down-left.fill.svg"; sourceTree = "<group>"; };
+		E805BB50E232D2FBBBDCE6C2 /* PreferencesManager+Networks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PreferencesManager+Networks.swift"; sourceTree = "<group>"; };
 		E80ECAEF2996A27EED42AD63 /* ph.planet.fill.svg */ = {isa = PBXFileReference; path = ph.planet.fill.svg; sourceTree = "<group>"; };
 		E81153DE8FF411D8AD747C45 /* ph.peace.fill.svg */ = {isa = PBXFileReference; path = ph.peace.fill.svg; sourceTree = "<group>"; };
 		E823D6AB217B237F7A938FE7 /* ph.anchor-simple.svg */ = {isa = PBXFileReference; path = "ph.anchor-simple.svg"; sourceTree = "<group>"; };
@@ -6604,6 +6618,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		7214FADCA1AF8E03CA151745 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D2AAE6C09917F8A2C000CDA7 /* CoreWLAN.framework in Frameworks */,
+				577D81D9B7F847D199BC05CF /* CoreLocation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -6654,6 +6677,7 @@
 				3F84E8A4E572683A32D9D67A /* MacOSController+MenuUpdates.swift */,
 				91CEBA1AD099F7D5EAE7E343 /* MacOSController+PinnedItems.swift */,
 				2FBAFF70B90E3449AD09EFEE /* MenuBuilder.swift */,
+				61A94182130B246D657251F2 /* NetworkLocationManager.swift */,
 				A3A3EB6D0DE7E9C0DE57ABAF /* Protocols.swift */,
 				46EB6A2D48574EFA0940AA54 /* ValueConversion.swift */,
 				3A45056D1FCE4E16C96D619A /* ActionEngine */,
@@ -6707,6 +6731,7 @@
 				45ADAE5712E4621056FF217C /* GroupEditorPanel.swift */,
 				FE7B43E8AAC9847448C2E493 /* HomeAssistantSection.swift */,
 				3FE4F034B6941A4D32654933 /* ItsytvSection.swift */,
+				A793D4567D7D01049F5AAECA /* NetworksSection.swift */,
 				9C1443A561323B39B108F71E /* WebhooksSection.swift */,
 			);
 			path = Sections;
@@ -6817,6 +6842,8 @@
 		78B41F82784BDCAEC891225C /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				6E8F5AEEB7520B0281A61D35 /* CoreLocation.framework */,
+				D20429F23D14E450863DD629 /* CoreWLAN.framework */,
 				748347D84F0BDF92DA4DE1E4 /* HomeKit.framework */,
 			);
 			name = Frameworks;
@@ -9892,6 +9919,7 @@
 				53DB7EE84923D850A3407FE8 /* PreferencesManager+Groups.swift */,
 				100C3A13341E171360625696 /* PreferencesManager+Hidden.swift */,
 				EDA2774BA8D6C05CE372039D /* PreferencesManager+Icons.swift */,
+				E805BB50E232D2FBBBDCE6C2 /* PreferencesManager+Networks.swift */,
 				9F015059030FE61A6C4B4AE5 /* PreferencesManager+Ordering.swift */,
 				113E78ECB1A5FF5BCF3830FF /* PreferencesManager+Pinned.swift */,
 				31BD1E0F7E27ABA8E0379495 /* PreferencesManager+Shortcuts.swift */,
@@ -9938,6 +9966,7 @@
 				A3DAF45509B9ED647A47A085 /* LightMenuItemTests.swift */,
 				074390035F5E079496B2A9FD /* LocalChangeNotifiableTests.swift */,
 				B1E8111658D6791710247D20 /* LockMenuItemTests.swift */,
+				B014E69ABBED5CF37466EEA4 /* NetworkAutoSwitchTests.swift */,
 				3AD1C9F5AE818158EA2137D6 /* PreferencesManagerTests.swift */,
 				8D6209D5D4AF8B8C8228A9CB /* ProStatusCacheTests.swift */,
 				6FA15C35EE0393A2B3CB900A /* SceneMenuItemTests.swift */,
@@ -10118,6 +10147,7 @@
 			buildPhases = (
 				9C1DBB788CBAA69529339F62 /* Sources */,
 				8EB327BD875F2791ABCD45F9 /* Resources */,
+				7214FADCA1AF8E03CA151745 /* Frameworks */,
 			);
 			buildRules = (
 			);
@@ -13386,6 +13416,8 @@
 				51296CE1AEA687F0449B01EA /* ModeButton.swift in Sources */,
 				5171AB4ED04287E23FDB5D33 /* ModeButtonGroup.swift in Sources */,
 				98F783AA77C8DA2CF5D5A923 /* ModernSlider.swift in Sources */,
+				035572FA920FC6508BA8698C /* NetworkLocationManager.swift in Sources */,
+				80E5B83D66173C19DB6A4EB4 /* NetworksSection.swift in Sources */,
 				ED4750AE71C4CCEA0ECBF16C /* PhosphorIcon.swift in Sources */,
 				DF94581E3860681F94472B34 /* PinnedStatusItem+Characteristics.swift in Sources */,
 				3895DCBC0225A5F2846973D3 /* PinnedStatusItem+Menu.swift in Sources */,
@@ -13398,6 +13430,7 @@
 				CD3D5F76FB77895BF389D86E /* PreferencesManager+Groups.swift in Sources */,
 				1E64EA05C2D06A9721EBE957 /* PreferencesManager+Hidden.swift in Sources */,
 				F51EAE1427C72D02069E59B4 /* PreferencesManager+Icons.swift in Sources */,
+				A1E1641C521B8DCF16DC2155 /* PreferencesManager+Networks.swift in Sources */,
 				BD8CC083B6C960CE92172856 /* PreferencesManager+Ordering.swift in Sources */,
 				107190609220A54BD547652D /* PreferencesManager+Pinned.swift in Sources */,
 				B1D9FD4BADEA28A3253BFB45 /* PreferencesManager+Shortcuts.swift in Sources */,
@@ -13519,6 +13552,8 @@
 				67E9EC3321181637F2778AD9 /* ModeButton.swift in Sources */,
 				646873EACC1B4A1563A79DB8 /* ModeButtonGroup.swift in Sources */,
 				CD9CC7D9F4C6F66CB4098F96 /* ModernSlider.swift in Sources */,
+				7B72DBE8A2AC4130A9A2C2D5 /* NetworkAutoSwitchTests.swift in Sources */,
+				8AADEBE97BE3BAED709D6500 /* NetworkLocationManager.swift in Sources */,
 				6F158BF2BDDFDCCEB4843BB9 /* PhosphorIcon.swift in Sources */,
 				C2A314EBCA881CBCD6167E98 /* PlatformManager.swift in Sources */,
 				BE1C57BE5421AF6007A59729 /* PlatformManagerTests.swift in Sources */,
@@ -13528,6 +13563,7 @@
 				9A79260F2695BFB415621F88 /* PreferencesManager+Groups.swift in Sources */,
 				0BE2BB32BFB08E40369319D9 /* PreferencesManager+Hidden.swift in Sources */,
 				ECB8E4FA07DE18C43B2FD5EC /* PreferencesManager+Icons.swift in Sources */,
+				7FAC7748DBB4CDD30527B4F4 /* PreferencesManager+Networks.swift in Sources */,
 				1F3F167553112C17651DF3BA /* PreferencesManager+Ordering.swift in Sources */,
 				87037F0B503C4EA9855C096B /* PreferencesManager+Pinned.swift in Sources */,
 				6BE2CFCD7BA7383199064680 /* PreferencesManager+Shortcuts.swift in Sources */,
