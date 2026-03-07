@@ -405,27 +405,7 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
             } catch {
                 StartupLogger.error("Failed to connect to Home Assistant: \(error)")
                 await MainActor.run { isConnectingToHA = false }
-                let nsError = error as NSError
-                let isNetworkError = nsError.domain == NSURLErrorDomain
-                    && [NSURLErrorNotConnectedToInternet,
-                        NSURLErrorNetworkConnectionLost,
-                        NSURLErrorDNSLookupFailed].contains(nsError.code)
-                let isTransientError: Bool
-                if let haError = error as? HomeAssistantClientError {
-                    switch haError {
-                    case .timeout, .notConnected, .connectionFailed:
-                        isTransientError = true
-                    default:
-                        isTransientError = false
-                    }
-                } else {
-                    isTransientError = false
-                }
-                if !isNetworkError && !isTransientError {
-                    await MainActor.run {
-                        showError(message: "Failed to connect to Home Assistant: \(error.localizedDescription)")
-                    }
-                }
+                // Errors are already logged above – no popup needed, the app auto-reconnects
             }
         }
     }
@@ -454,12 +434,16 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
     }
 
     public func platformDidEncounterError(_ platform: SmartHomePlatform, message: String) {
-        // Check for alarm code errors - notify UI to handle gracefully
-        if message.lowercased().contains("alarm code") || message.lowercased().contains("invalid") && message.lowercased().contains("code") {
+        // Route alarm code errors to the security panel UI
+        let lower = message.lowercased()
+        if lower.contains("alarm") && lower.contains("code") {
             NotificationCenter.default.post(name: .alarmCommandFailed, object: nil, userInfo: ["message": message])
-            return  // Don't show generic error dialog for alarm code issues
+            return
         }
-        showError(message: message)
+
+        // Log only – never show popups for runtime HA errors.
+        // Connection issues auto-recover, and modal alerts on wake are disruptive.
+        StartupLogger.error("Home Assistant error (suppressed popup): \(message)")
     }
 
     public func platformDidDisconnect(_ platform: SmartHomePlatform) {

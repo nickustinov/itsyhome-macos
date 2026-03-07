@@ -2,6 +2,9 @@
 
 ## 2.3.0
 
+### Build 251
+- **Suppress all runtime Home Assistant error popups** – HA connection and data errors are now logged silently instead of showing modal alerts; fixes disruptive popups on wake from sleep (#85)
+
 ### Build 249
 - **Add double-click zoom for camera streams** – double-click on a camera stream to zoom in at 2× toward the click point, double-click again to zoom out; trackpad pinch-to-zoom also supported (1×–3×), pan while zoomed; overlays and controls stay fixed above the video; zoom resets when switching cameras or closing the stream (#76)
 
