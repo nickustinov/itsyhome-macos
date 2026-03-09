@@ -339,10 +339,30 @@ final class EntityMapper {
                 CameraData(
                     uniqueIdentifier: deterministicUUID(for: state.entityId),
                     name: state.friendlyName,
-                    entityId: state.entityId
+                    entityId: state.entityId,
+                    hasMotionSensor: hasMotionSensorOnSameDevice(as: state.entityId)
                 )
             }
             .sorted { $0.name < $1.name }
+    }
+
+    /// Check whether the same device has a binary_sensor with device_class "motion"
+    private func hasMotionSensorOnSameDevice(as entityId: String) -> Bool {
+        guard let deviceId = entityRegistry[entityId]?.deviceId else { return false }
+        return entityRegistry.values.contains { entry in
+            entry.deviceId == deviceId
+                && entry.entityId.hasPrefix("binary_sensor.")
+                && entityStates[entry.entityId]?.deviceClass == "motion"
+        }
+    }
+
+    /// Find the camera UUID on the same device as the given entity
+    func findCameraOnSameDevice(as entityId: String) -> UUID? {
+        guard let deviceId = entityRegistry[entityId]?.deviceId else { return nil }
+        guard let cameraEntry = entityRegistry.values.first(where: {
+            $0.deviceId == deviceId && $0.entityId.hasPrefix("camera.")
+        }) else { return nil }
+        return deterministicUUID(for: cameraEntry.entityId)
     }
 
     // MARK: - Entity to service mapping

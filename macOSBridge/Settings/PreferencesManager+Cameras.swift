@@ -49,4 +49,39 @@ extension PreferencesManager {
         mapping[cameraId] = list.isEmpty ? nil : list
         cameraOverlayAccessories = mapping
     }
+
+    // MARK: - Motion-triggered camera open (per-home)
+
+    private static let motionOpenCameraIdsKey = "motionOpenCameraIds"
+
+    /// Set of camera IDs that should auto-open on motion
+    var motionOpenCameraIds: Set<String> {
+        get {
+            let array = defaults.stringArray(forKey: homeKey(Self.motionOpenCameraIdsKey)) ?? []
+            return Set(array)
+        }
+        set {
+            defaults.set(Array(newValue), forKey: homeKey(Self.motionOpenCameraIdsKey))
+            postNotification()
+        }
+    }
+
+    func isMotionOpenEnabled(for cameraId: String) -> Bool {
+        motionOpenCameraIds.contains(cameraId)
+    }
+
+    func toggleMotionOpen(for cameraId: String) {
+        var ids = motionOpenCameraIds
+        if ids.contains(cameraId) {
+            ids.remove(cameraId)
+        } else {
+            ids.insert(cameraId)
+        }
+        motionOpenCameraIds = ids
+    }
+
+    /// Whether any camera has motion-open enabled
+    var hasAnyMotionOpenEnabled: Bool {
+        !motionOpenCameraIds.isEmpty
+    }
 }

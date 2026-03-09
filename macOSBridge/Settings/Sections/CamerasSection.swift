@@ -155,31 +155,50 @@ class CamerasSection: NSView {
         doorbellStack.addArrangedSubview(soundRow)
         soundRow.widthAnchor.constraint(equalTo: doorbellStack.widthAnchor).isActive = true
 
-        let separator2 = NSBox()
-        separator2.boxType = .separator
-        separator2.translatesAutoresizingMaskIntoConstraints = false
-        doorbellStack.addArrangedSubview(separator2)
-        separator2.widthAnchor.constraint(equalTo: doorbellStack.widthAnchor).isActive = true
+        doorbellBox.addSubview(doorbellStack)
+        NSLayoutConstraint.activate([
+            doorbellStack.topAnchor.constraint(equalTo: doorbellBox.topAnchor, constant: 4),
+            doorbellStack.leadingAnchor.constraint(equalTo: doorbellBox.leadingAnchor, constant: 12),
+            doorbellStack.trailingAnchor.constraint(equalTo: doorbellBox.trailingAnchor, constant: -12),
+            doorbellStack.bottomAnchor.constraint(equalTo: doorbellBox.bottomAnchor, constant: -4)
+        ])
+
+        stackView.addArrangedSubview(doorbellBox)
+        doorbellBox.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
+
+        addSpacer(height: 8)
+
+        // Auto-close card (separate from doorbell – applies to any auto-open trigger)
+        let autoCloseBox = CardBoxView()
+        autoCloseBox.translatesAutoresizingMaskIntoConstraints = false
+
+        let autoCloseStack = NSStackView()
+        autoCloseStack.orientation = .vertical
+        autoCloseStack.spacing = 0
+        autoCloseStack.alignment = .leading
+        autoCloseStack.translatesAutoresizingMaskIntoConstraints = false
+
+        let hasAnyAutoOpen = PreferencesManager.shared.doorbellNotifications || PreferencesManager.shared.hasAnyMotionOpenEnabled
 
         autoCloseSwitch.controlSize = .mini
         autoCloseSwitch.target = self
         autoCloseSwitch.action = #selector(autoCloseSwitchChanged)
-        autoCloseSwitch.isEnabled = isPro && camerasOn
+        autoCloseSwitch.isEnabled = isPro && camerasOn && hasAnyAutoOpen
         autoCloseSwitch.state = PreferencesManager.shared.doorbellAutoClose ? .on : .off
 
         let autoCloseRow = createSettingRow(
-            label: String(localized: "settings.cameras.auto_close_doorbell", defaultValue: "Auto-close doorbell camera", bundle: .macOSBridge),
-            subtitle: String(localized: "settings.cameras.auto_close_doorbell_description", defaultValue: "Automatically close the camera popup after a doorbell ring.", bundle: .macOSBridge),
+            label: String(localized: "settings.cameras.auto_close_camera_popup", defaultValue: "Auto-close camera popup", bundle: .macOSBridge),
+            subtitle: String(localized: "settings.cameras.auto_close_camera_popup_description", defaultValue: "Automatically close the camera popup after it opens.", bundle: .macOSBridge),
             control: autoCloseSwitch
         )
-        doorbellStack.addArrangedSubview(autoCloseRow)
-        autoCloseRow.widthAnchor.constraint(equalTo: doorbellStack.widthAnchor).isActive = true
+        autoCloseStack.addArrangedSubview(autoCloseRow)
+        autoCloseRow.widthAnchor.constraint(equalTo: autoCloseStack.widthAnchor).isActive = true
 
-        let separator3 = NSBox()
-        separator3.boxType = .separator
-        separator3.translatesAutoresizingMaskIntoConstraints = false
-        doorbellStack.addArrangedSubview(separator3)
-        separator3.widthAnchor.constraint(equalTo: doorbellStack.widthAnchor).isActive = true
+        let autoCloseSeparator = NSBox()
+        autoCloseSeparator.boxType = .separator
+        autoCloseSeparator.translatesAutoresizingMaskIntoConstraints = false
+        autoCloseStack.addArrangedSubview(autoCloseSeparator)
+        autoCloseSeparator.widthAnchor.constraint(equalTo: autoCloseStack.widthAnchor).isActive = true
 
         let delayOptions: [(String, Int)] = [
             (String(localized: "settings.cameras.delay_30s", defaultValue: "30 seconds", bundle: .macOSBridge), 30),
@@ -201,25 +220,25 @@ class CamerasSection: NSView {
         autoCloseDelayPopup.controlSize = .small
         autoCloseDelayPopup.target = self
         autoCloseDelayPopup.action = #selector(autoCloseDelayChanged)
-        autoCloseDelayPopup.isEnabled = isPro && camerasOn && PreferencesManager.shared.doorbellAutoClose
+        autoCloseDelayPopup.isEnabled = isPro && camerasOn && hasAnyAutoOpen && PreferencesManager.shared.doorbellAutoClose
 
         let delayRow = createSettingRow(
             label: String(localized: "settings.cameras.close_after", defaultValue: "Close after", bundle: .macOSBridge),
             control: autoCloseDelayPopup
         )
-        doorbellStack.addArrangedSubview(delayRow)
-        delayRow.widthAnchor.constraint(equalTo: doorbellStack.widthAnchor).isActive = true
+        autoCloseStack.addArrangedSubview(delayRow)
+        delayRow.widthAnchor.constraint(equalTo: autoCloseStack.widthAnchor).isActive = true
 
-        doorbellBox.addSubview(doorbellStack)
+        autoCloseBox.addSubview(autoCloseStack)
         NSLayoutConstraint.activate([
-            doorbellStack.topAnchor.constraint(equalTo: doorbellBox.topAnchor, constant: 4),
-            doorbellStack.leadingAnchor.constraint(equalTo: doorbellBox.leadingAnchor, constant: 12),
-            doorbellStack.trailingAnchor.constraint(equalTo: doorbellBox.trailingAnchor, constant: -12),
-            doorbellStack.bottomAnchor.constraint(equalTo: doorbellBox.bottomAnchor, constant: -4)
+            autoCloseStack.topAnchor.constraint(equalTo: autoCloseBox.topAnchor, constant: 4),
+            autoCloseStack.leadingAnchor.constraint(equalTo: autoCloseBox.leadingAnchor, constant: 12),
+            autoCloseStack.trailingAnchor.constraint(equalTo: autoCloseBox.trailingAnchor, constant: -12),
+            autoCloseStack.bottomAnchor.constraint(equalTo: autoCloseBox.bottomAnchor, constant: -4)
         ])
 
-        stackView.addArrangedSubview(doorbellBox)
-        doorbellBox.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
+        stackView.addArrangedSubview(autoCloseBox)
+        autoCloseBox.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
 
         addSpacer(height: 16)
 
@@ -337,11 +356,12 @@ class CamerasSection: NSView {
         let isPro = ProStatusCache.shared.isPro
         let isHidden = PreferencesManager.shared.isHidden(cameraId: camera.uniqueIdentifier)
         let overlayIds = PreferencesManager.shared.overlayAccessories(for: camera.uniqueIdentifier)
+        let motionEnabled = PreferencesManager.shared.isMotionOpenEnabled(for: camera.uniqueIdentifier)
 
         let container = CardBoxView()
         container.translatesAutoresizingMaskIntoConstraints = false
 
-        // Top line: drag, eye, icon, name, add button
+        // Top line: drag, eye, [motion], name, add button
         let dragHandle = DragHandleView()
         dragHandle.translatesAutoresizingMaskIntoConstraints = false
         dragHandle.isHidden = !isPro
@@ -361,6 +381,26 @@ class CamerasSection: NSView {
         eyeButton.translatesAutoresizingMaskIntoConstraints = false
         container.addSubview(eyeButton)
 
+        // Motion toggle (only for cameras with built-in motion sensors)
+        var motionButton: NSButton?
+        if camera.hasMotionSensor {
+            let btn = NSButton()
+            btn.bezelStyle = .inline
+            btn.isBordered = false
+            btn.imagePosition = .imageOnly
+            btn.imageScaling = .scaleProportionallyUpOrDown
+            btn.image = motionEnabled ? PhosphorIcon.fill("person-simple-walk") : PhosphorIcon.regular("person-simple-walk")
+            btn.contentTintColor = motionEnabled ? .secondaryLabelColor : .tertiaryLabelColor
+            btn.toolTip = String(localized: "settings.cameras.motion_open_tooltip", defaultValue: "Open camera on motion", bundle: .macOSBridge)
+            btn.target = self
+            btn.action = #selector(motionToggleTapped(_:))
+            btn.tag = row
+            btn.isEnabled = isPro
+            btn.translatesAutoresizingMaskIntoConstraints = false
+            container.addSubview(btn)
+            motionButton = btn
+        }
+
         let nameLabel = NSTextField(labelWithString: camera.name)
         nameLabel.font = .systemFont(ofSize: 13)
         nameLabel.textColor = .labelColor
@@ -376,6 +416,19 @@ class CamerasSection: NSView {
         addButton.translatesAutoresizingMaskIntoConstraints = false
         container.addSubview(addButton)
 
+        let namePreviousAnchor: NSLayoutXAxisAnchor
+        if let motionBtn = motionButton {
+            namePreviousAnchor = motionBtn.trailingAnchor
+            NSLayoutConstraint.activate([
+                motionBtn.leadingAnchor.constraint(equalTo: eyeButton.trailingAnchor, constant: 4),
+                motionBtn.centerYAnchor.constraint(equalTo: addButton.centerYAnchor),
+                motionBtn.widthAnchor.constraint(equalToConstant: 20),
+                motionBtn.heightAnchor.constraint(equalToConstant: 20),
+            ])
+        } else {
+            namePreviousAnchor = eyeButton.trailingAnchor
+        }
+
         NSLayoutConstraint.activate([
             dragHandle.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 8),
             dragHandle.centerYAnchor.constraint(equalTo: addButton.centerYAnchor),
@@ -387,7 +440,7 @@ class CamerasSection: NSView {
             eyeButton.widthAnchor.constraint(equalToConstant: 20),
             eyeButton.heightAnchor.constraint(equalToConstant: 20),
 
-            nameLabel.leadingAnchor.constraint(equalTo: eyeButton.trailingAnchor, constant: 8),
+            nameLabel.leadingAnchor.constraint(equalTo: namePreviousAnchor, constant: 8),
             nameLabel.centerYAnchor.constraint(equalTo: addButton.centerYAnchor),
 
             addButton.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -12),
@@ -504,6 +557,13 @@ class CamerasSection: NSView {
         guard sender.tag < cameras.count else { return }
         let camera = cameras[sender.tag]
         PreferencesManager.shared.toggleHidden(cameraId: camera.uniqueIdentifier)
+        rebuildContent()
+    }
+
+    @objc private func motionToggleTapped(_ sender: NSButton) {
+        guard sender.tag < cameras.count else { return }
+        let camera = cameras[sender.tag]
+        PreferencesManager.shared.toggleMotionOpen(for: camera.uniqueIdentifier)
         rebuildContent()
     }
 

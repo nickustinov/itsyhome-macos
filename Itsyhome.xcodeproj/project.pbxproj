@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 54;
+	objectVersion = 77;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -1375,6 +1375,7 @@
 		68AE180369CE5C15CE1FB8B2 /* ph.bird.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = FAFD838E16B72BE9A5C19895 /* ph.bird.fill.svg */; };
 		68C6380FA4F1B48EF0D99D00 /* ph.train-simple.svg in Resources */ = {isa = PBXBuildFile; fileRef = 6EA4B81867F68D894440ED5D /* ph.train-simple.svg */; };
 		68CA3849DEDEF48AA564ADC5 /* ph.wifi-x.svg in Resources */ = {isa = PBXBuildFile; fileRef = B80AE4899F808B8CD0FDEEC5 /* ph.wifi-x.svg */; };
+		68E4A3CFCE73605286464A50 /* HomeKitManager+Motion.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6CC9935F5975FA57A1090BA /* HomeKitManager+Motion.swift */; };
 		68E83BDB11ED08A0A1829F95 /* ph.shield.svg in Resources */ = {isa = PBXBuildFile; fileRef = AD055976D254B13365F00725 /* ph.shield.svg */; };
 		68E9DFECCE7A084A020A4485 /* ph.fish.svg in Resources */ = {isa = PBXBuildFile; fileRef = BA4AD9144FA909308B596F2C /* ph.fish.svg */; };
 		68EA678E9A091D8701A9B0C7 /* ph.intersect-square.svg in Resources */ = {isa = PBXBuildFile; fileRef = B28552DBC38458D7C6B29A27 /* ph.intersect-square.svg */; };
@@ -5474,6 +5475,7 @@
 		A690DAB6F4DA26F9D65605B1 /* ph.door.svg */ = {isa = PBXFileReference; path = ph.door.svg; sourceTree = "<group>"; };
 		A6AA73595CEBA3B3C17C3E0F /* ph.pix-logo.fill.svg */ = {isa = PBXFileReference; path = "ph.pix-logo.fill.svg"; sourceTree = "<group>"; };
 		A6AD7C61A81888DEF43F63BF /* ph.magnet.fill.svg */ = {isa = PBXFileReference; path = ph.magnet.fill.svg; sourceTree = "<group>"; };
+		A6CC9935F5975FA57A1090BA /* HomeKitManager+Motion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HomeKitManager+Motion.swift"; sourceTree = "<group>"; };
 		A6E8F4464B0E2B6A092288CA /* ph.truck-trailer.fill.svg */ = {isa = PBXFileReference; path = "ph.truck-trailer.fill.svg"; sourceTree = "<group>"; };
 		A6EFF87080B9FE0B62F67D9B /* ph.link-simple-break.fill.svg */ = {isa = PBXFileReference; path = "ph.link-simple-break.fill.svg"; sourceTree = "<group>"; };
 		A6F70B1D9098BD0E5D3464D2 /* ph.folder-lock.svg */ = {isa = PBXFileReference; path = "ph.folder-lock.svg"; sourceTree = "<group>"; };
@@ -6810,6 +6812,7 @@
 				17B4F37C745C5889F78BE0FC /* HomeKitManager+DataFetching.swift */,
 				CCB59CFDF054B2B301179CF8 /* HomeKitManager+Debug.swift */,
 				3D415D82ADA7CEF78A9A4A52 /* HomeKitManager+Doorbell.swift */,
+				A6CC9935F5975FA57A1090BA /* HomeKitManager+Motion.swift */,
 				DF9768D90F7845161252A3AB /* HomeKitTypeNames.swift */,
 				B10754E8AB01F87A12A293A7 /* SceneDelegate.swift */,
 				3F2F71B5A8EA5B3176D9922D /* WebRTCStreamClient.swift */,
@@ -10207,7 +10210,7 @@
 			packageReferences = (
 				4B83A3AD3D02B152E08700AF /* XCRemoteSwiftPackageReference "webrtc-xcframework" */,
 			);
-			preferredProjectObjectVersion = 54;
+			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -13325,6 +13328,7 @@
 				5FBB76C77E1F919AA5784860 /* HomeKitManager+DataFetching.swift in Sources */,
 				C600FF97ABA87C766E842738 /* HomeKitManager+Debug.swift in Sources */,
 				B42AB1095DC27511CB7EABCF /* HomeKitManager+Doorbell.swift in Sources */,
+				68E4A3CFCE73605286464A50 /* HomeKitManager+Motion.swift in Sources */,
 				F2A340D41E3B57E9F7FEE940 /* HomeKitManager.swift in Sources */,
 				473BEC2B501485C7A3242B2B /* HomeKitTypeNames.swift in Sources */,
 				584E6850289D0E59424B198D /* PlatformManager.swift in Sources */,
@@ -13628,7 +13632,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_MAC_ICON_IN_CATALYST_APP = YES;
 				CODE_SIGN_ENTITLEMENTS = Itsyhome/Itsyhome.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 251;
+				CURRENT_PROJECT_VERSION = 252;
 				DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER = NO;
 				INFOPLIST_FILE = Itsyhome/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Itsyhome;
@@ -13637,7 +13641,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.3.0;
+				MARKETING_VERSION = 2.3.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.nickustinov.itsyhome;
 				PRODUCT_NAME = Itsyhome;
 				SDKROOT = iphoneos;
@@ -13757,7 +13761,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_MAC_ICON_IN_CATALYST_APP = YES;
 				CODE_SIGN_ENTITLEMENTS = Itsyhome/Itsyhome.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 251;
+				CURRENT_PROJECT_VERSION = 252;
 				DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER = NO;
 				INFOPLIST_FILE = Itsyhome/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Itsyhome;
@@ -13766,7 +13770,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.3.0;
+				MARKETING_VERSION = 2.3.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.nickustinov.itsyhome;
 				PRODUCT_NAME = Itsyhome;
 				SDKROOT = iphoneos;

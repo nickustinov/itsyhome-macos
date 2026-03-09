@@ -9703,8 +9703,30 @@
         }
       }
     },
-    "settings.cameras.auto_close_doorbell" : {
+    "settings.cameras.auto_close_camera_popup" : {
       "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Auto-close camera popup"
+          }
+        }
+      }
+    },
+    "settings.cameras.auto_close_camera_popup_description" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Automatically close the camera popup after it opens."
+          }
+        }
+      }
+    },
+    "settings.cameras.auto_close_doorbell" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -9781,7 +9803,7 @@
       }
     },
     "settings.cameras.auto_close_doorbell_description" : {
-      "extractionState" : "extracted_with_value",
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -10546,6 +10568,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "門鈴響起時播放提示音。"
+          }
+        }
+      }
+    },
+    "settings.cameras.motion_open_tooltip" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Open camera on motion"
           }
         }
       }

@@ -35,6 +35,9 @@ public protocol SmartHomePlatformDelegate: AnyObject {
 
     /// Called when a doorbell rings (for camera panel display)
     func platformDidReceiveDoorbellEvent(_ platform: SmartHomePlatform, cameraIdentifier: UUID)
+
+    /// Called when a camera's built-in motion sensor detects motion
+    func platformDidReceiveMotionEvent(_ platform: SmartHomePlatform, cameraIdentifier: UUID)
 }
 
 // MARK: - Camera stream info

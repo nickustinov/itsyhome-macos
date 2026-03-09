@@ -108,8 +108,9 @@ extension HomeKitManager {
             accessory.delegate = self
         }
 
-        // Subscribe to doorbell events
+        // Subscribe to doorbell and motion events
         subscribeToDoorbellEvents()
+        subscribeToMotionEvents()
 
         // Subscribe to all characteristic notifications for real-time updates
         subscribeToCharacteristicNotifications()
@@ -164,7 +165,11 @@ extension HomeKitManager {
             buildSceneData(from: scene)
         }
 
-        let cameraData = cameraAccessories.map { CameraData(uniqueIdentifier: $0.uniqueIdentifier, name: $0.name) }
+        let motionSensorType = ServiceTypes.motionSensor
+        let cameraData = cameraAccessories.map { acc in
+            let hasMotion = acc.services.contains { $0.serviceType == motionSensorType }
+            return CameraData(uniqueIdentifier: acc.uniqueIdentifier, name: acc.name, hasMotionSensor: hasMotion)
+        }
         let menuData = MenuData(homes: homeData, rooms: roomData, accessories: accessoryData, scenes: sceneData, selectedHomeId: selectedHomeIdentifier, hasCameras: !cameraAccessories.isEmpty, cameras: cameraData)
 
         do {

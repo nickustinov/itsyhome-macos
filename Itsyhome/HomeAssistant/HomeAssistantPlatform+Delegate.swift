@@ -49,6 +49,13 @@ extension HomeAssistantPlatform: HomeAssistantClientDelegate {
                 delegate?.platformDidReceiveDoorbellEvent(self, cameraIdentifier: cameraUUID)
             }
         }
+
+        // Check for motion events (binary_sensor with device_class "motion" turning on)
+        if newState.domain == "binary_sensor" && newState.deviceClass == "motion" && newState.state == "on" {
+            if let cameraUUID = findAssociatedCamera(for: entityId) {
+                delegate?.platformDidReceiveMotionEvent(self, cameraIdentifier: cameraUUID)
+            }
+        }
     }
 
     func client(_ client: HomeAssistantClient, didReceiveEvent event: HAEvent) {
@@ -59,15 +66,7 @@ extension HomeAssistantPlatform: HomeAssistantClientDelegate {
         delegate?.platformDidEncounterError(self, message: error.localizedDescription)
     }
 
-    private func findAssociatedCamera(for doorbellEntityId: String) -> UUID? {
-        // Try to find camera with similar name/device
-        let menuData = mapper.generateMenuData()
-        for camera in menuData.cameras {
-            // Simple heuristic: camera name contains doorbell-related terms
-            // or is from the same device
-            // This is a simplification - real implementation would check device associations
-            return UUID(uuidString: camera.uniqueIdentifier)
-        }
-        return nil
+    private func findAssociatedCamera(for entityId: String) -> UUID? {
+        mapper.findCameraOnSameDevice(as: entityId)
     }
 }

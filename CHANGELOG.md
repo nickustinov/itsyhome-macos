@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.3.1
+
+### Build 252
+- **Open camera on motion (Pro)** – cameras with built-in motion sensors can now auto-open the camera stream when motion is detected; per-camera toggle in Settings → Cameras; works with both HomeKit and Home Assistant; includes 60-second cooldown to prevent repeated triggers (#34)
+- **Separate auto-close settings card** – the auto-close camera popup settings are now in their own card, enabled whenever any auto-open trigger (doorbell or motion) is active
+
 ## 2.3.0
 
 ### Build 251

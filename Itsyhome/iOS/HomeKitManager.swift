@@ -190,6 +190,9 @@ extension HomeKitManager: HMAccessoryDelegate {
         if handleDoorbellEventIfNeeded(accessory: accessory, service: service, characteristic: characteristic) {
             return
         }
+        if handleMotionEventIfNeeded(accessory: accessory, service: service, characteristic: characteristic) {
+            return
+        }
 
         if let value = characteristic.value {
             macOSDelegate?.updateCharacteristic(identifier: characteristic.uniqueIdentifier, value: value)

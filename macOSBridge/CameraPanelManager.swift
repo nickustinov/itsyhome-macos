@@ -21,14 +21,14 @@ final class CameraPanelManager {
     private var cameraPanelSize: NSSize = NSSize(width: 300, height: 300)
     private var isCameraPanelOpening = false
     private var pendingCameraPanelShow = false
-    private var pendingDoorbellShow = false
-    private var pendingDoorbellReveal = false
+    private var pendingAutoOpenShow = false
+    private var pendingAutoOpenReveal = false
     private var clickOutsideMonitor: Any?
     private var localClickMonitor: Any?
     private var cameraPanelPollTimer: DispatchSourceTimer?
     private var cameraWindowObserver: NSObjectProtocol?
     private(set) var isPinned = false
-    private var isDoorbellMode = false
+    private var isAutoOpenMode = false
     private var activeCameraId: UUID?
     private var moveObserver: NSObjectProtocol?
     private var resizeObserver: NSObjectProtocol?
@@ -98,8 +98,8 @@ final class CameraPanelManager {
         cancelAutoCloseTimer()
         activeCameraId = nil
         isPinned = false
-        isDoorbellMode = false
-        pendingDoorbellReveal = false
+        isAutoOpenMode = false
+        pendingAutoOpenReveal = false
         removeClickOutsideMonitor()
         // Reset window size/position before hiding to avoid slide animation on next open
         if let window = cameraPanelWindow {
@@ -137,8 +137,8 @@ final class CameraPanelManager {
         cameraPanelWindow?.isVisible == true
     }
 
-    func showForDoorbell() {
-        isDoorbellMode = true
+    func showForAutoOpen() {
+        isAutoOpenMode = true
 
         if let existing = cameraPanelWindow, existing.isVisible {
             // Panel already visible — just pin it and reposition
@@ -151,22 +151,22 @@ final class CameraPanelManager {
         if cameraPanelWindow != nil {
             // Window exists but hidden — unhide iOS content, wait for stream resize to reveal
             delegate?.cameraPanelManagerSetCameraWindowHidden(self, hidden: false)
-            pendingDoorbellReveal = true
+            pendingAutoOpenReveal = true
             return
         }
 
         if isCameraPanelOpening { return }
 
         isCameraPanelOpening = true
-        pendingDoorbellShow = true
+        pendingAutoOpenShow = true
         delegate?.cameraPanelManagerOpenCameraWindow(self)
         setupCameraPanelWindow()
     }
 
     func resizeCameraPanel(width: CGFloat, height: CGFloat, aspectRatio: CGFloat, animated: Bool) {
-        // Ignore grid-sized resize while in doorbell mode — the stream dimensions are authoritative
+        // Ignore grid-sized resize while in auto-open mode — the stream dimensions are authoritative
         let isStreamMode = width > 400
-        if isDoorbellMode && !isStreamMode {
+        if isAutoOpenMode && !isStreamMode {
             return
         }
         cameraPanelSize = NSSize(width: width, height: height)
@@ -185,7 +185,7 @@ final class CameraPanelManager {
             window.aspectRatio = NSSize(width: aspectRatio, height: 1)
         } else {
             activeCameraId = nil
-            isDoorbellMode = false
+            isAutoOpenMode = false
             if isPinned {
                 isPinned = false
                 window.level = .popUpMenu
@@ -201,8 +201,8 @@ final class CameraPanelManager {
             }
         }
 
-        if pendingDoorbellReveal && isStreamMode {
-            pendingDoorbellReveal = false
+        if pendingAutoOpenReveal && isStreamMode {
+            pendingAutoOpenReveal = false
             setCameraPinned(true)
             positionCameraPanelTopRight(window, width: width, height: height)
             window.alphaValue = 1.0
@@ -214,7 +214,7 @@ final class CameraPanelManager {
         }
 
         guard window.isVisible else { return }
-        if isDoorbellMode {
+        if isAutoOpenMode {
             positionCameraPanelTopRight(window, width: width, height: height)
         } else if isStreamMode, let cameraId = activeCameraId, let saved = savedFrame(for: cameraId) {
             window.setFrame(saved, display: true, animate: animated)
@@ -362,13 +362,13 @@ final class CameraPanelManager {
 
         // Window stays hidden — will be shown by showCameraPanel() on user click
         isCameraPanelOpening = false
-        if pendingDoorbellShow {
-            pendingDoorbellShow = false
+        if pendingAutoOpenShow {
+            pendingAutoOpenShow = false
             pendingCameraPanelShow = false
             // Don't show yet — keep hidden until stream resize arrives with correct dimensions.
-            // Unhide the iOS content so the view controller lifecycle runs (panelDidShow → startStream).
+            // Unhide the iOS content so the view controller lifecycle runs (panelDidShow -> startStream).
             delegate?.cameraPanelManagerSetCameraWindowHidden(self, hidden: false)
-            pendingDoorbellReveal = true
+            pendingAutoOpenReveal = true
         } else if pendingCameraPanelShow {
             pendingCameraPanelShow = false
             showCameraPanel()

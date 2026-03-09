@@ -185,6 +185,11 @@ private class MockPlatformDelegate: SmartHomePlatformDelegate {
     func platformDidReceiveDoorbellEvent(_ platform: SmartHomePlatform, cameraIdentifier: UUID) {
         didReceiveDoorbellEventCalled = true
     }
+
+    var didReceiveMotionEventCalled = false
+    func platformDidReceiveMotionEvent(_ platform: SmartHomePlatform, cameraIdentifier: UUID) {
+        didReceiveMotionEventCalled = true
+    }
 }
 
 // MARK: - CameraStreamInfo tests

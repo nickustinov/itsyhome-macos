@@ -458,6 +458,10 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
         showCameraPanelForDoorbell(cameraIdentifier: cameraIdentifier)
     }
 
+    public func platformDidReceiveMotionEvent(_ platform: SmartHomePlatform, cameraIdentifier: UUID) {
+        showCameraPanelForMotion(cameraIdentifier: cameraIdentifier)
+    }
+
     // MARK: - Platform-agnostic action helpers
 
     func executeScene(identifier: UUID) {
@@ -730,7 +734,30 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
                 NSSound(named: "Glass")?.play()
             }
 
-            self.cameraPanelManager.showForDoorbell()
+            self.cameraPanelManager.showForAutoOpen()
+        }
+    }
+
+    private var lastMotionTriggerTimes: [UUID: Date] = [:]
+    private let motionCooldown: TimeInterval = 60
+
+    @objc public func showCameraPanelForMotion(cameraIdentifier: UUID) {
+        DispatchQueue.main.async { [weak self] in
+            let isPro = ProStatusCache.shared.isPro
+            let camerasOn = PreferencesManager.shared.camerasEnabled
+            let motionOn = PreferencesManager.shared.isMotionOpenEnabled(for: cameraIdentifier.uuidString)
+            NSLog("[Motion] showCameraPanelForMotion camera=%@ isPro=%d camerasEnabled=%d motionEnabled=%d", cameraIdentifier.uuidString, isPro ? 1 : 0, camerasOn ? 1 : 0, motionOn ? 1 : 0)
+            guard let self, isPro, camerasOn, motionOn else { return }
+
+            // Cooldown: don't re-trigger if recently opened for this camera
+            let now = Date()
+            if let lastTrigger = self.lastMotionTriggerTimes[cameraIdentifier],
+               now.timeIntervalSince(lastTrigger) < self.motionCooldown {
+                return
+            }
+            self.lastMotionTriggerTimes[cameraIdentifier] = now
+
+            self.cameraPanelManager.showForAutoOpen()
         }
     }
 

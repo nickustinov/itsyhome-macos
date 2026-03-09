@@ -344,11 +344,21 @@ public struct CameraData: Codable {
     public let uniqueIdentifier: String
     public let name: String
     public let entityId: String?  // HA only: e.g. "camera.front_door"
+    public let hasMotionSensor: Bool
 
-    public init(uniqueIdentifier: UUID, name: String, entityId: String? = nil) {
+    public init(uniqueIdentifier: UUID, name: String, entityId: String? = nil, hasMotionSensor: Bool = false) {
         self.uniqueIdentifier = uniqueIdentifier.uuidString
         self.name = name
         self.entityId = entityId
+        self.hasMotionSensor = hasMotionSensor
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        uniqueIdentifier = try container.decode(String.self, forKey: .uniqueIdentifier)
+        name = try container.decode(String.self, forKey: .name)
+        entityId = try container.decodeIfPresent(String.self, forKey: .entityId)
+        hasMotionSensor = try container.decodeIfPresent(Bool.self, forKey: .hasMotionSensor) ?? false
     }
 }
 
@@ -481,6 +491,7 @@ public protocol iOS2Mac: NSObjectProtocol {
     func resizeCameraPanel(width: CGFloat, height: CGFloat, aspectRatio: CGFloat, animated: Bool)
     func setCameraPanelPinned(_ pinned: Bool)
     func showCameraPanelForDoorbell(cameraIdentifier: UUID)
+    func showCameraPanelForMotion(cameraIdentifier: UUID)
     func notifyStreamStarted(cameraIdentifier: UUID)
     func dismissCameraPanel()
 }
