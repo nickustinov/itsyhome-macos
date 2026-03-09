@@ -130,6 +130,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             name: NSNotification.Name("HACameraDataUpdated"),
             object: nil
         )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleHAAutoOpenCamera(_:)),
+            name: .haAutoOpenCamera,
+            object: nil
+        )
     }
 
     @objc private func handleHACameraDataUpdated(_ notification: Notification) {
@@ -144,6 +150,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
            let menuData = try? JSONDecoder().decode(MenuData.self, from: menuDataJSON) {
             CameraViewController.cachedHAMenuData = menuData
         }
+    }
+
+    @objc private func handleHAAutoOpenCamera(_ notification: Notification) {
+        guard let cameraId = notification.userInfo?["cameraIdentifier"] as? UUID else { return }
+        CameraViewController.pendingHAAutoOpenCameraId = cameraId
     }
 
     @objc private func handleRequestOpenCameraWindow() {

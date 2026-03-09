@@ -35,7 +35,7 @@ extension CameraViewController {
         // Resolve HA overlay data
         resolveHAOverlayData()
 
-        if !hasActiveHAStream {
+        if !hasPendingOrActiveStream && Self.pendingHAAutoOpenCameraId == nil {
             let height = computeGridHeight()
             macOSController?.resizeCameraPanel(width: Self.gridWidth, height: height, aspectRatio: Self.defaultAspectRatio, animated: false)
         }
@@ -158,9 +158,20 @@ extension CameraViewController {
         // Hide HK audio controls (HA audio handled differently)
         audioControlsStack.isHidden = true
 
-        let ratio = cameraAspectRatios[cameraId] ?? Self.defaultAspectRatio
-        let streamHeight = Self.streamWidth / ratio
-        updatePanelSize(width: Self.streamWidth, height: streamHeight, aspectRatio: ratio, animated: false)
+        if isDoorbellMode && cameraAspectRatios[cameraId] == nil {
+            // Auto-open should wait for a real HA snapshot ratio instead of revealing at the default 16:9 size.
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                let ratio = await self.resolveInitialHAAspectRatio(cameraId: cameraId, entityId: entityId)
+                guard self.activeHACameraId == cameraId, self.activeHAEntityId == entityId else { return }
+                let streamHeight = Self.streamWidth / ratio
+                self.updatePanelSize(width: Self.streamWidth, height: streamHeight, aspectRatio: ratio, animated: false)
+            }
+        } else {
+            let ratio = cameraAspectRatios[cameraId] ?? Self.defaultAspectRatio
+            let streamHeight = Self.streamWidth / ratio
+            updatePanelSize(width: Self.streamWidth, height: streamHeight, aspectRatio: ratio, animated: false)
+        }
 
         // Show HA stream overlays
         updateHAStreamOverlays(cameraId: cameraId)
@@ -212,8 +223,19 @@ extension CameraViewController {
 
             client.onDisconnect = { [weak self] in
                 DispatchQueue.main.async {
-                    if self?.hlsPlayer == nil {
-                        self?.backToGrid()
+                    guard let self = self else { return }
+                    if self.hlsPlayer != nil { return }
+                    // Try snapshot polling fallback before giving up
+                    if let entityId = self.activeHAEntityId {
+                        if let videoView = self.webrtcClient?.videoView {
+                            videoView.removeFromSuperview()
+                        }
+                        self.webrtcClient = nil
+                        if !self.trySnapshotStream(entityId: entityId) {
+                            self.backToGrid()
+                        }
+                    } else {
+                        self.backToGrid()
                     }
                 }
             }
@@ -346,6 +368,53 @@ extension CameraViewController {
     }
 
     // MARK: - Snapshot stream fallback
+
+    private func resolveInitialHAAspectRatio(cameraId: UUID, entityId: String) async -> CGFloat {
+        if let cachedRatio = cameraAspectRatios[cameraId] {
+            return cachedRatio
+        }
+
+        guard let image = await fetchHASnapshotImage(entityId: entityId, timeoutInterval: 1.5) else {
+            return Self.defaultAspectRatio
+        }
+
+        await MainActor.run {
+            self.haSnapshotImages[cameraId] = image
+            self.snapshotTimestamps[cameraId] = Date()
+            self.cacheAspectRatio(from: image, for: cameraId)
+        }
+
+        let ratio = image.size.width / image.size.height
+        if ratio > 0.3 && ratio < 4.0 {
+            return ratio
+        }
+        return Self.defaultAspectRatio
+    }
+
+    private func fetchHASnapshotImage(entityId: String, timeoutInterval: TimeInterval) async -> UIImage? {
+        guard let serverURL = HAAuthManager.shared.serverURL,
+              let token = HAAuthManager.shared.accessToken else { return nil }
+
+        let snapshotURL = serverURL
+            .appendingPathComponent("api/camera_proxy")
+            .appendingPathComponent(entityId)
+
+        var request = URLRequest(url: snapshotURL)
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.timeoutInterval = timeoutInterval
+
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+            guard let httpResponse = response as? HTTPURLResponse,
+                  200..<300 ~= httpResponse.statusCode else {
+                return nil
+            }
+            return UIImage(data: data)
+        } catch {
+            logger.debug("Initial HA snapshot ratio fetch failed for \(entityId): \(error.localizedDescription)")
+            return nil
+        }
+    }
 
     func trySnapshotStream(entityId: String) -> Bool {
         guard let serverURL = HAAuthManager.shared.serverURL,

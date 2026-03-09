@@ -137,7 +137,10 @@ final class CameraPanelManager {
         cameraPanelWindow?.isVisible == true
     }
 
-    func showForAutoOpen() {
+    func showForAutoOpen(cameraId: UUID? = nil) {
+        if let cameraId = cameraId {
+            activeCameraId = cameraId
+        }
         isAutoOpenMode = true
 
         if let existing = cameraPanelWindow, existing.isVisible {
@@ -164,8 +167,8 @@ final class CameraPanelManager {
     }
 
     func resizeCameraPanel(width: CGFloat, height: CGFloat, aspectRatio: CGFloat, animated: Bool) {
-        // Ignore grid-sized resize while in auto-open mode — the stream dimensions are authoritative
         let isStreamMode = width > 400
+        // Ignore grid-sized resize while in auto-open mode — the stream dimensions are authoritative
         if isAutoOpenMode && !isStreamMode {
             return
         }
@@ -203,8 +206,13 @@ final class CameraPanelManager {
 
         if pendingAutoOpenReveal && isStreamMode {
             pendingAutoOpenReveal = false
+            isAutoOpenMode = false
             setCameraPinned(true)
-            positionCameraPanelTopRight(window, width: width, height: height)
+            if let cameraId = activeCameraId, let saved = savedFrame(for: cameraId) {
+                window.setFrame(saved, display: true)
+            } else {
+                positionCameraPanelTopRight(window, width: width, height: height)
+            }
             window.alphaValue = 1.0
             window.makeKeyAndOrderFront(nil)
             setupClickOutsideMonitor()
@@ -214,9 +222,7 @@ final class CameraPanelManager {
         }
 
         guard window.isVisible else { return }
-        if isAutoOpenMode {
-            positionCameraPanelTopRight(window, width: width, height: height)
-        } else if isStreamMode, let cameraId = activeCameraId, let saved = savedFrame(for: cameraId) {
+        if isStreamMode, let cameraId = activeCameraId, let saved = savedFrame(for: cameraId) {
             window.setFrame(saved, display: true, animate: animated)
         } else {
             positionCameraPanelWithSize(window, width: width, height: height, animate: animated)

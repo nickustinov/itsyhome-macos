@@ -734,7 +734,8 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
                 NSSound(named: "Glass")?.play()
             }
 
-            self.cameraPanelManager.showForAutoOpen()
+            self.notifyAutoOpenCamera(cameraIdentifier)
+            self.cameraPanelManager.showForAutoOpen(cameraId: cameraIdentifier)
         }
     }
 
@@ -757,8 +758,19 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
             }
             self.lastMotionTriggerTimes[cameraIdentifier] = now
 
-            self.cameraPanelManager.showForAutoOpen()
+            self.notifyAutoOpenCamera(cameraIdentifier)
+            self.cameraPanelManager.showForAutoOpen(cameraId: cameraIdentifier)
         }
+    }
+
+    /// Notify CameraViewController which camera to auto-stream (HA mode)
+    private func notifyAutoOpenCamera(_ cameraIdentifier: UUID) {
+        guard PlatformManager.shared.selectedPlatform == .homeAssistant else { return }
+        NotificationCenter.default.post(
+            name: .haAutoOpenCamera,
+            object: nil,
+            userInfo: ["cameraIdentifier": cameraIdentifier]
+        )
     }
 
     private func showProRequiredAlert() {

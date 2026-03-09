@@ -356,13 +356,17 @@ final class EntityMapper {
         }
     }
 
-    /// Find the camera UUID on the same device as the given entity
-    func findCameraOnSameDevice(as entityId: String) -> UUID? {
-        guard let deviceId = entityRegistry[entityId]?.deviceId else { return nil }
-        guard let cameraEntry = entityRegistry.values.first(where: {
-            $0.deviceId == deviceId && $0.entityId.hasPrefix("camera.")
-        }) else { return nil }
-        return deterministicUUID(for: cameraEntry.entityId)
+    /// Find all camera UUIDs on the same device as the given entity.
+    func findCamerasOnSameDevice(as entityId: String) -> [UUID] {
+        lock.lock()
+        defer { lock.unlock() }
+
+        guard let entry = entityRegistry[entityId],
+              let deviceId = entry.deviceId else { return [] }
+
+        return entityRegistry.values
+            .filter { $0.deviceId == deviceId && $0.entityId.hasPrefix("camera.") }
+            .map { deterministicUUID(for: $0.entityId) }
     }
 
     // MARK: - Entity to service mapping

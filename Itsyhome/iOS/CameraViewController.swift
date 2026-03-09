@@ -108,6 +108,15 @@ class CameraViewController: UIViewController {
         webrtcClient != nil || hlsPlayer != nil || snapshotStreamTimer != nil
     }
 
+    var hasPendingOrActiveStream: Bool {
+        activeStreamAccessory != nil ||
+        activeStreamControl != nil ||
+        activeHACameraId != nil ||
+        activeHAEntityId != nil ||
+        hasActiveHAStream ||
+        streamContainerView?.isHidden == false
+    }
+
     /// Resolved overlay data per camera: [cameraUUID: [(characteristic, service name, service type)]]
     var overlayData: [UUID: [(characteristic: HMCharacteristic, name: String, serviceType: String)]] = [:]
 
@@ -172,10 +181,16 @@ class CameraViewController: UIViewController {
             name: NSNotification.Name("HACameraDataUpdated"),
             object: nil
         )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleHAAutoOpenCamera(_:)),
+            name: .haAutoOpenCamera,
+            object: nil
+        )
     }
 
     @objc private func preferencesDidChange() {
-        guard activeStreamControl == nil && !hasActiveHAStream else { return }
+        guard !hasPendingOrActiveStream else { return }
         loadCameras()
         emptyLabel.isHidden = cameraCount > 0
         collectionView.isHidden = cameraCount == 0
@@ -186,7 +201,7 @@ class CameraViewController: UIViewController {
     }
 
     @objc private func homeDidChange() {
-        if activeStreamControl != nil || hasActiveHAStream {
+        if hasPendingOrActiveStream {
             backToGrid()
         }
         loadCameras()
@@ -204,7 +219,12 @@ class CameraViewController: UIViewController {
             streamDoorbellCamera(id: doorbellId)
             return
         }
-        guard activeStreamControl == nil && !hasActiveHAStream else { return }
+        if isHomeAssistant, let cameraId = Self.pendingHAAutoOpenCameraId {
+            Self.pendingHAAutoOpenCameraId = nil
+            streamDoorbellCamera(id: cameraId)
+            return
+        }
+        guard !hasPendingOrActiveStream else { return }
         takeAllSnapshots()
         if isHomeAssistant {
             refreshHAOverlayStates()
@@ -216,7 +236,7 @@ class CameraViewController: UIViewController {
     @objc private func panelDidHide() {
         stopSnapshotTimer()
         stopTimestampTimer()
-        if activeStreamControl != nil || hasActiveHAStream {
+        if hasPendingOrActiveStream {
             backToGrid()
         }
     }
@@ -225,6 +245,20 @@ class CameraViewController: UIViewController {
         guard let cameraId = notification.userInfo?["cameraIdentifier"] as? UUID else { return }
         homeKitManager?.pendingDoorbellCameraId = nil
         streamDoorbellCamera(id: cameraId)
+    }
+
+    /// Pending HA camera ID for auto-open (motion/doorbell).
+    /// Static so it survives before the view controller is created.
+    static var pendingHAAutoOpenCameraId: UUID?
+
+    @objc private func handleHAAutoOpenCamera(_ notification: Notification) {
+        guard let cameraId = notification.userInfo?["cameraIdentifier"] as? UUID else { return }
+        // If already streaming, switch to the new camera directly
+        if hasActiveHAStream {
+            streamDoorbellCamera(id: cameraId)
+        } else {
+            Self.pendingHAAutoOpenCameraId = cameraId
+        }
     }
 
     @objc private func handleHACameraDataUpdated(_ notification: Notification) {
@@ -324,15 +358,20 @@ class CameraViewController: UIViewController {
             takeAllSnapshots()
         }
 
-        // Check for pending doorbell camera (scene just activated for doorbell)
+        // Check for pending doorbell/motion camera (scene just activated)
         if !isHomeAssistant, let doorbellId = homeKitManager?.pendingDoorbellCameraId {
             homeKitManager?.pendingDoorbellCameraId = nil
             streamDoorbellCamera(id: doorbellId)
             return
         }
+        if isHomeAssistant, let cameraId = Self.pendingHAAutoOpenCameraId {
+            Self.pendingHAAutoOpenCameraId = nil
+            streamDoorbellCamera(id: cameraId)
+            return
+        }
 
         // Don't reset to grid if a stream is already active (e.g. doorbell triggered from panelDidShow)
-        guard activeStreamControl == nil && !hasActiveHAStream else { return }
+        guard !hasPendingOrActiveStream else { return }
 
         let height = computeGridHeight()
         updatePanelSize(width: Self.gridWidth, height: height, animated: false)

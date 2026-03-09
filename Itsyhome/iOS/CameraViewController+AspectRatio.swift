@@ -39,8 +39,12 @@ extension CameraViewController {
         if let existing = cameraAspectRatios[uuid], abs(existing - ratio) < 0.05 { return }
 
         cameraAspectRatios[uuid] = ratio
+        // Persist so auto-open has correct ratio on next launch
+        if !streamConfirmedRatios.contains(uuid) {
+            persistStreamRatio(ratio, for: uuid)
+        }
 
-        if activeStreamControl == nil && !hasActiveHAStream {
+        if !hasPendingOrActiveStream {
             collectionView.collectionViewLayout.invalidateLayout()
             let height = computeGridHeight()
             updatePanelSize(width: Self.gridWidth, height: height, animated: false)
@@ -74,7 +78,7 @@ extension CameraViewController {
         NSLog("[Itsyhome] Camera \"%@\" cached ratio=%.2f stream=%d", name, ratio, fromStream ? 1 : 0)
 
         // Reload grid layout if we're in grid mode (not streaming)
-        if activeStreamControl == nil && !hasActiveHAStream {
+        if !hasPendingOrActiveStream {
             collectionView.collectionViewLayout.invalidateLayout()
             let height = computeGridHeight()
             updatePanelSize(width: Self.gridWidth, height: height, animated: false)

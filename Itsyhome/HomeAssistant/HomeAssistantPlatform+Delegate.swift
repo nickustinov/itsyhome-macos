@@ -44,15 +44,14 @@ extension HomeAssistantPlatform: HomeAssistantClientDelegate {
 
         // Check for doorbell events
         if newState.domain == "event" && newState.deviceClass == "doorbell" {
-            // Find associated camera
-            if let cameraUUID = findAssociatedCamera(for: entityId) {
+            for cameraUUID in findAssociatedCameras(for: entityId) {
                 delegate?.platformDidReceiveDoorbellEvent(self, cameraIdentifier: cameraUUID)
             }
         }
 
         // Check for motion events (binary_sensor with device_class "motion" turning on)
         if newState.domain == "binary_sensor" && newState.deviceClass == "motion" && newState.state == "on" {
-            if let cameraUUID = findAssociatedCamera(for: entityId) {
+            for cameraUUID in findAssociatedCameras(for: entityId) {
                 delegate?.platformDidReceiveMotionEvent(self, cameraIdentifier: cameraUUID)
             }
         }
@@ -66,7 +65,7 @@ extension HomeAssistantPlatform: HomeAssistantClientDelegate {
         delegate?.platformDidEncounterError(self, message: error.localizedDescription)
     }
 
-    private func findAssociatedCamera(for entityId: String) -> UUID? {
-        mapper.findCameraOnSameDevice(as: entityId)
+    private func findAssociatedCameras(for entityId: String) -> [UUID] {
+        mapper.findCamerasOnSameDevice(as: entityId)
     }
 }
