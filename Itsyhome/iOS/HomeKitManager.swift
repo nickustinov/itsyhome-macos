@@ -31,6 +31,9 @@ class HomeKitManager: NSObject, Mac2iOS, HMHomeManagerDelegate {
     /// Set when a doorbell rings; consumed by CameraViewController to auto-stream
     var pendingDoorbellCameraId: UUID?
 
+    /// Tracks accessories marked unreachable so we can restore them on value updates
+    var unreachableAccessoryIds: Set<UUID> = []
+
     var selectedHome: HMHome? { currentHome }
 
     var cameraAccessories: [HMAccessory] {
@@ -166,7 +169,14 @@ extension HomeKitManager: HMHomeDelegate {
 
 extension HomeKitManager: HMAccessoryDelegate {
     func accessoryDidUpdateReachability(_ accessory: HMAccessory) {
-        macOSDelegate?.setReachability(accessoryIdentifier: accessory.uniqueIdentifier, isReachable: accessory.isReachable)
+        let id = accessory.uniqueIdentifier
+        if accessory.isReachable {
+            unreachableAccessoryIds.remove(id)
+        } else {
+            unreachableAccessoryIds.insert(id)
+        }
+
+        macOSDelegate?.setReachability(accessoryIdentifier: id, isReachable: accessory.isReachable)
 
         // Re-read all characteristic values when accessory becomes reachable,
         // since we may have missed updates while it was unreachable
@@ -196,6 +206,15 @@ extension HomeKitManager: HMAccessoryDelegate {
 
         if let value = characteristic.value {
             macOSDelegate?.updateCharacteristic(identifier: characteristic.uniqueIdentifier, value: value)
+        }
+
+        // If we're receiving value updates for an accessory that was marked unreachable,
+        // it's clearly reachable now – un-gray it
+        let accessoryId = accessory.uniqueIdentifier
+        if unreachableAccessoryIds.contains(accessoryId), accessory.isReachable {
+            unreachableAccessoryIds.remove(accessoryId)
+            logger.info("Accessory \(accessory.name, privacy: .public) recovered – marking reachable")
+            macOSDelegate?.setReachability(accessoryIdentifier: accessoryId, isReachable: true)
         }
     }
 }

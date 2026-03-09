@@ -2,6 +2,9 @@
 
 ## 2.3.1
 
+### Build 253
+- **Fix devices stuck grayed out** – HomeKit notification subscriptions are now throttled per-accessory to avoid overwhelming bridges (e.g. Hue); if a value update arrives for a device marked unreachable, it is automatically restored to reachable; already-subscribed characteristics are skipped on refresh
+
 ### Build 252
 - **Open camera on motion (Pro)** – cameras with built-in motion sensors can now auto-open the camera stream when motion is detected; per-camera toggle in Settings → Cameras; works with both HomeKit and Home Assistant; includes 60-second cooldown to prevent repeated triggers (#34)
 - **Separate auto-close settings card** – the auto-close camera popup settings are now in their own card, enabled whenever any auto-open trigger (doorbell or motion) is active
