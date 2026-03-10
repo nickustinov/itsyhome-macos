@@ -46,7 +46,7 @@ targets:
         TARGETED_DEVICE_FAMILY: "6"
         # App metadata
         MARKETING_VERSION: "2.3.1"
-        CURRENT_PROJECT_VERSION: "253"
+        CURRENT_PROJECT_VERSION: "254"
         INFOPLIST_KEY_CFBundleDisplayName: Itsyhome
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.utilities
     scheme:
