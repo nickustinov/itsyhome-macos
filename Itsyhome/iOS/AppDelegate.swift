@@ -132,8 +132,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         )
         NotificationCenter.default.addObserver(
             self,
-            selector: #selector(handleHAAutoOpenCamera(_:)),
-            name: .haAutoOpenCamera,
+            selector: #selector(handleAutoOpenCamera(_:)),
+            name: .autoOpenCamera,
             object: nil
         )
     }
@@ -152,9 +152,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
     }
 
-    @objc private func handleHAAutoOpenCamera(_ notification: Notification) {
+    @objc private func handleAutoOpenCamera(_ notification: Notification) {
         guard let cameraId = notification.userInfo?["cameraIdentifier"] as? UUID else { return }
-        CameraViewController.pendingHAAutoOpenCameraId = cameraId
+        CameraViewController.pendingAutoOpenCameraId = cameraId
     }
 
     @objc private func handleRequestOpenCameraWindow() {

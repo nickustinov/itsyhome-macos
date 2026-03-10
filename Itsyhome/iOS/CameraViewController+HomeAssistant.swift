@@ -35,7 +35,7 @@ extension CameraViewController {
         // Resolve HA overlay data
         resolveHAOverlayData()
 
-        if !hasPendingOrActiveStream && Self.pendingHAAutoOpenCameraId == nil {
+        if !hasPendingOrActiveStream && Self.pendingAutoOpenCameraId == nil {
             let height = computeGridHeight()
             macOSController?.resizeCameraPanel(width: Self.gridWidth, height: height, aspectRatio: Self.defaultAspectRatio, animated: false)
         }

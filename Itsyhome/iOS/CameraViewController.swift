@@ -183,8 +183,8 @@ class CameraViewController: UIViewController {
         )
         NotificationCenter.default.addObserver(
             self,
-            selector: #selector(handleHAAutoOpenCamera(_:)),
-            name: .haAutoOpenCamera,
+            selector: #selector(handleAutoOpenCamera(_:)),
+            name: .autoOpenCamera,
             object: nil
         )
     }
@@ -214,14 +214,16 @@ class CameraViewController: UIViewController {
     }
 
     @objc private func panelDidShow() {
+        // Check for pending auto-open (motion/doorbell from macOS controller, both platforms)
+        if let cameraId = Self.pendingAutoOpenCameraId {
+            Self.pendingAutoOpenCameraId = nil
+            streamDoorbellCamera(id: cameraId)
+            return
+        }
+        // HomeKit doorbell: pending ID set directly by HomeKitManager
         if !isHomeAssistant, let doorbellId = homeKitManager?.pendingDoorbellCameraId {
             homeKitManager?.pendingDoorbellCameraId = nil
             streamDoorbellCamera(id: doorbellId)
-            return
-        }
-        if isHomeAssistant, let cameraId = Self.pendingHAAutoOpenCameraId {
-            Self.pendingHAAutoOpenCameraId = nil
-            streamDoorbellCamera(id: cameraId)
             return
         }
         guard !hasPendingOrActiveStream else { return }
@@ -247,17 +249,17 @@ class CameraViewController: UIViewController {
         streamDoorbellCamera(id: cameraId)
     }
 
-    /// Pending HA camera ID for auto-open (motion/doorbell).
+    /// Pending camera ID for auto-open (motion/doorbell, both platforms).
     /// Static so it survives before the view controller is created.
-    static var pendingHAAutoOpenCameraId: UUID?
+    static var pendingAutoOpenCameraId: UUID?
 
-    @objc private func handleHAAutoOpenCamera(_ notification: Notification) {
+    @objc private func handleAutoOpenCamera(_ notification: Notification) {
         guard let cameraId = notification.userInfo?["cameraIdentifier"] as? UUID else { return }
         // If already streaming, switch to the new camera directly
-        if hasActiveHAStream {
+        if hasPendingOrActiveStream {
             streamDoorbellCamera(id: cameraId)
         } else {
-            Self.pendingHAAutoOpenCameraId = cameraId
+            Self.pendingAutoOpenCameraId = cameraId
         }
     }
 
@@ -358,15 +360,15 @@ class CameraViewController: UIViewController {
             takeAllSnapshots()
         }
 
-        // Check for pending doorbell/motion camera (scene just activated)
+        // Check for pending auto-open camera (motion/doorbell, both platforms)
+        if let cameraId = Self.pendingAutoOpenCameraId {
+            Self.pendingAutoOpenCameraId = nil
+            streamDoorbellCamera(id: cameraId)
+            return
+        }
         if !isHomeAssistant, let doorbellId = homeKitManager?.pendingDoorbellCameraId {
             homeKitManager?.pendingDoorbellCameraId = nil
             streamDoorbellCamera(id: doorbellId)
-            return
-        }
-        if isHomeAssistant, let cameraId = Self.pendingHAAutoOpenCameraId {
-            Self.pendingHAAutoOpenCameraId = nil
-            streamDoorbellCamera(id: cameraId)
             return
         }
 

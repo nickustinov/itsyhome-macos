@@ -595,7 +595,7 @@ public extension Notification.Name {
     static let requestOpenCameraWindow = Notification.Name("com.itsyhome.requestOpenCameraWindow")
     static let requestCloseCameraWindow = Notification.Name("com.itsyhome.requestCloseCameraWindow")
     static let requestSetCameraWindowHidden = Notification.Name("com.itsyhome.requestSetCameraWindowHidden")
-    static let haAutoOpenCamera = Notification.Name("com.itsyhome.haAutoOpenCamera")
+    static let autoOpenCamera = Notification.Name("com.itsyhome.autoOpenCamera")
 }
 
 // MARK: - String UUID conversion

@@ -42,7 +42,7 @@ extension CameraViewController {
 
         resolveOverlayData(homeId: homeId)
 
-        if activeStreamControl == nil && homeKitManager?.pendingDoorbellCameraId == nil && Self.pendingHAAutoOpenCameraId == nil {
+        if activeStreamControl == nil && homeKitManager?.pendingDoorbellCameraId == nil && Self.pendingAutoOpenCameraId == nil {
             let height = computeGridHeight()
             macOSController?.resizeCameraPanel(width: Self.gridWidth, height: height, aspectRatio: Self.defaultAspectRatio, animated: false)
         }

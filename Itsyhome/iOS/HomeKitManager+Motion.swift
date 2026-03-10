@@ -64,18 +64,8 @@ extension HomeKitManager {
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
 
-            // Notify macOS side to open the camera panel
+            // Notify macOS side — it checks motion-open preference and handles panel + streaming
             self.macOSDelegate?.showCameraPanelForMotion(cameraIdentifier: cameraId)
-
-            // Store pending camera ID for CameraViewController to stream on show
-            self.pendingDoorbellCameraId = cameraId
-
-            // If CameraViewController is already visible, notify it directly
-            NotificationCenter.default.post(
-                name: .doorbellRang,
-                object: nil,
-                userInfo: ["cameraIdentifier": cameraId]
-            )
         }
 
         return true

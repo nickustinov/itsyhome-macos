@@ -763,11 +763,10 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
         }
     }
 
-    /// Notify CameraViewController which camera to auto-stream (HA mode)
+    /// Notify CameraViewController which camera to auto-stream
     private func notifyAutoOpenCamera(_ cameraIdentifier: UUID) {
-        guard PlatformManager.shared.selectedPlatform == .homeAssistant else { return }
         NotificationCenter.default.post(
-            name: .haAutoOpenCamera,
+            name: .autoOpenCamera,
             object: nil,
             userInfo: ["cameraIdentifier": cameraIdentifier]
         )
