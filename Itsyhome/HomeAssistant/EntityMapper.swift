@@ -527,31 +527,34 @@ final class EntityMapper {
     }
 
     /// Resolve area for a device group (used in generateAccessories).
-    /// Prioritises device area for stability – entity-level area only used as fallback for deviceless entities.
+    /// Uses the first entity's area override if set, otherwise falls back to device area.
     private func resolveAreaId(deviceId: String?, states: [HAEntityState]) -> String? {
-        // For device-grouped entities, use the device's area (stable across syncs)
-        if let deviceId = deviceId, let device = devices[deviceId], let deviceArea = device.areaId {
-            return deviceArea
+        // Check entity-level area overrides first (HA lets users assign entities to different areas)
+        for state in states {
+            if let entityArea = entityRegistry[state.entityId]?.areaId {
+                return entityArea
+            }
         }
 
-        // For standalone entities (no device), use the entity's own area
-        if let first = states.first {
-            return entityRegistry[first.entityId]?.areaId
+        // Fall back to device area
+        if let deviceId = deviceId, let device = devices[deviceId], let deviceArea = device.areaId {
+            return deviceArea
         }
 
         return nil
     }
 
     /// Resolve area for a single entity (used in mapEntityToService for per-service room assignment).
+    /// Entity area override takes priority over device area.
     private func resolveAreaId(for state: HAEntityState, deviceId: String?) -> String? {
-        // First check device's area (consistent with device group resolution)
-        if let deviceId = deviceId, let device = devices[deviceId], let deviceArea = device.areaId {
-            return deviceArea
-        }
-
-        // Then check entity's direct area
+        // Entity-level area override takes priority
         if let entityArea = entityRegistry[state.entityId]?.areaId {
             return entityArea
+        }
+
+        // Fall back to device area
+        if let deviceId = deviceId, let device = devices[deviceId], let deviceArea = device.areaId {
+            return deviceArea
         }
 
         return nil

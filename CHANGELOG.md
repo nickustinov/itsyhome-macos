@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.3.2
+
+### Build 255
+- **Fix camera motion auto-open bypassing preference check** – HomeKit motion events unconditionally triggered camera streaming even for cameras without motion-open enabled; now all motion events go through the macOS-side preference check before opening the panel or starting a stream (#34)
+- **Fix Home Assistant entities ignoring per-entity area overrides** – entities assigned to a different area than their parent device were always grouped by the device's area; now entity-level area overrides take priority, matching Home Assistant's own behavior (#92)
+
 ## 2.3.1
 
 ### Build 253
