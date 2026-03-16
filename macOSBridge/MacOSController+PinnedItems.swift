@@ -121,9 +121,7 @@ extension MacOSController {
         }
 
         if let group = PreferencesManager.shared.deviceGroups.first(where: { $0.id == favouriteId }) {
-            for service in group.resolveServices(in: data) {
-                toggleService(service)
-            }
+            toggleGroup(group, in: data)
             return
         }
 
@@ -132,6 +130,55 @@ extension MacOSController {
                 if service.uniqueIdentifier == favouriteId {
                     toggleService(service)
                     return
+                }
+            }
+        }
+    }
+
+    func toggleGroup(_ group: DeviceGroup, in data: MenuData) {
+        let services = group.resolveServices(in: data)
+        let commonType = group.commonServiceType(in: data)
+
+        if commonType == ServiceTypes.windowCovering ||
+           commonType == ServiceTypes.door ||
+           commonType == ServiceTypes.window {
+            // Position-based group: average position, toggle between 0/100
+            var totalPosition = 0
+            var positionCount = 0
+            for service in services {
+                if let idString = service.currentPositionId, let id = UUID(uuidString: idString) {
+                    let position = getCharacteristicValue(identifier: id) as? Int ?? 0
+                    totalPosition += position
+                    positionCount += 1
+                }
+            }
+            let avgPosition = positionCount > 0 ? totalPosition / positionCount : 0
+            let newPosition = avgPosition > 50 ? 0 : 100
+            for service in services {
+                if let idString = service.targetPositionId, let id = UUID(uuidString: idString) {
+                    writeCharacteristic(identifier: id, value: newPosition)
+                }
+            }
+        } else {
+            // Power-based group: if any is on, turn all off; if all off, turn all on
+            var anyOn = false
+            for service in services {
+                if let idString = service.powerStateId, let id = UUID(uuidString: idString) {
+                    if getCharacteristicValue(identifier: id) as? Bool == true { anyOn = true; break }
+                } else if let idString = service.activeId, let id = UUID(uuidString: idString) {
+                    if (getCharacteristicValue(identifier: id) as? Int ?? 0) != 0 { anyOn = true; break }
+                } else if let idString = service.lockCurrentStateId, let id = UUID(uuidString: idString) {
+                    if (getCharacteristicValue(identifier: id) as? Int ?? 1) != 0 { anyOn = true; break }
+                }
+            }
+            let newState = !anyOn
+            for service in services {
+                if let idString = service.powerStateId, let id = UUID(uuidString: idString) {
+                    writeCharacteristic(identifier: id, value: newState)
+                } else if let idString = service.activeId, let id = UUID(uuidString: idString) {
+                    writeCharacteristic(identifier: id, value: newState ? 1 : 0)
+                } else if let idString = service.lockTargetStateId, let id = UUID(uuidString: idString) {
+                    writeCharacteristic(identifier: id, value: newState ? 1 : 0)
                 }
             }
         }

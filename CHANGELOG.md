@@ -1,19 +1,13 @@
 # Changelog
 
-## 2.3.2
+## 2.4.0
 
-### Build 255
-- **Fix camera motion auto-open bypassing preference check** – HomeKit motion events unconditionally triggered camera streaming even for cameras without motion-open enabled; now all motion events go through the macOS-side preference check before opening the panel or starting a stream (#34)
-- **Fix Home Assistant entities ignoring per-entity area overrides** – entities assigned to a different area than their parent device were always grouped by the device's area; now entity-level area overrides take priority, matching Home Assistant's own behavior (#92)
-
-## 2.3.1
-
-### Build 253
-- **Fix devices stuck grayed out** – HomeKit notification subscriptions are now throttled per-accessory to avoid overwhelming bridges (e.g. Hue); if a value update arrives for a device marked unreachable, it is automatically restored to reachable; already-subscribed characteristics are skipped on refresh
-
-### Build 252
 - **Open camera on motion (Pro)** – cameras with built-in motion sensors can now auto-open the camera stream when motion is detected; per-camera toggle in Settings → Cameras; works with both HomeKit and Home Assistant; includes 60-second cooldown to prevent repeated triggers (#34)
 - **Separate auto-close settings card** – the auto-close camera popup settings are now in their own card, enabled whenever any auto-open trigger (doorbell or motion) is active
+- **Fix group keyboard shortcut toggling lights individually** – using a keyboard shortcut to toggle a device group toggled each light's state independently (on→off, off→on) instead of treating the group as a whole; now matches menu behavior: if any device is on, all turn off; if all are off, all turn on (#101)
+- **Fix camera motion auto-open bypassing preference check** – HomeKit motion events unconditionally triggered camera streaming even for cameras without motion-open enabled; now all motion events go through the macOS-side preference check before opening the panel or starting a stream (#34)
+- **Fix Home Assistant entities ignoring per-entity area overrides** – entities assigned to a different area than their parent device were always grouped by the device's area; now entity-level area overrides take priority, matching Home Assistant's own behavior (#92)
+- **Fix devices stuck grayed out** – HomeKit notification subscriptions are now throttled per-accessory to avoid overwhelming bridges (e.g. Hue); if a value update arrives for a device marked unreachable, it is automatically restored to reachable; already-subscribed characteristics are skipped on refresh
 
 ## 2.3.0
 
