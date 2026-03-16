@@ -120,7 +120,7 @@ class ItsytvSection: SettingsCard {
         learnMoreButton.controlSize = .regular
         buttonRow.addArrangedSubview(learnMoreButton)
 
-        let freeLabel = createLabel(String(localized: "settings.itsytv.free_open_source", defaultValue: "Free and open source", bundle: .macOSBridge), style: .caption)
+        let freeLabel = createLabel(String(localized: "settings.itsytv.free_open_source", defaultValue: "Open source", bundle: .macOSBridge), style: .caption)
         buttonRow.addArrangedSubview(freeLabel)
 
         textStack.addArrangedSubview(buttonRow)
