@@ -12,6 +12,7 @@ import Foundation
 public enum SmartHomePlatformType: String, Codable {
     case homeKit = "homekit"
     case homeAssistant = "homeassistant"
+    case hubitat = "hubitat"
 }
 
 // MARK: - Platform delegate
@@ -96,6 +97,12 @@ public struct PlatformCapabilities {
     )
 
     public static let homeAssistant = PlatformCapabilities(
+        supportsMultipleHomes: false,
+        supportsSceneStateTracking: false,
+        supportsOutletInUse: false
+    )
+
+    public static let hubitat = PlatformCapabilities(
         supportsMultipleHomes: false,
         supportsSceneStateTracking: false,
         supportsOutletInUse: false

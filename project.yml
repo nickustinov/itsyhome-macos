@@ -32,6 +32,7 @@ targets:
       - path: Itsyhome/iOS
       - path: Itsyhome/Shared
       - path: Itsyhome/HomeAssistant
+      - path: Itsyhome/Hubitat
       - path: Itsyhome/Resources
     settings:
       base:
@@ -94,6 +95,8 @@ targets:
         buildPhase: sources
       - path: Itsyhome/HomeAssistant
         buildPhase: sources
+      - path: Itsyhome/Hubitat
+        buildPhase: sources
       - path: macOSBridge/Resources/PhosphorIcons
         buildPhase: resources
         type: folder
@@ -142,6 +145,8 @@ targets:
       - path: Itsyhome/Shared
         buildPhase: sources
       - path: Itsyhome/HomeAssistant
+        buildPhase: sources
+      - path: Itsyhome/Hubitat
         buildPhase: sources
     dependencies:
       - target: macOSBridge

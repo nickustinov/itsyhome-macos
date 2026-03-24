@@ -1,0 +1,77 @@
+//
+//  HubitatBridge.swift
+//  macOSBridge
+//
+//  Adapter that implements Mac2iOS protocol for Hubitat
+//  This allows menu items to work with Hubitat using the same interface as HomeKit
+//
+
+import Foundation
+
+/// Bridges HubitatPlatform to the Mac2iOS protocol expected by menu items
+class HubitatBridge: NSObject, Mac2iOS {
+
+    private let platform: HubitatPlatform
+
+    init(platform: HubitatPlatform) {
+        self.platform = platform
+        super.init()
+    }
+
+    // MARK: - Mac2iOS Protocol
+
+    var homes: [HomeInfo] {
+        // Hubitat doesn't have multiple homes - return a single virtual home
+        let homeId = UUID(uuidString: "00000000-0000-0000-0000-000000000002")!
+        return [HomeInfo(uniqueIdentifier: homeId, name: "Hubitat", isPrimary: true)]
+    }
+
+    var selectedHomeIdentifier: UUID? {
+        get { nil }
+        set { }
+    }
+
+    var rooms: [RoomInfo] { [] }
+    var accessories: [AccessoryInfo] { [] }
+    var scenes: [SceneInfo] { [] }
+
+    func reloadHomeKit() {
+        platform.reloadData()
+    }
+
+    func executeScene(identifier: UUID) {
+        platform.executeScene(identifier: identifier)
+    }
+
+    func readCharacteristic(identifier: UUID) {
+        platform.readCharacteristic(identifier: identifier)
+    }
+
+    func writeCharacteristic(identifier: UUID, value: Any) {
+        platform.writeCharacteristic(identifier: identifier, value: value)
+    }
+
+    func getCharacteristicValue(identifier: UUID) -> Any? {
+        return platform.getCharacteristicValue(identifier: identifier)
+    }
+
+    func openCameraWindow() {
+        NotificationCenter.default.post(name: .requestOpenCameraWindow, object: nil)
+    }
+
+    func closeCameraWindow() {
+        NotificationCenter.default.post(name: .requestCloseCameraWindow, object: nil)
+    }
+
+    func setCameraWindowHidden(_ hidden: Bool) {
+        NotificationCenter.default.post(name: .requestSetCameraWindowHidden, object: nil, userInfo: ["hidden": hidden])
+    }
+
+    func getRawHomeKitDump() -> String? {
+        return platform.getRawDataDump()
+    }
+
+    func getCameraDebugJSON(entityId: String?, completion: @escaping (String?) -> Void) {
+        completion(nil)
+    }
+}

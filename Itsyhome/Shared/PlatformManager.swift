@@ -16,12 +16,15 @@ public enum SelectedPlatform: String, Codable {
     case none = "none"
     case homeKit = "homekit"
     case homeAssistant = "homeassistant"
+    case hubitat = "hubitat"
 }
 
 // MARK: - Notifications
 
 public extension Notification.Name {
     static let platformDidChange = Notification.Name("com.itsyhome.platformDidChange")
+    static let hubitatCredentialsChanged = Notification.Name("HubitatCredentialsChanged")
+    static let hubitatSectionFocusHubURL = Notification.Name("HubitatSectionFocusHubURL")
 }
 
 // MARK: - Platform manager
@@ -74,6 +77,8 @@ public final class PlatformManager {
         case .homeAssistant:
             // Check if HA server URL is configured (HAAuthManager stores this in UserDefaults)
             return UserDefaults.standard.string(forKey: "HomeAssistantServerURL") != nil
+        case .hubitat:
+            return UserDefaults.standard.string(forKey: "HubitatHubURL") != nil
         }
     }
 
@@ -133,6 +138,14 @@ public final class PlatformManager {
         NotificationCenter.default.post(name: .platformDidChange, object: nil)
     }
 
+    /// Select Hubitat as the platform
+    public func selectHubitat() {
+        selectedPlatform = .hubitat
+        hasCompletedOnboarding = true
+        logger.info("Hubitat selected")
+        NotificationCenter.default.post(name: .platformDidChange, object: nil)
+    }
+
     /// Reset platform selection (for testing/settings)
     public func resetPlatform() {
         selectedPlatform = .none
@@ -146,5 +159,12 @@ public final class PlatformManager {
     public func clearHomeAssistantCredentials() {
         UserDefaults.standard.removeObject(forKey: "HomeAssistantServerURL")
         // Token is in Keychain, cleared by HAAuthManager
+    }
+
+    /// Clear Hubitat credentials (called from code that has access to HubitatAuthManager)
+    public func clearHubitatCredentials() {
+        UserDefaults.standard.removeObject(forKey: "HubitatHubURL")
+        UserDefaults.standard.removeObject(forKey: "HubitatAppId")
+        // Token is in Keychain, cleared by HubitatAuthManager
     }
 }

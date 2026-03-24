@@ -67,6 +67,7 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
     private enum Section: Int, CaseIterable {
         case general
         case homeAssistant
+        case hubitat
         case accessories
         case cameras
         case networks
@@ -80,6 +81,7 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
             switch self {
             case .general: return String(localized: "settings.general.title", defaultValue: "General", bundle: .macOSBridge)
             case .homeAssistant: return String(localized: "settings.home_assistant.title", defaultValue: "Home Assistant", bundle: .macOSBridge)
+            case .hubitat: return String(localized: "settings.hubitat.title", defaultValue: "Hubitat", bundle: .macOSBridge)
             case .accessories: return String(localized: "settings.home.title", defaultValue: "Home", bundle: .macOSBridge)
             case .cameras: return String(localized: "settings.cameras.title", defaultValue: "Cameras", bundle: .macOSBridge)
             case .networks: return String(localized: "settings.networks.title", defaultValue: "Networks", bundle: .macOSBridge)
@@ -95,6 +97,7 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
             switch self {
             case .general: return "gear"
             case .homeAssistant: return "plug"
+            case .hubitat: return "plug"
             case .accessories: return "house"
             case .cameras: return "security-camera"
             case .networks: return "wifi-high"
@@ -119,6 +122,8 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
             switch self {
             case .homeAssistant:
                 return platform == .homeAssistant
+            case .hubitat:
+                return platform == .hubitat
             case .accessories:
                 // Show Home section for both platforms (different content)
                 return true
@@ -136,6 +141,7 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
     // Content views (lazily created)
     private var generalSection: GeneralSection?
     private var homeAssistantSection: HomeAssistantSection?
+    private var hubitatSection: HubitatSection?
     private var accessoriesSection: AccessoriesSettingsView?
     private var camerasSection: CamerasSection?
     private var networksSection: NetworksSection?
@@ -286,6 +292,12 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
                 homeAssistantSection = HomeAssistantSection()
             }
             contentView = homeAssistantSection!
+
+        case .hubitat:
+            if hubitatSection == nil {
+                hubitatSection = HubitatSection()
+            }
+            contentView = hubitatSection!
 
         case .accessories:
             if accessoriesSection == nil {
