@@ -23,7 +23,7 @@ final class StayOpenMenu: NSMenu {
 }
 
 @objc(MacOSController)
-public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerDelegate, HAConnectDelegate, HASuccessDelegate, SmartHomePlatformDelegate, NetworkLocationManagerDelegate {
+public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerDelegate, HAConnectDelegate, HASuccessDelegate, HubitatConnectDelegate, SmartHomePlatformDelegate, NetworkLocationManagerDelegate {
 
     // MARK: - Properties
 
@@ -40,8 +40,12 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
     private var platformPickerController: PlatformPickerWindowController?
     private var haConnectController: HAConnectWindowController?
     private var haSuccessController: HASuccessWindowController?
+    private var hubitatConnectController: HubitatConnectWindowController?
     private var homeAssistantPlatform: HomeAssistantPlatform?
     private var homeAssistantBridge: HomeAssistantBridge?
+    private var hubitatPlatform: HubitatPlatform?
+    private var hubitatBridge: HubitatBridge?
+    private var isConnectingToHubitat = false
     private var lastErrorMessage: String?
     private var lastErrorTime: Date?
     private var networkMonitor: NWPathMonitor?
@@ -52,10 +56,11 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
 
     /// Returns the appropriate bridge based on the selected platform
     var activeBridge: Mac2iOS? {
-        if PlatformManager.shared.selectedPlatform == .homeAssistant {
-            return homeAssistantBridge
+        switch PlatformManager.shared.selectedPlatform {
+        case .homeAssistant: return homeAssistantBridge
+        case .hubitat: return hubitatBridge
+        case .homeKit, .none: return iOSBridge
         }
-        return iOSBridge
     }
 
     // MARK: - Initialization
@@ -118,6 +123,18 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
         showHAConnectScreen()
     }
 
+    func platformPickerDidSelectHubitat() {
+        StartupLogger.log("User selected Hubitat")
+        platformPickerController = nil
+        showHubitatConnectScreen()
+    }
+
+    private func showHubitatConnectScreen() {
+        hubitatConnectController = HubitatConnectWindowController()
+        hubitatConnectController?.delegate = self
+        hubitatConnectController?.showWindow(nil)
+    }
+
     private func showHAConnectScreen() {
         haConnectController = HAConnectWindowController()
         haConnectController?.delegate = self
@@ -149,6 +166,20 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
         showPlatformPicker()
     }
 
+    // MARK: - HubitatConnectDelegate
+
+    func hubitatConnectDidSucceed(hubURL: String, appId: String, accessToken: String, deviceCount: Int) {
+        StartupLogger.log("Hubitat connection successful – \(deviceCount) devices")
+        hubitatConnectController = nil
+        PlatformManager.shared.selectHubitat()
+        restartApp()
+    }
+
+    func hubitatConnectDidCancel() {
+        hubitatConnectController = nil
+        showPlatformPicker()
+    }
+
     private func setupNotifications() {
         NotificationCenter.default.addObserver(
             self,
@@ -168,6 +199,13 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
             self,
             selector: #selector(handleHomeAssistantCredentialsChanged),
             name: NSNotification.Name("HomeAssistantCredentialsChanged"),
+            object: nil
+        )
+
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleHubitatCredentialsChanged),
+            name: .hubitatCredentialsChanged,
             object: nil
         )
 
@@ -207,6 +245,13 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
                     self?.openSettingsToHomeAssistant()
                 }
+            }
+        }
+
+        // Connect to Hubitat if already configured
+        if PlatformManager.shared.selectedPlatform == .hubitat {
+            if HubitatAuthManager.shared.isConfigured {
+                connectToHubitat()
             }
         }
     }
@@ -250,6 +295,14 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
         }
     }
 
+    @objc private func handleHubitatCredentialsChanged() {
+        if HubitatAuthManager.shared.isConfigured {
+            connectToHubitat()
+        } else {
+            disconnectFromHubitat()
+        }
+    }
+
     @objc private func handlePlatformDidChange() {
         updateStatusItemIcon()
         setupMenu()  // Refresh menu for the new platform
@@ -264,13 +317,20 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
             }
         }
 
-        guard PlatformManager.shared.selectedPlatform == .homeAssistant else { return }
-        guard HAAuthManager.shared.isConfigured else { return }
-        guard homeAssistantPlatform?.isConnected != true else { return }
-
-        StartupLogger.log("System woke from sleep – reconnecting to Home Assistant")
-        disconnectFromHomeAssistant()
-        connectToHomeAssistant()
+        let platform = PlatformManager.shared.selectedPlatform
+        if platform == .homeAssistant {
+            guard HAAuthManager.shared.isConfigured else { return }
+            guard homeAssistantPlatform?.isConnected != true else { return }
+            StartupLogger.log("System woke from sleep – reconnecting to Home Assistant")
+            disconnectFromHomeAssistant()
+            connectToHomeAssistant()
+        } else if platform == .hubitat {
+            guard HubitatAuthManager.shared.isConfigured else { return }
+            guard hubitatPlatform?.isConnected != true else { return }
+            StartupLogger.log("System woke from sleep – reconnecting to Hubitat")
+            disconnectFromHubitat()
+            connectToHubitat()
+        }
     }
 
     private func startNetworkMonitor() {
@@ -278,29 +338,40 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
         monitor.pathUpdateHandler = { [weak self] path in
             DispatchQueue.main.async {
                 guard let self else { return }
-                guard PlatformManager.shared.selectedPlatform == .homeAssistant else { return }
-                guard HAAuthManager.shared.isConfigured else { return }
+                let platform = PlatformManager.shared.selectedPlatform
 
-                if path.status == .unsatisfied, path.unsatisfiedReason == .localNetworkDenied {
-                    StartupLogger.error("Local network access denied by system policy")
-                    self.showError(message: String(localized: "alert.error.local_network_denied", defaultValue: "Itsyhome needs local network access to reach Home Assistant. Enable it in System Settings \u{2192} Privacy & Security \u{2192} Local Network.", bundle: .macOSBridge))
-                    return
-                }
+                if platform == .homeAssistant {
+                    guard HAAuthManager.shared.isConfigured else { return }
 
-                guard path.status == .satisfied else { return }
-                guard self.homeAssistantPlatform?.isConnected != true else { return }
-                guard !self.isConnectingToHA else { return }
-
-                // Re-evaluate SSID when network changes
-                if ProStatusCache.shared.isPro && PreferencesManager.shared.networkAutoSwitchEnabled {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-                        NetworkLocationManager.shared.reevaluateSSID()
+                    if path.status == .unsatisfied, path.unsatisfiedReason == .localNetworkDenied {
+                        StartupLogger.error("Local network access denied by system policy")
+                        self.showError(message: String(localized: "alert.error.local_network_denied", defaultValue: "Itsyhome needs local network access to reach Home Assistant. Enable it in System Settings \u{2192} Privacy & Security \u{2192} Local Network.", bundle: .macOSBridge))
+                        return
                     }
-                }
 
-                StartupLogger.log("Network became available – connecting to Home Assistant")
-                self.disconnectFromHomeAssistant()
-                self.connectToHomeAssistant()
+                    guard path.status == .satisfied else { return }
+                    guard self.homeAssistantPlatform?.isConnected != true else { return }
+                    guard !self.isConnectingToHA else { return }
+
+                    // Re-evaluate SSID when network changes
+                    if ProStatusCache.shared.isPro && PreferencesManager.shared.networkAutoSwitchEnabled {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                            NetworkLocationManager.shared.reevaluateSSID()
+                        }
+                    }
+
+                    StartupLogger.log("Network became available – connecting to Home Assistant")
+                    self.disconnectFromHomeAssistant()
+                    self.connectToHomeAssistant()
+                } else if platform == .hubitat {
+                    guard HubitatAuthManager.shared.isConfigured else { return }
+                    guard path.status == .satisfied else { return }
+                    guard self.hubitatPlatform?.isConnected != true else { return }
+                    guard !self.isConnectingToHubitat else { return }
+                    StartupLogger.log("Network became available – connecting to Hubitat")
+                    self.disconnectFromHubitat()
+                    self.connectToHubitat()
+                }
             }
         }
         monitor.start(queue: DispatchQueue(label: "com.nickustinov.itsyhome.networkMonitor"))
@@ -417,6 +488,40 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
         StartupLogger.log("Disconnected from Home Assistant")
     }
 
+    private func connectToHubitat() {
+        guard PlatformManager.shared.selectedPlatform == .hubitat else { return }
+        guard HubitatAuthManager.shared.isConfigured else { return }
+
+        StartupLogger.log("Connecting to Hubitat...")
+        isConnectingToHubitat = true
+
+        if hubitatPlatform == nil {
+            hubitatPlatform = HubitatPlatform()
+            hubitatPlatform?.delegate = self
+            hubitatBridge = HubitatBridge(platform: hubitatPlatform!)
+        }
+
+        actionEngine.bridge = hubitatBridge
+
+        Task {
+            do {
+                try await hubitatPlatform?.connect()
+                StartupLogger.log("Connected to Hubitat")
+                await MainActor.run { self.isConnectingToHubitat = false }
+            } catch {
+                StartupLogger.log("Failed to connect to Hubitat: \(error.localizedDescription)")
+                await MainActor.run { self.isConnectingToHubitat = false }
+            }
+        }
+    }
+
+    private func disconnectFromHubitat() {
+        hubitatPlatform?.disconnect()
+        hubitatPlatform = nil
+        hubitatBridge = nil
+        StartupLogger.log("Disconnected from Hubitat")
+    }
+
     // MARK: - SmartHomePlatformDelegate
 
     public func platformDidUpdateMenuData(_ platform: SmartHomePlatform, jsonString: String) {
@@ -465,34 +570,34 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
     // MARK: - Platform-agnostic action helpers
 
     func executeScene(identifier: UUID) {
-        if PlatformManager.shared.selectedPlatform == .homeAssistant {
-            homeAssistantPlatform?.executeScene(identifier: identifier)
-        } else {
-            iOSBridge?.executeScene(identifier: identifier)
+        switch PlatformManager.shared.selectedPlatform {
+        case .homeAssistant: homeAssistantPlatform?.executeScene(identifier: identifier)
+        case .hubitat: hubitatPlatform?.executeScene(identifier: identifier)
+        case .homeKit, .none: iOSBridge?.executeScene(identifier: identifier)
         }
     }
 
     func readCharacteristic(identifier: UUID) {
-        if PlatformManager.shared.selectedPlatform == .homeAssistant {
-            homeAssistantPlatform?.readCharacteristic(identifier: identifier)
-        } else {
-            iOSBridge?.readCharacteristic(identifier: identifier)
+        switch PlatformManager.shared.selectedPlatform {
+        case .homeAssistant: homeAssistantPlatform?.readCharacteristic(identifier: identifier)
+        case .hubitat: hubitatPlatform?.readCharacteristic(identifier: identifier)
+        case .homeKit, .none: iOSBridge?.readCharacteristic(identifier: identifier)
         }
     }
 
     func writeCharacteristic(identifier: UUID, value: Any) {
-        if PlatformManager.shared.selectedPlatform == .homeAssistant {
-            homeAssistantPlatform?.writeCharacteristic(identifier: identifier, value: value)
-        } else {
-            iOSBridge?.writeCharacteristic(identifier: identifier, value: value)
+        switch PlatformManager.shared.selectedPlatform {
+        case .homeAssistant: homeAssistantPlatform?.writeCharacteristic(identifier: identifier, value: value)
+        case .hubitat: hubitatPlatform?.writeCharacteristic(identifier: identifier, value: value)
+        case .homeKit, .none: iOSBridge?.writeCharacteristic(identifier: identifier, value: value)
         }
     }
 
     func getCharacteristicValue(identifier: UUID) -> Any? {
-        if PlatformManager.shared.selectedPlatform == .homeAssistant {
-            return homeAssistantPlatform?.getCharacteristicValue(identifier: identifier)
-        } else {
-            return iOSBridge?.getCharacteristicValue(identifier: identifier)
+        switch PlatformManager.shared.selectedPlatform {
+        case .homeAssistant: return homeAssistantPlatform?.getCharacteristicValue(identifier: identifier)
+        case .hubitat: return hubitatPlatform?.getCharacteristicValue(identifier: identifier)
+        case .homeKit, .none: return iOSBridge?.getCharacteristicValue(identifier: identifier)
         }
     }
 
@@ -530,6 +635,8 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
             lastEntityCategoryFilter = currentFilter
             if PlatformManager.shared.selectedPlatform == .homeAssistant {
                 homeAssistantPlatform?.reloadData()
+            } else if PlatformManager.shared.selectedPlatform == .hubitat {
+                hubitatPlatform?.reloadData()
             }
         }
 
@@ -567,8 +674,12 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
         guard let button = statusItem.button else { return }
         let pluginBundle = Bundle(for: MacOSController.self)
 
-        // Use HA icon when Home Assistant is selected, otherwise use HomeKit icon
-        let iconName = PlatformManager.shared.selectedPlatform == .homeAssistant ? "HAMenuBarIcon" : "MenuBarIcon"
+        let iconName: String
+        switch PlatformManager.shared.selectedPlatform {
+        case .homeAssistant: iconName = "HAMenuBarIcon"
+        case .hubitat: iconName = "MenuBarIcon"  // Reuse default icon for now
+        case .homeKit, .none: iconName = "MenuBarIcon"
+        }
 
         if let icon = pluginBundle.image(forResource: iconName) {
             icon.isTemplate = true
@@ -585,6 +696,8 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
         switch PlatformManager.shared.selectedPlatform {
         case .homeAssistant:
             loadingText = String(localized: "menu.loading.home_assistant", defaultValue: "Connecting to Home Assistant...", bundle: .macOSBridge)
+        case .hubitat:
+            loadingText = String(localized: "menu.loading.hubitat", defaultValue: "Connecting to Hubitat...", bundle: .macOSBridge)
         case .homeKit:
             loadingText = String(localized: "menu.loading.homekit", defaultValue: "Loading HomeKit...", bundle: .macOSBridge)
         case .none:
@@ -603,9 +716,10 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
 
     @objc public func reloadMenuWithJSON(_ jsonString: String) {
         // This method is called by HomeKit via iOS2Mac protocol
-        // Ignore HomeKit data if Home Assistant is selected
-        if PlatformManager.shared.selectedPlatform == .homeAssistant {
-            StartupLogger.log("Ignoring HomeKit JSON (\(jsonString.count) chars) - Home Assistant is selected")
+        // Ignore HomeKit data if a non-HomeKit platform is selected
+        let platform = PlatformManager.shared.selectedPlatform
+        if platform == .homeAssistant || platform == .hubitat {
+            StartupLogger.log("Ignoring HomeKit JSON (\(jsonString.count) chars) - \(platform.rawValue) is selected")
             return
         }
 
@@ -817,8 +931,14 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
         cameraPanelManager.setupCameraStatusItem(hasCameras: shouldShow)
 
         // Broadcast camera data for CameraViewController (HA mode)
+        let platformLabel: String
+        switch PlatformManager.shared.selectedPlatform {
+        case .homeAssistant: platformLabel = "HA"
+        case .hubitat: platformLabel = "HUB"
+        case .homeKit, .none: platformLabel = "HK"
+        }
         NSLog("[CameraDebug] MacOSController: platform=%@ cameras=%d hasCameras=%d camerasEnabled=%d isPro=%d shouldShow=%d",
-              PlatformManager.shared.selectedPlatform == .homeAssistant ? "HA" : "HK",
+              platformLabel,
               data.cameras.count, data.hasCameras ? 1 : 0, camerasEnabled ? 1 : 0, isPro ? 1 : 0, shouldShow ? 1 : 0)
         if PlatformManager.shared.selectedPlatform == .homeAssistant && !data.cameras.isEmpty {
             NSLog("[CameraDebug] MacOSController: posting HACameraDataUpdated with %d cameras", data.cameras.count)
@@ -922,6 +1042,12 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
                 homeAssistantPlatform?.reloadData()
             } else {
                 connectToHomeAssistant()
+            }
+        } else if PlatformManager.shared.selectedPlatform == .hubitat {
+            if hubitatPlatform?.isConnected == true {
+                hubitatPlatform?.reloadData()
+            } else {
+                connectToHubitat()
             }
         } else {
             iOSBridge?.reloadHomeKit()

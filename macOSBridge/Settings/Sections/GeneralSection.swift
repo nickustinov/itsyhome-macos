@@ -18,6 +18,7 @@ class GeneralSection: SettingsCard {
     // Platform picker
     private var homeKitCard: PlatformCardButton!
     private var homeAssistantCard: PlatformCardButton!
+    private var hubitatCard: PlatformCardButton!
 
     // Pro section
     private var cancellables = Set<AnyCancellable>()
@@ -113,6 +114,15 @@ class GeneralSection: SettingsCard {
         )
         homeAssistantCard.onSelect = { [weak self] in self?.platformCardTapped(.homeAssistant) }
         cardsStack.addArrangedSubview(homeAssistantCard)
+
+        // Hubitat card
+        hubitatCard = PlatformCardButton(
+            icon: pluginBundle.image(forResource: "hubitat"),
+            title: String(localized: "settings.general.hubitat", defaultValue: "Hubitat", bundle: .macOSBridge),
+            isSelected: currentPlatform == .hubitat
+        )
+        hubitatCard.onSelect = { [weak self] in self?.platformCardTapped(.hubitat) }
+        cardsStack.addArrangedSubview(hubitatCard)
 
         NSLayoutConstraint.activate([
             container.heightAnchor.constraint(equalToConstant: 80),

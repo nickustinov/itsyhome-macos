@@ -10,6 +10,7 @@ import AppKit
 protocol PlatformPickerDelegate: AnyObject {
     func platformPickerDidSelectHomeKit()
     func platformPickerDidSelectHomeAssistant()
+    func platformPickerDidSelectHubitat()
 }
 
 class PlatformPickerWindowController: NSWindowController {
@@ -20,7 +21,7 @@ class PlatformPickerWindowController: NSWindowController {
 
     init() {
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 500, height: 370),
+            contentRect: NSRect(x: 0, y: 0, width: 680, height: 370),
             styleMask: [.borderless],
             backing: .buffered,
             defer: false
@@ -36,7 +37,7 @@ class PlatformPickerWindowController: NSWindowController {
         super.init(window: window)
 
         window.contentView = pickerView
-        window.setContentSize(NSSize(width: 500, height: 370))
+        window.setContentSize(NSSize(width: 680, height: 370))
 
         pickerView.onHomeKitSelected = { [weak self] in
             self?.window?.close()
@@ -46,6 +47,11 @@ class PlatformPickerWindowController: NSWindowController {
         pickerView.onHomeAssistantSelected = { [weak self] in
             self?.window?.close()
             self?.delegate?.platformPickerDidSelectHomeAssistant()
+        }
+
+        pickerView.onHubitatSelected = { [weak self] in
+            self?.window?.close()
+            self?.delegate?.platformPickerDidSelectHubitat()
         }
     }
 
@@ -69,11 +75,13 @@ class PlatformPickerView: NSView {
 
     var onHomeKitSelected: (() -> Void)?
     var onHomeAssistantSelected: (() -> Void)?
+    var onHubitatSelected: (() -> Void)?
 
     private let titleLabel = NSTextField(labelWithString: String(localized: "onboarding.welcome", defaultValue: "Welcome to Itsyhome", bundle: .macOSBridge))
     private let subtitleLabel = NSTextField(labelWithString: String(localized: "onboarding.choose_platform", defaultValue: "Choose your smart home platform", bundle: .macOSBridge))
     private let homeKitCard: PlatformCard
     private let homeAssistantCard: PlatformCard
+    private let hubitatCard: PlatformCard
     private let footerLabel = NSTextField(labelWithString: String(localized: "onboarding.change_later", defaultValue: "You can change this later in Settings", bundle: .macOSBridge))
 
     override init(frame frameRect: NSRect) {
@@ -88,6 +96,11 @@ class PlatformPickerView: NSView {
             title: String(localized: "settings.general.home_assistant", defaultValue: "Home Assistant", bundle: .macOSBridge),
             subtitle: String(localized: "onboarding.home_assistant_subtitle", defaultValue: "Open-source home automation", bundle: .macOSBridge),
             icon: pluginBundle.image(forResource: "ha") ?? NSImage()
+        )
+        hubitatCard = PlatformCard(
+            title: String(localized: "settings.general.hubitat", defaultValue: "Hubitat", bundle: .macOSBridge),
+            subtitle: String(localized: "onboarding.hubitat_subtitle", defaultValue: "Hubitat Elevation smart home hub", bundle: .macOSBridge),
+            icon: pluginBundle.image(forResource: "hubitat") ?? NSImage()
         )
 
         super.init(frame: frameRect)
@@ -124,7 +137,7 @@ class PlatformPickerView: NSView {
         addSubview(subtitleLabel)
 
         // Cards container
-        let cardsStack = NSStackView(views: [homeKitCard, homeAssistantCard])
+        let cardsStack = NSStackView(views: [homeKitCard, homeAssistantCard, hubitatCard])
         cardsStack.orientation = .horizontal
         cardsStack.spacing = 20
         cardsStack.distribution = .fillEqually
@@ -137,6 +150,9 @@ class PlatformPickerView: NSView {
         }
         homeAssistantCard.onClick = { [weak self] in
             self?.onHomeAssistantSelected?()
+        }
+        hubitatCard.onClick = { [weak self] in
+            self?.onHubitatSelected?()
         }
 
         // Footer

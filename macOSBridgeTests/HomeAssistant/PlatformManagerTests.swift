@@ -148,6 +148,8 @@ final class PlatformManagerTests: XCTestCase {
             isConfigured = true
         case .homeAssistant:
             isConfigured = userDefaults.string(forKey: "HomeAssistantServerURL") != nil
+        case .hubitat:
+            isConfigured = userDefaults.string(forKey: "HubitatHubURL") != nil
         }
 
         // Then it should not be configured
@@ -166,6 +168,8 @@ final class PlatformManagerTests: XCTestCase {
         case .homeKit:
             isConfigured = true  // HomeKit is always configured once selected
         case .homeAssistant:
+            isConfigured = false
+        case .hubitat:
             isConfigured = false
         }
 
@@ -187,6 +191,8 @@ final class PlatformManagerTests: XCTestCase {
             isConfigured = true
         case .homeAssistant:
             isConfigured = userDefaults.string(forKey: "HomeAssistantServerURL") != nil
+        case .hubitat:
+            isConfigured = userDefaults.string(forKey: "HubitatHubURL") != nil
         }
 
         // Then it should not be configured
@@ -207,6 +213,8 @@ final class PlatformManagerTests: XCTestCase {
             isConfigured = true
         case .homeAssistant:
             isConfigured = userDefaults.string(forKey: "HomeAssistantServerURL") != nil
+        case .hubitat:
+            isConfigured = userDefaults.string(forKey: "HubitatHubURL") != nil
         }
 
         // Then it should be configured
@@ -299,12 +307,14 @@ final class PlatformManagerTests: XCTestCase {
         XCTAssertEqual(SelectedPlatform.none.rawValue, "none")
         XCTAssertEqual(SelectedPlatform.homeKit.rawValue, "homekit")
         XCTAssertEqual(SelectedPlatform.homeAssistant.rawValue, "homeassistant")
+        XCTAssertEqual(SelectedPlatform.hubitat.rawValue, "hubitat")
     }
 
     func testSelectedPlatformFromRawValue() {
         XCTAssertEqual(SelectedPlatform(rawValue: "none"), SelectedPlatform.none)
         XCTAssertEqual(SelectedPlatform(rawValue: "homekit"), SelectedPlatform.homeKit)
         XCTAssertEqual(SelectedPlatform(rawValue: "homeassistant"), SelectedPlatform.homeAssistant)
+        XCTAssertEqual(SelectedPlatform(rawValue: "hubitat"), SelectedPlatform.hubitat)
     }
 
     func testSelectedPlatformInvalidRawValueReturnsNil() {
