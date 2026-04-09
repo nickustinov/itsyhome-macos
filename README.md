@@ -13,6 +13,12 @@ A native macOS menu bar app for controlling your HomeKit and Home Assistant smar
 
 **[itsyhome.app](https://itsyhome.app)**
 
+### Also available on iOS
+
+[![Itsyhome iOS app screenshot](itsyhome-ios.png)](https://itsyhome.app/ios)
+
+[![Download on the App Store](https://developer.apple.com/app-store/marketing/guidelines/images/badge-download-on-the-app-store.svg)](https://itsyhome.app/ios)
+
 ## Features
 
 - **Menu bar access** - Control your smart home from the macOS menu bar
