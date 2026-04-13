@@ -464,8 +464,11 @@ class LightMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
                 notifyLocalChange(characteristicId: hueId, value: Float(newHue))
             }
             if let satId = saturationCharacteristicId {
-                bridge?.writeCharacteristic(identifier: satId, value: Float(newSat))
-                notifyLocalChange(characteristicId: satId, value: Float(newSat))
+                // Delay saturation write so the bridge finishes processing hue first
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { [weak self] in
+                    self?.bridge?.writeCharacteristic(identifier: satId, value: Float(newSat))
+                    self?.notifyLocalChange(characteristicId: satId, value: Float(newSat))
+                }
             }
         }
     }

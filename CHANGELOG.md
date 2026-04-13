@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.4.1
+
+- Fix RGB colour picker setting wrong colour on Hue lights (delay saturation write after hue)
+
 ## 2.4.0
 
 - **Open camera on motion (Pro)** – cameras with built-in motion sensors can now auto-open the camera stream when motion is detected; per-camera toggle in Settings → Cameras; works with both HomeKit and Home Assistant; includes 60-second cooldown to prevent repeated triggers (#34)

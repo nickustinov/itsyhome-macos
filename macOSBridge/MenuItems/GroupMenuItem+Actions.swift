@@ -111,12 +111,16 @@ extension GroupMenuItem {
             notifyLocalChange(characteristicId: id, value: Float(newSat))
         }
 
-        // Write to all hue/saturation characteristics
+        // Write to all hue characteristics
         for id in hueIds {
             bridge.writeCharacteristic(identifier: id, value: Float(newHue))
         }
-        for id in saturationIds {
-            bridge.writeCharacteristic(identifier: id, value: Float(newSat))
+        // Delay saturation writes so the bridge finishes processing hue first
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { [weak self] in
+            guard let self, let bridge = self.bridge else { return }
+            for id in self.saturationIds {
+                bridge.writeCharacteristic(identifier: id, value: Float(newSat))
+            }
         }
     }
 
