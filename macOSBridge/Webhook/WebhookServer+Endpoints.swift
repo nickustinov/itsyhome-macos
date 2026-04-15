@@ -187,7 +187,13 @@ extension WebhookServer {
             )
             sendResponse(connection: connection, status: 200, body: encode(response))
 
-        case .notFound, .ambiguous:
+        case .ambiguous(let services):
+            // /info is a read-only query — returning all matches is safe and
+            // more useful than 404 when a room contains multiple devices that
+            // share the same name (e.g. thermostat + switch both named "Bathroom").
+            sendServiceInfoResponse(services, data: data, engine: engine, connection: connection)
+
+        case .notFound:
             sendResponse(connection: connection, status: 404, body: encode(APIResponse.error("Not found: \(target)")))
         }
     }
