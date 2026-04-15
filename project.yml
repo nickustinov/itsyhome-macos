@@ -46,7 +46,7 @@ targets:
         TARGETED_DEVICE_FAMILY: "6"
         # App metadata
         MARKETING_VERSION: "2.5.0"
-        CURRENT_PROJECT_VERSION: "258"
+        CURRENT_PROJECT_VERSION: "259"
         INFOPLIST_KEY_CFBundleDisplayName: Itsyhome
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.utilities
     scheme:
@@ -63,6 +63,7 @@ targets:
         com.apple.security.network.client: true
         com.apple.security.network.server: true
         com.apple.security.personal-information.location: true
+        com.apple.security.device.audio-input: true
     dependencies:
       - target: macOSBridge
         platformFilter: maccatalyst

@@ -161,11 +161,15 @@ final class ProStatusCache: @unchecked Sendable {
     // Set to true for TestFlight builds, false for App Store
     static let debugOverride = false
 
+    // Debug-only: flip to true to force non-Pro state (e.g. for previewing Pro badges)
+    static let debugForceNotPro = false
+
     private let lock = NSLock()
     private var _isPro: Bool = false
 
     var isPro: Bool {
         get {
+            if Self.debugForceNotPro { return false }
             if Self.debugOverride { return true }
             lock.lock()
             defer { lock.unlock() }

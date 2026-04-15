@@ -1202,6 +1202,7 @@
 		5BADB84DB9110294176D2A51 /* ph.handbag-simple.svg in Resources */ = {isa = PBXBuildFile; fileRef = 502A65BF6D40EBD87ED0026B /* ph.handbag-simple.svg */; };
 		5BC57754E92317F000D560BB /* ph.building-apartment.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = A4FE7304129FBDF5C61A935A /* ph.building-apartment.fill.svg */; };
 		5BE3961DD87E5811EF2A412B /* ph.television.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 0F63EC97AB45E8C2578B620E /* ph.television.fill.svg */; };
+		5BE84020BE312F801492CA37 /* ItsyhomeIOSSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FAAD4F9DABD4B0034824C91 /* ItsyhomeIOSSection.swift */; };
 		5C07D9C283445586379D523C /* ph.crosshair-simple.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 151FCDC47226440588CF466C /* ph.crosshair-simple.fill.svg */; };
 		5C0857626A52329BB8BB0DDF /* ph.phone-x.svg in Resources */ = {isa = PBXBuildFile; fileRef = E38511E0164AF7E2446A591E /* ph.phone-x.svg */; };
 		5C14E4E84B1509141786A8A2 /* ph.cloud.svg in Resources */ = {isa = PBXBuildFile; fileRef = 3EBD13797E5A859F851C0FD0 /* ph.cloud.svg */; };
@@ -3753,6 +3754,7 @@
 		1F394F355615714E8FB5DB86 /* ph.code-simple.fill.svg */ = {isa = PBXFileReference; path = "ph.code-simple.fill.svg"; sourceTree = "<group>"; };
 		1F45F1E17CEDD198793B61A5 /* ph.dice-six.fill.svg */ = {isa = PBXFileReference; path = "ph.dice-six.fill.svg"; sourceTree = "<group>"; };
 		1F6329D15B8490D034123C7D /* ph.solar-roof.svg */ = {isa = PBXFileReference; path = "ph.solar-roof.svg"; sourceTree = "<group>"; };
+		1FAAD4F9DABD4B0034824C91 /* ItsyhomeIOSSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItsyhomeIOSSection.swift; sourceTree = "<group>"; };
 		1FAE8016C0A912D789F584B7 /* ph.tractor.fill.svg */ = {isa = PBXFileReference; path = ph.tractor.fill.svg; sourceTree = "<group>"; };
 		1FF1390F58FBAEEBF3131076 /* ph.desktop-tower.svg */ = {isa = PBXFileReference; path = "ph.desktop-tower.svg"; sourceTree = "<group>"; };
 		1FFA097B29D368B3D258DC22 /* ph.push-pin.svg */ = {isa = PBXFileReference; path = "ph.push-pin.svg"; sourceTree = "<group>"; };
@@ -6732,6 +6734,7 @@
 				62AD62C3749331FE2DA3CA6B /* GeneralSection.swift */,
 				45ADAE5712E4621056FF217C /* GroupEditorPanel.swift */,
 				FE7B43E8AAC9847448C2E493 /* HomeAssistantSection.swift */,
+				1FAAD4F9DABD4B0034824C91 /* ItsyhomeIOSSection.swift */,
 				3FE4F034B6941A4D32654933 /* ItsytvSection.swift */,
 				A793D4567D7D01049F5AAECA /* NetworksSection.swift */,
 				9C1443A561323B39B108F71E /* WebhooksSection.swift */,
@@ -13410,6 +13413,7 @@
 				243C3F0D744EDDE9D9608B3C /* IconMapping.swift in Sources */,
 				221FC579B7EF3E2FD175FDBE /* IconPickerPopover.swift in Sources */,
 				874B5F9A250FC9E886EA1876 /* IconResolver.swift in Sources */,
+				5BE84020BE312F801492CA37 /* ItsyhomeIOSSection.swift in Sources */,
 				70C45E577C1BD38FFD1AC412 /* ItsytvSection.swift in Sources */,
 				4436CFEA7BA3F99DBA1BF890 /* LightMenuItem.swift in Sources */,
 				806CCEC2325035CD0F9D0690 /* LockMenuItem.swift in Sources */,
@@ -13632,7 +13636,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_MAC_ICON_IN_CATALYST_APP = YES;
 				CODE_SIGN_ENTITLEMENTS = Itsyhome/Itsyhome.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 258;
+				CURRENT_PROJECT_VERSION = 259;
 				DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER = NO;
 				INFOPLIST_FILE = Itsyhome/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Itsyhome;
@@ -13761,7 +13765,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_MAC_ICON_IN_CATALYST_APP = YES;
 				CODE_SIGN_ENTITLEMENTS = Itsyhome/Itsyhome.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 258;
+				CURRENT_PROJECT_VERSION = 259;
 				DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER = NO;
 				INFOPLIST_FILE = Itsyhome/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Itsyhome;

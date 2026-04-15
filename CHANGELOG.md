@@ -2,7 +2,7 @@
 
 ## 2.5.0
 
-- Fix RGB colour picker setting wrong colour on Hue lights (delay saturation write after hue)
+- Fix RGB colour picker setting wrong colour on Hue lights
 - Fix camera talk button not working (#114)
 - Reduce idle battery usage from chatty HomeKit bridges (#113)
 - Fix menu going blank after wake with SSID-based home switching (#112)
@@ -10,6 +10,7 @@
 - Return all matches from `/info/<room>/<device>` when multiple devices share the same name (#108)
 - Reorder accessories inside rooms by drag in Settings → Accessories; right-click any accessory to add or remove dividers, or reset the room's order (#115)
 - Add Home Assistant `input_boolean` support – treated like a switch with toggle on/off (#64)
+- Add "Itsyhome for iOS" settings panel promoting the iPhone/iPad companion included with Pro
 
 ## 2.4.0
 

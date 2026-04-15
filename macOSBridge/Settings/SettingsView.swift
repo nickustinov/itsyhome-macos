@@ -73,6 +73,7 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
         case advanced
         case deeplinks
         case webhooks
+        case itsyhomeIOS
         case itsytv
         case about
 
@@ -86,6 +87,7 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
             case .advanced: return String(localized: "settings.advanced.title", defaultValue: "Advanced", bundle: .macOSBridge)
             case .deeplinks: return String(localized: "settings.deeplinks.title", defaultValue: "Deeplinks", bundle: .macOSBridge)
             case .webhooks: return String(localized: "settings.webhooks.title", defaultValue: "Webhooks/CLI", bundle: .macOSBridge)
+            case .itsyhomeIOS: return String(localized: "settings.itsyhome_ios.section_title", defaultValue: "Itsyhome for iOS", bundle: .macOSBridge)
             case .itsytv: return String(localized: "settings.itsytv.title", defaultValue: "Apple TV remote", bundle: .macOSBridge)
             case .about: return String(localized: "settings.about.title", defaultValue: "About", bundle: .macOSBridge)
             }
@@ -101,6 +103,7 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
             case .advanced: return "sliders-horizontal"
             case .deeplinks: return "link"
             case .webhooks: return "globe"
+            case .itsyhomeIOS: return "device-mobile"
             case .itsytv: return "television"
             case .about: return "info"
             }
@@ -108,7 +111,7 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
 
         var isProFeature: Bool {
             switch self {
-            case .cameras, .networks, .deeplinks, .webhooks: return true
+            case .cameras, .networks, .deeplinks, .webhooks, .itsyhomeIOS: return true
             default: return false
             }
         }
@@ -142,6 +145,7 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
     private var advancedSection: AdvancedSection?
     private var deeplinksSection: DeeplinksSection?
     private var webhooksSection: WebhooksSection?
+    private var itsyhomeIOSSection: ItsyhomeIOSSection?
     private var itsytvSection: ItsytvSection?
     private var aboutSection: AboutSection?
     private var cancellables = Set<AnyCancellable>()
@@ -331,6 +335,12 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
                 webhooksSection = WebhooksSection()
             }
             contentView = webhooksSection!
+
+        case .itsyhomeIOS:
+            if itsyhomeIOSSection == nil {
+                itsyhomeIOSSection = ItsyhomeIOSSection()
+            }
+            contentView = itsyhomeIOSSection!
 
         case .itsytv:
             if itsytvSection == nil {

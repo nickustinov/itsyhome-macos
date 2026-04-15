@@ -13696,6 +13696,105 @@
         }
       }
     },
+    "settings.itsyhome_ios.description" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Itsyhome is also available for iPhone and iPad – included with your Pro purchase. Control your HomeKit setup from anywhere, with the same fast native experience."
+          }
+        }
+      }
+    },
+    "settings.itsyhome_ios.feature_control" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Control lights, climate, locks, covers, cameras"
+          }
+        }
+      }
+    },
+    "settings.itsyhome_ios.feature_included" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Included with your Itsyhome Pro purchase"
+          }
+        }
+      }
+    },
+    "settings.itsyhome_ios.feature_shortcuts" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Shortcuts, scenes, and groups at your fingertips"
+          }
+        }
+      }
+    },
+    "settings.itsyhome_ios.feature_sync" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Same setup as macOS – no extra configuration"
+          }
+        }
+      }
+    },
+    "settings.itsyhome_ios.feature_widgets" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Home screen widgets and Lock Screen controls"
+          }
+        }
+      }
+    },
+    "settings.itsyhome_ios.learn_more" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Learn more"
+          }
+        }
+      }
+    },
+    "settings.itsyhome_ios.section_title" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Itsyhome for iOS"
+          }
+        }
+      }
+    },
+    "settings.itsyhome_ios.title" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Itsyhome for iOS"
+          }
+        }
+      }
+    },
     "settings.itsytv.description" : {
       "extractionState" : "manual",
       "localizations" : {
