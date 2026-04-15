@@ -88,6 +88,15 @@ extension HomeAssistantPlatform {
                 )
             }
 
+        case "input_boolean":
+            if let isOn = value as? Bool {
+                try await client.callService(
+                    domain: "input_boolean",
+                    service: isOn ? "turn_on" : "turn_off",
+                    target: ["entity_id": entityId]
+                )
+            }
+
         case "climate":
             try await writeClimateValue(client: client, entityId: entityId, characteristicUUID: characteristicUUID, value: value)
 

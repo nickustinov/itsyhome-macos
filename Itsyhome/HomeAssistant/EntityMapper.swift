@@ -476,14 +476,14 @@ final class EntityMapper {
 
     private func isSupportedDomain(_ domain: String) -> Bool {
         let supported: Set<String> = [
-            "light", "switch", "climate", "cover", "lock", "fan",
+            "light", "switch", "input_boolean", "climate", "cover", "lock", "fan",
             "humidifier", "valve", "sensor", "binary_sensor", "alarm_control_panel"
         ]
         return supported.contains(domain)
     }
 
     private func hasPowerState(_ state: HAEntityState) -> Bool {
-        let domainsWithPower: Set<String> = ["light", "switch", "fan", "humidifier"]
+        let domainsWithPower: Set<String> = ["light", "switch", "input_boolean", "fan", "humidifier"]
         return domainsWithPower.contains(state.domain)
     }
 
@@ -503,6 +503,8 @@ final class EntityMapper {
             if deviceClass == "outlet" {
                 return ServiceTypes.outlet
             }
+            return ServiceTypes.switch
+        case "input_boolean":
             return ServiceTypes.switch
         case "climate":
             // Check for heater/cooler vs thermostat based on features

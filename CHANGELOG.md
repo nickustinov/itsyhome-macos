@@ -1,6 +1,6 @@
 # Changelog
 
-## 2.4.1
+## 2.5.0
 
 - Fix RGB colour picker setting wrong colour on Hue lights (delay saturation write after hue)
 - Fix camera talk button not working (#114)
@@ -9,6 +9,7 @@
 - Fix Home Assistant covers grouped in the wrong room when a single device spans multiple areas (#109)
 - Return all matches from `/info/<room>/<device>` when multiple devices share the same name (#108)
 - Reorder accessories inside rooms by drag in Settings → Accessories; right-click any accessory to add or remove dividers, or reset the room's order (#115)
+- Add Home Assistant `input_boolean` support – treated like a switch with toggle on/off (#64)
 
 ## 2.4.0
 
