@@ -8,6 +8,7 @@
 - Fix menu going blank after wake with SSID-based home switching (#112)
 - Fix Home Assistant covers grouped in the wrong room when a single device spans multiple areas (#109)
 - Return all matches from `/info/<room>/<device>` when multiple devices share the same name (#108)
+- Reorder accessories inside rooms by drag in Settings → Accessories; right-click any accessory to add or remove dividers, or reset the room's order (#115)
 
 ## 2.4.0
 

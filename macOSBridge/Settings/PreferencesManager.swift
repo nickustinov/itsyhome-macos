@@ -51,6 +51,7 @@ final class PreferencesManager {
         static let pinnedServiceShowName = "pinnedServiceShowName"
         static let globalGroupOrder = "globalGroupOrder"
         static let groupOrderByRoom = "groupOrderByRoom"
+        static let accessoryOrderByRoom = "accessoryOrderByRoom"
         static let favouriteGroupIds = "favouriteGroupIds"
         static let customIcons = "customIcons"
     }

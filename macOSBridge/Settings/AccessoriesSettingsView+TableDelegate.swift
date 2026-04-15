@@ -38,7 +38,7 @@ extension AccessoriesSettingsView: NSTableViewDelegate, NSTableViewDataSource {
     func tableView(_ tableView: NSTableView, heightOfRow row: Int) -> CGFloat {
         if tableView === roomsTableView, row < roomTableItems.count {
             switch roomTableItems[row] {
-            case .separator, .groupSeparator:
+            case .separator, .groupSeparator, .divider:
                 return 12
             default:
                 break
@@ -129,9 +129,11 @@ extension AccessoriesSettingsView: NSTableViewDelegate, NSTableViewDataSource {
             return createRoomGroupRowView(group: group, roomId: roomId, row: row)
         case .groupSeparator:
             return createSeparatorRow()
-        case .accessory(let service, let roomHidden):
+        case .accessory(let service, let roomHidden, _):
             return createAccessoryRow(service: service, roomHidden: roomHidden)
         case .separator:
+            return createSeparatorRow()
+        case .divider:
             return createSeparatorRow()
         }
     }
@@ -316,7 +318,6 @@ extension AccessoriesSettingsView: NSTableViewDelegate, NSTableViewDataSource {
             return pb
         }
         if tableView === roomsTableView {
-            // Only room headers and groups are draggable
             switch roomTableItems[row] {
             case .header(let room, _, _, _):
                 let pb = NSPasteboardItem()
@@ -324,10 +325,17 @@ extension AccessoriesSettingsView: NSTableViewDelegate, NSTableViewDataSource {
                 return pb
             case .group(let group, let roomId):
                 guard let roomId = roomId else { return nil }
-                // Only allow drag if there's more than one group in this room
                 guard (groupsByRoom[roomId]?.count ?? 0) > 1 else { return nil }
                 let pb = NSPasteboardItem()
                 pb.setString("\(group.id)|\(roomId)", forType: .roomGroupItem)
+                return pb
+            case .accessory(let service, _, let roomId):
+                let pb = NSPasteboardItem()
+                pb.setString("\(roomId)|\(service.uniqueIdentifier)", forType: .roomAccessoryItem)
+                return pb
+            case .divider(let token, let roomId):
+                let pb = NSPasteboardItem()
+                pb.setString("\(roomId)|\(token)", forType: .roomAccessoryItem)
                 return pb
             default:
                 return nil
@@ -354,26 +362,26 @@ extension AccessoriesSettingsView: NSTableViewDelegate, NSTableViewDataSource {
         guard dropOperation == .above else { return [] }
 
         if tableView === roomsTableView {
-            // Check what's being dragged
-            if info.draggingPasteboard.types?.contains(.roomGroupItem) == true {
-                // Room groups can only be dropped among other groups in the same room
-                // For simplicity, just allow the drop and handle validation in acceptDrop
+            // Accessory or user divider — drop must stay inside its source room.
+            if info.draggingPasteboard.types?.contains(.roomAccessoryItem) == true {
                 return .move
             }
 
-            // Only allow dropping above header rows or at end (for room reordering)
+            if info.draggingPasteboard.types?.contains(.roomGroupItem) == true {
+                return .move
+            }
+
+            // Room reordering: snap drop to header rows or end.
             if row < roomTableItems.count {
                 if case .header = roomTableItems[row] {
                     return .move
                 }
-                // Find the next header row
                 for i in row..<roomTableItems.count {
                     if case .header = roomTableItems[i] {
                         tableView.setDropRow(i, dropOperation: .above)
                         return .move
                     }
                 }
-                // Drop at end
                 tableView.setDropRow(roomTableItems.count, dropOperation: .above)
                 return .move
             }
@@ -397,7 +405,9 @@ extension AccessoriesSettingsView: NSTableViewDelegate, NSTableViewDataSource {
             return acceptFavouriteDrop(pb: pb, row: row, tableView: tableView)
         }
         if tableView === roomsTableView {
-            // Check if it's a room group drop first
+            if pb.string(forType: .roomAccessoryItem) != nil {
+                return acceptRoomAccessoryDrop(pb: pb, row: row)
+            }
             if pb.string(forType: .roomGroupItem) != nil {
                 return acceptRoomGroupDrop(pb: pb, row: row)
             }
@@ -541,6 +551,60 @@ extension AccessoriesSettingsView: NSTableViewDelegate, NSTableViewDataSource {
         rebuildRoomData()
         roomsTableView?.reloadData()
 
+        return true
+    }
+
+    private func acceptRoomAccessoryDrop(pb: NSPasteboardItem, row: Int) -> Bool {
+        guard let payload = pb.string(forType: .roomAccessoryItem) else { return false }
+        let parts = payload.split(separator: "|", maxSplits: 1)
+        guard parts.count == 2 else { return false }
+
+        let roomId = String(parts[0])
+        let draggedToken = String(parts[1])
+
+        // Resolve current order of accessories+dividers in this room from the
+        // table items. This works whether or not a custom order is saved —
+        // when none is saved, auto separators become real divider tokens,
+        // and we persist the seeded order on first drop.
+        var roomItemRows: [(rowIndex: Int, token: String)] = []
+        var inRoom = false
+        for (i, item) in roomTableItems.enumerated() {
+            switch item {
+            case .header(let room, _, _, _):
+                if inRoom { return finishAccessoryDrop(roomId: roomId, draggedToken: draggedToken, roomItemRows: roomItemRows, dropRow: row) }
+                inRoom = (room.uniqueIdentifier == roomId)
+            case .accessory(let service, _, _) where inRoom:
+                roomItemRows.append((i, service.uniqueIdentifier))
+            case .divider(let token, _) where inRoom:
+                roomItemRows.append((i, token))
+            case .separator where inRoom:
+                roomItemRows.append((i, "\(PreferencesManager.dividerPrefix)\(UUID().uuidString)"))
+            default:
+                break
+            }
+        }
+        return finishAccessoryDrop(roomId: roomId, draggedToken: draggedToken, roomItemRows: roomItemRows, dropRow: row)
+    }
+
+    private func finishAccessoryDrop(roomId: String, draggedToken: String, roomItemRows: [(rowIndex: Int, token: String)], dropRow: Int) -> Bool {
+        guard let originalIndex = roomItemRows.firstIndex(where: { $0.token == draggedToken }) else { return false }
+
+        // Compute target index = number of items in this room whose tableRow < dropRow.
+        var targetIndex = 0
+        for entry in roomItemRows where entry.rowIndex < dropRow {
+            targetIndex += 1
+        }
+
+        if originalIndex < targetIndex { targetIndex -= 1 }
+        if originalIndex == targetIndex { return false }
+
+        var order = roomItemRows.map(\.token)
+        let item = order.remove(at: originalIndex)
+        order.insert(item, at: targetIndex)
+
+        PreferencesManager.shared.setAccessoryOrder(order, forRoom: roomId)
+        rebuildRoomData()
+        roomsTableView?.reloadData()
         return true
     }
 }

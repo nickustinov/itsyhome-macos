@@ -144,8 +144,9 @@ class AccessoriesSettingsView: NSView {
         roomsTableView = RoomsTableView()
         roomsTableView.roomTableItems = { [weak self] in self?.roomTableItems ?? [] }
         roomsTableView.groupCountForRoom = { [weak self] roomId in self?.groupsByRoom[roomId]?.count ?? 0 }
+        roomsTableView.contextMenuForRow = { [weak self] row in self?.roomsContextMenu(forRow: row) }
         configureTableView(roomsTableView, dragType: .roomItem, intercellSpacing: 4)
-        roomsTableView.registerForDraggedTypes([.roomItem, .roomGroupItem])
+        roomsTableView.registerForDraggedTypes([.roomItem, .roomGroupItem, .roomAccessoryItem])
         roomsTableView.translatesAutoresizingMaskIntoConstraints = false
         roomsSection.addSubview(roomsTableView)
         NSLayoutConstraint.activate([

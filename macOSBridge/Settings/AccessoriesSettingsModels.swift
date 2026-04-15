@@ -15,6 +15,7 @@ extension NSPasteboard.PasteboardType {
     static let sceneItem = NSPasteboard.PasteboardType("com.itsyhome.sceneItem")
     static let globalGroupItem = NSPasteboard.PasteboardType("com.itsyhome.globalGroupItem")
     static let roomGroupItem = NSPasteboard.PasteboardType("com.itsyhome.roomGroupItem")
+    static let roomAccessoryItem = NSPasteboard.PasteboardType("com.itsyhome.roomAccessoryItem")
 }
 
 // MARK: - Data models
@@ -35,8 +36,11 @@ enum RoomTableItem {
     case header(room: RoomData, isHidden: Bool, isCollapsed: Bool, serviceCount: Int)
     case group(group: DeviceGroup, roomId: String?)
     case groupSeparator
-    case accessory(service: ServiceData, roomHidden: Bool)
+    case accessory(service: ServiceData, roomHidden: Bool, roomId: String)
+    /// Auto-inserted separator between type groups (not user-controlled).
     case separator
+    /// User-inserted divider, persisted in PreferencesManager.accessoryOrderByRoom.
+    case divider(token: String, roomId: String)
 
     var isHeader: Bool {
         if case .header = self { return true }

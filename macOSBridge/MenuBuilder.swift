@@ -237,7 +237,7 @@ class MenuBuilder {
                 }
             }
 
-            addServicesGroupedByType(to: submenu, accessories: roomAccessories, roomName: room.name)
+            addServicesGroupedByType(to: submenu, accessories: roomAccessories, roomName: room.name, roomId: room.uniqueIdentifier)
             roomItem.submenu = submenu
             menu.addItem(roomItem)
         }
@@ -253,10 +253,11 @@ class MenuBuilder {
         }
     }
 
-    func addServicesGroupedByType(to menu: NSMenu, accessories: [AccessoryData], roomName: String? = nil) {
+    func addServicesGroupedByType(to menu: NSMenu, accessories: [AccessoryData], roomName: String? = nil, roomId: String? = nil) {
         var servicesByType: [String: [ServiceData]] = [:]
         var temperatureSensors: [ServiceData] = []
         var humiditySensors: [ServiceData] = []
+        var allServices: [ServiceData] = []
 
         let excludedTypes: Set<String> = [
             ServiceTypes.temperatureSensor,
@@ -271,6 +272,7 @@ class MenuBuilder {
                     humiditySensors.append(service)
                 } else if !excludedTypes.contains(service.serviceType) {
                     servicesByType[service.serviceType, default: []].append(service)
+                    allServices.append(service)
                     // Also collect temperature/humidity from thermostats, ACs, etc.
                     if service.currentTemperatureId != nil {
                         temperatureSensors.append(service)
@@ -280,6 +282,57 @@ class MenuBuilder {
                     }
                 }
             }
+        }
+
+        // Custom per-room order overrides the default type grouping.
+        let savedOrder: [String] = roomId.map { PreferencesManager.shared.accessoryOrder(forRoom: $0) } ?? []
+        if !savedOrder.isEmpty {
+            let serviceLookup = Dictionary(allServices.map { ($0.uniqueIdentifier, $0) }, uniquingKeysWith: { a, _ in a })
+            var seen: Set<String> = []
+            var lastWasDivider = true  // suppress leading divider
+            for token in savedOrder {
+                if token.hasPrefix(PreferencesManager.dividerPrefix) {
+                    if !lastWasDivider, menu.items.last?.isSeparatorItem == false {
+                        menu.addItem(NSMenuItem.separator())
+                        lastWasDivider = true
+                    }
+                } else if let service = serviceLookup[token] {
+                    var displayService = service
+                    if let roomName = roomName {
+                        displayService = service.strippingRoomName(roomName)
+                    }
+                    if let item = createMenuItemForService(displayService) {
+                        menu.addItem(item)
+                        lastWasDivider = false
+                    }
+                    seen.insert(token)
+                }
+            }
+            // Append any new services not yet in the saved order
+            for service in allServices where !seen.contains(service.uniqueIdentifier) {
+                if !lastWasDivider, menu.items.last?.isSeparatorItem == false {
+                    menu.addItem(NSMenuItem.separator())
+                }
+                var displayService = service
+                if let roomName = roomName {
+                    displayService = service.strippingRoomName(roomName)
+                }
+                if let item = createMenuItemForService(displayService) {
+                    menu.addItem(item)
+                    lastWasDivider = false
+                }
+            }
+
+            if !temperatureSensors.isEmpty || !humiditySensors.isEmpty {
+                menu.addItem(NSMenuItem.separator())
+                let sensorItem = SensorSummaryMenuItem(
+                    temperatureSensors: temperatureSensors,
+                    humiditySensors: humiditySensors,
+                    bridge: bridge
+                )
+                menu.addItem(sensorItem)
+            }
+            return
         }
 
         let typeOrder: [String] = [

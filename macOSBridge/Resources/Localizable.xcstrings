@@ -9395,6 +9395,17 @@
         }
       }
     },
+    "settings.accessories.add_divider_above" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Add divider above"
+          }
+        }
+      }
+    },
     "settings.accessories.create_group" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -9545,6 +9556,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "在此管理您的家庭選單。將配件加入喜好項目，用眼睛圖示隱藏區段或裝置，將項目釘選到選單列。"
+          }
+        }
+      }
+    },
+    "settings.accessories.remove_divider" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Remove divider"
+          }
+        }
+      }
+    },
+    "settings.accessories.reset_order" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Reset accessory order"
           }
         }
       }

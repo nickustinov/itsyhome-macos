@@ -109,37 +109,57 @@ extension AccessoriesSettingsView {
                     items.append(.groupSeparator)
                 }
 
-                // Group services by type
-                var servicesByType: [String: [ServiceData]] = [:]
-                for service in services {
-                    servicesByType[service.serviceType, default: []].append(service)
-                }
-
-                // Sort types by typeOrder and add separators between groups
-                let sortedTypes = servicesByType.keys.sorted { type1, type2 in
-                    let i1 = typeOrder.firstIndex(of: type1) ?? Int.max
-                    let i2 = typeOrder.firstIndex(of: type2) ?? Int.max
-                    return i1 < i2
-                }
-
-                var isFirstGroup = true
-                for serviceType in sortedTypes {
-                    guard let typeServices = servicesByType[serviceType] else { continue }
-
-                    if !isFirstGroup {
-                        items.append(.separator)
+                let savedOrder = preferences.accessoryOrder(forRoom: roomId)
+                if !savedOrder.isEmpty {
+                    // Custom order: render in the saved sequence, with user dividers
+                    // and any newly-discovered services appended at the end.
+                    let serviceLookup = Dictionary(services.map { ($0.uniqueIdentifier, $0) }, uniquingKeysWith: { a, _ in a })
+                    var seenServiceIds: Set<String> = []
+                    for token in savedOrder {
+                        if token.hasPrefix(PreferencesManager.dividerPrefix) {
+                            items.append(.divider(token: token, roomId: roomId))
+                        } else if let service = serviceLookup[token] {
+                            items.append(.accessory(service: service, roomHidden: isHidden, roomId: roomId))
+                            seenServiceIds.insert(token)
+                        }
                     }
-                    isFirstGroup = false
+                    // Append any new services that weren't in the saved order
+                    for service in services where !seenServiceIds.contains(service.uniqueIdentifier) {
+                        items.append(.accessory(service: service, roomHidden: isHidden, roomId: roomId))
+                    }
+                } else {
+                    // Default: group services by type with auto separators
+                    var servicesByType: [String: [ServiceData]] = [:]
+                    for service in services {
+                        servicesByType[service.serviceType, default: []].append(service)
+                    }
 
-                    let sortedServices = typeServices.sorted { $0.name < $1.name }
-                    for service in sortedServices {
-                        items.append(.accessory(service: service, roomHidden: isHidden))
+                    let sortedTypes = servicesByType.keys.sorted { type1, type2 in
+                        let i1 = typeOrder.firstIndex(of: type1) ?? Int.max
+                        let i2 = typeOrder.firstIndex(of: type2) ?? Int.max
+                        return i1 < i2
+                    }
+
+                    var isFirstGroup = true
+                    for serviceType in sortedTypes {
+                        guard let typeServices = servicesByType[serviceType] else { continue }
+
+                        if !isFirstGroup {
+                            items.append(.separator)
+                        }
+                        isFirstGroup = false
+
+                        let sortedServices = typeServices.sorted { $0.name < $1.name }
+                        for service in sortedServices {
+                            items.append(.accessory(service: service, roomHidden: isHidden, roomId: roomId))
+                        }
                     }
                 }
             }
         }
         roomTableItems = items
     }
+
 
     func rebuildSceneData() {
         guard let data = menuData else {
@@ -221,7 +241,7 @@ extension AccessoriesSettingsView {
         var height: CGFloat = 0
         for (index, item) in roomTableItems.enumerated() {
             switch item {
-            case .separator, .groupSeparator:
+            case .separator, .groupSeparator, .divider:
                 height += 12
             default:
                 height += L.rowHeight

@@ -127,4 +127,71 @@ extension PreferencesManager {
         order.insert(item, at: destinationIndex)
         setGroupOrder(order, forRoom: roomId)
     }
+
+    // MARK: - Accessory order by room (per-home)
+
+    /// Per-room accessory (service) ordering. Entries are either service UUID
+    /// strings or divider tokens of the form "divider:<uuid>". Empty means the
+    /// room uses the default type-grouped rendering.
+    var accessoryOrderByRoom: [String: [String]] {
+        get {
+            guard let data = defaults.data(forKey: homeKey(Keys.accessoryOrderByRoom)),
+                  let dict = try? JSONDecoder().decode([String: [String]].self, from: data) else {
+                return [:]
+            }
+            return dict
+        }
+        set {
+            if let data = try? JSONEncoder().encode(newValue) {
+                defaults.set(data, forKey: homeKey(Keys.accessoryOrderByRoom))
+                postNotification()
+            }
+        }
+    }
+
+    static let dividerPrefix = "divider:"
+
+    func accessoryOrder(forRoom roomId: String) -> [String] {
+        accessoryOrderByRoom[roomId] ?? []
+    }
+
+    func setAccessoryOrder(_ order: [String], forRoom roomId: String) {
+        var mapping = accessoryOrderByRoom
+        if order.isEmpty {
+            mapping.removeValue(forKey: roomId)
+        } else {
+            mapping[roomId] = order
+        }
+        accessoryOrderByRoom = mapping
+    }
+
+    func resetAccessoryOrder(forRoom roomId: String) {
+        setAccessoryOrder([], forRoom: roomId)
+    }
+
+    func addDivider(forRoom roomId: String, at insertionIndex: Int? = nil) {
+        var order = accessoryOrder(forRoom: roomId)
+        let token = "\(Self.dividerPrefix)\(UUID().uuidString)"
+        if let index = insertionIndex, index >= 0, index <= order.count {
+            order.insert(token, at: index)
+        } else {
+            order.append(token)
+        }
+        setAccessoryOrder(order, forRoom: roomId)
+    }
+
+    func removeItem(_ token: String, forRoom roomId: String) {
+        var order = accessoryOrder(forRoom: roomId)
+        order.removeAll { $0 == token }
+        setAccessoryOrder(order, forRoom: roomId)
+    }
+
+    func moveAccessoryInRoom(_ roomId: String, from sourceIndex: Int, to destinationIndex: Int) {
+        var order = accessoryOrder(forRoom: roomId)
+        guard sourceIndex >= 0, sourceIndex < order.count,
+              destinationIndex >= 0, destinationIndex < order.count else { return }
+        let item = order.remove(at: sourceIndex)
+        order.insert(item, at: destinationIndex)
+        setAccessoryOrder(order, forRoom: roomId)
+    }
 }

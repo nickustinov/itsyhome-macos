@@ -201,6 +201,104 @@ extension AccessoriesSettingsView {
         PreferencesManager.shared.togglePinnedRoom(roomId: room.uniqueIdentifier)
         updateRoomsSection()
     }
+
+    // MARK: - Room context menu
+
+    func roomsContextMenu(forRow row: Int) -> NSMenu? {
+        guard row >= 0, row < roomTableItems.count else { return nil }
+        let item = roomTableItems[row]
+
+        switch item {
+        case .accessory(_, _, let roomId):
+            let menu = NSMenu()
+            let addAbove = NSMenuItem(
+                title: String(localized: "settings.accessories.add_divider_above", defaultValue: "Add divider above", bundle: .macOSBridge),
+                action: #selector(addDividerAbove(_:)), keyEquivalent: "")
+            addAbove.target = self
+            addAbove.representedObject = ["roomId": roomId, "row": row] as NSDictionary
+            menu.addItem(addAbove)
+
+            let reset = resetOrderItem(roomId: roomId)
+            menu.addItem(NSMenuItem.separator())
+            menu.addItem(reset)
+            return menu
+
+        case .divider(let token, let roomId):
+            let menu = NSMenu()
+            let remove = NSMenuItem(
+                title: String(localized: "settings.accessories.remove_divider", defaultValue: "Remove divider", bundle: .macOSBridge),
+                action: #selector(removeDivider(_:)), keyEquivalent: "")
+            remove.target = self
+            remove.representedObject = ["roomId": roomId, "token": token] as NSDictionary
+            menu.addItem(remove)
+            menu.addItem(NSMenuItem.separator())
+            menu.addItem(resetOrderItem(roomId: roomId))
+            return menu
+
+        case .header(let room, _, _, _):
+            let menu = NSMenu()
+            menu.addItem(resetOrderItem(roomId: room.uniqueIdentifier))
+            return menu
+
+        default:
+            return nil
+        }
+    }
+
+    private func resetOrderItem(roomId: String) -> NSMenuItem {
+        let item = NSMenuItem(
+            title: String(localized: "settings.accessories.reset_order", defaultValue: "Reset accessory order", bundle: .macOSBridge),
+            action: #selector(resetAccessoryOrder(_:)), keyEquivalent: "")
+        item.target = self
+        item.representedObject = roomId as NSString
+        return item
+    }
+
+    @objc private func addDividerAbove(_ sender: NSMenuItem) {
+        guard let info = sender.representedObject as? NSDictionary,
+              let roomId = info["roomId"] as? String,
+              let row = info["row"] as? Int else { return }
+
+        // Build the room's current ordered token list (mirrors acceptRoomAccessoryDrop seeding).
+        var tokens: [String] = []
+        var insertIndex = 0
+        var inRoom = false
+        for (i, item) in roomTableItems.enumerated() {
+            switch item {
+            case .header(let room, _, _, _):
+                if inRoom { break }
+                inRoom = (room.uniqueIdentifier == roomId)
+            case .accessory(let service, _, _) where inRoom:
+                if i == row { insertIndex = tokens.count }
+                tokens.append(service.uniqueIdentifier)
+            case .divider(let token, _) where inRoom:
+                if i == row { insertIndex = tokens.count }
+                tokens.append(token)
+            case .separator where inRoom:
+                if i == row { insertIndex = tokens.count }
+                tokens.append("\(PreferencesManager.dividerPrefix)\(UUID().uuidString)")
+            default:
+                break
+            }
+        }
+        tokens.insert("\(PreferencesManager.dividerPrefix)\(UUID().uuidString)", at: min(insertIndex, tokens.count))
+        PreferencesManager.shared.setAccessoryOrder(tokens, forRoom: roomId)
+        rebuild()
+    }
+
+    @objc private func removeDivider(_ sender: NSMenuItem) {
+        guard let info = sender.representedObject as? NSDictionary,
+              let roomId = info["roomId"] as? String,
+              let token = info["token"] as? String else { return }
+        PreferencesManager.shared.removeItem(token, forRoom: roomId)
+        rebuild()
+    }
+
+    @objc private func resetAccessoryOrder(_ sender: NSMenuItem) {
+        guard let roomId = sender.representedObject as? String else { return }
+        PreferencesManager.shared.resetAccessoryOrder(forRoom: roomId)
+        rebuild()
+    }
 }
 
 // MARK: - Groups table view (prevents dragging when only one group)
@@ -219,6 +317,17 @@ class RoomsTableView: NSTableView {
 
     var roomTableItems: (() -> [RoomTableItem])?
     var groupCountForRoom: ((String) -> Int)?
+    var contextMenuForRow: ((Int) -> NSMenu?)?
+
+    override func menu(for event: NSEvent) -> NSMenu? {
+        let point = convert(event.locationInWindow, from: nil)
+        let clickedRow = row(at: point)
+        guard clickedRow >= 0 else { return super.menu(for: event) }
+        if let menu = contextMenuForRow?(clickedRow) {
+            return menu
+        }
+        return super.menu(for: event)
+    }
 
     override func draggingSession(_ session: NSDraggingSession, sourceOperationMaskFor context: NSDraggingContext) -> NSDragOperation {
         return context == .withinApplication ? .move : []
@@ -238,6 +347,8 @@ class RoomsTableView: NSTableView {
                 if let roomId = roomId, (groupCountForRoom?(roomId) ?? 0) <= 1 {
                     return
                 }
+            case .accessory, .divider:
+                break // accessories and user dividers are draggable for room reordering
             default:
                 return
             }
