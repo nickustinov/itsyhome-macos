@@ -30,6 +30,19 @@ extension HomeKitManager {
             )
         }
 
+        // Self-heal: if currentHome got lost (e.g. stale reference or a
+        // transient empty homes list during wake) but homes are now
+        // available, re-resolve from the saved identifier or fall back.
+        if currentHome == nil || !manager.homes.contains(where: { $0 === currentHome }), !manager.homes.isEmpty {
+            if let savedId = UserDefaults.standard.string(forKey: Self.selectedHomeKey),
+               let uuid = UUID(uuidString: savedId),
+               let saved = manager.homes.first(where: { $0.uniqueIdentifier == uuid }) {
+                currentHome = saved
+            } else {
+                currentHome = manager.primaryHome ?? manager.homes.first
+            }
+        }
+
         guard let home = selectedHome else {
             logger.info("No current home selected")
             rooms = []

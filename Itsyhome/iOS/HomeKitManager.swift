@@ -14,10 +14,10 @@ private let logger = Logger(subsystem: "com.nickustinov.itsyhome", category: "Ho
 
 class HomeKitManager: NSObject, Mac2iOS, HMHomeManagerDelegate {
 
-    private static let selectedHomeKey = "selectedHomeIdentifier"
+    static let selectedHomeKey = "selectedHomeIdentifier"
 
     var homeManager: HMHomeManager?
-    private var currentHome: HMHome?
+    var currentHome: HMHome?
 
     weak var macOSDelegate: iOS2Mac?
 
@@ -44,10 +44,20 @@ class HomeKitManager: NSObject, Mac2iOS, HMHomeManagerDelegate {
     var selectedHomeIdentifier: UUID? {
         get { currentHome?.uniqueIdentifier }
         set {
-            if let id = newValue, let manager = homeManager {
-                currentHome = manager.homes.first { $0.uniqueIdentifier == id }
-                // Persist the selection
+            if let id = newValue {
+                // Persist the intent even if the home isn't currently known —
+                // HomeKit's homes list can be transiently empty after wake,
+                // and homeManagerDidUpdateHomes will use the saved id to restore.
                 UserDefaults.standard.set(id.uuidString, forKey: Self.selectedHomeKey)
+                if let found = homeManager?.homes.first(where: { $0.uniqueIdentifier == id }) {
+                    currentHome = found
+                } else {
+                    // Target not available right now — don't clobber the existing
+                    // selection with nil; that would blank the menu until the
+                    // delegate refires (which may never happen if HomeKit is stuck).
+                    logger.warning("Selected home \(id) not in manager.homes; keeping current selection")
+                    return
+                }
             } else {
                 currentHome = homeManager?.primaryHome ?? homeManager?.homes.first
                 UserDefaults.standard.removeObject(forKey: Self.selectedHomeKey)
