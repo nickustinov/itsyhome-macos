@@ -197,28 +197,47 @@ final class EntityMapper {
         var roomAssignments: [String: Int] = [:]
 
         for (deviceId, states) in deviceEntities {
-            let services = states.compactMap { mapEntityToService($0) }
-            guard !services.isEmpty else { continue }
+            // Split a device's entities by their resolved area so entities with
+            // per-entity area overrides end up in the correct room. The menu
+            // groups by accessory.roomIdentifier, so a multi-area device must
+            // become multiple virtual accessories — one per area.
+            var statesByArea: [String?: [HAEntityState]] = [:]
+            for state in states {
+                let entityDeviceId = entityRegistry[state.entityId]?.deviceId ?? deviceId
+                let entityAreaId = resolveAreaId(for: state, deviceId: entityDeviceId)
+                statesByArea[entityAreaId, default: []].append(state)
+            }
 
             let device = deviceId.flatMap { devices[$0] }
-            let areaId = resolveAreaId(deviceId: deviceId, states: states)
-            let roomUUID = areaId.flatMap { deterministicUUID(for: $0) }
-
-            let accessoryId = deviceId.flatMap { deterministicUUID(for: $0) }
-                ?? deterministicUUID(for: states.first!.entityId)
-
             let accessoryName = device?.name ?? states.first?.friendlyName ?? "Unknown"
+            let hasMultipleAreas = statesByArea.count > 1
 
-            // Track room assignments
-            roomAssignments[areaId ?? "nil", default: 0] += 1
+            for (areaId, areaStates) in statesByArea {
+                let services = areaStates.compactMap { mapEntityToService($0) }
+                guard !services.isEmpty else { continue }
 
-            accessories.append(AccessoryData(
-                uniqueIdentifier: accessoryId,
-                name: accessoryName,
-                roomIdentifier: roomUUID,
-                services: services,
-                isReachable: states.first?.state != "unavailable"
-            ))
+                let roomUUID = areaId.flatMap { deterministicUUID(for: $0) }
+
+                // Keep UUID stable for single-area devices (backward compatible);
+                // disambiguate per-area when a device spans multiple areas.
+                let accessoryKey: String
+                if let deviceId {
+                    accessoryKey = hasMultipleAreas ? "\(deviceId)|area=\(areaId ?? "none")" : deviceId
+                } else {
+                    accessoryKey = areaStates.first!.entityId
+                }
+                let accessoryId = deterministicUUID(for: accessoryKey)
+
+                roomAssignments[areaId ?? "nil", default: 0] += 1
+
+                accessories.append(AccessoryData(
+                    uniqueIdentifier: accessoryId,
+                    name: accessoryName,
+                    roomIdentifier: roomUUID,
+                    services: services,
+                    isReachable: areaStates.first?.state != "unavailable"
+                ))
+            }
         }
 
         logger.info("Room assignments: \(roomAssignments)")

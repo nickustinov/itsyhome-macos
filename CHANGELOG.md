@@ -6,6 +6,7 @@
 - Fix camera talk button not working (#114)
 - Reduce idle battery usage from chatty HomeKit bridges (#113)
 - Fix menu going blank after wake with SSID-based home switching (#112)
+- Fix Home Assistant covers grouped in the wrong room when a single device spans multiple areas (#109)
 
 ## 2.4.0
 
