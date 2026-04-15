@@ -7,6 +7,7 @@
 
 import UIKit
 import HomeKit
+import AVFoundation
 
 extension CameraViewController {
 
@@ -123,15 +124,40 @@ extension CameraViewController {
     }
 
     @objc private func talkButtonTapped() {
-        guard let speakerMuteChar = speakerControl?.mute else { return }
+        guard let stream = activeStreamControl?.cameraStream else { return }
 
         let newTalkState = !isTalking
 
-        speakerMuteChar.writeValue(!newTalkState) { [weak self] error in
-            DispatchQueue.main.async {
-                guard error == nil else { return }
-                self?.isTalking = newTalkState
-                self?.updateTalkButtonState()
+        if newTalkState {
+            Task { @MainActor in
+                let granted: Bool
+                if #available(iOS 17.0, macOS 14.0, *) {
+                    granted = await AVAudioApplication.requestRecordPermission()
+                } else {
+                    granted = await withCheckedContinuation { cont in
+                        AVAudioSession.sharedInstance().requestRecordPermission { result in
+                            cont.resume(returning: result)
+                        }
+                    }
+                }
+                guard granted else { return }
+                guard let stream = self.activeStreamControl?.cameraStream else { return }
+                stream.updateAudioStreamSetting(.bidirectionalAudioAllowed) { [weak self] error in
+                    DispatchQueue.main.async {
+                        guard error == nil else { return }
+                        self?.isTalking = true
+                        self?.updateTalkButtonState()
+                    }
+                }
+            }
+        } else {
+            let setting: HMCameraAudioStreamSetting = isMuted ? .muted : (HMCameraAudioStreamSetting(rawValue: 2) ?? .muted)
+            stream.updateAudioStreamSetting(setting) { [weak self] error in
+                DispatchQueue.main.async {
+                    guard error == nil else { return }
+                    self?.isTalking = false
+                    self?.updateTalkButtonState()
+                }
             }
         }
     }
