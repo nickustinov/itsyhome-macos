@@ -83,7 +83,7 @@ class ItsyhomeIOSSection: SettingsCard {
 
         let features = [
             String(localized: "settings.itsyhome_ios.feature_control", defaultValue: "Control lights, climate, locks, covers, cameras", bundle: .macOSBridge),
-            String(localized: "settings.itsyhome_ios.feature_widgets", defaultValue: "Home screen widgets and Lock Screen controls", bundle: .macOSBridge),
+            String(localized: "settings.itsyhome_ios.feature_widgets", defaultValue: "Lock Screen controls", bundle: .macOSBridge),
             String(localized: "settings.itsyhome_ios.feature_shortcuts", defaultValue: "Shortcuts, scenes, and groups at your fingertips", bundle: .macOSBridge),
             String(localized: "settings.itsyhome_ios.feature_sync", defaultValue: "Same setup as macOS \u{2013} no extra configuration", bundle: .macOSBridge),
             String(localized: "settings.itsyhome_ios.feature_included", defaultValue: "Included with your Itsyhome Pro purchase", bundle: .macOSBridge)
