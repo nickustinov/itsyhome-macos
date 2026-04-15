@@ -178,11 +178,15 @@ extension HomeKitManager: HMAccessoryDelegate {
 
         macOSDelegate?.setReachability(accessoryIdentifier: id, isReachable: accessory.isReachable)
 
-        // Re-read all characteristic values when accessory becomes reachable,
-        // since we may have missed updates while it was unreachable
+        // Re-read characteristic values when accessory becomes reachable,
+        // since we may have missed updates while it was unreachable. Limit
+        // to the set that actually drives ServiceData to avoid read storms
+        // on recovery — flappy bridges otherwise hammer all metadata chars.
         if accessory.isReachable {
+            let observed = HomeKitManager.observedCharacteristicTypes
             for service in accessory.services {
                 for characteristic in service.characteristics {
+                    guard observed.contains(characteristic.characteristicType) else { continue }
                     characteristic.readValue { error in
                         if error == nil, let value = characteristic.value {
                             self.macOSDelegate?.updateCharacteristic(

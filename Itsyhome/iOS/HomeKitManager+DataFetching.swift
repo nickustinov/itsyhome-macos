@@ -121,15 +121,76 @@ extension HomeKitManager {
 
     // MARK: - Characteristic notification subscriptions
 
+    /// Characteristic types whose live updates actually drive menu state.
+    /// Subscribing only to these avoids notification storms from metadata
+    /// characteristics (firmware revision, manufacturer, model, etc.) that
+    /// never change at runtime.
+    static let observedCharacteristicTypes: Set<String> = [
+        HMCharacteristicTypePowerState,
+        CharacteristicTypes.outletInUse,
+        HMCharacteristicTypeBrightness,
+        CharacteristicTypes.hue,
+        CharacteristicTypes.saturation,
+        CharacteristicTypes.colorTemperature,
+        HMCharacteristicTypeCurrentTemperature,
+        HMCharacteristicTypeTargetTemperature,
+        HMCharacteristicTypeCurrentHeatingCooling,
+        HMCharacteristicTypeTargetHeatingCooling,
+        CharacteristicTypes.lockCurrentState,
+        CharacteristicTypes.lockTargetState,
+        HMCharacteristicTypeCurrentPosition,
+        HMCharacteristicTypeTargetPosition,
+        CharacteristicTypes.currentHorizontalTiltAngle,
+        CharacteristicTypes.targetHorizontalTiltAngle,
+        CharacteristicTypes.currentVerticalTiltAngle,
+        CharacteristicTypes.targetVerticalTiltAngle,
+        CharacteristicTypes.positionState,
+        HMCharacteristicTypeCurrentRelativeHumidity,
+        HMCharacteristicTypeMotionDetected,
+        CharacteristicTypes.active,
+        CharacteristicTypes.currentHeaterCoolerState,
+        CharacteristicTypes.targetHeaterCoolerState,
+        CharacteristicTypes.coolingThresholdTemperature,
+        CharacteristicTypes.heatingThresholdTemperature,
+        CharacteristicTypes.rotationSpeed,
+        CharacteristicTypes.rotationDirection,
+        CharacteristicTypes.targetFanState,
+        CharacteristicTypes.currentFanState,
+        CharacteristicTypes.swingMode,
+        CharacteristicTypes.currentDoorState,
+        CharacteristicTypes.targetDoorState,
+        CharacteristicTypes.obstructionDetected,
+        CharacteristicTypes.contactSensorState,
+        CharacteristicTypes.currentHumidifierDehumidifierState,
+        CharacteristicTypes.targetHumidifierDehumidifierState,
+        CharacteristicTypes.humidifierThreshold,
+        CharacteristicTypes.dehumidifierThreshold,
+        CharacteristicTypes.waterLevel,
+        CharacteristicTypes.currentAirPurifierState,
+        CharacteristicTypes.targetAirPurifierState,
+        CharacteristicTypes.inUse,
+        CharacteristicTypes.setDuration,
+        CharacteristicTypes.remainingDuration,
+        CharacteristicTypes.securitySystemCurrentState,
+        CharacteristicTypes.securitySystemTargetState,
+        CharacteristicTypes.currentTiltAngle,
+        CharacteristicTypes.targetTiltAngle,
+        CharacteristicTypes.currentSlatState
+    ]
+
     func subscribeToCharacteristicNotifications() {
         guard let home = selectedHome else { return }
 
-        // Collect characteristics that need subscription, grouped by accessory
+        // Collect characteristics that need subscription, grouped by accessory.
+        // Filter to only types that drive ServiceData — subscribing to metadata
+        // characteristics caused chatty bridges to keep the app awake 24/7.
+        let observed = Self.observedCharacteristicTypes
         var accessoryBatches: [[HMCharacteristic]] = []
         for accessory in home.accessories {
             var batch: [HMCharacteristic] = []
             for service in accessory.services {
                 for characteristic in service.characteristics {
+                    guard observed.contains(characteristic.characteristicType) else { continue }
                     guard characteristic.properties.contains(
                         HMCharacteristicPropertySupportsEventNotification
                     ) else { continue }

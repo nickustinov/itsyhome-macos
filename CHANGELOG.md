@@ -4,6 +4,7 @@
 
 - Fix RGB colour picker setting wrong colour on Hue lights (delay saturation write after hue)
 - Fix camera talk button not working (#114)
+- Reduce idle battery usage from chatty HomeKit bridges (#113)
 
 ## 2.4.0
 
