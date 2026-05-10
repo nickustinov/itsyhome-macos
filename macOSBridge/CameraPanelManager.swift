@@ -432,22 +432,27 @@ final class CameraPanelManager {
 
     // MARK: - Click Outside Monitor
 
+    private func isPointInsidePanelOrStatusButton(_ screenPoint: NSPoint) -> Bool {
+        if let panel = cameraPanelWindow, panel.frame.contains(screenPoint) {
+            return true
+        }
+        if let button = cameraStatusItem?.button, let btnWindow = button.window {
+            let btnRect = button.convert(button.bounds, to: nil)
+            let btnScreenRect = btnWindow.convertToScreen(btnRect)
+            if btnScreenRect.contains(screenPoint) {
+                return true
+            }
+        }
+        return false
+    }
+
     private func setupClickOutsideMonitor() {
         removeClickOutsideMonitor()
 
         let dismissCheck: () -> Void = { [weak self] in
             guard let self = self else { return }
             let screenPoint = NSEvent.mouseLocation
-            if let panel = self.cameraPanelWindow, panel.frame.contains(screenPoint) {
-                return
-            }
-            if let button = self.cameraStatusItem?.button, let btnWindow = button.window {
-                let btnRect = button.convert(button.bounds, to: nil)
-                let btnScreenRect = btnWindow.convertToScreen(btnRect)
-                if btnScreenRect.contains(screenPoint) {
-                    return
-                }
-            }
+            if self.isPointInsidePanelOrStatusButton(screenPoint) { return }
             self.dismissCameraPanel()
         }
 
@@ -459,9 +464,13 @@ final class CameraPanelManager {
         // Catch clicks on other windows within the app (e.g. settings window)
         localClickMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] event in
             guard let self = self, self.cameraPanelWindow?.isVisible == true else { return event }
-            // Ignore clicks on the camera panel itself or its status bar button
-            if event.window == self.cameraPanelWindow { return event }
-            if event.window == self.cameraStatusItem?.button?.window { return event }
+            let screenPoint: NSPoint
+            if let eventWindow = event.window {
+                screenPoint = eventWindow.convertPoint(toScreen: event.locationInWindow)
+            } else {
+                screenPoint = NSEvent.mouseLocation
+            }
+            if self.isPointInsidePanelOrStatusButton(screenPoint) { return event }
             self.dismissCameraPanel()
             return event
         }
