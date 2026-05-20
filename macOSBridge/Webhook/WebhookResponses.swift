@@ -98,6 +98,11 @@ struct ServiceState: Encodable {
     var heatingThreshold: Double?
     var coolingThreshold: Double?
     var mode: String?
+    // Modes the device actually supports (e.g. ["off","cool","heat_cool","auto"]).
+    // HA climate provides this directly; HK Thermostat / HeaterCooler get
+    // translated from their valid-state arrays. Clients should restrict the
+    // Mode submenu to this list so users don't pick a mode the device drops.
+    var availableModes: [String]?
     var humidity: Double?
     var hue: Double?
     var saturation: Double?

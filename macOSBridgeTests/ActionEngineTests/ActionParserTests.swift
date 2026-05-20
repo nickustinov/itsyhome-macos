@@ -189,7 +189,7 @@ final class ActionParserTests: XCTestCase {
         switch result {
         case .success(let command):
             XCTAssertEqual(command.target, "thermostat")
-            XCTAssertEqual(command.action, .setMode(.heat))
+            XCTAssertEqual(command.action, .setMode("heat"))
         case .failure(let error):
             XCTFail("Unexpected error: \(error)")
         }
@@ -201,7 +201,7 @@ final class ActionParserTests: XCTestCase {
         switch result {
         case .success(let command):
             XCTAssertEqual(command.target, "bedroom ac")
-            XCTAssertEqual(command.action, .setMode(.cool))
+            XCTAssertEqual(command.action, .setMode("cool"))
         case .failure(let error):
             XCTFail("Unexpected error: \(error)")
         }
@@ -212,7 +212,7 @@ final class ActionParserTests: XCTestCase {
 
         switch result {
         case .success(let command):
-            XCTAssertEqual(command.action, .setMode(.auto))
+            XCTAssertEqual(command.action, .setMode("auto"))
         case .failure(let error):
             XCTFail("Unexpected error: \(error)")
         }
@@ -223,7 +223,7 @@ final class ActionParserTests: XCTestCase {
 
         switch result {
         case .success(let command):
-            XCTAssertEqual(command.action, .setMode(.off))
+            XCTAssertEqual(command.action, .setMode("off"))
         case .failure(let error):
             XCTFail("Unexpected error: \(error)")
         }

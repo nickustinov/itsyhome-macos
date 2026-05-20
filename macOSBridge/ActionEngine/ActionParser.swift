@@ -283,27 +283,23 @@ enum ActionParser {
     }
 
     private static func parseModeCommand(tokens: [String]) -> Result<ParsedCommand, ParseError> {
-        // "set mode heat thermostat"
+        // "set mode <mode> <target>". Mode is now a free-form string so
+        // HA-specific values (heat_cool, dry, fan_only, ...) flow through;
+        // the engine validates against per-device availability lists.
+        // Common synonyms are normalised to their canonical HA form.
         guard tokens.count >= 4 else {
             return .failure(.missingTarget)
         }
-
-        let modeName = tokens[2]
-        let mode: ThermostatMode
-
-        switch modeName {
-        case "off":
-            mode = .off
-        case "heat", "heating":
-            mode = .heat
-        case "cool", "cooling":
-            mode = .cool
-        case "auto", "automatic":
-            mode = .auto
-        default:
-            return .failure(.invalidValue(modeName))
+        let raw = tokens[2]
+        let mode: String
+        switch raw {
+        case "heating":          mode = "heat"
+        case "cooling":          mode = "cool"
+        case "automatic":        mode = "auto"
+        case "heatcool":         mode = "heat_cool"
+        case "fan", "fanonly":   mode = "fan_only"
+        default:                 mode = raw
         }
-
         let target = tokens.dropFirst(3).joined(separator: " ")
         return .success(ParsedCommand(target: target, action: .setMode(mode)))
     }

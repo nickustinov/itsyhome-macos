@@ -30,7 +30,10 @@ enum Action: Equatable {
 
     // Thermostat
     case setTargetTemp(Double)
-    case setMode(ThermostatMode)
+    // Mode is a string so HA-specific values ("heat_cool", "dry", "fan_only")
+    // pass through alongside the standard HK four (off/heat/cool/auto).
+    // executeThermostatMode validates against per-device availability.
+    case setMode(String)
     // Auto-mode thermostats and AC heater-coolers use two setpoints
     // (lo = heatingThresholdTemperature, hi = coolingThresholdTemperature)
     // instead of a single targetTemperature.
@@ -419,16 +422,66 @@ class ActionEngine {
         return true
     }
 
-    private func executeThermostatMode(_ mode: ThermostatMode, on service: ServiceData, bridge: Mac2iOS) -> Bool {
-        // Standard thermostat
-        if let idString = service.targetHeatingCoolingStateId, let id = UUID(uuidString: idString) {
-            writeCharacteristic(identifier: id, value: mode.rawValue, bridge: bridge)
+    private func executeThermostatMode(_ mode: String, on service: ServiceData, bridge: Mac2iOS) -> Bool {
+        // Three flavours of climate device, each with its own quirks (mirrors
+        // the menubar's ThermostatMenuItem / ACMenuItem / HAClimateMenuItem
+        // implementations):
+        //
+        //   • HA climate – `availableHVACModes` lists the supported strings.
+        //     Standard HK names are encoded as ints (0/1/2/3); HA-specific
+        //     names (auto, dry, fan_only, …) are written as strings so the
+        //     HA platform's writeClimateValue routes them correctly.
+        //   • HK Thermostat – `validTargetHeatingCoolingStates` is a subset
+        //     of [0,1,2,3]. Write the matching Int; reject unsupported.
+        //   • HK HeaterCooler (AC) – `validTargetHeaterCoolerStates` is a
+        //     subset of [0,1,2] (0=auto, 1=heat, 2=cool). Power lives on
+        //     the separate `active` characteristic, so "off" flips Active
+        //     and active modes flip Active on plus write the target state.
+
+        // HA climate
+        if let availableModes = service.availableHVACModes, !availableModes.isEmpty {
+            guard availableModes.contains(mode) else { return false }
+            guard let idString = service.targetHeatingCoolingStateId,
+                  let id = UUID(uuidString: idString) else { return false }
+            switch mode {
+            case "off":       writeCharacteristic(identifier: id, value: 0, bridge: bridge)
+            case "heat":      writeCharacteristic(identifier: id, value: 1, bridge: bridge)
+            case "cool":      writeCharacteristic(identifier: id, value: 2, bridge: bridge)
+            case "heat_cool": writeCharacteristic(identifier: id, value: 3, bridge: bridge)
+            default:          writeCharacteristic(identifier: id, value: mode, bridge: bridge)
+            }
             return true
         }
 
-        // HeaterCooler (AC)
+        // HK Thermostat
+        if let idString = service.targetHeatingCoolingStateId, let id = UUID(uuidString: idString) {
+            let intFor: [String: Int] = ["off": 0, "heat": 1, "cool": 2, "auto": 3]
+            guard let value = intFor[mode] else { return false }
+            if let valid = service.validTargetHeatingCoolingStates, !valid.contains(value) {
+                return false
+            }
+            writeCharacteristic(identifier: id, value: value, bridge: bridge)
+            return true
+        }
+
+        // HK HeaterCooler (AC)
         if let idString = service.targetHeaterCoolerStateId, let id = UUID(uuidString: idString) {
-            writeCharacteristic(identifier: id, value: mode.rawValue, bridge: bridge)
+            if mode == "off" {
+                guard let activeIdStr = service.activeId,
+                      let activeId = UUID(uuidString: activeIdStr) else { return false }
+                writeCharacteristic(identifier: activeId, value: 0, bridge: bridge)
+                return true
+            }
+            let intFor: [String: Int] = ["auto": 0, "heat": 1, "cool": 2]
+            guard let value = intFor[mode] else { return false }
+            if let valid = service.validTargetHeaterCoolerStates, !valid.contains(value) {
+                return false
+            }
+            // Power on first so the mode change actually takes effect.
+            if let activeIdStr = service.activeId, let activeId = UUID(uuidString: activeIdStr) {
+                writeCharacteristic(identifier: activeId, value: 1, bridge: bridge)
+            }
+            writeCharacteristic(identifier: id, value: value, bridge: bridge)
             return true
         }
 

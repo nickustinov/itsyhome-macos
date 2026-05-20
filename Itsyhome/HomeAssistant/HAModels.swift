@@ -254,10 +254,13 @@ extension HAEntityState {
         attributes["brightness"] as? Int
     }
 
-    /// Brightness as percentage (0-100)
+    /// Brightness as percentage (0-100). Round, don't truncate: Int(b / 2.55)
+    /// drops 0.49 from each conversion, so 127/255 reads back as 49% even
+    /// though the user set 50%. Symmetric with the write-side fix in
+    /// HomeAssistantPlatform+Actions.swift.
     var brightnessPercent: Int? {
         guard let b = brightness else { return nil }
-        return Int(Double(b) / 2.55)
+        return Int((Double(b) / 2.55).rounded())
     }
 
     /// Color temperature in Kelvin

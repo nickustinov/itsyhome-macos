@@ -596,6 +596,38 @@ extension WebhookServer {
         }
     }
 
+    /// Unified list of climate modes the device will actually accept,
+    /// normalised to the HA string vocabulary so clients can render one
+    /// vocabulary regardless of whether the underlying device is HA-bridged
+    /// or HK-native. Returns nil for non-climate services.
+    ///
+    /// Quirks mirrored from the menubar menu items:
+    ///   - HA climate (HAClimateMenuItem): use `availableHVACModes` as-is.
+    ///   - HK Thermostat (ThermostatMenuItem): `validTargetHeatingCoolingStates`
+    ///     is a subset of [0,1,2,3] → off/heat/cool/auto. Defaults to all four.
+    ///   - HK HeaterCooler (ACMenuItem): `validTargetHeaterCoolerStates` is
+    ///     a subset of [0,1,2] → auto/heat/cool. "off" is exposed via the
+    ///     separate Active characteristic, so prepend it when an `activeId`
+    ///     exists. Defaults to [auto,heat,cool] plus off.
+    private func climateAvailableModes(for service: ServiceData) -> [String]? {
+        if let modes = service.availableHVACModes, !modes.isEmpty {
+            return modes
+        }
+        if service.targetHeatingCoolingStateId != nil {
+            let labels: [Int: String] = [0: "off", 1: "heat", 2: "cool", 3: "auto"]
+            let valid = service.validTargetHeatingCoolingStates ?? [0, 1, 2, 3]
+            return valid.compactMap { labels[$0] }
+        }
+        if service.targetHeaterCoolerStateId != nil {
+            let labels: [Int: String] = [0: "auto", 1: "heat", 2: "cool"]
+            let valid = service.validTargetHeaterCoolerStates ?? [0, 1, 2]
+            var modes = valid.compactMap { labels[$0] }
+            if service.activeId != nil { modes.insert("off", at: 0) }
+            return modes
+        }
+        return nil
+    }
+
     private func buildServiceInfo(_ service: ServiceData, in data: MenuData, engine: ActionEngine) -> ServiceInfoResponse {
         let roomLookup = data.roomLookup()
         let accessory = data.accessories.first { $0.services.contains(where: { $0.uniqueIdentifier == service.uniqueIdentifier }) }
@@ -648,14 +680,33 @@ extension WebhookServer {
             state.coolingThreshold = doubleValue(value)
         }
 
-        // Mode
+        // Mode. For HA climate the bridge stores HA-specific modes as extended
+        // ints beyond the HK 0-3 range (see EntityMapper.mapHVACModeToHomeKit:
+        // 3=heat_cool, 4=dry, 5=fan_only, 6=auto). Falling through to
+        // TargetThermostatState dropped 4/5/6 to "off" and labelled 3 as
+        // HK's "auto", so the UI lied about the current mode. Detect HA by
+        // the presence of availableHVACModes and translate explicitly.
         if let value = getValue(service.heatingCoolingStateId) {
             state.mode = ThermostatState(rawValue: intValue(value))?.label ?? "off"
         } else if let value = getValue(service.targetHeaterCoolerStateId) {
             state.mode = HeaterCoolerState(rawValue: intValue(value))?.label ?? "off"
         } else if let value = getValue(service.targetHeatingCoolingStateId) {
-            state.mode = TargetThermostatState(rawValue: intValue(value))?.label ?? "off"
+            let raw = intValue(value)
+            if service.availableHVACModes != nil {
+                let extended: [Int: String] = [0: "off", 1: "heat", 2: "cool", 3: "heat_cool", 4: "dry", 5: "fan_only", 6: "auto"]
+                state.mode = extended[raw] ?? "off"
+            } else {
+                state.mode = TargetThermostatState(rawValue: raw)?.label ?? "off"
+            }
         }
+
+        // List of modes the device will actually accept. HA climate emits
+        // `availableHVACModes` directly (includes heat_cool, dry, fan_only,
+        // etc.); HK Thermostat / HeaterCooler advertise the supported
+        // subset of their integer valid-states arrays. Clients should drive
+        // the Mode submenu from this list so they never offer a write the
+        // device will silently drop.
+        state.availableModes = climateAvailableModes(for: service)
 
         if let value = getValue(service.humidityId) {
             state.humidity = doubleValue(value)

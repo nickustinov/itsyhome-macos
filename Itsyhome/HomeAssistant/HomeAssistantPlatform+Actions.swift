@@ -153,7 +153,11 @@ extension HomeAssistantPlatform {
             } else {
                 return
             }
-            let haBrightness = Int(Double(brightness) * 2.55)
+            // Round, don't truncate. With Int(x * 2.55), 50% becomes 127
+            // (instead of 128) and round-trips back as 49% on read. Same
+            // off-by-one applies symmetrically on the read side – see
+            // HAEntityState.brightnessPercent.
+            let haBrightness = Int((Double(brightness) * 2.55).rounded())
             try await client.callService(
                 domain: "light",
                 service: "turn_on",
