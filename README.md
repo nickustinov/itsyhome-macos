@@ -174,6 +174,7 @@ curl http://localhost:8423/arm/stay/Hall/Alarm
 curl http://localhost:8423/arm/away/Hall/Alarm
 curl http://localhost:8423/arm/night/Hall/Alarm
 curl http://localhost:8423/disarm/Hall/Alarm
+curl http://localhost:8423/refresh
 ```
 
 **Query endpoints:**
@@ -181,14 +182,18 @@ curl http://localhost:8423/disarm/Hall/Alarm
 | Endpoint | Description |
 |----------|-------------|
 | `/status` | Home summary (rooms, devices, reachable/unreachable counts) |
-| `/list/rooms` | List all rooms |
+| `/list/rooms` | List all rooms, with the Phosphor icon used in the menubar |
 | `/list/devices` | List all devices with type and reachability |
 | `/list/devices/<room>` | List devices in a specific room |
 | `/list/scenes` | List all scenes |
 | `/list/groups` | List all device groups (includes room info for room-scoped groups) |
 | `/list/groups/<room>` | List groups available in a specific room (room-scoped + global) |
+| `/list/favourites` | List items pinned as favourites (services, device groups, scenes, rooms). Alias: `/list/favorites` |
 | `/info/<target>` | Detailed device/room info with current state |
+| `/icon/<name>` | PNG of a Phosphor icon. Query params: `?fill=1` for filled variant, `?size=64` for size in pixels |
 | `/events` | SSE event stream for real-time characteristic changes |
+
+List responses respect the user's drag ordering from Settings → Accessories, and hidden items are filtered out (a specific `/info/<name>` lookup still works for hidden items).
 
 **Event stream (SSE):**
 
