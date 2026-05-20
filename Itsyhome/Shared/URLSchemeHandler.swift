@@ -50,6 +50,19 @@ enum URLSchemeHandler {
         case "temp":
             return parseValueAction("temperature", components: components)
 
+        // Thermostat-specific endpoints. /mode/<mode>/<target> sets
+        // off/heat/cool/auto; /heat and /cool set the heating/cooling
+        // threshold (lo/hi) for auto-mode thermostats and HeaterCooler ACs
+        // that don't expose a single targetTemperature characteristic.
+        case "mode":
+            return parseModeAction(components: components)
+
+        case "heat":
+            return parseValueAction("heat", components: components)
+
+        case "cool":
+            return parseValueAction("cool", components: components)
+
         case "color":
             return parseColorAction(components: components)
 
@@ -97,6 +110,18 @@ enum URLSchemeHandler {
         let target = components.dropFirst(2).joined(separator: "/").removingPercentEncoding
             ?? components.dropFirst(2).joined(separator: "/")
         return "set color \(hue) \(saturation) \(target)"
+    }
+
+    /// Parse mode action for thermostats
+    /// URL: itsyhome://mode/heat/Bedroom/Ecobee → "set mode heat Bedroom/Ecobee"
+    private static func parseModeAction(components: [String]) -> String? {
+        guard components.count >= 2 else {
+            return nil
+        }
+        let mode = components[0]
+        let target = components.dropFirst().joined(separator: "/").removingPercentEncoding
+            ?? components.dropFirst().joined(separator: "/")
+        return "set mode \(mode) \(target)"
     }
 
     /// Parse arm action with mode

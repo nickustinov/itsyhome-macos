@@ -31,6 +31,11 @@ enum Action: Equatable {
     // Thermostat
     case setTargetTemp(Double)
     case setMode(ThermostatMode)
+    // Auto-mode thermostats and AC heater-coolers use two setpoints
+    // (lo = heatingThresholdTemperature, hi = coolingThresholdTemperature)
+    // instead of a single targetTemperature.
+    case setHeatingThreshold(Double)
+    case setCoolingThreshold(Double)
 
     // Lock
     case lock
@@ -199,6 +204,10 @@ class ActionEngine {
             return executeTargetTemp(temp, on: service, bridge: bridge)
         case .setMode(let mode):
             return executeThermostatMode(mode, on: service, bridge: bridge)
+        case .setHeatingThreshold(let temp):
+            return executeHeatingThreshold(temp, on: service, bridge: bridge)
+        case .setCoolingThreshold(let temp):
+            return executeCoolingThreshold(temp, on: service, bridge: bridge)
         case .lock:
             return executeLockState(locked: true, on: service, bridge: bridge)
         case .unlock:
@@ -290,6 +299,16 @@ class ActionEngine {
             return true
         }
 
+        // Thermostats (HomeKit and HA-bridged) don't expose a discrete power
+        // characteristic — they use TargetHeatingCoolingState (0=off, 1=heat,
+        // 2=cool, 3=auto). Mirror the toggle path: on → auto, off → off.
+        // The Temperature submenu still lets the user pick heat/cool/auto
+        // explicitly afterwards.
+        if let idString = service.targetHeatingCoolingStateId, let id = UUID(uuidString: idString) {
+            writeCharacteristic(identifier: id, value: on ? 3 : 0, bridge: bridge)
+            return true
+        }
+
         return false
     }
 
@@ -361,24 +380,43 @@ class ActionEngine {
     }
 
     private func executeTargetTemp(_ temp: Double, on service: ServiceData, bridge: Mac2iOS) -> Bool {
-        // Standard thermostat
+        // Standard thermostat with a single target temperature characteristic.
         if let idString = service.targetTemperatureId, let id = UUID(uuidString: idString) {
             writeCharacteristic(identifier: id, value: temp, bridge: bridge)
             return true
         }
 
-        // HeaterCooler (AC) - set both cooling and heating thresholds
-        var success = false
+        // Auto-mode thermostats (e.g. Ecobee) and HeaterCooler ACs expose
+        // separate heating/cooling thresholds. Writing both to the same
+        // value clobbered the auto-mode band (Ecobee enforces a 1°C minimum
+        // spread and silently rejected one of the writes). Interpret /temp
+        // as "set the upper comfort bound" – the cooling threshold – and
+        // leave the heating threshold alone. Clients that need finer control
+        // can use the explicit /heat and /cool endpoints.
         if let idString = service.coolingThresholdTemperatureId, let id = UUID(uuidString: idString) {
             writeCharacteristic(identifier: id, value: temp, bridge: bridge)
-            success = true
+            return true
         }
         if let idString = service.heatingThresholdTemperatureId, let id = UUID(uuidString: idString) {
             writeCharacteristic(identifier: id, value: temp, bridge: bridge)
-            success = true
+            return true
         }
 
-        return success
+        return false
+    }
+
+    private func executeHeatingThreshold(_ temp: Double, on service: ServiceData, bridge: Mac2iOS) -> Bool {
+        guard let idString = service.heatingThresholdTemperatureId,
+              let id = UUID(uuidString: idString) else { return false }
+        writeCharacteristic(identifier: id, value: temp, bridge: bridge)
+        return true
+    }
+
+    private func executeCoolingThreshold(_ temp: Double, on service: ServiceData, bridge: Mac2iOS) -> Bool {
+        guard let idString = service.coolingThresholdTemperatureId,
+              let id = UUID(uuidString: idString) else { return false }
+        writeCharacteristic(identifier: id, value: temp, bridge: bridge)
+        return true
     }
 
     private func executeThermostatMode(_ mode: ThermostatMode, on service: ServiceData, bridge: Mac2iOS) -> Bool {

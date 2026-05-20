@@ -92,6 +92,11 @@ struct ServiceState: Encodable {
     var position: Int?
     var temperature: Double?
     var targetTemperature: Double?
+    // Auto-mode thermostats (e.g. Ecobee) and HeaterCooler ACs use two
+    // setpoints instead of a single targetTemperature. Either or both can
+    // be present; clients should render whichever is non-nil.
+    var heatingThreshold: Double?
+    var coolingThreshold: Double?
     var mode: String?
     var humidity: Double?
     var hue: Double?

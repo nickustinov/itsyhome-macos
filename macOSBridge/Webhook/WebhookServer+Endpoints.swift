@@ -635,14 +635,17 @@ extension WebhookServer {
         }
         if let value = getValue(service.targetTemperatureId) {
             state.targetTemperature = doubleValue(value)
-        } else {
-            // AC uses cooling/heating threshold temperatures
-            let targetMode = getValue(service.targetHeaterCoolerStateId).map { intValue($0) }
-            if targetMode == 1, let value = getValue(service.heatingThresholdTemperatureId) {
-                state.targetTemperature = doubleValue(value)
-            } else if let value = getValue(service.coolingThresholdTemperatureId) {
-                state.targetTemperature = doubleValue(value)
-            }
+        }
+        // Auto-mode thermostats (e.g. Ecobee) and HeaterCooler ACs expose
+        // these instead of (or alongside) a single targetTemperature.
+        // Surface both raw values so clients can render a true lo/hi band
+        // rather than the misleading single-number fallback we used to
+        // synthesise here.
+        if let value = getValue(service.heatingThresholdTemperatureId) {
+            state.heatingThreshold = doubleValue(value)
+        }
+        if let value = getValue(service.coolingThresholdTemperatureId) {
+            state.coolingThreshold = doubleValue(value)
         }
 
         // Mode
@@ -696,7 +699,9 @@ extension WebhookServer {
         // Check if state has any values. speedMin/speedMax are metadata
         // alongside `speed`, so we don't count them on their own.
         let hasState = state.on != nil || state.brightness != nil || state.position != nil ||
-                       state.temperature != nil || state.targetTemperature != nil || state.mode != nil ||
+                       state.temperature != nil || state.targetTemperature != nil ||
+                       state.heatingThreshold != nil || state.coolingThreshold != nil ||
+                       state.mode != nil ||
                        state.humidity != nil || state.hue != nil || state.saturation != nil ||
                        state.locked != nil || state.doorState != nil || state.speed != nil ||
                        state.securityState != nil

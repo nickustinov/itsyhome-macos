@@ -171,6 +171,12 @@ enum ActionParser {
         case "temperature", "temp":
             return parseTemperatureCommand(tokens: tokens)
 
+        case "heat", "heating", "heatingthreshold":
+            return parseThresholdCommand(tokens: tokens, builder: Action.setHeatingThreshold)
+
+        case "cool", "cooling", "coolingthreshold":
+            return parseThresholdCommand(tokens: tokens, builder: Action.setCoolingThreshold)
+
         case "color", "colour":
             return parseColorCommand(tokens: tokens)
 
@@ -228,6 +234,20 @@ enum ActionParser {
 
         let target = tokens.dropFirst(3).joined(separator: " ")
         return .success(ParsedCommand(target: target, action: .setTargetTemp(value)))
+    }
+
+    /// Shared parser for `set heat <temp> <target>` and `set cool <temp> <target>`.
+    /// The auto-mode thermostat (and HeaterCooler AC) keeps two separate
+    /// setpoints; this lets clients move each independently.
+    private static func parseThresholdCommand(tokens: [String], builder: (Double) -> Action) -> Result<ParsedCommand, ParseError> {
+        guard tokens.count >= 4 else {
+            return .failure(.missingTarget)
+        }
+        guard let value = Double(tokens[2]) else {
+            return .failure(.invalidValue(tokens[2]))
+        }
+        let target = tokens.dropFirst(3).joined(separator: " ")
+        return .success(ParsedCommand(target: target, action: builder(value)))
     }
 
     private static func parseColorCommand(tokens: [String]) -> Result<ParsedCommand, ParseError> {
