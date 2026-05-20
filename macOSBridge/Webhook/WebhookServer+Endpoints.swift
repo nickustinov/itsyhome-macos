@@ -7,8 +7,68 @@
 
 import Foundation
 import Network
+import AppKit
 
 extension WebhookServer {
+
+    // MARK: - User-defined ordering helpers
+    //
+    // These mirror the same predicates the menubar dropdown applies so the
+    // webhook returns rooms / scenes / accessories / groups in the order the
+    // user chose in Settings → Accessories.
+
+    fileprivate func sortByOrder<T>(_ items: [T], idOf: (T) -> String, savedOrder: [String]) -> [T] {
+        return items.sorted { a, b in
+            let i1 = savedOrder.firstIndex(of: idOf(a)) ?? Int.max
+            let i2 = savedOrder.firstIndex(of: idOf(b)) ?? Int.max
+            return i1 < i2
+        }
+    }
+
+    fileprivate func orderedRooms(_ rooms: [RoomData]) -> [RoomData] {
+        let preferences = PreferencesManager.shared
+        let visible = rooms.filter { !preferences.isHidden(roomId: $0.uniqueIdentifier) }
+        return sortByOrder(visible, idOf: { $0.uniqueIdentifier }, savedOrder: preferences.roomOrder)
+    }
+
+    fileprivate func orderedScenes(_ scenes: [SceneData]) -> [SceneData] {
+        let preferences = PreferencesManager.shared
+        let visible = scenes.filter { !preferences.isHidden(sceneId: $0.uniqueIdentifier) }
+        return sortByOrder(visible, idOf: { $0.uniqueIdentifier }, savedOrder: preferences.sceneOrder)
+    }
+
+    fileprivate func orderedGroups(_ groups: [DeviceGroup], roomId: String?) -> [DeviceGroup] {
+        let preferences = PreferencesManager.shared
+        let order = roomId.map { preferences.groupOrder(forRoom: $0) } ?? preferences.globalGroupOrder
+        return sortByOrder(groups, idOf: { $0.id }, savedOrder: order)
+    }
+
+    // Apply the per-room accessory order to a flat list of services. Entries
+    // that aren't in the saved order land at the end in their original
+    // sequence. Divider tokens (used by the menubar to insert separators) are
+    // skipped — the webhook list doesn't have a separator concept.
+    fileprivate func orderedServices(_ services: [ServiceData], roomId: String?) -> [ServiceData] {
+        let preferences = PreferencesManager.shared
+        let visible = services.filter { !preferences.isHidden(serviceId: $0.uniqueIdentifier) }
+        guard let roomId = roomId else { return visible }
+        let savedOrder = preferences.accessoryOrder(forRoom: roomId)
+        guard !savedOrder.isEmpty else { return visible }
+
+        let lookup = Dictionary(visible.map { ($0.uniqueIdentifier, $0) }, uniquingKeysWith: { first, _ in first })
+        var seen: Set<String> = []
+        var result: [ServiceData] = []
+        for token in savedOrder {
+            if token.hasPrefix(PreferencesManager.dividerPrefix) { continue }
+            if let svc = lookup[token] {
+                result.append(svc)
+                seen.insert(token)
+            }
+        }
+        for svc in visible where !seen.contains(svc.uniqueIdentifier) {
+            result.append(svc)
+        }
+        return result
+    }
 
     // MARK: - Read endpoints
 
@@ -35,6 +95,15 @@ extension WebhookServer {
             let decoded = String(rest).removingPercentEncoding ?? String(rest)
             handleInfo(target: decoded, connection: connection, engine: engine)
             return true
+        case "icon":
+            // /icon/<phosphor-name>[?fill=1][&size=64]
+            let rest = String(path.dropFirst(5)) // drop "icon/"
+            let qIdx = rest.firstIndex(of: "?")
+            let namePart = qIdx.map { String(rest[..<$0]) } ?? rest
+            let queryStr = qIdx.map { String(rest[rest.index(after: $0)...]) } ?? ""
+            let name = namePart.removingPercentEncoding ?? namePart
+            handleIcon(name: name, queryString: queryStr, connection: connection)
+            return true
         case "debug":
             let rest = path.dropFirst(6) // drop "debug/"
             let decoded = String(rest).removingPercentEncoding ?? String(rest)
@@ -52,6 +121,112 @@ extension WebhookServer {
         default:
             return false
         }
+    }
+
+    // MARK: - Icon
+
+    /// Render a Phosphor icon by name to PNG. Query params:
+    ///   fill=1   → use the filled variant (default: regular outline)
+    ///   size=N   → output pixel size, clamped to 16…256 (default: 96)
+    /// Icons are rendered white-on-transparent so clients can paint them on
+    /// dark backgrounds (e.g. the Even G2's black canvas).
+    fileprivate func handleIcon(name: String, queryString: String, connection: NWConnection) {
+        var fill = false
+        var size = 96
+        for pair in queryString.split(separator: "&") {
+            let kv = pair.split(separator: "=", maxSplits: 1)
+            guard kv.count == 2 else { continue }
+            let key = String(kv[0])
+            let value = String(kv[1])
+            switch key {
+            case "fill": fill = (value == "1" || value.lowercased() == "true")
+            case "size": if let n = Int(value) { size = n }
+            default: break
+            }
+        }
+        size = max(16, min(size, 256))
+
+        guard let image = PhosphorIcon.icon(name, filled: fill) else {
+            sendResponse(connection: connection, status: 404, body: encode(APIResponse.error("Icon not found: \(name)")))
+            return
+        }
+
+        guard let png = renderIconPNG(image, size: CGFloat(size)) else {
+            sendResponse(connection: connection, status: 500, body: encode(APIResponse.error("Icon render failed")))
+            return
+        }
+
+        sendBinaryResponse(connection: connection, contentType: "image/png", body: png)
+    }
+
+    private func renderIconPNG(_ image: NSImage, size: CGFloat) -> Data? {
+        let pixelSize = NSSize(width: size, height: size)
+        // Oversample 2x then encode at the requested size so the SVG
+        // rasterises at sub-pixel precision before final downsampling. At
+        // 28px this is the difference between blocky edges and clean
+        // glyphs, since the firmware quantises to gray4 afterwards.
+        let scale: CGFloat = 2.0
+        let supersampled = NSSize(width: size * scale, height: size * scale)
+        guard let bigRep = NSBitmapImageRep(
+            bitmapDataPlanes: nil,
+            pixelsWide: Int(supersampled.width),
+            pixelsHigh: Int(supersampled.height),
+            bitsPerSample: 8,
+            samplesPerPixel: 4,
+            hasAlpha: true,
+            isPlanar: false,
+            colorSpaceName: .deviceRGB,
+            bytesPerRow: 0,
+            bitsPerPixel: 0
+        ) else { return nil }
+        bigRep.size = supersampled
+
+        NSGraphicsContext.saveGraphicsState()
+        let ctx = NSGraphicsContext(bitmapImageRep: bigRep)
+        ctx?.imageInterpolation = .high
+        NSGraphicsContext.current = ctx
+        let bigRect = NSRect(origin: .zero, size: supersampled)
+        // Transparent background: the template SVG paints onto a clear
+        // canvas, the icon's stroke alpha becomes the rendered alpha.
+        // sourceAtop then tints only the painted pixels to white — using an
+        // opaque black background here would set alpha=1 across the whole
+        // square and the white fill would clobber everything (turning
+        // template outline icons into flat white squares).
+        image.draw(in: bigRect, from: .zero, operation: .sourceOver, fraction: 1.0,
+                   respectFlipped: true,
+                   hints: [.interpolation: NSImageInterpolation.high])
+        NSColor.white.set()
+        bigRect.fill(using: .sourceAtop)
+        NSGraphicsContext.restoreGraphicsState()
+
+        // Downsample the supersampled bitmap to the requested pixel size.
+        // RGBA so the icon's alpha mask survives the resize.
+        guard let finalRep = NSBitmapImageRep(
+            bitmapDataPlanes: nil,
+            pixelsWide: Int(size),
+            pixelsHigh: Int(size),
+            bitsPerSample: 8,
+            samplesPerPixel: 4,
+            hasAlpha: true,
+            isPlanar: false,
+            colorSpaceName: .deviceRGB,
+            bytesPerRow: 0,
+            bitsPerPixel: 0
+        ) else { return nil }
+        finalRep.size = pixelSize
+
+        NSGraphicsContext.saveGraphicsState()
+        let outCtx = NSGraphicsContext(bitmapImageRep: finalRep)
+        outCtx?.imageInterpolation = .high
+        NSGraphicsContext.current = outCtx
+        let outRect = NSRect(origin: .zero, size: pixelSize)
+        bigRep.draw(in: outRect, from: NSRect(origin: .zero, size: supersampled),
+                    operation: .sourceOver, fraction: 1.0,
+                    respectFlipped: true,
+                    hints: [.interpolation: NSImageInterpolation.high])
+        NSGraphicsContext.restoreGraphicsState()
+
+        return finalRep.representation(using: .png, properties: [:])
     }
 
     // MARK: - Status
@@ -87,50 +262,101 @@ extension WebhookServer {
 
         switch type {
         case "rooms":
-            let items = data.rooms.map { RoomListItem(name: $0.name) }
+            let items = orderedRooms(data.rooms).map { room in
+                RoomListItem(
+                    name: room.name,
+                    icon: IconResolver.iconName(forRoomId: room.uniqueIdentifier, roomName: room.name)
+                )
+            }
             sendResponse(connection: connection, status: 200, body: encode(items))
 
         case "devices":
             let roomLookup = data.roomLookup()
             var items: [DeviceListItem] = []
 
+            // Walk rooms in the user-defined order so /list/devices?room=X and
+            // the full list both honour the menubar's room ordering.
+            let filterRoomLower = room?.removingPercentEncoding?.lowercased()
+
+            // Group services by room first.
+            var servicesByRoom: [String?: [ServiceData]] = [:]
             for accessory in data.accessories {
-                let roomName = accessory.roomIdentifier.flatMap { roomLookup[$0] }
                 for service in accessory.services {
-                    if let filterRoom = room?.removingPercentEncoding {
-                        guard roomName?.lowercased() == filterRoom.lowercased() else { continue }
-                    }
+                    servicesByRoom[accessory.roomIdentifier, default: []].append(service)
+                }
+            }
+
+            for room in orderedRooms(data.rooms) {
+                let roomName = room.name
+                if let filter = filterRoomLower, roomName.lowercased() != filter { continue }
+                let services = orderedServices(servicesByRoom[room.uniqueIdentifier] ?? [], roomId: room.uniqueIdentifier)
+                for service in services {
+                    let accessory = data.accessories.first { $0.services.contains(where: { $0.uniqueIdentifier == service.uniqueIdentifier }) }
                     items.append(DeviceListItem(
                         name: service.name,
                         type: serviceTypeLabel(service.serviceType),
                         icon: IconResolver.iconName(for: service),
-                        reachable: accessory.isReachable,
+                        reachable: accessory?.isReachable ?? false,
                         room: roomName
                     ))
                 }
             }
+
+            // Roomless accessories (the menubar's "Other" section) come last.
+            if filterRoomLower == nil {
+                let roomless = orderedServices(servicesByRoom[nil] ?? [], roomId: nil)
+                for service in roomless {
+                    let accessory = data.accessories.first { $0.services.contains(where: { $0.uniqueIdentifier == service.uniqueIdentifier }) }
+                    items.append(DeviceListItem(
+                        name: service.name,
+                        type: serviceTypeLabel(service.serviceType),
+                        icon: IconResolver.iconName(for: service),
+                        reachable: accessory?.isReachable ?? false,
+                        room: nil
+                    ))
+                }
+            }
+
             sendResponse(connection: connection, status: 200, body: encode(items))
 
         case "scenes":
-            let items = data.scenes.map { scene in
+            let items = orderedScenes(data.scenes).map { scene in
                 SceneListItem(name: scene.name, icon: IconResolver.iconName(for: scene))
             }
             sendResponse(connection: connection, status: 200, body: encode(items))
 
         case "groups":
-            var groups = PreferencesManager.shared.deviceGroups
+            let allGroups = PreferencesManager.shared.deviceGroups
             let roomLookup = data.roomLookup()
             let roomIdLookup = Dictionary(data.rooms.map { ($0.name.lowercased(), $0.uniqueIdentifier) }, uniquingKeysWith: { first, _ in first })
 
-            // Filter by room if specified
-            if let filterRoom = room?.removingPercentEncoding {
-                let filterRoomLower = filterRoom.lowercased()
-                if let roomId = roomIdLookup[filterRoomLower] {
-                    groups = groups.filter { $0.roomId == roomId || $0.roomId == nil }
+            // Filter by room if specified — room-scoped groups for that room
+            // plus any global (roomId == nil) groups also surface there.
+            var ordered: [DeviceGroup] = []
+            if let filterRoom = room?.removingPercentEncoding,
+               let filterRoomId = roomIdLookup[filterRoom.lowercased()] {
+                let scoped = allGroups.filter { $0.roomId == filterRoomId }
+                let global = allGroups.filter { $0.roomId == nil }
+                ordered = orderedGroups(scoped, roomId: filterRoomId) + orderedGroups(global, roomId: nil)
+            } else {
+                // No filter: emit by room in user-defined room order, then global last.
+                var groupsByRoom: [String: [DeviceGroup]] = [:]
+                var globalGroups: [DeviceGroup] = []
+                for group in allGroups {
+                    if let roomId = group.roomId {
+                        groupsByRoom[roomId, default: []].append(group)
+                    } else {
+                        globalGroups.append(group)
+                    }
                 }
+                for room in orderedRooms(data.rooms) {
+                    let inRoom = groupsByRoom[room.uniqueIdentifier] ?? []
+                    ordered.append(contentsOf: orderedGroups(inRoom, roomId: room.uniqueIdentifier))
+                }
+                ordered.append(contentsOf: orderedGroups(globalGroups, roomId: nil))
             }
 
-            let items = groups.map { group in
+            let items = ordered.map { group in
                 GroupListItem(
                     name: group.name,
                     icon: group.icon,
@@ -140,9 +366,74 @@ extension WebhookServer {
             }
             sendResponse(connection: connection, status: 200, body: encode(items))
 
+        case "favourites", "favorites":
+            sendResponse(connection: connection, status: 200, body: encode(buildFavourites(data: data)))
+
         default:
-            sendResponse(connection: connection, status: 400, body: encode(APIResponse.error("Unknown list type: \(type). Use rooms, devices, scenes, or groups.")))
+            sendResponse(connection: connection, status: 400, body: encode(APIResponse.error("Unknown list type: \(type). Use rooms, devices, scenes, groups, or favourites.")))
         }
+    }
+
+    /// Build the favourites list from PreferencesManager's user-curated
+    /// favourites (NOT menubar pins – those are a separate concept).
+    /// IDs come from `orderedFavouriteIds`:
+    ///   "groupFav:<groupId>" → device-group favourite
+    ///   else, a raw scene or service ID (disambiguated via the typed sets
+    ///   `orderedFavouriteSceneIds` / `orderedFavouriteServiceIds`).
+    /// Items resolving to a deleted/hidden entity are skipped. Order matches
+    /// the user's drag-ordered favourites list (no alphabetical sort).
+    private func buildFavourites(data: MenuData) -> [FavouriteListItem] {
+        let preferences = PreferencesManager.shared
+        let ordered = preferences.orderedFavouriteIds
+        let sceneIds = Set(preferences.orderedFavouriteSceneIds)
+        let serviceIds = Set(preferences.orderedFavouriteServiceIds)
+        let roomLookup = Dictionary(data.rooms.map { ($0.uniqueIdentifier, $0) }, uniquingKeysWith: { a, _ in a })
+        let sceneLookup = Dictionary(data.scenes.map { ($0.uniqueIdentifier, $0) }, uniquingKeysWith: { a, _ in a })
+        let allServices = data.accessories.flatMap { $0.services }
+        let serviceLookup = Dictionary(allServices.map { ($0.uniqueIdentifier, $0) }, uniquingKeysWith: { a, _ in a })
+        let deviceGroups = preferences.deviceGroups
+
+        var items: [FavouriteListItem] = []
+        for favId in ordered {
+            if favId.hasPrefix("groupFav:") {
+                let groupId = String(favId.dropFirst("groupFav:".count))
+                guard let group = deviceGroups.first(where: { $0.id == groupId }) else { continue }
+                items.append(FavouriteListItem(
+                    kind: "group",
+                    name: group.name,
+                    icon: group.icon,
+                    type: nil,
+                    room: group.roomId.flatMap { roomLookup[$0]?.name },
+                    reachable: true
+                ))
+                continue
+            }
+            if sceneIds.contains(favId) {
+                guard let scene = sceneLookup[favId], !preferences.isHidden(sceneId: favId) else { continue }
+                items.append(FavouriteListItem(
+                    kind: "scene",
+                    name: scene.name,
+                    icon: IconResolver.iconName(for: scene)
+                ))
+                continue
+            }
+            if serviceIds.contains(favId) {
+                guard let service = serviceLookup[favId], !preferences.isHidden(serviceId: favId) else { continue }
+                let accessory = data.accessories.first { $0.services.contains(where: { $0.uniqueIdentifier == favId }) }
+                let roomName = accessory?.roomIdentifier.flatMap { roomLookup[$0]?.name }
+                items.append(FavouriteListItem(
+                    kind: "service",
+                    name: service.name,
+                    icon: IconResolver.iconName(for: service),
+                    type: serviceTypeLabel(service.serviceType),
+                    room: roomName,
+                    reachable: accessory?.isReachable ?? false
+                ))
+                continue
+            }
+        }
+
+        return items
     }
 
     // MARK: - Info
@@ -159,7 +450,10 @@ extension WebhookServer {
         if let room = data.rooms.first(where: { $0.name.lowercased() == lowered }) {
             let roomServices = data.accessories.filter { $0.roomIdentifier == room.uniqueIdentifier }
                 .flatMap { $0.services }
-            let items = roomServices.map { buildServiceInfo($0, in: data, engine: engine) }
+            // Apply the user's per-room accessory ordering so /info/Room
+            // mirrors the order shown in the menubar's room submenu.
+            let ordered = orderedServices(roomServices, roomId: room.uniqueIdentifier)
+            let items = ordered.map { buildServiceInfo($0, in: data, engine: engine) }
             sendResponse(connection: connection, status: 200, body: encode(items))
             return
         }
@@ -316,11 +610,16 @@ extension WebhookServer {
         // Build state
         var state = ServiceState()
 
-        // Power state
-        if let value = getValue(service.powerStateId) {
-            state.on = boolValue(value)
-        } else if let value = getValue(service.activeId) {
+        // Power state: prefer the `Active` characteristic when present. Fans
+        // (FanV2), AC (HeaterCooler) and Valves use `Active` as their
+        // canonical power switch — `On` (powerStateId) may still be exposed
+        // by the accessory but its cached value can drift behind `Active`,
+        // which is exactly what the menubar item resolves against
+        // (FanMenuItem: `activeId ?? powerStateId`).
+        if let value = getValue(service.activeId) {
             state.on = intValue(value) != 0
+        } else if let value = getValue(service.powerStateId) {
+            state.on = boolValue(value)
         } else if let value = getValue(service.targetHeatingCoolingStateId) {
             state.on = intValue(value) != 0
         }
@@ -378,6 +677,13 @@ extension WebhookServer {
         if let value = getValue(service.rotationSpeedId) {
             state.speed = doubleValue(value)
         }
+        // Expose the rotation-speed scale so clients can render presets and
+        // captions correctly — HomeKit fans can override the default 0–100
+        // range (e.g. 0–6 on stepped ceiling fans).
+        if service.rotationSpeedId != nil {
+            state.speedMin = service.rotationSpeedMin
+            state.speedMax = service.rotationSpeedMax
+        }
         if let value = getValue(service.securitySystemCurrentStateId) {
             if let strValue = value as? String {
                 // HA sends raw state strings: armed_home, armed_away, armed_night, disarmed, triggered, etc.
@@ -387,7 +693,8 @@ extension WebhookServer {
             }
         }
 
-        // Check if state has any values
+        // Check if state has any values. speedMin/speedMax are metadata
+        // alongside `speed`, so we don't count them on their own.
         let hasState = state.on != nil || state.brightness != nil || state.position != nil ||
                        state.temperature != nil || state.targetTemperature != nil || state.mode != nil ||
                        state.humidity != nil || state.hue != nil || state.saturation != nil ||

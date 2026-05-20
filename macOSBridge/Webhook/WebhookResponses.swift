@@ -40,6 +40,7 @@ struct StatusResponse: Encodable {
 
 struct RoomListItem: Encodable {
     let name: String
+    let icon: String
 }
 
 struct DeviceListItem: Encodable {
@@ -60,6 +61,18 @@ struct GroupListItem: Encodable {
     let icon: String
     let devices: Int
     var room: String?
+}
+
+// /list/favourites: the items the user has pinned to the menu bar (services,
+// rooms, scenes, device groups). `kind` discriminates so a client knows how
+// to dispatch a tap (open device screen, fire scene, drill into room, etc.).
+struct FavouriteListItem: Encodable {
+    let kind: String   // "service" | "group" | "scene" | "room"
+    let name: String
+    let icon: String
+    var type: String?      // service type label (for kind=service)
+    var room: String?      // for services and room-scoped groups
+    var reachable: Bool?   // for services
 }
 
 // MARK: - Info endpoint
@@ -86,6 +99,11 @@ struct ServiceState: Encodable {
     var locked: Bool?
     var doorState: String?
     var speed: Double?
+    // Min/Max for stepped rotation-speed characteristics. HomeKit fans can
+    // override the default 0–100 range (e.g. 0–6 for a 6-speed ceiling fan);
+    // clients need these to render the speed scale and presets correctly.
+    var speedMin: Double?
+    var speedMax: Double?
     var securityState: String?
 }
 

@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.5.1
+
+- Fix camera snapshots not auto-refreshing on subsequent panel opens – the snapshot and timestamp timers were torn down on close but only restarted via `viewDidAppear`, which doesn't fire on later opens; now restarted in `panelDidShow` so the timestamp ticks and snapshots refresh every 30s (#117)
+- Fix camera panel dismissing when clicking inside the feed – the local click monitor compared window identity, so clicks landing on the panel's hosted/child windows were treated as outside; now uses screen-coordinate containment, matching the global monitor
+- Expose `speedMin` / `speedMax` in `/info` JSON so webhook clients can render the correct fan speed scale and presets (HomeKit fans can override the 0–100 default — e.g. 0–6 on a 6-speed ceiling fan)
+- Fix `/info` reporting stale `on` state for fans / AC / valves — prefer the `Active` characteristic over the `On` characteristic, matching what the menubar dropdown reads (`activeId ?? powerStateId`)
+- Webhook list endpoints now respect the user's reordering from Settings → Accessories: `/list/rooms`, `/list/scenes`, `/list/groups`, `/list/groups/<room>`, `/list/devices`, and `/info/<room>` all emit items in the same order as the menubar dropdown. Hidden rooms, scenes, and services are also filtered out of `/list/*` responses (a specific `/info/<name>` lookup still works for hidden items)
+- Webhook icon endpoint: `GET /icon/<phosphor-name>?fill=1&size=64` returns a PNG of the requested Phosphor icon rendered white on transparent. Lets clients render the same icons the menubar uses (including user-customised icons via `IconResolver`) without bundling the SVG set themselves
+- `/list/rooms` now includes the Phosphor `icon` name for each room (paired with the new `/icon/<name>` endpoint), so clients can render the per-room icon the menubar already uses
+- `/list/favourites` (alias: `/list/favorites`) returns the items pinned to the menu bar (services / device groups / scenes / rooms) with a `kind` discriminator and the same Phosphor icon names, so clients can render a unified "Favourites" affordance. Ordering is alphabetical by name (the underlying preference is a Set; the menubar itself doesn't expose a stable order)
+
 ## 2.5.0
 
 - Fix RGB colour picker setting wrong colour on Hue lights

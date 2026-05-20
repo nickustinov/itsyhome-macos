@@ -228,6 +228,8 @@ class CameraViewController: UIViewController {
         }
         guard !hasPendingOrActiveStream else { return }
         takeAllSnapshots()
+        startSnapshotTimer()
+        startTimestampTimer()
         if isHomeAssistant {
             refreshHAOverlayStates()
         }

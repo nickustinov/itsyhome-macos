@@ -242,6 +242,30 @@ final class WebhookServer {
 
     // MARK: - HTTP response
 
+    /// Send a raw binary response with a custom content type. Used by the
+    /// `/icon/<name>` endpoint to deliver PNG bytes without JSON-wrapping.
+    func sendBinaryResponse(connection: NWConnection, contentType: String, body: Data) {
+        // no-store on the response: client-side WebViews persist HTTP cache
+        // across icon-render fixes, and stale 172-byte renders shadow the
+        // good output once we ship a server update. Clients (glasses + this
+        // app) keep their own in-memory cache so the per-icon hit is fine.
+        let header = """
+        HTTP/1.1 200 OK\r
+        Content-Type: \(contentType)\r
+        Content-Length: \(body.count)\r
+        Cache-Control: no-store\r
+        Connection: close\r
+        Access-Control-Allow-Origin: *\r
+        \r
+
+        """
+        var data = Data(header.utf8)
+        data.append(body)
+        connection.send(content: data, completion: .contentProcessed { _ in
+            connection.cancel()
+        })
+    }
+
     func sendResponse(connection: NWConnection, status: Int, body: String) {
         let statusText: String
         switch status {

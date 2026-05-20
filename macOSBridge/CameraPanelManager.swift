@@ -464,6 +464,12 @@ final class CameraPanelManager {
         // Catch clicks on other windows within the app (e.g. settings window)
         localClickMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] event in
             guard let self = self, self.cameraPanelWindow?.isVisible == true else { return event }
+            // Identity check first — reliable signal for the status-bar button (the
+            // geometric check can miss it because event.window for status-item clicks
+            // isn't always the button's host window) and for the panel itself.
+            if event.window == self.cameraPanelWindow { return event }
+            if event.window == self.cameraStatusItem?.button?.window { return event }
+            // Geometric check — catches clicks landing on child/hosted windows of the panel.
             let screenPoint: NSPoint
             if let eventWindow = event.window {
                 screenPoint = eventWindow.convertPoint(toScreen: event.locationInWindow)
