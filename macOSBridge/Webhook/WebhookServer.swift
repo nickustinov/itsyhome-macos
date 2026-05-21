@@ -222,16 +222,6 @@ final class WebhookServer {
             return
         }
 
-        // POST endpoints. /voice/transcribe accepts a raw 16 kHz mono
-        // int16 LE PCM payload; everything else gets a 405.
-        if method == "POST" {
-            if trimmedPath == "voice/transcribe" {
-                handleVoiceTranscribe(body: body, connection: connection)
-                return
-            }
-            sendResponse(connection: connection, status: 405, body: encode(APIResponse.error("Method not allowed")))
-            return
-        }
         if method != "GET" {
             sendResponse(connection: connection, status: 405, body: encode(APIResponse.error("Method not allowed")))
             return
@@ -304,103 +294,6 @@ final class WebhookServer {
         }
         SceneStateHelper.reverse(scene: scene, bridge: engine.bridge)
         sendResponse(connection: connection, status: 200, body: encode(APIResponse.success))
-    }
-
-    // MARK: - Voice transcription
-
-    /// POST /voice/transcribe — body is a raw 16 kHz mono int16 LE PCM
-    /// payload captured on the glasses. We hand it to SFSpeechRecognizer
-    /// (on-device) and return the transcript. The glasses app does its own
-    /// fuzzy matching against rooms / devices / scenes from there.
-    private func handleVoiceTranscribe(body: Data, connection: NWConnection) {
-        guard UserDefaults.standard.bool(forKey: SpeechTranscriber.voiceEnabledKey) else {
-            let resp = VoiceTranscribeResponse(status: "error", text: nil, confidence: nil,
-                message: "Voice control is disabled. Enable it in Itsyhome on Mac: Settings → Webhooks/CLI.")
-            sendResponse(connection: connection, status: 403, body: encode(resp))
-            return
-        }
-        guard !body.isEmpty else {
-            let resp = VoiceTranscribeResponse(status: "error", text: nil, confidence: nil,
-                message: "Empty audio payload")
-            sendResponse(connection: connection, status: 400, body: encode(resp))
-            return
-        }
-        // Build a catalog prompt (rooms + scenes + service names + groups)
-        // so Whisper biases its decoder toward the user's actual device
-        // names. ~200-char budget — Whisper's prefill context is ~244
-        // tokens, and shorter is better (less drift). Devices first since
-        // they're the most common command target.
-        let catalogPrompt = buildCatalogPrompt(maxChars: 200)
-        // Bridge to async. The TCP connection stays open until we send the
-        // response back from the completion.
-        Task { [weak self] in
-            guard let self else { return }
-            do {
-                let (text, confidence) = try await SpeechTranscriber.transcribe(pcm: body, prompt: catalogPrompt)
-                let resp = VoiceTranscribeResponse(status: "success", text: text,
-                                                    confidence: confidence, message: nil)
-                self.queue.async {
-                    self.sendResponse(connection: connection, status: 200, body: self.encode(resp))
-                }
-            } catch {
-                let msg: String
-                switch error {
-                case SpeechTranscribeError.bufferConversionFailed:
-                    msg = "Failed to decode audio payload"
-                case SpeechTranscribeError.modelLoadFailed(let detail):
-                    msg = "Voice model failed to load: \(detail)"
-                case SpeechTranscribeError.underlying(let underlying):
-                    msg = underlying.localizedDescription
-                default:
-                    msg = "Speech recognition failed: \(error)"
-                }
-                let resp = VoiceTranscribeResponse(status: "error", text: nil,
-                                                    confidence: nil, message: msg)
-                self.queue.async {
-                    self.sendResponse(connection: connection, status: 500, body: self.encode(resp))
-                }
-            }
-        }
-    }
-
-    /// Build a short, comma-separated string of catalog names (devices →
-    /// rooms → scenes → groups) used as Whisper's prefill prompt for
-    /// /voice/transcribe. The order biases more important / more often
-    /// spoken names into the budget first. Returns "" when no engine is
-    /// configured yet (e.g. before HomeKit loads).
-    private func buildCatalogPrompt(maxChars: Int) -> String {
-        guard let data = actionEngine?.menuData else { return "" }
-        var pieces: [String] = []
-        var seen = Set<String>()
-        func add(_ s: String) {
-            let trimmed = s.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !trimmed.isEmpty else { return }
-            let key = trimmed.lowercased()
-            guard !seen.contains(key) else { return }
-            seen.insert(key)
-            pieces.append(trimmed)
-        }
-        // Devices first: most commonly spoken.
-        for accessory in data.accessories {
-            for service in accessory.services {
-                add(service.name)
-            }
-        }
-        // Rooms next — often qualify the device ("office lamp").
-        for room in data.rooms { add(room.name) }
-        // Scenes — momentary commands.
-        for scene in data.scenes { add(scene.name) }
-        // Device groups — power user feature.
-        for group in PreferencesManager.shared.deviceGroups { add(group.name) }
-
-        // Pack into the budget, comma-separated.
-        var out = ""
-        for p in pieces {
-            let nextLen = out.isEmpty ? p.count : out.count + 2 + p.count
-            if nextLen > maxChars { break }
-            out = out.isEmpty ? p : "\(out), \(p)"
-        }
-        return out
     }
 
     // MARK: - Value conversion helpers

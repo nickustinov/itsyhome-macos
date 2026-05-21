@@ -247,8 +247,7 @@ extension WebhookServer {
             reachable: reachableCount,
             unreachable: data.accessories.count - reachableCount,
             scenes: data.scenes.count,
-            groups: PreferencesManager.shared.deviceGroups.count,
-            voiceEnabled: SpeechTranscriber.isAvailable()
+            groups: PreferencesManager.shared.deviceGroups.count
         )
         sendResponse(connection: connection, status: 200, body: encode(response))
     }

@@ -5,10 +5,6 @@
 - Scene state + deactivate over webhooks. `/list/scenes` and `/info/scene/<name>` now include an optional `state: { on: Bool }` for HomeKit scenes that have a granular action list (omitted for HA snapshot scenes and other cases where the server can't introspect — clients should fall back to fire-only). The "active" computation matches what the menubar toggle uses: every action's target characteristic must match the device's current value within a per-characteristic tolerance (5 for position/brightness/speed, ~0 for booleans)
 - New webhook endpoint `GET /off/scene/<name>` deactivates a scene with Apple Home semantics — turns off only what the scene turned on, never opens blinds or unlocks doors. Pair with the existing `GET /scene/<name>` (activate) to expose a full toggle UI on clients that previously only fired scenes
 - `SceneStateHelper` extracted from `SceneMenuItem` so the menubar UI and the webhook layer share one source of truth for "is this scene active" and "deactivate this scene"
-- Voice control for Even Realities G2 glasses (Pro, opt-in). New toggle in Settings → Webhooks/CLI lets the glasses app transcribe spoken commands on the Mac. Recognition runs entirely on-device via WhisperKit (OpenAI Whisper tiny.en, ~40 MB CoreML model downloaded from Hugging Face on first use) – nothing leaves your Mac, no system Dictation toggle required, English-only for now. Subsequent launches reuse the cached model
-- New webhook endpoint `POST /voice/transcribe` accepts a raw 16 kHz mono int16 LE PCM body (matches the format the glasses SDK emits via `audioEvent.audioPcm`) and returns `{ status, text, confidence, message }`. 5 s of audio is ~160 KB and one HTTP roundtrip
-- `GET /status` gains a `voiceEnabled` boolean so the glasses app can hide the "Tap to speak" affordance for users who haven't enabled the feature
-- Webhook server now handles arbitrary HTTP methods and multi-chunk request bodies (POST with `Content-Length`-bounded body). Previously the receive loop read a single 4 KB chunk and only parsed GET; now it accumulates bytes until headers and body are complete
 
 ## 2.5.1
 

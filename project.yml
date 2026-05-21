@@ -11,14 +11,6 @@ packages:
   LiveKitWebRTC:
     url: https://github.com/livekit/webrtc-xcframework.git
     exactVersion: "137.7151.12"
-  WhisperKit:
-    url: https://github.com/argmaxinc/WhisperKit.git
-    # Pinned to the last version that uses swift-transformers 0.1.x. Starting
-    # with WhisperKit 0.15.0, the requirement jumped to swift-transformers
-    # 1.1.x, and 1.1.7+ pulls in yyjson as a C dependency that doesn't build
-    # reliably on GitHub Actions runners. Revisit when upstream fixes the
-    # yyjson module-map issue.
-    exactVersion: "0.14.1"
 
 settings:
   base:
@@ -71,7 +63,6 @@ targets:
         com.apple.security.network.client: true
         com.apple.security.network.server: true
         com.apple.security.personal-information.location: true
-        com.apple.security.device.audio-input: true
     dependencies:
       - target: macOSBridge
         platformFilter: maccatalyst
@@ -114,7 +105,6 @@ targets:
         embed: false
       - sdk: CoreLocation.framework
         embed: false
-      - package: WhisperKit
 
   # Unit tests for macOSBridge
   macOSBridgeTests:
@@ -155,7 +145,3 @@ targets:
         buildPhase: sources
     dependencies:
       - target: macOSBridge
-      # SpeechTranscriber.swift is compiled into the test bundle (it's not
-      # excluded), so the bundle needs to link WhisperKit at link time even
-      # though no test exercises it.
-      - package: WhisperKit

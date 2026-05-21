@@ -199,19 +199,6 @@ curl http://localhost:8423/refresh
 
 List responses respect the user's drag ordering from Settings → Accessories, and hidden items are filtered out (a specific `/info/<name>` lookup still works for hidden items).
 
-**Voice transcription:**
-
-Opt-in via Settings → Webhooks/CLI → "Enable voice control". POST raw 16 kHz mono int16 LE PCM audio to `/voice/transcribe` (the format the Even Realities G2 SDK emits via `audioEvent.audioPcm`). Recognition runs entirely on-device via WhisperKit (`openai_whisper-tiny.en`, ~40 MB CoreML model downloaded from Hugging Face on first use; English-only for now). Subsequent calls reuse the cached model.
-
-```bash
-curl --data-binary @audio.pcm \
-  -H 'Content-Type: application/octet-stream' \
-  http://localhost:8423/voice/transcribe
-# → { "status": "success", "text": "turn off the bedroom light", "confidence": 0.94 }
-```
-
-The server biases Whisper's decoder toward the user's vocabulary by passing the home's room / scene / device / group names as a prefill prompt — clients don't need to send anything extra. `GET /status` includes a `voiceEnabled` boolean so clients can hide their voice affordance when the user hasn't enabled the feature.
-
 **Event stream (SSE):**
 
 Stream real-time device state changes using [Server-Sent Events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events). Connect with `curl -N` or any SSE client (including `EventSource` in browsers). Only actual value changes are emitted — read refreshes are filtered out.

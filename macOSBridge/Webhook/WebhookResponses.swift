@@ -34,20 +34,6 @@ struct StatusResponse: Encodable {
     let unreachable: Int
     let scenes: Int
     let groups: Int
-    // Feature flag: clients (e.g. the G2 glasses app) check this before
-    // showing the "Tap to speak" affordance. True when the user has
-    // toggled Voice control on in Settings → Webhooks/CLI AND macOS has
-    // granted speech-recognition authorization.
-    let voiceEnabled: Bool
-}
-
-// MARK: - Voice transcription
-
-struct VoiceTranscribeResponse: Encodable {
-    let status: String       // "success" / "error"
-    let text: String?        // recognised text (nil on error)
-    let confidence: Float?   // best transcription's first-segment confidence
-    let message: String?     // human-readable error
 }
 
 // MARK: - List endpoints
