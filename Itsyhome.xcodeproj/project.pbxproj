@@ -803,6 +803,7 @@
 		3C6F37FF98DD804AD802D97E /* ph.bone.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 7E696F97E3E63FC046D535D7 /* ph.bone.fill.svg */; };
 		3C732AE83EC8D893B4B5D2A8 /* ph.list.svg in Resources */ = {isa = PBXBuildFile; fileRef = 1791C051684EC1115A355509 /* ph.list.svg */; };
 		3C750A023D6DF8FCA74A825E /* ph.intersect.svg in Resources */ = {isa = PBXBuildFile; fileRef = A633383CF9C0D86B526F8E27 /* ph.intersect.svg */; };
+		3C96631229D69FA5FF3AC750 /* SceneStateHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC3B660024CF43F6B687D9DC /* SceneStateHelper.swift */; };
 		3CB132A9BF1FE1F9EDB047EB /* ph.image-square.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 6EE0BED65784208FEA585964 /* ph.image-square.fill.svg */; };
 		3CB771C08C92D8840105940C /* ph.file-png.svg in Resources */ = {isa = PBXBuildFile; fileRef = 87A89C5FB4DC811F10E570B8 /* ph.file-png.svg */; };
 		3CB8C06C30823082A7DB2880 /* ph.steam-logo.svg in Resources */ = {isa = PBXBuildFile; fileRef = C966FB0E7D02749BC0F3983A /* ph.steam-logo.svg */; };
@@ -2035,6 +2036,7 @@
 		996398481BBB4D931A1E3B30 /* ph.music-notes-minus.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9FCE38E1CC99ECCBC9BF679 /* ph.music-notes-minus.fill.svg */; };
 		99740DA347090031FA4782E2 /* ph.mailbox.svg in Resources */ = {isa = PBXBuildFile; fileRef = 79CD4F77985A103AB4C42BFA /* ph.mailbox.svg */; };
 		9995CFF6AA50E8DA4108E6B9 /* ph.terminal-window.svg in Resources */ = {isa = PBXBuildFile; fileRef = B60AECFCF263CA788693AC64 /* ph.terminal-window.svg */; };
+		99982E4387F3386B2896F384 /* SceneStateHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC3B660024CF43F6B687D9DC /* SceneStateHelper.swift */; };
 		999C9C4093E470171F9873DC /* ph.door-open.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 6BD2DA4C5011452A0EB1D168 /* ph.door-open.fill.svg */; };
 		99C3C9D0C12AD7F0B25D85CE /* ph.cactus.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 1C71B0D0D0EC3325800CEEC8 /* ph.cactus.fill.svg */; };
 		99EA0EDA860AC1A8C462BC47 /* ph.arrow-circle-up-right.svg in Resources */ = {isa = PBXBuildFile; fileRef = 1EC61EF1FBF1B10C0FF6CD51 /* ph.arrow-circle-up-right.svg */; };
@@ -5775,6 +5777,7 @@
 		BBE1B3545CA2303AF4103E77 /* ph.google-logo.fill.svg */ = {isa = PBXFileReference; path = "ph.google-logo.fill.svg"; sourceTree = "<group>"; };
 		BC104B19535EA18576DE6608 /* ph.ice-cream.fill.svg */ = {isa = PBXFileReference; path = "ph.ice-cream.fill.svg"; sourceTree = "<group>"; };
 		BC1120DE898CD3AF7F5911D2 /* ph.arrow-elbow-left-up.fill.svg */ = {isa = PBXFileReference; path = "ph.arrow-elbow-left-up.fill.svg"; sourceTree = "<group>"; };
+		BC3B660024CF43F6B687D9DC /* SceneStateHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneStateHelper.swift; sourceTree = "<group>"; };
 		BC3CB82477C15E635DE759CA /* ph.train.fill.svg */ = {isa = PBXFileReference; path = ph.train.fill.svg; sourceTree = "<group>"; };
 		BC3EB0CA44881596E905465B /* ph.file-archive.fill.svg */ = {isa = PBXFileReference; path = "ph.file-archive.fill.svg"; sourceTree = "<group>"; };
 		BC455A77578981243AB7A96E /* ph.campfire.fill.svg */ = {isa = PBXFileReference; path = ph.campfire.fill.svg; sourceTree = "<group>"; };
@@ -6788,6 +6791,7 @@
 			isa = PBXGroup;
 			children = (
 				99F905F4EDD22D9B508D8257 /* HomeKitStates.swift */,
+				BC3B660024CF43F6B687D9DC /* SceneStateHelper.swift */,
 				DC85F1209953AFF948579BDC /* SpeechTranscriber.swift */,
 				C89601E207FEBA59AF221472 /* WebhookResponses.swift */,
 				CE0096925C98FD6B955AB016 /* WebhookServer.swift */,
@@ -13466,6 +13470,7 @@
 				3468ABB31915D39AF41D2621 /* ProProducts.swift in Sources */,
 				9152D628D15146FC06FE6B70 /* Protocols.swift in Sources */,
 				0189B807373567481D495882 /* SceneMenuItem.swift in Sources */,
+				3C96631229D69FA5FF3AC750 /* SceneStateHelper.swift in Sources */,
 				680D90D25922D1D80083CFC7 /* SecuritySystemMenuItem.swift in Sources */,
 				F0D475122112E46686ADF3C1 /* SensorSummaryMenuItem.swift in Sources */,
 				721D0C78421B4D27A7722A00 /* SettingsCard.swift in Sources */,
@@ -13603,6 +13608,7 @@
 				D6E99C5EF38C95797107C163 /* Protocols.swift in Sources */,
 				874A311DF0D311BD252A5F4C /* SceneMenuItem.swift in Sources */,
 				3041F591E28C5E4DCEEF5759 /* SceneMenuItemTests.swift in Sources */,
+				99982E4387F3386B2896F384 /* SceneStateHelper.swift in Sources */,
 				0D1340AA633BF40EC7B797C4 /* SecuritySystemMenuItem.swift in Sources */,
 				02A44E3CB567D2F45BD9E9AD /* SecuritySystemMenuItemTests.swift in Sources */,
 				4DE21C1DE370423C77BB118D /* SensorSummaryMenuItem.swift in Sources */,

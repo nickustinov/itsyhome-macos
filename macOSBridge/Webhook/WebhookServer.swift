@@ -247,6 +247,17 @@ final class WebhookServer {
             return
         }
 
+        // Scene deactivate: /off/scene/<name>. Apple Home semantics —
+        // turns off only what the scene turned on, never opens or unlocks.
+        // Handled here (rather than via ActionParser) so we can call the
+        // SceneStateHelper directly with the resolved SceneData.
+        if trimmedPath.hasPrefix("off/scene/") {
+            let nameSeg = String(trimmedPath.dropFirst("off/scene/".count))
+            let name = nameSeg.removingPercentEncoding ?? nameSeg
+            handleSceneOff(name: name, engine: actionEngine, connection: connection)
+            return
+        }
+
         // Control action via URLSchemeHandler
         guard let url = URL(string: "itsyhome://\(trimmedPath)") else {
             sendResponse(connection: connection, status: 400, body: encode(APIResponse.error("Invalid path")))
@@ -274,6 +285,25 @@ final class WebhookServer {
         case .failure(let parseError):
             sendResponse(connection: connection, status: 400, body: encode(APIResponse.error(parseError.localizedDescription)))
         }
+    }
+
+    // MARK: - Scene deactivate
+
+    /// Resolve a scene by name (case-insensitive) and run the reverse
+    /// logic from SceneStateHelper. Mirrors what the menubar's scene
+    /// toggle switch does when flipped off.
+    private func handleSceneOff(name: String, engine: ActionEngine, connection: NWConnection) {
+        guard let data = engine.menuData else {
+            sendResponse(connection: connection, status: 500, body: encode(APIResponse.error("No data available")))
+            return
+        }
+        let lookup = name.lowercased()
+        guard let scene = data.scenes.first(where: { $0.name.lowercased() == lookup }) else {
+            sendResponse(connection: connection, status: 404, body: encode(APIResponse.error("Scene not found: \(name)")))
+            return
+        }
+        SceneStateHelper.reverse(scene: scene, bridge: engine.bridge)
+        sendResponse(connection: connection, status: 200, body: encode(APIResponse.success))
     }
 
     // MARK: - Voice transcription

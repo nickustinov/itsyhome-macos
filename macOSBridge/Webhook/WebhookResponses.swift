@@ -68,6 +68,14 @@ struct DeviceListItem: Encodable {
 struct SceneListItem: Encodable {
     let name: String
     let icon: String
+    // Optional — server may omit when the scene has no actions (e.g. HA
+    // snapshot scenes), in which case clients fall back to fire-only
+    // behaviour and don't render an on/off indicator.
+    var state: SceneState?
+}
+
+struct SceneState: Encodable {
+    var on: Bool?
 }
 
 struct GroupListItem: Encodable {
@@ -135,6 +143,7 @@ struct SceneInfoResponse: Encodable {
     let name: String
     let type: String
     let icon: String
+    var state: SceneState?
 }
 
 // MARK: - Debug endpoint

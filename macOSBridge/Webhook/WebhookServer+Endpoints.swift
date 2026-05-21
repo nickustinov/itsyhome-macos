@@ -321,8 +321,13 @@ extension WebhookServer {
             sendResponse(connection: connection, status: 200, body: encode(items))
 
         case "scenes":
-            let items = orderedScenes(data.scenes).map { scene in
-                SceneListItem(name: scene.name, icon: IconResolver.iconName(for: scene))
+            let items = orderedScenes(data.scenes).map { scene -> SceneListItem in
+                let on = SceneStateHelper.isActive(scene: scene, bridge: engine.bridge)
+                return SceneListItem(
+                    name: scene.name,
+                    icon: IconResolver.iconName(for: scene),
+                    state: on.map { SceneState(on: $0) }
+                )
             }
             sendResponse(connection: connection, status: 200, body: encode(items))
 
@@ -475,10 +480,12 @@ extension WebhookServer {
             sendServiceInfoResponse(services, data: data, engine: engine, connection: connection)
 
         case .scene(let scene):
+            let on = SceneStateHelper.isActive(scene: scene, bridge: engine.bridge)
             let response = SceneInfoResponse(
                 name: scene.name,
                 type: "scene",
-                icon: IconResolver.iconName(for: scene)
+                icon: IconResolver.iconName(for: scene),
+                state: on.map { SceneState(on: $0) }
             )
             sendResponse(connection: connection, status: 200, body: encode(response))
 

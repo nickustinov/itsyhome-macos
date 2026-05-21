@@ -21,17 +21,6 @@ class SceneMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
     private let nameLabel: NSTextField
     private let toggleSwitch: ToggleSwitch
 
-    // Characteristic types that can be reversed
-    private static let reversibleTypes: Set<String> = [
-        CharacteristicTypes.powerState,
-        CharacteristicTypes.brightness,
-        CharacteristicTypes.targetPosition,
-        CharacteristicTypes.lockTargetState,
-        CharacteristicTypes.targetDoorState,
-        CharacteristicTypes.active,
-        CharacteristicTypes.rotationSpeed
-    ]
-
     var characteristicIdentifiers: [UUID] {
         sceneData.actions.compactMap { UUID(uuidString: $0.characteristicId) }
     }
@@ -138,24 +127,12 @@ class SceneMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
                   let currentValue = currentValues[charId] else {
                 return false
             }
-            let tolerance = Self.tolerance(for: action.characteristicType)
+            let tolerance = SceneStateHelper.tolerance(for: action.characteristicType)
             return abs(currentValue - action.targetValue) < tolerance
         }
 
         isActive = allMatch
         updateUI()
-    }
-
-    private static func tolerance(for characteristicType: String) -> Double {
-        switch characteristicType {
-        case CharacteristicTypes.targetPosition,
-             CharacteristicTypes.currentPosition,
-             CharacteristicTypes.brightness,
-             CharacteristicTypes.rotationSpeed:
-            return 5.0
-        default:
-            return 0.01
-        }
     }
 
     private func updateUI() {
@@ -190,26 +167,16 @@ class SceneMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
         bridge?.executeScene(identifier: uuid)
     }
 
-    /// Deactivate a scene by turning off only things the scene turned on.
-    /// Matches Apple Home behaviour: deactivating a scene never turns on lights,
-    /// unlocks doors, or opens garage doors.
     private func reverseScene() {
-        for action in sceneData.actions {
-            guard let charId = UUID(uuidString: action.characteristicId),
-                  Self.reversibleTypes.contains(action.characteristicType),
-                  let offValue = Self.offValue(for: action) else {
-                continue
-            }
-            bridge?.writeCharacteristic(identifier: charId, value: offValue)
-        }
+        SceneStateHelper.reverse(scene: sceneData, bridge: bridge)
     }
 
     /// Optimistically cache the off values for all reversible actions.
     private func cacheOffValues() {
         for action in sceneData.actions {
             guard let charId = UUID(uuidString: action.characteristicId),
-                  Self.reversibleTypes.contains(action.characteristicType),
-                  let offValue = Self.offValue(for: action) else {
+                  SceneStateHelper.reversibleTypes.contains(action.characteristicType),
+                  let offValue = SceneStateHelper.offValue(for: action) else {
                 continue
             }
             if let doubleValue = offValue as? Double {
@@ -219,33 +186,6 @@ class SceneMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
             } else if let boolValue = offValue as? Bool {
                 currentValues[charId] = boolValue ? 1.0 : 0.0
             }
-        }
-    }
-
-    /// Returns the "off" value for an action if the scene turned the device on,
-    /// or nil if the scene already set the device to its off state (no action needed).
-    static func offValue(for action: SceneActionData) -> Any? {
-        let charType = action.characteristicType
-        let target = action.targetValue
-
-        switch charType {
-        case CharacteristicTypes.powerState, CharacteristicTypes.active:
-            // Only turn off if the scene turned it on
-            return target > 0.5 ? false : nil
-        case CharacteristicTypes.brightness, CharacteristicTypes.rotationSpeed:
-            // Only set to 0 if the scene set a non-zero value
-            return target > 0.5 ? 0 : nil
-        case CharacteristicTypes.targetPosition:
-            // Only close if the scene opened (position > 50 means open)
-            return target > 50 ? 0 : nil
-        case CharacteristicTypes.lockTargetState:
-            // Lock target: 1 = secured, 0 = unsecured. Never unlock.
-            return nil
-        case CharacteristicTypes.targetDoorState:
-            // Door target: 0 = open, 1 = closed. Only close if the scene opened.
-            return target < 0.5 ? 1 : nil
-        default:
-            return target > 0.5 ? 0 : nil
         }
     }
 
