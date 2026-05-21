@@ -164,8 +164,12 @@ curl http://localhost:8423/brightness/50/Office/Lamp
 curl http://localhost:8423/position/75/Living%20Room/Blinds
 curl http://localhost:8423/speed/50/Bedroom/Ceiling%20Fan
 curl http://localhost:8423/temp/22/Hallway/Thermostat
+curl http://localhost:8423/heat/19/Hallway/Thermostat        # heating threshold (auto-mode)
+curl http://localhost:8423/cool/23/Hallway/Thermostat        # cooling threshold (auto-mode)
+curl http://localhost:8423/mode/auto/Hallway/Thermostat      # off | heat | cool | auto | heat_cool | dry | fan_only
 curl http://localhost:8423/color/120/100/Bedroom/Light
-curl http://localhost:8423/scene/Goodnight
+curl http://localhost:8423/scene/Goodnight                   # activate scene
+curl http://localhost:8423/off/scene/Goodnight               # deactivate scene (Apple Home semantics)
 curl http://localhost:8423/lock/Front%20Door
 curl http://localhost:8423/unlock/Front%20Door
 curl http://localhost:8423/open/Garage/Door
@@ -185,15 +189,28 @@ curl http://localhost:8423/refresh
 | `/list/rooms` | List all rooms, with the Phosphor icon used in the menubar |
 | `/list/devices` | List all devices with type and reachability |
 | `/list/devices/<room>` | List devices in a specific room |
-| `/list/scenes` | List all scenes |
+| `/list/scenes` | List all scenes. Items include `state: { on }` when the scene's "active" state can be computed (HomeKit scenes with a granular action list); omitted otherwise so clients fall back to fire-only |
 | `/list/groups` | List all device groups (includes room info for room-scoped groups) |
 | `/list/groups/<room>` | List groups available in a specific room (room-scoped + global) |
 | `/list/favourites` | List items pinned as favourites (services, device groups, scenes, rooms). Alias: `/list/favorites` |
-| `/info/<target>` | Detailed device/room info with current state |
+| `/info/<target>` | Detailed device/room info with current state. For scenes, includes `state: { on }` matching `/list/scenes` |
 | `/icon/<name>` | PNG of a Phosphor icon. Query params: `?fill=1` for filled variant, `?size=64` for size in pixels |
 | `/events` | SSE event stream for real-time characteristic changes |
 
 List responses respect the user's drag ordering from Settings → Accessories, and hidden items are filtered out (a specific `/info/<name>` lookup still works for hidden items).
+
+**Voice transcription:**
+
+Opt-in via Settings → Webhooks/CLI → "Enable voice control". POST raw 16 kHz mono int16 LE PCM audio to `/voice/transcribe` (the format the Even Realities G2 SDK emits via `audioEvent.audioPcm`). Recognition runs entirely on-device via WhisperKit (`openai_whisper-tiny.en`, ~40 MB CoreML model downloaded from Hugging Face on first use; English-only for now). Subsequent calls reuse the cached model.
+
+```bash
+curl --data-binary @audio.pcm \
+  -H 'Content-Type: application/octet-stream' \
+  http://localhost:8423/voice/transcribe
+# → { "status": "success", "text": "turn off the bedroom light", "confidence": 0.94 }
+```
+
+The server biases Whisper's decoder toward the user's vocabulary by passing the home's room / scene / device / group names as a prefill prompt — clients don't need to send anything extra. `GET /status` includes a `voiceEnabled` boolean so clients can hide their voice affordance when the user hasn't enabled the feature.
 
 **Event stream (SSE):**
 
