@@ -13,7 +13,12 @@ packages:
     exactVersion: "137.7151.12"
   WhisperKit:
     url: https://github.com/argmaxinc/WhisperKit.git
-    from: "0.13.0"
+    # Pinned to the last version that uses swift-transformers 0.1.x. Starting
+    # with WhisperKit 0.15.0, the requirement jumped to swift-transformers
+    # 1.1.x, and 1.1.7+ pulls in yyjson as a C dependency that doesn't build
+    # reliably on GitHub Actions runners. Revisit when upstream fixes the
+    # yyjson module-map issue.
+    exactVersion: "0.14.1"
 
 settings:
   base:
