@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.5.2
+
+- Voice control for Even Realities G2 glasses (Pro, opt-in). New toggle in Settings → Webhooks/CLI lets the glasses app transcribe spoken commands on the Mac. Recognition runs entirely on-device via WhisperKit (OpenAI Whisper tiny.en, ~40 MB CoreML model downloaded from Hugging Face on first use) – nothing leaves your Mac, no system Dictation toggle required, English-only for now. Subsequent launches reuse the cached model
+- New webhook endpoint `POST /voice/transcribe` accepts a raw 16 kHz mono int16 LE PCM body (matches the format the glasses SDK emits via `audioEvent.audioPcm`) and returns `{ status, text, confidence, message }`. 5 s of audio is ~160 KB and one HTTP roundtrip
+- `GET /status` gains a `voiceEnabled` boolean so the glasses app can hide the "Tap to speak" affordance for users who haven't enabled the feature
+- Webhook server now handles arbitrary HTTP methods and multi-chunk request bodies (POST with `Content-Length`-bounded body). Previously the receive loop read a single 4 KB chunk and only parsed GET; now it accumulates bytes until headers and body are complete
+
 ## 2.5.1
 
 - Fix camera snapshots not auto-refreshing on subsequent panel opens – the snapshot and timestamp timers were torn down on close but only restarted via `viewDidAppear`, which doesn't fire on later opens; now restarted in `panelDidShow` so the timestamp ticks and snapshots refresh every 30s (#117)

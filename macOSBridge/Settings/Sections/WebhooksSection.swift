@@ -10,9 +10,14 @@ import AppKit
 class WebhooksSection: SettingsCard {
 
     private let enableSwitch = NSSwitch()
+    private let voiceSwitch = NSSwitch()
     private var statusLabel: NSTextField!
     private var addressLabel: NSTextField!
     private var portField: NSTextField!
+    private var voiceStatusLabel: NSTextField?
+    private var voicePreloadTask: Task<Void, Never>?
+
+    static let voiceEnabledKey = "WebhookVoiceEnabled"
 
     private let actions: [(action: String, format: String, example: String)] = [
         ("Toggle", "toggle/<Room>/<Device>", "toggle/Office/Spotlights"),
@@ -75,10 +80,25 @@ class WebhooksSection: SettingsCard {
 
         stackView.addArrangedSubview(createSpacer(height: 4))
 
-        // Enable toggle box
+        // Enable toggle box (server enable + voice for glasses, stacked)
         let enableBox = createCardBox()
-        let enableRow = createEnableRow()
-        addContentToBox(enableBox, content: enableRow)
+        let enableStack = NSStackView()
+        enableStack.orientation = .vertical
+        enableStack.alignment = .leading
+        enableStack.spacing = 4
+        enableStack.translatesAutoresizingMaskIntoConstraints = false
+        enableStack.addArrangedSubview(createEnableRow())
+
+        // Divider between server toggle and voice toggle
+        let divider = NSBox()
+        divider.boxType = .separator
+        divider.translatesAutoresizingMaskIntoConstraints = false
+        enableStack.addArrangedSubview(divider)
+        divider.widthAnchor.constraint(equalTo: enableStack.widthAnchor).isActive = true
+
+        enableStack.addArrangedSubview(createVoiceRow())
+
+        addContentToBox(enableBox, content: enableStack)
         stackView.addArrangedSubview(enableBox)
         enableBox.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
 
@@ -173,6 +193,59 @@ class WebhooksSection: SettingsCard {
             labelStack.trailingAnchor.constraint(lessThanOrEqualTo: enableSwitch.leadingAnchor, constant: -16),
             enableSwitch.trailingAnchor.constraint(equalTo: container.trailingAnchor),
             enableSwitch.centerYAnchor.constraint(equalTo: container.centerYAnchor)
+        ])
+
+        return container
+    }
+
+    // MARK: - Voice row
+
+    private func createVoiceRow() -> NSView {
+        let container = NSView()
+        container.translatesAutoresizingMaskIntoConstraints = false
+
+        let labelStack = NSStackView()
+        labelStack.orientation = .vertical
+        labelStack.alignment = .leading
+        labelStack.spacing = 2
+        labelStack.translatesAutoresizingMaskIntoConstraints = false
+
+        let title = createLabel("Voice control for G2 glasses", style: .body)
+        labelStack.addArrangedSubview(title)
+
+        let subtitle = NSTextField(wrappingLabelWithString: "Lets the Itsyhome app on your Even Realities G2 glasses transcribe spoken commands on your Mac. Downloads a ~40 MB English speech model on first use — runs entirely on-device, nothing leaves your Mac.")
+        subtitle.font = .systemFont(ofSize: 11)
+        subtitle.textColor = .secondaryLabelColor
+        subtitle.translatesAutoresizingMaskIntoConstraints = false
+        labelStack.addArrangedSubview(subtitle)
+
+        let statusField = NSTextField(labelWithString: "")
+        statusField.font = .systemFont(ofSize: 11)
+        statusField.textColor = .secondaryLabelColor
+        statusField.translatesAutoresizingMaskIntoConstraints = false
+        statusField.isHidden = true
+        labelStack.addArrangedSubview(statusField)
+        // Visual breathing room between the static description and the
+        // live status line — the status changes colour to signal state.
+        labelStack.setCustomSpacing(8, after: subtitle)
+        voiceStatusLabel = statusField
+
+        voiceSwitch.controlSize = .mini
+        voiceSwitch.target = self
+        voiceSwitch.action = #selector(voiceSwitchChanged)
+        voiceSwitch.state = UserDefaults.standard.bool(forKey: Self.voiceEnabledKey) ? .on : .off
+        voiceSwitch.translatesAutoresizingMaskIntoConstraints = false
+
+        container.addSubview(labelStack)
+        container.addSubview(voiceSwitch)
+
+        NSLayoutConstraint.activate([
+            labelStack.topAnchor.constraint(equalTo: container.topAnchor, constant: 6),
+            labelStack.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -6),
+            labelStack.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            labelStack.trailingAnchor.constraint(lessThanOrEqualTo: voiceSwitch.leadingAnchor, constant: -16),
+            voiceSwitch.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+            voiceSwitch.topAnchor.constraint(equalTo: container.topAnchor, constant: 8)
         ])
 
         return container
@@ -410,6 +483,49 @@ class WebhooksSection: SettingsCard {
         } else {
             WebhookServer.shared.stop()
         }
+    }
+
+    @objc private func voiceSwitchChanged(_ sender: NSSwitch) {
+        let enabled = sender.state == .on
+        UserDefaults.standard.set(enabled, forKey: Self.voiceEnabledKey)
+        if !enabled {
+            voicePreloadTask?.cancel()
+            voicePreloadTask = nil
+            SpeechTranscriber.unload()
+            updateVoiceStatusLabel("", color: .secondaryLabelColor)
+            return
+        }
+        // Turning on: kick the WhisperKit pipeline. First call downloads
+        // the tiny.en CoreML model (~40 MB) from Hugging Face into the
+        // user's Application Support cache; subsequent toggles re-use it.
+        // The label below the switch shows progress / errors. Orange =
+        // in-flight, green = ready, red = error.
+        updateVoiceStatusLabel("Preparing model — downloading on first use…", color: .systemOrange)
+        voicePreloadTask?.cancel()
+        voicePreloadTask = Task { [weak self] in
+            let task = SpeechTranscriber.prepare()
+            do {
+                _ = try await task.value
+                await MainActor.run {
+                    self?.updateVoiceStatusLabel("Voice ready.", color: .systemGreen)
+                }
+            } catch {
+                await MainActor.run {
+                    guard let self = self else { return }
+                    // Roll the switch back so the user can retry.
+                    self.voiceSwitch.state = .off
+                    UserDefaults.standard.set(false, forKey: Self.voiceEnabledKey)
+                    self.updateVoiceStatusLabel("Couldn't load model: \(error.localizedDescription)", color: .systemRed)
+                }
+            }
+        }
+    }
+
+    private func updateVoiceStatusLabel(_ text: String, color: NSColor) {
+        guard let label = voiceStatusLabel else { return }
+        label.stringValue = text
+        label.textColor = color
+        label.isHidden = text.isEmpty
     }
 
     @objc private func portChanged(_ sender: NSTextField) {

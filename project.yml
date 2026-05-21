@@ -11,6 +11,9 @@ packages:
   LiveKitWebRTC:
     url: https://github.com/livekit/webrtc-xcframework.git
     exactVersion: "137.7151.12"
+  WhisperKit:
+    url: https://github.com/argmaxinc/WhisperKit.git
+    from: "0.13.0"
 
 settings:
   base:
@@ -45,8 +48,8 @@ targets:
         DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER: NO
         TARGETED_DEVICE_FAMILY: "6"
         # App metadata
-        MARKETING_VERSION: "2.5.1"
-        CURRENT_PROJECT_VERSION: "265"
+        MARKETING_VERSION: "2.5.2"
+        CURRENT_PROJECT_VERSION: "268"
         INFOPLIST_KEY_CFBundleDisplayName: Itsyhome
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.utilities
     scheme:
@@ -106,6 +109,7 @@ targets:
         embed: false
       - sdk: CoreLocation.framework
         embed: false
+      - package: WhisperKit
 
   # Unit tests for macOSBridge
   macOSBridgeTests:

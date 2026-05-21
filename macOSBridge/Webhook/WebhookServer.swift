@@ -114,39 +114,97 @@ final class WebhookServer {
 
     private func handleConnection(_ connection: NWConnection) {
         connection.start(queue: queue)
+        receiveLoop(connection: connection, buffer: Data())
+    }
 
-        connection.receive(minimumIncompleteLength: 1, maximumLength: 4096) { [weak self] data, _, _, error in
-            guard let self, let data, error == nil else {
+    /// Accumulates incoming bytes until we have a full HTTP request
+    /// (headers + content-length bytes of body). Replaces the old single-
+    /// chunk reader so POST bodies larger than one TCP read (e.g. PCM
+    /// audio for /voice/transcribe — ~160 KB for a 5 s utterance) can be
+    /// reassembled before dispatch.
+    private func receiveLoop(connection: NWConnection, buffer: Data) {
+        connection.receive(minimumIncompleteLength: 1, maximumLength: 65536) { [weak self] data, _, isComplete, error in
+            guard let self else { connection.cancel(); return }
+            guard error == nil else { connection.cancel(); return }
+            var buf = buffer
+            if let d = data { buf.append(d) }
+
+            if let headerEnd = self.findHeaderEnd(in: buf) {
+                let headData = buf.subdata(in: 0..<headerEnd)
+                guard let headStr = String(data: headData, encoding: .utf8),
+                      let parsed = self.parseHead(headStr) else {
+                    self.sendResponse(connection: connection, status: 400, body: self.encode(APIResponse.error("Invalid HTTP request")))
+                    return
+                }
+                let bodyStart = headerEnd + 4  // skip "\r\n\r\n"
+                let contentLength = Int(parsed.headers["content-length"] ?? "0") ?? 0
+                let availableBody = buf.count - bodyStart
+                if availableBody >= contentLength {
+                    let body: Data = contentLength > 0
+                        ? buf.subdata(in: bodyStart..<bodyStart + contentLength)
+                        : Data()
+                    self.handleRequest(method: parsed.method, path: parsed.path, body: body, connection: connection)
+                    return
+                }
+            }
+
+            if isComplete {
                 connection.cancel()
                 return
             }
-
-            guard let request = String(data: data, encoding: .utf8) else {
-                self.sendResponse(connection: connection, status: 400, body: self.encode(APIResponse.error("Invalid request")))
-                return
-            }
-
-            guard let path = self.parseHTTPPath(from: request) else {
-                self.sendResponse(connection: connection, status: 400, body: self.encode(APIResponse.error("Invalid HTTP request")))
-                return
-            }
-
-            self.handleRequest(path: path, connection: connection)
+            self.receiveLoop(connection: connection, buffer: buf)
         }
     }
 
     // MARK: - HTTP parsing
 
-    private func parseHTTPPath(from request: String) -> String? {
-        guard let firstLine = request.split(separator: "\r\n", maxSplits: 1).first else { return nil }
-        let parts = firstLine.split(separator: " ")
-        guard parts.count >= 2, parts[0] == "GET" else { return nil }
-        return String(parts[1])
+    private func findHeaderEnd(in data: Data) -> Int? {
+        let crlf: [UInt8] = [0x0D, 0x0A, 0x0D, 0x0A]
+        guard data.count >= crlf.count else { return nil }
+        return data.withUnsafeBytes { rawBuf -> Int? in
+            let bytes = rawBuf.bindMemory(to: UInt8.self)
+            var i = 0
+            let end = bytes.count - crlf.count
+            while i <= end {
+                if bytes[i] == crlf[0] && bytes[i+1] == crlf[1]
+                    && bytes[i+2] == crlf[2] && bytes[i+3] == crlf[3] {
+                    return i
+                }
+                i += 1
+            }
+            return nil
+        }
+    }
+
+    private func parseHead(_ head: String) -> (method: String, path: String, headers: [String: String])? {
+        let lines = head.components(separatedBy: "\r\n")
+        guard let requestLine = lines.first else { return nil }
+        let parts = requestLine.split(separator: " ")
+        guard parts.count >= 2 else { return nil }
+        let method = String(parts[0]).uppercased()
+        let path = String(parts[1])
+        var headers: [String: String] = [:]
+        for line in lines.dropFirst() where !line.isEmpty {
+            if let colonIdx = line.firstIndex(of: ":") {
+                let key = String(line[..<colonIdx]).trimmingCharacters(in: .whitespaces).lowercased()
+                let value = String(line[line.index(after: colonIdx)...]).trimmingCharacters(in: .whitespaces)
+                headers[key] = value
+            }
+        }
+        return (method, path, headers)
     }
 
     // MARK: - Request handling
 
-    private func handleRequest(path: String, connection: NWConnection) {
+    private func handleRequest(method: String, path: String, body: Data, connection: NWConnection) {
+        // CORS preflight: browsers (and Even Hub's WebView) fire an
+        // OPTIONS request before any "non-simple" POST. Answer it with
+        // the headers needed for the actual request to follow. Cheap and
+        // independent of Pro / engine state, so handle it early.
+        if method == "OPTIONS" {
+            sendPreflightResponse(connection: connection)
+            return
+        }
         guard let actionEngine else {
             sendResponse(connection: connection, status: 500, body: encode(APIResponse.error("Server not configured")))
             return
@@ -161,6 +219,21 @@ final class WebhookServer {
 
         guard !trimmedPath.isEmpty else {
             sendResponse(connection: connection, status: 400, body: encode(APIResponse.error("Empty path")))
+            return
+        }
+
+        // POST endpoints. /voice/transcribe accepts a raw 16 kHz mono
+        // int16 LE PCM payload; everything else gets a 405.
+        if method == "POST" {
+            if trimmedPath == "voice/transcribe" {
+                handleVoiceTranscribe(body: body, connection: connection)
+                return
+            }
+            sendResponse(connection: connection, status: 405, body: encode(APIResponse.error("Method not allowed")))
+            return
+        }
+        if method != "GET" {
+            sendResponse(connection: connection, status: 405, body: encode(APIResponse.error("Method not allowed")))
             return
         }
 
@@ -201,6 +274,103 @@ final class WebhookServer {
         case .failure(let parseError):
             sendResponse(connection: connection, status: 400, body: encode(APIResponse.error(parseError.localizedDescription)))
         }
+    }
+
+    // MARK: - Voice transcription
+
+    /// POST /voice/transcribe — body is a raw 16 kHz mono int16 LE PCM
+    /// payload captured on the glasses. We hand it to SFSpeechRecognizer
+    /// (on-device) and return the transcript. The glasses app does its own
+    /// fuzzy matching against rooms / devices / scenes from there.
+    private func handleVoiceTranscribe(body: Data, connection: NWConnection) {
+        guard UserDefaults.standard.bool(forKey: WebhooksSection.voiceEnabledKey) else {
+            let resp = VoiceTranscribeResponse(status: "error", text: nil, confidence: nil,
+                message: "Voice control is disabled. Enable it in Settings → Webhooks/CLI.")
+            sendResponse(connection: connection, status: 403, body: encode(resp))
+            return
+        }
+        guard !body.isEmpty else {
+            let resp = VoiceTranscribeResponse(status: "error", text: nil, confidence: nil,
+                message: "Empty audio payload")
+            sendResponse(connection: connection, status: 400, body: encode(resp))
+            return
+        }
+        // Build a catalog prompt (rooms + scenes + service names + groups)
+        // so Whisper biases its decoder toward the user's actual device
+        // names. ~200-char budget — Whisper's prefill context is ~244
+        // tokens, and shorter is better (less drift). Devices first since
+        // they're the most common command target.
+        let catalogPrompt = buildCatalogPrompt(maxChars: 200)
+        // Bridge to async. The TCP connection stays open until we send the
+        // response back from the completion.
+        Task { [weak self] in
+            guard let self else { return }
+            do {
+                let (text, confidence) = try await SpeechTranscriber.transcribe(pcm: body, prompt: catalogPrompt)
+                let resp = VoiceTranscribeResponse(status: "success", text: text,
+                                                    confidence: confidence, message: nil)
+                self.queue.async {
+                    self.sendResponse(connection: connection, status: 200, body: self.encode(resp))
+                }
+            } catch {
+                let msg: String
+                switch error {
+                case SpeechTranscribeError.bufferConversionFailed:
+                    msg = "Failed to decode audio payload"
+                case SpeechTranscribeError.modelLoadFailed(let detail):
+                    msg = "Voice model failed to load: \(detail)"
+                case SpeechTranscribeError.underlying(let underlying):
+                    msg = underlying.localizedDescription
+                default:
+                    msg = "Speech recognition failed: \(error)"
+                }
+                let resp = VoiceTranscribeResponse(status: "error", text: nil,
+                                                    confidence: nil, message: msg)
+                self.queue.async {
+                    self.sendResponse(connection: connection, status: 500, body: self.encode(resp))
+                }
+            }
+        }
+    }
+
+    /// Build a short, comma-separated string of catalog names (devices →
+    /// rooms → scenes → groups) used as Whisper's prefill prompt for
+    /// /voice/transcribe. The order biases more important / more often
+    /// spoken names into the budget first. Returns "" when no engine is
+    /// configured yet (e.g. before HomeKit loads).
+    private func buildCatalogPrompt(maxChars: Int) -> String {
+        guard let data = actionEngine?.menuData else { return "" }
+        var pieces: [String] = []
+        var seen = Set<String>()
+        func add(_ s: String) {
+            let trimmed = s.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmed.isEmpty else { return }
+            let key = trimmed.lowercased()
+            guard !seen.contains(key) else { return }
+            seen.insert(key)
+            pieces.append(trimmed)
+        }
+        // Devices first: most commonly spoken.
+        for accessory in data.accessories {
+            for service in accessory.services {
+                add(service.name)
+            }
+        }
+        // Rooms next — often qualify the device ("office lamp").
+        for room in data.rooms { add(room.name) }
+        // Scenes — momentary commands.
+        for scene in data.scenes { add(scene.name) }
+        // Device groups — power user feature.
+        for group in PreferencesManager.shared.deviceGroups { add(group.name) }
+
+        // Pack into the budget, comma-separated.
+        var out = ""
+        for p in pieces {
+            let nextLen = out.isEmpty ? p.count : out.count + 2 + p.count
+            if nextLen > maxChars { break }
+            out = out.isEmpty ? p : "\(out), \(p)"
+        }
+        return out
     }
 
     // MARK: - Value conversion helpers
@@ -273,6 +443,7 @@ final class WebhookServer {
         case 400: statusText = "Bad Request"
         case 403: statusText = "Forbidden"
         case 404: statusText = "Not Found"
+        case 405: statusText = "Method Not Allowed"
         case 500: statusText = "Internal Server Error"
         default: statusText = "Unknown"
         }
@@ -283,10 +454,33 @@ final class WebhookServer {
         Content-Length: \(body.utf8.count)\r
         Connection: close\r
         Access-Control-Allow-Origin: *\r
+        Access-Control-Allow-Methods: GET, POST, OPTIONS\r
+        Access-Control-Allow-Headers: Content-Type\r
         \r
         \(body)
         """
 
+        let data = Data(response.utf8)
+        connection.send(content: data, completion: .contentProcessed { _ in
+            connection.cancel()
+        })
+    }
+
+    /// 204 No Content reply to a CORS preflight (OPTIONS). Must include
+    /// the same Allow-Origin / Allow-Methods / Allow-Headers that the
+    /// real response will carry, so the browser accepts the upcoming POST.
+    func sendPreflightResponse(connection: NWConnection) {
+        let response = """
+        HTTP/1.1 204 No Content\r
+        Access-Control-Allow-Origin: *\r
+        Access-Control-Allow-Methods: GET, POST, OPTIONS\r
+        Access-Control-Allow-Headers: Content-Type\r
+        Access-Control-Max-Age: 600\r
+        Content-Length: 0\r
+        Connection: close\r
+        \r
+
+        """
         let data = Data(response.utf8)
         connection.send(content: data, completion: .contentProcessed { _ in
             connection.cancel()

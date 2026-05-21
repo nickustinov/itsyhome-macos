@@ -104,6 +104,7 @@
 		076BD407FD712E0EA8CC5301 /* ph.phone-x.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = D5C511657E3CD7B288D2EBEE /* ph.phone-x.fill.svg */; };
 		077FEB94E3705298F76B6103 /* ph.smiley-melting.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = D7AD2D98C008C031C44A2F2F /* ph.smiley-melting.fill.svg */; };
 		07A302575F0F86237495D0A5 /* ph.coffee.svg in Resources */ = {isa = PBXBuildFile; fileRef = E5D6B6CEE729DBA4944090B7 /* ph.coffee.svg */; };
+		07E6AF5C498445C5FCD2E9F7 /* WhisperKit in Frameworks */ = {isa = PBXBuildFile; productRef = 28224FD08DFF2DF1D23A8220 /* WhisperKit */; };
 		07ECCBA7F4459E3FB18DBE7D /* ph.equalizer.svg in Resources */ = {isa = PBXBuildFile; fileRef = 9FD30846D1E594A02FA40902 /* ph.equalizer.svg */; };
 		07F0155BB21510D30A7AEFB9 /* ph.folder-simple-plus.svg in Resources */ = {isa = PBXBuildFile; fileRef = 45D25F7496C835592B3F0E8D /* ph.folder-simple-plus.svg */; };
 		081C574CB84363FC0F49E0D1 /* ph.file-ini.svg in Resources */ = {isa = PBXBuildFile; fileRef = 053B298BE56428BA275AF898 /* ph.file-ini.svg */; };
@@ -1366,6 +1367,7 @@
 		67D13DBA100A0CB1B08D2383 /* ph.warning.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = BB1080EF11D896989F1909FC /* ph.warning.fill.svg */; };
 		67E7CE4D2C1ED055F0EF8E7A /* ph.monitor-play.svg in Resources */ = {isa = PBXBuildFile; fileRef = 37D8B8439A8362AD6F136C98 /* ph.monitor-play.svg */; };
 		67E9EC3321181637F2778AD9 /* ModeButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7593F05E9EAB8871D43D8E8 /* ModeButton.swift */; };
+		67F7CAE2CE24F64C4CC79C68 /* SpeechTranscriber.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC85F1209953AFF948579BDC /* SpeechTranscriber.swift */; };
 		67F82E96858514BCDD7CCCB6 /* ph.prohibit-inset.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 9D619A164C9E7112B13D46D3 /* ph.prohibit-inset.fill.svg */; };
 		67F977FD2A020855178DB8F7 /* ph.flying-saucer.svg in Resources */ = {isa = PBXBuildFile; fileRef = 4AA7A9281B4FE42F6C341300 /* ph.flying-saucer.svg */; };
 		680D90D25922D1D80083CFC7 /* SecuritySystemMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBD57CCBF703A5861D8AEFB0 /* SecuritySystemMenuItem.swift */; };
@@ -2102,6 +2104,7 @@
 		9E169CCD3FF3C4CDC7BFBA73 /* ph.square-logo.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = FEB574C55BAC23FF7FBB788A /* ph.square-logo.fill.svg */; };
 		9E20A40CF8A440563E08D132 /* ph.oven.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = EF0B993CDCB770D2B0398651 /* ph.oven.fill.svg */; };
 		9E40413770BD4F3504096E3C /* EntityMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CE309CD606A1CB670BC8B05 /* EntityMapper.swift */; };
+		9E478A54349973AC8B0D43C2 /* SpeechTranscriber.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC85F1209953AFF948579BDC /* SpeechTranscriber.swift */; };
 		9E523490EEBB73CE878E9769 /* ph.fast-forward-circle.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = C1DFF90BEB4836CD702DC119 /* ph.fast-forward-circle.fill.svg */; };
 		9E97331FF2A1255696CE4C1C /* ph.text-outdent.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = FD58426569ABF984E9F04441 /* ph.text-outdent.fill.svg */; };
 		9EB5AC77F45B375AAB8C9537 /* ph.bank.svg in Resources */ = {isa = PBXBuildFile; fileRef = 8629AECF305CDA93CC1B9790 /* ph.bank.svg */; };
@@ -6171,6 +6174,7 @@
 		DC56AFCC7E64773203DADF2A /* ph.split-horizontal.fill.svg */ = {isa = PBXFileReference; path = "ph.split-horizontal.fill.svg"; sourceTree = "<group>"; };
 		DC6AFDB239AF6E9E08E6CC34 /* ph.split-horizontal.svg */ = {isa = PBXFileReference; path = "ph.split-horizontal.svg"; sourceTree = "<group>"; };
 		DC8046933512FFF7FEEDB453 /* ph.chat-centered-text.svg */ = {isa = PBXFileReference; path = "ph.chat-centered-text.svg"; sourceTree = "<group>"; };
+		DC85F1209953AFF948579BDC /* SpeechTranscriber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechTranscriber.swift; sourceTree = "<group>"; };
 		DC86EDBAA5EFDFC89ABC3DCE /* ph.shower.svg */ = {isa = PBXFileReference; path = ph.shower.svg; sourceTree = "<group>"; };
 		DC94D0437703BD8F2A135398 /* ph.tiktok-logo.svg */ = {isa = PBXFileReference; path = "ph.tiktok-logo.svg"; sourceTree = "<group>"; };
 		DCB5A13C222E1B3BB079F473 /* ph.thermometer-hot.fill.svg */ = {isa = PBXFileReference; path = "ph.thermometer-hot.fill.svg"; sourceTree = "<group>"; };
@@ -6628,6 +6632,7 @@
 			files = (
 				D2AAE6C09917F8A2C000CDA7 /* CoreWLAN.framework in Frameworks */,
 				577D81D9B7F847D199BC05CF /* CoreLocation.framework in Frameworks */,
+				07E6AF5C498445C5FCD2E9F7 /* WhisperKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -6774,6 +6779,7 @@
 			isa = PBXGroup;
 			children = (
 				99F905F4EDD22D9B508D8257 /* HomeKitStates.swift */,
+				DC85F1209953AFF948579BDC /* SpeechTranscriber.swift */,
 				C89601E207FEBA59AF221472 /* WebhookResponses.swift */,
 				CE0096925C98FD6B955AB016 /* WebhookServer.swift */,
 				E1852A78644B4B1C92FE7EA2 /* WebhookServer+Endpoints.swift */,
@@ -10161,6 +10167,7 @@
 			);
 			name = macOSBridge;
 			packageProductDependencies = (
+				28224FD08DFF2DF1D23A8220 /* WhisperKit */,
 			);
 			productName = macOSBridge;
 			productReference = 5735B31C003BD03DE4B28206 /* macOSBridge.bundle */;
@@ -10212,6 +10219,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				4B83A3AD3D02B152E08700AF /* XCRemoteSwiftPackageReference "webrtc-xcframework" */,
+				9D72451289FFC481307C8BE7 /* XCRemoteSwiftPackageReference "WhisperKit" */,
 			);
 			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
@@ -13456,6 +13464,7 @@
 				EBD10F700CEFAA9D8C99229F /* ShortcutButton.swift in Sources */,
 				874E81D53AA0FC8CD8E987EA /* SlatMenuItem.swift in Sources */,
 				B2CD8112268FB9D03A608D10 /* SmartHomePlatform.swift in Sources */,
+				9E478A54349973AC8B0D43C2 /* SpeechTranscriber.swift in Sources */,
 				49776CBF087EF86859BA5713 /* StartupLogger.swift in Sources */,
 				CAFADC7AC3708C1CF63E3E15 /* SwitchMenuItem.swift in Sources */,
 				85A7FA1BF8285A1BF44CEA0E /* TemperatureFormatter.swift in Sources */,
@@ -13589,6 +13598,7 @@
 				EB177BFC46F5251C608A5E6E /* ServiceDataTests.swift in Sources */,
 				9F6ADB69D964B6EDECD22CF9 /* SlatMenuItem.swift in Sources */,
 				B6EE15CB1D179D13C4AC7D23 /* SmartHomePlatform.swift in Sources */,
+				67F7CAE2CE24F64C4CC79C68 /* SpeechTranscriber.swift in Sources */,
 				9907F04B32E92E6D358D63FD /* StartupLogger.swift in Sources */,
 				4959FC69F1F23C3ABA0365A1 /* SwitchMenuItem.swift in Sources */,
 				9FBEDE4F029FFD689286563C /* SwitchMenuItemTests.swift in Sources */,
@@ -13636,7 +13646,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_MAC_ICON_IN_CATALYST_APP = YES;
 				CODE_SIGN_ENTITLEMENTS = Itsyhome/Itsyhome.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 265;
+				CURRENT_PROJECT_VERSION = 268;
 				DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER = NO;
 				INFOPLIST_FILE = Itsyhome/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Itsyhome;
@@ -13645,7 +13655,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.5.1;
+				MARKETING_VERSION = 2.5.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.nickustinov.itsyhome;
 				PRODUCT_NAME = Itsyhome;
 				SDKROOT = iphoneos;
@@ -13765,7 +13775,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_MAC_ICON_IN_CATALYST_APP = YES;
 				CODE_SIGN_ENTITLEMENTS = Itsyhome/Itsyhome.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 265;
+				CURRENT_PROJECT_VERSION = 268;
 				DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER = NO;
 				INFOPLIST_FILE = Itsyhome/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Itsyhome;
@@ -13774,7 +13784,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.5.1;
+				MARKETING_VERSION = 2.5.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.nickustinov.itsyhome;
 				PRODUCT_NAME = Itsyhome;
 				SDKROOT = iphoneos;
@@ -13930,9 +13940,22 @@
 				version = 137.7151.12;
 			};
 		};
+		9D72451289FFC481307C8BE7 /* XCRemoteSwiftPackageReference "WhisperKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/argmaxinc/WhisperKit.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.13.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		28224FD08DFF2DF1D23A8220 /* WhisperKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 9D72451289FFC481307C8BE7 /* XCRemoteSwiftPackageReference "WhisperKit" */;
+			productName = WhisperKit;
+		};
 		C891028440C5C0E1AB9180F5 /* LiveKitWebRTC */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 4B83A3AD3D02B152E08700AF /* XCRemoteSwiftPackageReference "webrtc-xcframework" */;
