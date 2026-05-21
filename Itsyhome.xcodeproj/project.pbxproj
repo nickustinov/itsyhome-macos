@@ -2366,6 +2366,7 @@
 		B2073E1E1855BAC5691F30B1 /* ph.phone-slash.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 4CCF9CC032A4E715F4F67D33 /* ph.phone-slash.fill.svg */; };
 		B228969CB3824F1195D6CEA9 /* ph.plus-circle.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 03D8F15315E2C1A5F457A52E /* ph.plus-circle.fill.svg */; };
 		B236B3156A0818EE8ADE48A8 /* ph.game-controller.svg in Resources */ = {isa = PBXBuildFile; fileRef = D7FCEEE44F61A58B6975DF76 /* ph.game-controller.svg */; };
+		B241F2942A1E9EAC5AE5E314 /* WhisperKit in Frameworks */ = {isa = PBXBuildFile; productRef = 5EACDD30A0056F906F0F7C03 /* WhisperKit */; };
 		B25B2DF9541E13F777D699B3 /* ph.dots-six-vertical.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = CA387411A3036A21CB8428CD /* ph.dots-six-vertical.fill.svg */; };
 		B29D064CFB377BF9A6536281 /* ph.baseball.svg in Resources */ = {isa = PBXBuildFile; fileRef = 31736C5D95D30A0F751CD40A /* ph.baseball.svg */; };
 		B2A0429C8396EBB99764791A /* ph.arrow-elbow-right-down.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 4E5654A4CCA0355BA9F34739 /* ph.arrow-elbow-right-down.fill.svg */; };
@@ -6636,6 +6637,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		B3E3269437BDA4617A1BCE71 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B241F2942A1E9EAC5AE5E314 /* WhisperKit in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -10119,6 +10128,7 @@
 			buildPhases = (
 				DD8CD3634C51BFE29E20799E /* Sources */,
 				612466FC9E8DD93371A37307 /* Resources */,
+				B3E3269437BDA4617A1BCE71 /* Frameworks */,
 			);
 			buildRules = (
 			);
@@ -10127,6 +10137,7 @@
 			);
 			name = macOSBridgeTests;
 			packageProductDependencies = (
+				5EACDD30A0056F906F0F7C03 /* WhisperKit */,
 			);
 			productName = macOSBridgeTests;
 			productReference = AFFF50FE92C7137DE82A4A69 /* macOSBridgeTests.xctest */;
@@ -13952,6 +13963,11 @@
 
 /* Begin XCSwiftPackageProductDependency section */
 		28224FD08DFF2DF1D23A8220 /* WhisperKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 9D72451289FFC481307C8BE7 /* XCRemoteSwiftPackageReference "WhisperKit" */;
+			productName = WhisperKit;
+		};
+		5EACDD30A0056F906F0F7C03 /* WhisperKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 9D72451289FFC481307C8BE7 /* XCRemoteSwiftPackageReference "WhisperKit" */;
 			productName = WhisperKit;

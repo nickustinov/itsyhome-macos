@@ -155,3 +155,7 @@ targets:
         buildPhase: sources
     dependencies:
       - target: macOSBridge
+      # SpeechTranscriber.swift is compiled into the test bundle (it's not
+      # excluded), so the bundle needs to link WhisperKit at link time even
+      # though no test exercises it.
+      - package: WhisperKit
