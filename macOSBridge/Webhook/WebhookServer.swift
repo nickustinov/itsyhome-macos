@@ -283,7 +283,7 @@ final class WebhookServer {
     /// (on-device) and return the transcript. The glasses app does its own
     /// fuzzy matching against rooms / devices / scenes from there.
     private func handleVoiceTranscribe(body: Data, connection: NWConnection) {
-        guard UserDefaults.standard.bool(forKey: WebhooksSection.voiceEnabledKey) else {
+        guard UserDefaults.standard.bool(forKey: SpeechTranscriber.voiceEnabledKey) else {
             let resp = VoiceTranscribeResponse(status: "error", text: nil, confidence: nil,
                 message: "Voice control is disabled. Enable it in Itsyhome on Mac: Settings → Webhooks/CLI.")
             sendResponse(connection: connection, status: 403, body: encode(resp))

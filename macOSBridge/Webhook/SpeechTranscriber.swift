@@ -21,6 +21,12 @@ enum SpeechTranscribeError: Error {
 
 enum SpeechTranscriber {
 
+    /// UserDefaults key for the "voice control enabled" toggle. Owned by
+    /// this type (rather than WebhooksSection) so the webhook layer can
+    /// read it without forcing the settings UI to be linked in — the test
+    /// target excludes the Settings/ folder.
+    static let voiceEnabledKey = "WebhookVoiceEnabled"
+
     // The pipeline is lazily loaded the first time someone calls
     // `prepare()` or `transcribe(...)`. We hold the Task so concurrent
     // requests share the same load (and the same download).
@@ -33,7 +39,7 @@ enum SpeechTranscriber {
     /// app can advertise the row immediately after the user opts in,
     /// even before the model finishes loading.
     static func isAvailable() -> Bool {
-        UserDefaults.standard.bool(forKey: WebhooksSection.voiceEnabledKey)
+        UserDefaults.standard.bool(forKey: voiceEnabledKey)
     }
 
     /// Kick off the model download / load. Safe to call multiple times —

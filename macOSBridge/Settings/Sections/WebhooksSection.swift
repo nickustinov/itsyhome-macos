@@ -17,7 +17,9 @@ class WebhooksSection: SettingsCard {
     private var voiceStatusLabel: NSTextField?
     private var voicePreloadTask: Task<Void, Never>?
 
-    static let voiceEnabledKey = "WebhookVoiceEnabled"
+    // Canonical key lives on SpeechTranscriber so the webhook layer can
+    // read it without forcing the Settings/ folder to be linked in.
+    static var voiceEnabledKey: String { SpeechTranscriber.voiceEnabledKey }
 
     private let actions: [(action: String, format: String, example: String)] = [
         ("Toggle", "toggle/<Room>/<Device>", "toggle/Office/Spotlights"),

@@ -260,6 +260,11 @@ final class CameraPanelManager {
         positionCameraPanelWithSize(panel, width: cameraPanelSize.width, height: cameraPanelSize.height)
         delegate?.cameraPanelManagerSetCameraWindowHidden(self, hidden: false)
         panel.alphaValue = 1.0
+        // Activate the app so the first click in the panel reaches the camera tile.
+        // Without this, if the user previously clicked outside the app (losing active
+        // status) the first click in the reopened panel is consumed by the system's
+        // "activate app" gesture and only the second click registers.
+        NSApp.activate(ignoringOtherApps: true)
         panel.makeKeyAndOrderFront(nil)
         setupClickOutsideMonitor()
         // Re-apply highlight after mouse event completes (system resets it on mouseUp)

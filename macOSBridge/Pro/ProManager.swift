@@ -159,7 +159,7 @@ final class ProStatusCache: @unchecked Sendable {
     static let shared = ProStatusCache()
 
     // Set to true for TestFlight builds, false for App Store
-    static let debugOverride = false
+    static let debugOverride = true
 
     // Debug-only: flip to true to force non-Pro state (e.g. for previewing Pro badges)
     static let debugForceNotPro = false
