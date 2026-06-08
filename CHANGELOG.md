@@ -8,6 +8,7 @@
 - Read-only sensors over webhooks – the binary sensor family is exposed through the local web server: `/list` and `/status` include them, `/info` adds a `detected` bool (reported as unknown when unreadable, never a false "clear"), `/debug` lists their characteristics, and value changes publish over the SSE `/events` stream
 - Home Assistant sensor support – every HA sensor now appears in the menu. Contact, motion, occupancy, leak (moisture), smoke and carbon monoxide binary sensors map to their dedicated rows; any other numeric sensor (CO2, power, pressure, illuminance, air quality, ...) shows its value and unit, and any other binary sensor shows On/Off, each with a device-class icon. Diagnostic sensors stay governed by the entity category filter
 - Battery indicator – battery-powered accessories show a small battery icon and percentage next to their name in the menu (sensors, locks, doors, blinds, garage doors and thermostats). Works with both HomeKit (sibling battery service) and Home Assistant (the device's battery sensor)
+- Add sensors to custom groups – sensors can now be added to user-created groups. In submenu groups they show as rows with their reading; the aggregate toggle of inline groups ignores read-only sensors
 
 ## 2.5.2
 

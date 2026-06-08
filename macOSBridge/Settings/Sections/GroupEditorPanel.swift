@@ -237,11 +237,11 @@ class GroupEditorPanel: NSViewController {
         // Get room name lookup
         let roomLookup = menuData.roomLookup()
 
-        // Excluded types (sensors, etc.)
-        let excludedTypes: Set<String> = [ServiceTypes.temperatureSensor, ServiceTypes.humiditySensor]
-
+        // All services (including read-only sensors) can be added to a group;
+        // sensors show as rows in submenu groups and are ignored by the
+        // aggregate toggle of inline groups.
         for accessory in menuData.accessories {
-            for service in accessory.services where !excludedTypes.contains(service.serviceType) {
+            for service in accessory.services {
                 let roomName = service.roomIdentifier.flatMap { roomLookup[$0] } ?? "Other"
                 result[roomName, default: []].append(service)
             }
