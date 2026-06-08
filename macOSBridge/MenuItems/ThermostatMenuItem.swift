@@ -31,6 +31,7 @@ class ThermostatMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
     private let nameLabel: NSTextField
     private let tempLabel: NSTextField
     private let powerToggle: ToggleSwitch
+    private let batteryBadge: BatteryBadgeView?
 
     // Controls row (shown when not off)
     private let controlsRow: NSView
@@ -71,6 +72,7 @@ class ThermostatMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
         if let id = targetStateId { ids.append(id) }
         if let id = coolingThresholdId { ids.append(id) }
         if let id = heatingThresholdId { ids.append(id) }
+        ids.append(contentsOf: batteryBadge?.characteristicIds ?? [])
         return ids
     }
 
@@ -130,6 +132,10 @@ class ThermostatMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
         tempLabel.textColor = .secondaryLabelColor
         tempLabel.alignment = .right
         containerView.addSubview(tempLabel)
+
+        // Battery badge sits just left of the current-temperature label.
+        batteryBadge = BatteryBadgeView(serviceData: serviceData)
+        batteryBadge?.install(in: containerView, rightEdgeX: tempX - DS.Spacing.sm, nameLabel: nameLabel)
 
         // Power toggle
         let switchY = (collapsedHeight - DS.ControlSize.switchHeight) / 2
@@ -284,6 +290,10 @@ class ThermostatMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
     }
 
     func updateValue(for characteristicId: UUID, value: Any, isLocalChange: Bool = false) {
+        if let batteryBadge, batteryBadge.characteristicIds.contains(characteristicId) {
+            batteryBadge.updateValue(for: characteristicId, value: value)
+            return
+        }
         if characteristicId == currentTempId {
             if let temp = ValueConversion.toDouble(value) {
                 currentTemp = temp

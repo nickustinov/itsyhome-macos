@@ -200,12 +200,26 @@ final class EntityMapper {
         var roomAssignments: [String: Int] = [:]
 
         for (deviceId, states) in deviceEntities {
+            // A device's battery sensor is shown as a badge on its other rows
+            // (like the iOS app) rather than as its own row. If the battery is
+            // the only thing on the device, it stays a normal sensor row.
+            let batteryEntity = states.first {
+                $0.domain == "sensor" && $0.deviceClass == "battery" && $0.numericState != nil
+            }
+            let batteryLevelId = batteryEntity.map { characteristicUUID($0.entityId, "sensor_reading") }
+            let hasOtherSupported = states.contains {
+                $0.entityId != batteryEntity?.entityId && isSupportedDomain($0.domain)
+            }
+            let mappableStates = (batteryEntity != nil && hasOtherSupported)
+                ? states.filter { $0.entityId != batteryEntity!.entityId }
+                : states
+
             // Split a device's entities by their resolved area so entities with
             // per-entity area overrides end up in the correct room. The menu
             // groups by accessory.roomIdentifier, so a multi-area device must
             // become multiple virtual accessories — one per area.
             var statesByArea: [String?: [HAEntityState]] = [:]
-            for state in states {
+            for state in mappableStates {
                 let entityDeviceId = entityRegistry[state.entityId]?.deviceId ?? deviceId
                 let entityAreaId = resolveAreaId(for: state, deviceId: entityDeviceId)
                 statesByArea[entityAreaId, default: []].append(state)
@@ -216,7 +230,7 @@ final class EntityMapper {
             let hasMultipleAreas = statesByArea.count > 1
 
             for (areaId, areaStates) in statesByArea {
-                let services = areaStates.compactMap { mapEntityToService($0) }
+                let services = areaStates.compactMap { mapEntityToService($0, batteryLevelId: batteryLevelId) }
                 guard !services.isEmpty else { continue }
 
                 let roomUUID = areaId.flatMap { deterministicUUID(for: $0) }
@@ -393,7 +407,7 @@ final class EntityMapper {
 
     // MARK: - Entity to service mapping
 
-    private func mapEntityToService(_ state: HAEntityState) -> ServiceData? {
+    private func mapEntityToService(_ state: HAEntityState, batteryLevelId: UUID? = nil) -> ServiceData? {
         let serviceType = mapDomainToServiceType(state.domain, deviceClass: state.deviceClass, hasNumericState: state.numericState != nil)
         guard let serviceType = serviceType else { return nil }
 
@@ -470,6 +484,8 @@ final class EntityMapper {
             sensorReadingId: (serviceType == ServiceTypes.sensor || serviceType == ServiceTypes.binarySensor) ? characteristicUUID(state.entityId, "sensor_reading") : nil,
             sensorUnit: serviceType == ServiceTypes.sensor ? state.unitOfMeasurement : nil,
             sensorDeviceClass: (serviceType == ServiceTypes.sensor || serviceType == ServiceTypes.binarySensor) ? state.deviceClass : nil,
+            // Battery (from a sibling battery sensor on the same HA device)
+            batteryLevelId: batteryLevelId,
             // Humidifier characteristics
             currentHumidifierDehumidifierStateId: state.humidifierAction != nil ? characteristicUUID(state.entityId, "hum_action") : nil,
             targetHumidifierDehumidifierStateId: state.domain == "humidifier" && !state.availableModes.isEmpty ? characteristicUUID(state.entityId, "hum_mode") : nil,

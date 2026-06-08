@@ -186,6 +186,8 @@ extension HomeKitManager {
         CharacteristicTypes.smokeDetected,
         CharacteristicTypes.carbonMonoxideDetected,
         CharacteristicTypes.carbonDioxideDetected,
+        HMCharacteristicTypeBatteryLevel,
+        HMCharacteristicTypeStatusLowBattery,
         CharacteristicTypes.currentHumidifierDehumidifierState,
         CharacteristicTypes.targetHumidifierDehumidifierState,
         CharacteristicTypes.humidifierThreshold,
@@ -314,6 +316,12 @@ extension HomeKitManager {
             hmService.characteristics.first { $0.characteristicType == type }
         }
 
+        // Battery lives on a sibling Battery service on the same accessory.
+        let batteryService = hmService.accessory?.services.first { $0.serviceType == HMServiceTypeBattery }
+        func batteryCharId(_ type: String) -> UUID? {
+            batteryService?.characteristics.first { $0.characteristicType == type }?.uniqueIdentifier
+        }
+
         // Get rotation speed min/max from metadata
         let rotationSpeedChar = findChar(CharacteristicTypes.rotationSpeed)
         let rotationSpeedMin = rotationSpeedChar?.metadata?.minimumValue?.doubleValue
@@ -396,6 +404,9 @@ extension HomeKitManager {
             smokeDetectedId: charId(CharacteristicTypes.smokeDetected),
             carbonMonoxideDetectedId: charId(CharacteristicTypes.carbonMonoxideDetected),
             carbonDioxideDetectedId: charId(CharacteristicTypes.carbonDioxideDetected),
+            // Battery (sibling Battery service on the same accessory)
+            batteryLevelId: batteryCharId(HMCharacteristicTypeBatteryLevel),
+            statusLowBatteryId: batteryCharId(HMCharacteristicTypeStatusLowBattery),
             // Humidifier/Dehumidifier characteristics
             currentHumidifierDehumidifierStateId: charId(CharacteristicTypes.currentHumidifierDehumidifierState),
             targetHumidifierDehumidifierStateId: charId(CharacteristicTypes.targetHumidifierDehumidifierState),

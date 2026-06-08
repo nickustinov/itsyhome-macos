@@ -28,9 +28,10 @@ class SensorStateMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRe
     private let containerView: HighlightingMenuItemView
     private let iconView: NSImageView
     private let valueLabel: NSTextField
+    private let batteryBadge: BatteryBadgeView?
 
     var characteristicIdentifiers: [UUID] {
-        stateCharacteristicId.map { [$0] } ?? []
+        (stateCharacteristicId.map { [$0] } ?? []) + (batteryBadge?.characteristicIds ?? [])
     }
 
     /// The currently displayed reading (e.g. "Open", "Leak", "21.5°", "—").
@@ -80,6 +81,10 @@ class SensorStateMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRe
         titleLabel.lineBreakMode = .byTruncatingTail
         containerView.addSubview(titleLabel)
 
+        // Battery badge sits just left of the reading.
+        batteryBadge = BatteryBadgeView(serviceData: serviceData)
+        batteryBadge?.install(in: containerView, rightEdgeX: valueX - DS.Spacing.sm, nameLabel: titleLabel)
+
         super.init(title: "", action: nil, keyEquivalent: "")
         self.view = containerView
 
@@ -93,6 +98,10 @@ class SensorStateMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRe
     // MARK: - CharacteristicUpdatable
 
     func updateValue(for characteristicId: UUID, value: Any, isLocalChange: Bool = false) {
+        if let batteryBadge, batteryBadge.characteristicIds.contains(characteristicId) {
+            batteryBadge.updateValue(for: characteristicId, value: value)
+            return
+        }
         guard characteristicId == stateCharacteristicId else { return }
         apply(value)
     }

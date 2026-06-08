@@ -33,6 +33,7 @@ class HAClimateMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefr
     private let nameLabel: NSTextField
     private let tempLabel: NSTextField
     private let powerToggle: ToggleSwitch
+    private let batteryBadge: BatteryBadgeView?
     private var swingButtonGroup: ModeButtonGroup?
     private var swingButton: ModeButton?
 
@@ -80,6 +81,7 @@ class HAClimateMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefr
         if let id = coolingThresholdId { ids.append(id) }
         if let id = heatingThresholdId { ids.append(id) }
         if let id = swingModeId { ids.append(id) }
+        ids.append(contentsOf: batteryBadge?.characteristicIds ?? [])
         return ids
     }
 
@@ -149,6 +151,10 @@ class HAClimateMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefr
         tempLabel.textColor = .secondaryLabelColor
         tempLabel.alignment = .right
         containerView.addSubview(tempLabel)
+
+        // Battery badge sits just left of the current-temperature label.
+        batteryBadge = BatteryBadgeView(serviceData: serviceData)
+        batteryBadge?.install(in: containerView, rightEdgeX: tempX - DS.Spacing.sm, nameLabel: nameLabel)
 
         // Swing button group (on Row 1, before toggle)
         if swingModeId != nil {
@@ -381,6 +387,10 @@ class HAClimateMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefr
     // MARK: - Value updates
 
     func updateValue(for characteristicId: UUID, value: Any, isLocalChange: Bool = false) {
+        if let batteryBadge, batteryBadge.characteristicIds.contains(characteristicId) {
+            batteryBadge.updateValue(for: characteristicId, value: value)
+            return
+        }
         if characteristicId == currentTempId {
             if let temp = ValueConversion.toDouble(value) {
                 currentTemp = temp

@@ -25,12 +25,14 @@ class GarageDoorMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
     private let nameLabel: NSTextField
     private let statusLabel: NSTextField
     private let toggleSwitch: ToggleSwitch
+    private let batteryBadge: BatteryBadgeView?
 
     var characteristicIdentifiers: [UUID] {
         var ids: [UUID] = []
         if let id = currentDoorStateId { ids.append(id) }
         if let id = targetDoorStateId { ids.append(id) }
         if let id = obstructionDetectedId { ids.append(id) }
+        ids.append(contentsOf: batteryBadge?.characteristicIds ?? [])
         return ids
     }
 
@@ -82,6 +84,10 @@ class GarageDoorMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
         statusLabel.alignment = .right
         containerView.addSubview(statusLabel)
 
+        // Battery badge sits just left of the status label.
+        batteryBadge = BatteryBadgeView(serviceData: serviceData)
+        batteryBadge?.install(in: containerView, rightEdgeX: statusX - DS.Spacing.sm, nameLabel: nameLabel)
+
         // Toggle switch (on = closed, off = open)
         let switchY = (height - DS.ControlSize.switchHeight) / 2
         toggleSwitch = ToggleSwitch()
@@ -117,6 +123,10 @@ class GarageDoorMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
     }
 
     func updateValue(for characteristicId: UUID, value: Any, isLocalChange: Bool = false) {
+        if let batteryBadge, batteryBadge.characteristicIds.contains(characteristicId) {
+            batteryBadge.updateValue(for: characteristicId, value: value)
+            return
+        }
         if characteristicId == currentDoorStateId {
             if let state = ValueConversion.toInt(value) {
                 currentState = state

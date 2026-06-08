@@ -26,12 +26,14 @@ class HAGarageDoorMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicR
     private let nameLabel: NSTextField
     private let statusLabel: NSTextField
     private let toggleSwitch: ToggleSwitch
+    private let batteryBadge: BatteryBadgeView?
 
     var characteristicIdentifiers: [UUID] {
         var ids: [UUID] = []
         if let id = currentDoorStateId { ids.append(id) }
         if let id = targetDoorStateId { ids.append(id) }
         if let id = obstructionDetectedId { ids.append(id) }
+        ids.append(contentsOf: batteryBadge?.characteristicIds ?? [])
         return ids
     }
 
@@ -91,6 +93,10 @@ class HAGarageDoorMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicR
         statusLabel.alignment = .right
         containerView.addSubview(statusLabel)
 
+        // Battery badge sits just left of the status label.
+        batteryBadge = BatteryBadgeView(serviceData: serviceData)
+        batteryBadge?.install(in: containerView, rightEdgeX: statusX - DS.Spacing.sm, nameLabel: nameLabel)
+
         // Toggle switch (on = closed, off = open)
         let switchY = (height - DS.ControlSize.switchHeight) / 2
         toggleSwitch = ToggleSwitch()
@@ -117,6 +123,10 @@ class HAGarageDoorMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicR
     }
 
     func updateValue(for characteristicId: UUID, value: Any, isLocalChange: Bool = false) {
+        if let batteryBadge, batteryBadge.characteristicIds.contains(characteristicId) {
+            batteryBadge.updateValue(for: characteristicId, value: value)
+            return
+        }
         if characteristicId == currentDoorStateId {
             // HA sends state as string, but EntityMapper converts to HomeKit int
             if let stateString = value as? String {

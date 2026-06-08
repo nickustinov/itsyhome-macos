@@ -1191,6 +1191,38 @@ final class EntityMapperTests: XCTestCase {
         XCTAssertEqual(mapper.getCharacteristicValues(for: "binary_sensor.gas_off")[offUUID] as? Int, 0)
     }
 
+    // MARK: - Battery tests
+
+    private func registryEntry(_ entityId: String, deviceId: String) -> HAEntityRegistryEntry {
+        HAEntityRegistryEntry(json: ["entity_id": entityId, "platform": "test", "device_id": deviceId])!
+    }
+
+    // A device's battery sensor badges its sibling rows and is not its own row.
+    func testHABatterySensorBadgesSiblingsAndIsHidden() {
+        let light = createEntityState(entityId: "light.lamp", state: "on", attributes: ["friendly_name": "Lamp"])
+        let battery = createEntityState(entityId: "sensor.lamp_battery", state: "60", attributes: ["device_class": "battery", "unit_of_measurement": "%"])
+        mapper.loadData(
+            states: [light, battery],
+            entities: [registryEntry("light.lamp", deviceId: "dev1"), registryEntry("sensor.lamp_battery", deviceId: "dev1")],
+            devices: [], areas: []
+        )
+
+        let services = mapper.generateMenuData().accessories.flatMap { $0.services }
+        XCTAssertEqual(services.count, 1, "battery sensor should badge the light, not add a row")
+        let lightService = services.first { $0.haEntityId == "light.lamp" }
+        XCTAssertEqual(lightService?.batteryLevelId, mapper.characteristicUUID("sensor.lamp_battery", "sensor_reading").uuidString)
+    }
+
+    // A device that is only a battery sensor still shows as a normal sensor row.
+    func testHABatteryOnlyDeviceShownAsSensor() {
+        let battery = createEntityState(entityId: "sensor.leak_battery", state: "75", attributes: ["device_class": "battery", "unit_of_measurement": "%"])
+        mapper.loadData(states: [battery], entities: [registryEntry("sensor.leak_battery", deviceId: "dev2")], devices: [], areas: [])
+
+        let services = mapper.generateMenuData().accessories.flatMap { $0.services }
+        XCTAssertEqual(services.count, 1)
+        XCTAssertEqual(services.first?.serviceType, ServiceTypes.sensor)
+    }
+
     // MARK: - Gate/door cover mapping tests
 
     func testGateMapsToWindowCovering() {

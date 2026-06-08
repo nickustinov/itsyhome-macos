@@ -21,11 +21,13 @@ class LockMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshab
     private let nameLabel: NSTextField
     private let statusLabel: NSTextField
     private let toggleSwitch: ToggleSwitch
+    private let batteryBadge: BatteryBadgeView?
 
     var characteristicIdentifiers: [UUID] {
         var ids: [UUID] = []
         if let id = lockStateCharacteristicId { ids.append(id) }
         if let id = targetStateCharacteristicId { ids.append(id) }
+        ids.append(contentsOf: batteryBadge?.characteristicIds ?? [])
         return ids
     }
 
@@ -76,6 +78,10 @@ class LockMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshab
         statusLabel.alignment = .right
         containerView.addSubview(statusLabel)
 
+        // Battery badge sits just left of the status label.
+        batteryBadge = BatteryBadgeView(serviceData: serviceData)
+        batteryBadge?.install(in: containerView, rightEdgeX: statusX - DS.Spacing.sm, nameLabel: nameLabel)
+
         // Toggle switch (on = locked, off = unlocked)
         let switchY = (height - DS.ControlSize.switchHeight) / 2
         toggleSwitch = ToggleSwitch()
@@ -103,6 +109,10 @@ class LockMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshab
     }
 
     func updateValue(for characteristicId: UUID, value: Any, isLocalChange: Bool = false) {
+        if let batteryBadge, batteryBadge.characteristicIds.contains(characteristicId) {
+            batteryBadge.updateValue(for: characteristicId, value: value)
+            return
+        }
         if characteristicId == lockStateCharacteristicId {
             if let state = ValueConversion.toInt(value) {
                 isLocked = state == 1

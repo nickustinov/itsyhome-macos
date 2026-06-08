@@ -26,6 +26,7 @@ class BlindMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
     private let iconView: NSImageView
     private let nameLabel: NSTextField
     private let positionSlider: ModernSlider
+    private let batteryBadge: BatteryBadgeView?
 
     // Tilt row (only created if tilt is present)
     private var tiltLabel: NSTextField?
@@ -38,6 +39,7 @@ class BlindMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
         var ids: [UUID] = []
         if let id = currentPositionId { ids.append(id) }
         if let id = currentTiltId { ids.append(id) }
+        ids.append(contentsOf: batteryBadge?.characteristicIds ?? [])
         return ids
     }
 
@@ -105,6 +107,10 @@ class BlindMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
         positionSlider.progressTintColor = DS.Colors.sliderFan
         containerView.addSubview(positionSlider)
 
+        // Battery badge sits just left of the position slider.
+        batteryBadge = BatteryBadgeView(serviceData: serviceData)
+        batteryBadge?.install(in: containerView, rightEdgeX: sliderX - DS.Spacing.sm, nameLabel: nameLabel)
+
         // Row 2: Tilt label and slider (if tilt is present)
         if hasTilt {
             let row2Y: CGFloat = DS.Spacing.sm
@@ -163,6 +169,10 @@ class BlindMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
     }
 
     func updateValue(for characteristicId: UUID, value: Any, isLocalChange: Bool = false) {
+        if let batteryBadge, batteryBadge.characteristicIds.contains(characteristicId) {
+            batteryBadge.updateValue(for: characteristicId, value: value)
+            return
+        }
         if characteristicId == currentPositionId {
             if let pos = ValueConversion.toInt(value) {
                 if isLocalChange {

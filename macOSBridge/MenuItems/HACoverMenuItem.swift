@@ -23,10 +23,12 @@ class HACoverMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefres
     private let iconView: NSImageView
     private let nameLabel: NSTextField
     private let coverControl: CoverControl
+    private let batteryBadge: BatteryBadgeView?
 
     var characteristicIdentifiers: [UUID] {
         var ids: [UUID] = []
         if let id = currentPositionId { ids.append(id) }
+        ids.append(contentsOf: batteryBadge?.characteristicIds ?? [])
         return ids
     }
 
@@ -70,6 +72,10 @@ class HACoverMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefres
         coverControl = CoverControl()
         coverControl.frame = NSRect(x: controlX, y: controlY, width: controlWidth, height: controlHeight)
         containerView.addSubview(coverControl)
+
+        // Battery badge sits just left of the cover control.
+        batteryBadge = BatteryBadgeView(serviceData: serviceData)
+        batteryBadge?.install(in: containerView, rightEdgeX: controlX - DS.Spacing.sm, nameLabel: nameLabel)
 
         super.init(title: serviceData.name, action: nil, keyEquivalent: "")
 
@@ -149,6 +155,10 @@ class HACoverMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefres
     }
 
     func updateValue(for characteristicId: UUID, value: Any, isLocalChange: Bool = false) {
+        if let batteryBadge, batteryBadge.characteristicIds.contains(characteristicId) {
+            batteryBadge.updateValue(for: characteristicId, value: value)
+            return
+        }
         if characteristicId == currentPositionId {
             if let pos = ValueConversion.toInt(value) {
                 position = pos

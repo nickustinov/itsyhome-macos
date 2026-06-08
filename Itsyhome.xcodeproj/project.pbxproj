@@ -1925,6 +1925,7 @@
 		910964EE8A864F909D31EEE3 /* ph.arrow-u-up-left.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 9B45A165E9708DE31A770F92 /* ph.arrow-u-up-left.fill.svg */; };
 		910A509E07909B54CCE3CE8C /* ph.pencil-simple.svg in Resources */ = {isa = PBXBuildFile; fileRef = 6DBED86607DBE8B3525F9857 /* ph.pencil-simple.svg */; };
 		910ECA0D72F2B1AAD4E89129 /* ph.ranking.svg in Resources */ = {isa = PBXBuildFile; fileRef = B1CF48AEB08F52524EF28CB3 /* ph.ranking.svg */; };
+		9113B753AD9A4943DDC66A09 /* BatteryBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B874CA0A525F91704FCC1B3 /* BatteryBadge.swift */; };
 		9117D00CD3A0C24D4B12E783 /* HAURLValidator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 668366013FF6C34C164050B0 /* HAURLValidator.swift */; };
 		9117EE570E060274A3768725 /* ph.notepad.svg in Resources */ = {isa = PBXBuildFile; fileRef = 8843A5A186CC09F325E2B00D /* ph.notepad.svg */; };
 		91182B77DC42B28CE2611B29 /* ph.share.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 1EC56D05BF8233BFBE5B42FF /* ph.share.fill.svg */; };
@@ -3320,6 +3321,7 @@
 		FD2EB91AE6AEA106E46489AE /* ph.windows-logo.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 2A94C6224AAD0B020100BC79 /* ph.windows-logo.fill.svg */; };
 		FD2F1D60D57F4A39D9571F2B /* ph.camera-plus.svg in Resources */ = {isa = PBXBuildFile; fileRef = 9C4473411516AF566ED1AFB0 /* ph.camera-plus.svg */; };
 		FD307596A98BE457EB11DEA8 /* ph.number-circle-two.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 04008CF02EBA767926493CC6 /* ph.number-circle-two.fill.svg */; };
+		FD32F8E90693ED82AD1DC974 /* BatteryBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B874CA0A525F91704FCC1B3 /* BatteryBadge.swift */; };
 		FD4C2370BE4E326A4F5DB472 /* ph.hand-pointing.svg in Resources */ = {isa = PBXBuildFile; fileRef = 333E9D84D060658BF4EC10A7 /* ph.hand-pointing.svg */; };
 		FD67050A4065A62C54FF4613 /* ph.fire-extinguisher.svg in Resources */ = {isa = PBXBuildFile; fileRef = F7953A76729C763F2F166214 /* ph.fire-extinguisher.svg */; };
 		FD74EEA81FE029DE719F7BD7 /* ph.money.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 12EB98C3FBDAD850209CC7E5 /* ph.money.fill.svg */; };
@@ -4306,6 +4308,7 @@
 		4B2C2A1F84AD2FBB7B022159 /* ph.cards.fill.svg */ = {isa = PBXFileReference; path = ph.cards.fill.svg; sourceTree = "<group>"; };
 		4B39D802C83AA2C19753EFC9 /* ph.password.svg */ = {isa = PBXFileReference; path = ph.password.svg; sourceTree = "<group>"; };
 		4B4005C86EA7BB4B1896FAFE /* ph.sticker.fill.svg */ = {isa = PBXFileReference; path = ph.sticker.fill.svg; sourceTree = "<group>"; };
+		4B874CA0A525F91704FCC1B3 /* BatteryBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryBadge.swift; sourceTree = "<group>"; };
 		4BC166A5A6E8292C4A386639 /* ph.rss-simple.fill.svg */ = {isa = PBXFileReference; path = "ph.rss-simple.fill.svg"; sourceTree = "<group>"; };
 		4BE10114AD31F8AD7C1655F7 /* ph.rectangle-dashed.svg */ = {isa = PBXFileReference; path = "ph.rectangle-dashed.svg"; sourceTree = "<group>"; };
 		4BF4DCE4AE91AF603BD938BE /* ph.clock-afternoon.svg */ = {isa = PBXFileReference; path = "ph.clock-afternoon.svg"; sourceTree = "<group>"; };
@@ -10015,6 +10018,7 @@
 		D2258862CCE787F231C5D76E /* DesignSystem */ = {
 			isa = PBXGroup;
 			children = (
+				4B874CA0A525F91704FCC1B3 /* BatteryBadge.swift */,
 				969ADECEBC8D55A1B08144AD /* ColorPickerViews.swift */,
 				AAAF01A5098680FB98C9A853 /* CoverControl.swift */,
 				181D73D7B6680B4F8CD37D4E /* DesignSystem.swift */,
@@ -13375,6 +13379,7 @@
 				58F2E76BE45DD0ACB598D99A /* AdvancedSection.swift in Sources */,
 				772EAC65582AA05AFFA09210 /* AirPurifierMenuItem.swift in Sources */,
 				3B59DD36C2400864DCEE2CA3 /* BaseMenuItems.swift in Sources */,
+				FD32F8E90693ED82AD1DC974 /* BatteryBadge.swift in Sources */,
 				CA8E1F973147B8CE2E58FA52 /* BlindMenuItem.swift in Sources */,
 				0C50A9F7E4B39D3073FCB0C2 /* BridgeProtocols.swift in Sources */,
 				E1A8142E0DD300BA6D9C2B62 /* Bundle+Localization.swift in Sources */,
@@ -13504,6 +13509,7 @@
 				5E2CF28F91004D72D8819802 /* AirPurifierMenuItem.swift in Sources */,
 				B8EE23FE23CA886CD1FC81A5 /* AirPurifierMenuItemTests.swift in Sources */,
 				16A327E2FD58F4B48606729C /* BaseMenuItems.swift in Sources */,
+				9113B753AD9A4943DDC66A09 /* BatteryBadge.swift in Sources */,
 				851260AF14FDF357AD88C04F /* BlindMenuItem.swift in Sources */,
 				CB2495B718EDDDF5D1B94AC7 /* BlindMenuItemTests.swift in Sources */,
 				67926ADF4BFE82DCEF6BB9D1 /* BridgeProtocols.swift in Sources */,

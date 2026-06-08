@@ -24,11 +24,13 @@ class HALockMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresh
     private let nameLabel: NSTextField
     private let statusLabel: NSTextField
     private let toggleSwitch: ToggleSwitch
+    private let batteryBadge: BatteryBadgeView?
 
     var characteristicIdentifiers: [UUID] {
         var ids: [UUID] = []
         if let id = lockStateId { ids.append(id) }
         if let id = targetStateId { ids.append(id) }
+        ids.append(contentsOf: batteryBadge?.characteristicIds ?? [])
         return ids
     }
 
@@ -91,6 +93,10 @@ class HALockMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresh
         statusLabel.alignment = .right
         containerView.addSubview(statusLabel)
 
+        // Battery badge sits just left of the status label.
+        batteryBadge = BatteryBadgeView(serviceData: serviceData)
+        batteryBadge?.install(in: containerView, rightEdgeX: statusX - DS.Spacing.sm, nameLabel: nameLabel)
+
         // Toggle switch
         let switchY = (height - DS.ControlSize.switchHeight) / 2
         toggleSwitch = ToggleSwitch()
@@ -117,6 +123,10 @@ class HALockMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresh
     }
 
     func updateValue(for characteristicId: UUID, value: Any, isLocalChange: Bool = false) {
+        if let batteryBadge, batteryBadge.characteristicIds.contains(characteristicId) {
+            batteryBadge.updateValue(for: characteristicId, value: value)
+            return
+        }
         if characteristicId == lockStateId {
             // HA sends state as string or int
             if let stateString = value as? String {

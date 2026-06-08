@@ -98,6 +98,9 @@ public struct ServiceData: Codable {
     public let sensorReadingId: String?           // numeric value, or 0/1 for generic binary
     public let sensorUnit: String?                // unit_of_measurement (numeric sensors)
     public let sensorDeviceClass: String?         // HA device_class, for icon and label
+    // Battery (sibling battery service on HomeKit; same-device battery sensor on HA)
+    public let batteryLevelId: String?            // 0–100 percentage
+    public let statusLowBatteryId: String?        // 1 = low
     // Humidifier/Dehumidifier characteristics
     public let currentHumidifierDehumidifierStateId: String?
     public let targetHumidifierDehumidifierStateId: String?
@@ -187,6 +190,9 @@ public struct ServiceData: Codable {
         sensorReadingId: UUID? = nil,
         sensorUnit: String? = nil,
         sensorDeviceClass: String? = nil,
+        // Battery
+        batteryLevelId: UUID? = nil,
+        statusLowBatteryId: UUID? = nil,
         // Humidifier/Dehumidifier
         currentHumidifierDehumidifierStateId: UUID? = nil,
         targetHumidifierDehumidifierStateId: UUID? = nil,
@@ -275,6 +281,9 @@ public struct ServiceData: Codable {
         self.sensorReadingId = sensorReadingId?.uuidString
         self.sensorUnit = sensorUnit
         self.sensorDeviceClass = sensorDeviceClass
+        // Battery
+        self.batteryLevelId = batteryLevelId?.uuidString
+        self.statusLowBatteryId = statusLowBatteryId?.uuidString
         // Humidifier/Dehumidifier
         self.currentHumidifierDehumidifierStateId = currentHumidifierDehumidifierStateId?.uuidString
         self.targetHumidifierDehumidifierStateId = targetHumidifierDehumidifierStateId?.uuidString
