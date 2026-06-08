@@ -88,6 +88,12 @@ public struct ServiceData: Codable {
     public let obstructionDetectedId: String?  // Bool
     // Contact sensor characteristics
     public let contactSensorStateId: String?   // 0=detected (closed), 1=not detected (open)
+    // Safety / occupancy sensor characteristics (0=clear, 1=detected)
+    public let occupancyDetectedId: String?    // Occupancy sensors
+    public let leakDetectedId: String?         // Leak sensors
+    public let smokeDetectedId: String?        // Smoke sensors
+    public let carbonMonoxideDetectedId: String?  // Carbon monoxide sensors
+    public let carbonDioxideDetectedId: String?   // Carbon dioxide sensors
     // Humidifier/Dehumidifier characteristics
     public let currentHumidifierDehumidifierStateId: String?
     public let targetHumidifierDehumidifierStateId: String?
@@ -167,6 +173,12 @@ public struct ServiceData: Codable {
         targetDoorStateId: UUID? = nil,
         obstructionDetectedId: UUID? = nil,
         contactSensorStateId: UUID? = nil,
+        // Safety / occupancy sensors
+        occupancyDetectedId: UUID? = nil,
+        leakDetectedId: UUID? = nil,
+        smokeDetectedId: UUID? = nil,
+        carbonMonoxideDetectedId: UUID? = nil,
+        carbonDioxideDetectedId: UUID? = nil,
         // Humidifier/Dehumidifier
         currentHumidifierDehumidifierStateId: UUID? = nil,
         targetHumidifierDehumidifierStateId: UUID? = nil,
@@ -245,6 +257,12 @@ public struct ServiceData: Codable {
         self.targetDoorStateId = targetDoorStateId?.uuidString
         self.obstructionDetectedId = obstructionDetectedId?.uuidString
         self.contactSensorStateId = contactSensorStateId?.uuidString
+        // Safety / occupancy sensors
+        self.occupancyDetectedId = occupancyDetectedId?.uuidString
+        self.leakDetectedId = leakDetectedId?.uuidString
+        self.smokeDetectedId = smokeDetectedId?.uuidString
+        self.carbonMonoxideDetectedId = carbonMonoxideDetectedId?.uuidString
+        self.carbonDioxideDetectedId = carbonDioxideDetectedId?.uuidString
         // Humidifier/Dehumidifier
         self.currentHumidifierDehumidifierStateId = currentHumidifierDehumidifierStateId?.uuidString
         self.targetHumidifierDehumidifierStateId = targetHumidifierDehumidifierStateId?.uuidString
@@ -515,6 +533,11 @@ public protocol iOS2Mac: NSObjectProtocol {
     @objc public static let fanV2 = "000000B7-0000-1000-8000-0026BB765291"
     @objc public static let garageDoorOpener = "00000041-0000-1000-8000-0026BB765291"
     @objc public static let contactSensor = "00000080-0000-1000-8000-0026BB765291"
+    @objc public static let occupancySensor = "00000086-0000-1000-8000-0026BB765291"
+    @objc public static let leakSensor = "00000083-0000-1000-8000-0026BB765291"
+    @objc public static let smokeSensor = "00000087-0000-1000-8000-0026BB765291"
+    @objc public static let carbonMonoxideSensor = "0000007F-0000-1000-8000-0026BB765291"
+    @objc public static let carbonDioxideSensor = "00000097-0000-1000-8000-0026BB765291"
     @objc public static let humidifierDehumidifier = "000000BD-0000-1000-8000-0026BB765291"
     @objc public static let airPurifier = "000000BB-0000-1000-8000-0026BB765291"
     @objc public static let valve = "000000D0-0000-1000-8000-0026BB765291"
@@ -565,6 +588,12 @@ public protocol iOS2Mac: NSObjectProtocol {
     @objc public static let obstructionDetected = "00000024-0000-1000-8000-0026BB765291"
     // Contact sensor characteristics
     @objc public static let contactSensorState = "0000006A-0000-1000-8000-0026BB765291"
+    // Safety / occupancy sensor characteristics
+    @objc public static let occupancyDetected = "00000071-0000-1000-8000-0026BB765291"
+    @objc public static let leakDetected = "00000070-0000-1000-8000-0026BB765291"
+    @objc public static let smokeDetected = "00000076-0000-1000-8000-0026BB765291"
+    @objc public static let carbonMonoxideDetected = "00000069-0000-1000-8000-0026BB765291"
+    @objc public static let carbonDioxideDetected = "00000092-0000-1000-8000-0026BB765291"
     // Humidifier/Dehumidifier characteristics
     @objc public static let currentHumidifierDehumidifierState = "000000B3-0000-1000-8000-0026BB765291"
     @objc public static let targetHumidifierDehumidifierState = "000000B4-0000-1000-8000-0026BB765291"

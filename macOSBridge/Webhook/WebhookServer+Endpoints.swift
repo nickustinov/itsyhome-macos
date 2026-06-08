@@ -735,6 +735,18 @@ extension WebhookServer {
         if let value = getValue(service.currentDoorStateId) {
             state.doorState = DoorState(rawValue: intValue(value))?.label ?? "stopped"
         }
+        // Binary safety / occupancy sensors. Read whichever detected-state
+        // characteristic this service exposes; raw value 1 = active reading.
+        // Use the nil-returning converter so an unreadable value reports as
+        // "unknown" (detected stays nil) rather than a misleading false "clear"
+        // - a false "clear" on a smoke/CO/leak sensor is the worst silent failure.
+        let binarySensorId = service.contactSensorStateId ?? service.motionDetectedId
+            ?? service.occupancyDetectedId ?? service.leakDetectedId
+            ?? service.smokeDetectedId ?? service.carbonMonoxideDetectedId
+            ?? service.carbonDioxideDetectedId
+        if let value = getValue(binarySensorId), let raw = ValueConversion.toInt(value) {
+            state.detected = raw == 1
+        }
         if let value = getValue(service.rotationSpeedId) {
             state.speed = doubleValue(value)
         }
@@ -762,7 +774,7 @@ extension WebhookServer {
                        state.mode != nil ||
                        state.humidity != nil || state.hue != nil || state.saturation != nil ||
                        state.locked != nil || state.doorState != nil || state.speed != nil ||
-                       state.securityState != nil
+                       state.securityState != nil || state.detected != nil
 
         return ServiceInfoResponse(
             name: service.name,
@@ -836,6 +848,13 @@ extension WebhookServer {
 
         // Contact sensor
         addChar("contactSensorState", service.contactSensorStateId)
+
+        // Safety / occupancy sensors
+        addChar("occupancyDetected", service.occupancyDetectedId)
+        addChar("leakDetected", service.leakDetectedId)
+        addChar("smokeDetected", service.smokeDetectedId)
+        addChar("carbonMonoxideDetected", service.carbonMonoxideDetectedId)
+        addChar("carbonDioxideDetected", service.carbonDioxideDetectedId)
 
         // Humidifier/Dehumidifier
         addChar("currentHumidifierDehumidifierState", service.currentHumidifierDehumidifierStateId)

@@ -267,6 +267,49 @@ extension PhosphorIcon {
         ServiceTypes.humiditySensor: AccessoryIconConfig(
             defaultIcon: "drop-half",
             suggestedIcons: ["drop", "drop-simple", "drop-half", "drop-half-bottom"]
+        ),
+
+        // Contact Sensors (door / window open-close)
+        ServiceTypes.contactSensor: AccessoryIconConfig(
+            defaultIcon: "door",
+            suggestedIcons: ["door", "door-open", "garage", "browser"],
+            modeIcons: ["open": "door-open", "closed": "door"]
+        ),
+
+        // Motion Sensors
+        ServiceTypes.motionSensor: AccessoryIconConfig(
+            defaultIcon: "footprints",
+            suggestedIcons: ["footprints", "person-simple-run", "eye"]
+        ),
+
+        // Occupancy Sensors
+        ServiceTypes.occupancySensor: AccessoryIconConfig(
+            defaultIcon: "person",
+            suggestedIcons: ["person", "user", "users", "footprints", "eye"]
+        ),
+
+        // Leak Sensors
+        ServiceTypes.leakSensor: AccessoryIconConfig(
+            defaultIcon: "drop",
+            suggestedIcons: ["drop", "drop-half", "waves", "warning"]
+        ),
+
+        // Smoke Sensors
+        ServiceTypes.smokeSensor: AccessoryIconConfig(
+            defaultIcon: "cloud-fog",
+            suggestedIcons: ["cloud-fog", "flame", "fire", "warning"]
+        ),
+
+        // Carbon Monoxide Sensors
+        ServiceTypes.carbonMonoxideSensor: AccessoryIconConfig(
+            defaultIcon: "cloud-warning",
+            suggestedIcons: ["cloud-warning", "warning-octagon", "skull", "wind"]
+        ),
+
+        // Carbon Dioxide Sensors
+        ServiceTypes.carbonDioxideSensor: AccessoryIconConfig(
+            defaultIcon: "cloud",
+            suggestedIcons: ["cloud", "wind", "warning-octagon", "drop"]
         )
     ]
 }

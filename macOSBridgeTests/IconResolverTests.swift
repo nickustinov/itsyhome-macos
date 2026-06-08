@@ -198,6 +198,38 @@ final class IconResolverTests: XCTestCase {
         XCTAssertEqual(IconResolver.iconName(for: service), defaultIconName)
     }
 
+    // MARK: - Binary sensor icon config
+
+    func testBinarySensorDefaultIcons() {
+        XCTAssertEqual(PhosphorIcon.defaultIconName(for: ServiceTypes.contactSensor), "door")
+        XCTAssertEqual(PhosphorIcon.defaultIconName(for: ServiceTypes.motionSensor), "footprints")
+        XCTAssertEqual(PhosphorIcon.defaultIconName(for: ServiceTypes.occupancySensor), "person")
+        XCTAssertEqual(PhosphorIcon.defaultIconName(for: ServiceTypes.leakSensor), "drop")
+        XCTAssertEqual(PhosphorIcon.defaultIconName(for: ServiceTypes.smokeSensor), "cloud-fog")
+        XCTAssertEqual(PhosphorIcon.defaultIconName(for: ServiceTypes.carbonMonoxideSensor), "cloud-warning")
+        XCTAssertEqual(PhosphorIcon.defaultIconName(for: ServiceTypes.carbonDioxideSensor), "cloud")
+    }
+
+    // Contact sensors swap glyph by state via the central modeIcons map; this
+    // is what restores the open-door icon after icon resolution was centralized.
+    func testContactSensorModeIcons() {
+        XCTAssertEqual(PhosphorIcon.modeIconName(for: ServiceTypes.contactSensor, mode: "open"), "door-open")
+        XCTAssertEqual(PhosphorIcon.modeIconName(for: ServiceTypes.contactSensor, mode: "closed"), "door")
+    }
+
+    // Other binary kinds have no distinct state glyph (they fill in when active).
+    func testNonContactSensorsHaveNoModeIcons() {
+        XCTAssertNil(PhosphorIcon.modeIconName(for: ServiceTypes.leakSensor, mode: "open"))
+        XCTAssertNil(PhosphorIcon.modeIconName(for: ServiceTypes.motionSensor, mode: "open"))
+    }
+
+    // A user's custom icon still wins over the default for a sensor service.
+    func testSensorCustomIconOverridesDefault() {
+        let service = makeService(name: "Front Door", serviceType: ServiceTypes.contactSensor)
+        prefs.setCustomIcon("garage", for: service.uniqueIdentifier)
+        XCTAssertEqual(IconResolver.iconName(for: service), "garage")
+    }
+
     // MARK: - Helpers
 
     private func makeService(name: String, serviceType: String) -> ServiceData {

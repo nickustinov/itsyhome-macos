@@ -272,6 +272,68 @@ final class WebhookServerTests: XCTestCase {
         XCTAssertEqual(response?.statusCode, 400)
     }
 
+    // MARK: - Binary sensor tests
+
+    func testServiceTypeLabelForBinarySensors() {
+        XCTAssertEqual(server.serviceTypeLabel(ServiceTypes.contactSensor), "contact-sensor")
+        XCTAssertEqual(server.serviceTypeLabel(ServiceTypes.motionSensor), "motion-sensor")
+        XCTAssertEqual(server.serviceTypeLabel(ServiceTypes.occupancySensor), "occupancy-sensor")
+        XCTAssertEqual(server.serviceTypeLabel(ServiceTypes.leakSensor), "leak-sensor")
+        XCTAssertEqual(server.serviceTypeLabel(ServiceTypes.smokeSensor), "smoke-sensor")
+        XCTAssertEqual(server.serviceTypeLabel(ServiceTypes.carbonMonoxideSensor), "carbon-monoxide-sensor")
+        XCTAssertEqual(server.serviceTypeLabel(ServiceTypes.carbonDioxideSensor), "carbon-dioxide-sensor")
+    }
+
+    func testInfoExposesBinarySensorDetected() {
+        // Every kind reads its own field in the binarySensorId coalescing chain,
+        // so cover all seven and both polarities. Contact is the inverted one:
+        // HAP value 1 = "not detected" = physically open, so an open contact
+        // reports detected:true and a closed one detected:false.
+        let cases: [(name: String, type: String, label: String, value: Int, detected: String)] = [
+            ("Front Door", ServiceTypes.contactSensor, "contact-sensor", 1, "true"),    // open
+            ("Back Door", ServiceTypes.contactSensor, "contact-sensor", 0, "false"),    // closed
+            ("Hall Motion", ServiceTypes.motionSensor, "motion-sensor", 1, "true"),
+            ("Office Presence", ServiceTypes.occupancySensor, "occupancy-sensor", 0, "false"),
+            ("Sink Leak", ServiceTypes.leakSensor, "leak-sensor", 0, "false"),          // dry
+            ("Kitchen Smoke", ServiceTypes.smokeSensor, "smoke-sensor", 1, "true"),
+            ("Garage CO", ServiceTypes.carbonMonoxideSensor, "carbon-monoxide-sensor", 1, "true"),
+            ("Bedroom CO2", ServiceTypes.carbonDioxideSensor, "carbon-dioxide-sensor", 0, "false")
+        ]
+        let ids = Dictionary(uniqueKeysWithValues: cases.map { ($0.name, UUID()) })
+        let sensors = cases.map { (name: $0.name, type: $0.type, charId: ids[$0.name]!) }
+        engine.updateMenuData(makeSensorMenuData(sensors))
+        for c in cases { mockBridge.characteristicValues[ids[c.name]!] = c.value }
+        server.start()
+
+        for c in cases {
+            let path = "/info/" + c.name.replacingOccurrences(of: " ", with: "%20")
+            let body = sendRequest(path: path)?.body ?? ""
+            XCTAssertTrue(body.contains("\"type\":\"\(c.label)\""), "type label for \(c.name)")
+            XCTAssertTrue(body.contains("\"detected\":\(c.detected)"), "detected for \(c.name)")
+        }
+    }
+
+    func testInfoLightHasNoDetectedField() {
+        mockBridge.characteristicValues[powerStateId] = true
+        server.start()
+
+        let body = sendRequest(path: "/info/Light")?.body ?? ""
+        XCTAssertFalse(body.contains("\"detected\""), "non-sensor service must not expose detected")
+    }
+
+    func testDebugIncludesBinarySensorCharacteristics() {
+        let co2Id = UUID()
+        engine.updateMenuData(makeSensorMenuData([
+            (name: "Bedroom CO2", type: ServiceTypes.carbonDioxideSensor, charId: co2Id)
+        ]))
+        mockBridge.characteristicValues[co2Id] = 1
+        server.start()
+
+        let body = sendRequest(path: "/debug/Bedroom%20CO2")?.body ?? ""
+        XCTAssertTrue(body.contains("\"carbonDioxideDetected\""))
+        XCTAssertTrue(body.contains("\"serviceTypeLabel\":\"carbon-dioxide-sensor\""))
+    }
+
     // MARK: - Port configuration test
 
     func testConfiguredPort() {
@@ -360,6 +422,45 @@ final class WebhookServerTests: XCTestCase {
             ],
             accessories: accessories,
             scenes: scenes,
+            selectedHomeId: nil
+        )
+    }
+
+    /// Build menu data from a list of binary sensors, routing each char id to
+    /// the ServiceData field that matches its service type. One accessory per
+    /// sensor, all in a single "Hall" room.
+    private func makeSensorMenuData(_ sensors: [(name: String, type: String, charId: UUID)]) -> MenuData {
+        let roomId = UUID()
+        let services: [ServiceData] = sensors.map { sensor in
+            ServiceData(
+                uniqueIdentifier: UUID(),
+                name: sensor.name,
+                serviceType: sensor.type,
+                accessoryName: sensor.name,
+                roomIdentifier: roomId,
+                motionDetectedId: sensor.type == ServiceTypes.motionSensor ? sensor.charId : nil,
+                contactSensorStateId: sensor.type == ServiceTypes.contactSensor ? sensor.charId : nil,
+                occupancyDetectedId: sensor.type == ServiceTypes.occupancySensor ? sensor.charId : nil,
+                leakDetectedId: sensor.type == ServiceTypes.leakSensor ? sensor.charId : nil,
+                smokeDetectedId: sensor.type == ServiceTypes.smokeSensor ? sensor.charId : nil,
+                carbonMonoxideDetectedId: sensor.type == ServiceTypes.carbonMonoxideSensor ? sensor.charId : nil,
+                carbonDioxideDetectedId: sensor.type == ServiceTypes.carbonDioxideSensor ? sensor.charId : nil
+            )
+        }
+        let accessories = services.map { svc in
+            AccessoryData(
+                uniqueIdentifier: UUID(),
+                name: svc.name,
+                roomIdentifier: roomId,
+                services: [svc],
+                isReachable: true
+            )
+        }
+        return MenuData(
+            homes: [HomeData(uniqueIdentifier: UUID(), name: "Home", isPrimary: true)],
+            rooms: [RoomData(uniqueIdentifier: roomId, name: "Hall")],
+            accessories: accessories,
+            scenes: [],
             selectedHomeId: nil
         )
     }
