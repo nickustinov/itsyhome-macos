@@ -1003,20 +1003,192 @@ final class EntityMapperTests: XCTestCase {
         XCTAssertEqual(values[humidityUUID] as? Double, 55.0)
     }
 
-    func testUnsupportedSensorIsIgnored() {
+    // Any numeric sensor (incl. battery) is now supported as a generic sensor.
+    // Diagnostic noise is governed separately by the entity-category filter.
+    func testNumericSensorMapsToGenericSensor() {
         let state = createEntityState(
             entityId: "sensor.battery",
             state: "80",
             attributes: [
-                "device_class": "battery"
+                "device_class": "battery",
+                "unit_of_measurement": "%"
             ]
         )
         loadData(states: [state])
 
-        let menuData = mapper.generateMenuData()
+        let service = mapper.generateMenuData().accessories.first?.services.first
+        XCTAssertEqual(service?.serviceType, ServiceTypes.sensor)
+        XCTAssertEqual(service?.sensorUnit, "%")
+    }
 
-        // Battery sensors are not supported
-        XCTAssertEqual(menuData.accessories.count, 0)
+    // MARK: - Binary sensor mapping tests
+
+    func testBinarySensorDeviceClassesMapToSensorServiceTypes() {
+        let cases: [(deviceClass: String, type: String)] = [
+            ("door", ServiceTypes.contactSensor),
+            ("window", ServiceTypes.contactSensor),
+            ("opening", ServiceTypes.contactSensor),
+            ("garage_door", ServiceTypes.contactSensor),
+            ("motion", ServiceTypes.motionSensor),
+            ("moving", ServiceTypes.motionSensor),
+            ("occupancy", ServiceTypes.occupancySensor),
+            ("presence", ServiceTypes.occupancySensor),
+            ("moisture", ServiceTypes.leakSensor),
+            ("smoke", ServiceTypes.smokeSensor),
+            ("carbon_monoxide", ServiceTypes.carbonMonoxideSensor)
+        ]
+        for c in cases {
+            let entityId = "binary_sensor.\(c.deviceClass)"
+            loadData(states: [createEntityState(entityId: entityId, state: "off", attributes: ["device_class": c.deviceClass])])
+            let service = mapper.generateMenuData().accessories.first?.services.first
+            XCTAssertEqual(service?.serviceType, c.type, "mapping for \(c.deviceClass)")
+        }
+    }
+
+    // Each kind populates its own detected-state characteristic id.
+    func testBinarySensorPopulatesCorrectCharacteristicId() {
+        loadData(states: [
+            createEntityState(entityId: "binary_sensor.front_door", state: "off", attributes: ["device_class": "door"]),
+            createEntityState(entityId: "binary_sensor.hall", state: "off", attributes: ["device_class": "motion"]),
+            createEntityState(entityId: "binary_sensor.office", state: "off", attributes: ["device_class": "occupancy"]),
+            createEntityState(entityId: "binary_sensor.sink", state: "off", attributes: ["device_class": "moisture"]),
+            createEntityState(entityId: "binary_sensor.kitchen", state: "off", attributes: ["device_class": "smoke"]),
+            createEntityState(entityId: "binary_sensor.garage", state: "off", attributes: ["device_class": "carbon_monoxide"])
+        ])
+        let services = mapper.generateMenuData().accessories.flatMap { $0.services }
+        func service(_ id: String) -> ServiceData? { services.first { $0.haEntityId == id } }
+
+        XCTAssertNotNil(service("binary_sensor.front_door")?.contactSensorStateId)
+        XCTAssertNotNil(service("binary_sensor.hall")?.motionDetectedId)
+        XCTAssertNotNil(service("binary_sensor.office")?.occupancyDetectedId)
+        XCTAssertNotNil(service("binary_sensor.sink")?.leakDetectedId)
+        XCTAssertNotNil(service("binary_sensor.kitchen")?.smokeDetectedId)
+        XCTAssertNotNil(service("binary_sensor.garage")?.carbonMonoxideDetectedId)
+    }
+
+    // HA reports on = detected; contact-style classes report on = open, which
+    // matches HomeKit's ContactSensorState 1 = open.
+    func testBinarySensorValuesMapOnOffToOneZero() {
+        let cases: [(deviceClass: String, charName: String)] = [
+            ("door", "contact_state"),
+            ("motion", "motion"),
+            ("occupancy", "occupancy"),
+            ("moisture", "leak"),
+            ("smoke", "smoke"),
+            ("carbon_monoxide", "co")
+        ]
+        for c in cases {
+            let onId = "binary_sensor.on_\(c.deviceClass)"
+            let offId = "binary_sensor.off_\(c.deviceClass)"
+            loadData(states: [
+                createEntityState(entityId: onId, state: "on", attributes: ["device_class": c.deviceClass]),
+                createEntityState(entityId: offId, state: "off", attributes: ["device_class": c.deviceClass])
+            ])
+            let onValue = mapper.getCharacteristicValues(for: onId)[mapper.characteristicUUID(onId, c.charName)] as? Int
+            let offValue = mapper.getCharacteristicValues(for: offId)[mapper.characteristicUUID(offId, c.charName)] as? Int
+            XCTAssertEqual(onValue, 1, "on value for \(c.deviceClass)")
+            XCTAssertEqual(offValue, 0, "off value for \(c.deviceClass)")
+        }
+    }
+
+    // Unavailable must read as unknown (no value), never a false "clear" – a
+    // false clear on a smoke/CO/leak sensor is the worst silent failure.
+    func testUnavailableBinarySensorHasNoValue() {
+        let entityId = "binary_sensor.unavailable_smoke"
+        loadData(states: [createEntityState(entityId: entityId, state: "unavailable", attributes: ["device_class": "smoke"])])
+        let values = mapper.getCharacteristicValues(for: entityId)
+        XCTAssertNil(values[mapper.characteristicUUID(entityId, "smoke")])
+    }
+
+    // Binary sensors without a HomeKit-equivalent device_class become generic
+    // binary sensors (shown as On/Off) rather than being dropped.
+    func testUnmappedBinarySensorsBecomeGeneric() {
+        loadData(states: [
+            createEntityState(entityId: "binary_sensor.connectivity", state: "on", attributes: ["device_class": "connectivity"]),
+            createEntityState(entityId: "binary_sensor.problem", state: "off", attributes: ["device_class": "problem"]),
+            createEntityState(entityId: "binary_sensor.plain", state: "on", attributes: [:])
+        ])
+        let services = mapper.generateMenuData().accessories.flatMap { $0.services }
+        XCTAssertEqual(services.count, 3)
+        XCTAssertTrue(services.allSatisfy { $0.serviceType == ServiceTypes.binarySensor })
+    }
+
+    // The webhook/read path resolves a sensor characteristic back to its entity.
+    func testBinarySensorCharacteristicResolvesToEntity() {
+        let entityId = "binary_sensor.leak_detector"
+        loadData(states: [createEntityState(entityId: entityId, state: "on", attributes: ["device_class": "moisture"])])
+        let leakUUID = mapper.characteristicUUID(entityId, "leak")
+        XCTAssertEqual(mapper.getEntityIdFromCharacteristic(leakUUID), entityId)
+    }
+
+    // MARK: - Generic sensor tests
+
+    // Any numeric sensor without a HomeKit equivalent (CO2, power, pressure, ...)
+    // becomes a generic sensor carrying its unit and device_class.
+    func testGenericNumericSensorMapping() {
+        let state = createEntityState(
+            entityId: "sensor.co2",
+            state: "812",
+            attributes: [
+                "friendly_name": "Living Room CO2",
+                "device_class": "carbon_dioxide",
+                "unit_of_measurement": "ppm"
+            ]
+        )
+        loadData(states: [state])
+
+        let service = mapper.generateMenuData().accessories.first?.services.first
+        XCTAssertEqual(service?.serviceType, ServiceTypes.sensor)
+        XCTAssertNotNil(service?.sensorReadingId)
+        XCTAssertEqual(service?.sensorUnit, "ppm")
+        XCTAssertEqual(service?.sensorDeviceClass, "carbon_dioxide")
+    }
+
+    func testGenericNumericSensorValue() {
+        let state = createEntityState(
+            entityId: "sensor.power",
+            state: "42.5",
+            attributes: ["device_class": "power", "unit_of_measurement": "W"]
+        )
+        loadData(states: [state])
+
+        let values = mapper.getCharacteristicValues(for: "sensor.power")
+        XCTAssertEqual(values[mapper.characteristicUUID("sensor.power", "sensor_reading")] as? Double, 42.5)
+    }
+
+    // Sensors with no numeric value (text/enum/timestamp) are skipped.
+    func testNonNumericSensorIsIgnored() {
+        loadData(states: [
+            createEntityState(entityId: "sensor.washer", state: "running", attributes: ["friendly_name": "Washer"]),
+            createEntityState(entityId: "sensor.last_boot", state: "2026-01-01T00:00:00+00:00", attributes: ["device_class": "timestamp"])
+        ])
+        XCTAssertEqual(mapper.generateMenuData().accessories.count, 0)
+    }
+
+    // Binary sensors without a HomeKit equivalent become generic binary sensors.
+    func testGenericBinarySensorMapping() {
+        let state = createEntityState(
+            entityId: "binary_sensor.vibration",
+            state: "on",
+            attributes: ["friendly_name": "Washer Vibration", "device_class": "vibration"]
+        )
+        loadData(states: [state])
+
+        let service = mapper.generateMenuData().accessories.first?.services.first
+        XCTAssertEqual(service?.serviceType, ServiceTypes.binarySensor)
+        XCTAssertNotNil(service?.sensorReadingId)
+        XCTAssertEqual(service?.sensorDeviceClass, "vibration")
+    }
+
+    func testGenericBinarySensorValue() {
+        loadData(states: [
+            createEntityState(entityId: "binary_sensor.gas_on", state: "on", attributes: ["device_class": "gas"]),
+            createEntityState(entityId: "binary_sensor.gas_off", state: "off", attributes: ["device_class": "gas"])
+        ])
+        let onUUID = mapper.characteristicUUID("binary_sensor.gas_on", "sensor_reading")
+        let offUUID = mapper.characteristicUUID("binary_sensor.gas_off", "sensor_reading")
+        XCTAssertEqual(mapper.getCharacteristicValues(for: "binary_sensor.gas_on")[onUUID] as? Int, 1)
+        XCTAssertEqual(mapper.getCharacteristicValues(for: "binary_sensor.gas_off")[offUUID] as? Int, 0)
     }
 
     // MARK: - Gate/door cover mapping tests

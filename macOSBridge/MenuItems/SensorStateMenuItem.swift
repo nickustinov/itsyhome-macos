@@ -20,7 +20,9 @@ class SensorStateMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRe
     weak var bridge: Mac2iOS?
 
     private let serviceData: ServiceData
-    private let kind: SensorKind
+    /// The HomeKit-equivalent kind, or nil for a generic Home Assistant sensor
+    /// (driven instead by the ServiceData sensor fields).
+    private let kind: SensorKind?
     private let stateCharacteristicId: UUID?
 
     private let containerView: HighlightingMenuItemView
@@ -38,10 +40,10 @@ class SensorStateMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRe
     init(serviceData: ServiceData, bridge: Mac2iOS?) {
         self.bridge = bridge
         self.serviceData = serviceData
-        let kind = SensorKind(serviceType: serviceData.serviceType) ?? .contact
+        let kind = SensorKind(serviceType: serviceData.serviceType)
         self.kind = kind
-        self.stateCharacteristicId = kind.stateCharacteristicId(from: serviceData)
-            .flatMap { UUID(uuidString: $0) }
+        let charId = kind?.stateCharacteristicId(from: serviceData) ?? serviceData.sensorReadingId
+        self.stateCharacteristicId = charId.flatMap { UUID(uuidString: $0) }
 
         // Single-line row matching the other menu items: small icon + name on
         // the left, reading right-aligned. (The aggregate temperature/humidity
@@ -101,6 +103,10 @@ class SensorStateMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRe
     /// shows the placeholder). Numeric kinds format the reading; binary kinds
     /// map 1/0 to their state words and drive a state-aware icon.
     private func apply(_ value: Any?) {
+        guard let kind else {
+            applyGeneric(value)
+            return
+        }
         if kind.isNumeric {
             valueLabel.stringValue = value.flatMap(ValueConversion.toDouble)
                 .flatMap(kind.formattedValue) ?? "—"
@@ -116,5 +122,24 @@ class SensorStateMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRe
             }
         }
         iconView.image = IconResolver.sensorIcon(for: serviceData, active: raw == 1)
+    }
+
+    /// Generic Home Assistant sensor: a binary On/Off, or a numeric reading with
+    /// its unit. The icon comes from the HA device_class via IconResolver.
+    private func applyGeneric(_ value: Any?) {
+        if serviceData.serviceType == ServiceTypes.binarySensor {
+            let raw = value.flatMap(ValueConversion.toInt)
+            let labels = GenericSensor.binaryLabels
+            switch raw {
+            case 1: valueLabel.stringValue = labels.one
+            case 0: valueLabel.stringValue = labels.zero
+            default: valueLabel.stringValue = "—"
+            }
+            iconView.image = IconResolver.icon(for: serviceData, filled: raw == 1)
+        } else {
+            valueLabel.stringValue = value.flatMap(ValueConversion.toDouble)
+                .map { GenericSensor.formattedReading($0, unit: serviceData.sensorUnit) } ?? "—"
+            iconView.image = IconResolver.icon(for: serviceData)
+        }
     }
 }

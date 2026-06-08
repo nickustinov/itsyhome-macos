@@ -152,7 +152,8 @@ extension AccessoriesSettingsView {
                         ServiceTypes.occupancySensor, ServiceTypes.leakSensor,
                         ServiceTypes.smokeSensor, ServiceTypes.carbonMonoxideSensor,
                         ServiceTypes.carbonDioxideSensor,
-                        ServiceTypes.temperatureSensor, ServiceTypes.humiditySensor
+                        ServiceTypes.temperatureSensor, ServiceTypes.humiditySensor,
+                        ServiceTypes.sensor, ServiceTypes.binarySensor
                     ]
 
                     func appendServices(_ typeServices: [ServiceData]) {

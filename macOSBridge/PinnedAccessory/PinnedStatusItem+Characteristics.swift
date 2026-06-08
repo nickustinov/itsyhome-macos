@@ -58,6 +58,7 @@ extension PinnedStatusItem {
         if let id = service.smokeDetectedId.flatMap({ UUID(uuidString: $0) }) { ids.append(id) }
         if let id = service.carbonMonoxideDetectedId.flatMap({ UUID(uuidString: $0) }) { ids.append(id) }
         if let id = service.carbonDioxideDetectedId.flatMap({ UUID(uuidString: $0) }) { ids.append(id) }
+        if let id = service.sensorReadingId.flatMap({ UUID(uuidString: $0) }) { ids.append(id) }
         return ids
     }
 
@@ -111,7 +112,8 @@ extension PinnedStatusItem {
             service.leakDetectedId,
             service.smokeDetectedId,
             service.carbonMonoxideDetectedId,
-            service.carbonDioxideDetectedId
+            service.carbonDioxideDetectedId,
+            service.sensorReadingId
         ]
 
         return displayIds.compactMap { $0?.uuid }.contains(characteristicId)

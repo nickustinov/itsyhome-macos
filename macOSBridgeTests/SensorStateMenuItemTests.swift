@@ -153,6 +153,57 @@ final class SensorStateMenuItemTests: XCTestCase {
         XCTAssertEqual(item.displayedState, "—")
     }
 
+    // MARK: - Generic Home Assistant sensors
+
+    private func makeGenericService(type: String, charId: UUID, unit: String? = nil, deviceClass: String? = nil) -> ServiceData {
+        ServiceData(
+            uniqueIdentifier: UUID(),
+            name: "Generic Sensor",
+            serviceType: type,
+            accessoryName: "Generic",
+            roomIdentifier: nil,
+            sensorReadingId: charId,
+            sensorUnit: unit,
+            sensorDeviceClass: deviceClass
+        )
+    }
+
+    func testGenericNumericSensorRoutesToReadingCharacteristic() {
+        let id = UUID()
+        let item = SensorStateMenuItem(serviceData: makeGenericService(type: ServiceTypes.sensor, charId: id, unit: "ppm"), bridge: nil)
+        XCTAssertEqual(item.characteristicIdentifiers, [id])
+    }
+
+    func testGenericNumericSensorShowsValueWithUnit() {
+        let id = UUID()
+        let item = SensorStateMenuItem(serviceData: makeGenericService(type: ServiceTypes.sensor, charId: id, unit: "ppm", deviceClass: "carbon_dioxide"), bridge: nil)
+        item.updateValue(for: id, value: 453.0)
+        XCTAssertEqual(item.displayedState, "453 ppm")
+    }
+
+    func testGenericNumericSensorPercentHasNoSpace() {
+        let id = UUID()
+        let item = SensorStateMenuItem(serviceData: makeGenericService(type: ServiceTypes.sensor, charId: id, unit: "%"), bridge: nil)
+        item.updateValue(for: id, value: 85.0)
+        XCTAssertEqual(item.displayedState, "85%")
+    }
+
+    func testGenericNumericSensorWithoutUnitShowsBareNumber() {
+        let id = UUID()
+        let item = SensorStateMenuItem(serviceData: makeGenericService(type: ServiceTypes.sensor, charId: id), bridge: nil)
+        item.updateValue(for: id, value: 7.0)
+        XCTAssertEqual(item.displayedState, "7")
+    }
+
+    func testGenericBinarySensorShowsOnOff() {
+        let id = UUID()
+        let item = SensorStateMenuItem(serviceData: makeGenericService(type: ServiceTypes.binarySensor, charId: id, deviceClass: "gas"), bridge: nil)
+        item.updateValue(for: id, value: 1)
+        XCTAssertEqual(item.displayedState, "On")
+        item.updateValue(for: id, value: 0)
+        XCTAssertEqual(item.displayedState, "Off")
+    }
+
     // MARK: - Construction
 
     func testViewIsCreated() {

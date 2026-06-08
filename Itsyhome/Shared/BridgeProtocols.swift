@@ -94,6 +94,10 @@ public struct ServiceData: Codable {
     public let smokeDetectedId: String?        // Smoke sensors
     public let carbonMonoxideDetectedId: String?  // Carbon monoxide sensors
     public let carbonDioxideDetectedId: String?   // Carbon dioxide sensors
+    // Generic Home Assistant sensor (read-only, no HomeKit equivalent)
+    public let sensorReadingId: String?           // numeric value, or 0/1 for generic binary
+    public let sensorUnit: String?                // unit_of_measurement (numeric sensors)
+    public let sensorDeviceClass: String?         // HA device_class, for icon and label
     // Humidifier/Dehumidifier characteristics
     public let currentHumidifierDehumidifierStateId: String?
     public let targetHumidifierDehumidifierStateId: String?
@@ -179,6 +183,10 @@ public struct ServiceData: Codable {
         smokeDetectedId: UUID? = nil,
         carbonMonoxideDetectedId: UUID? = nil,
         carbonDioxideDetectedId: UUID? = nil,
+        // Generic Home Assistant sensor
+        sensorReadingId: UUID? = nil,
+        sensorUnit: String? = nil,
+        sensorDeviceClass: String? = nil,
         // Humidifier/Dehumidifier
         currentHumidifierDehumidifierStateId: UUID? = nil,
         targetHumidifierDehumidifierStateId: UUID? = nil,
@@ -263,6 +271,10 @@ public struct ServiceData: Codable {
         self.smokeDetectedId = smokeDetectedId?.uuidString
         self.carbonMonoxideDetectedId = carbonMonoxideDetectedId?.uuidString
         self.carbonDioxideDetectedId = carbonDioxideDetectedId?.uuidString
+        // Generic Home Assistant sensor
+        self.sensorReadingId = sensorReadingId?.uuidString
+        self.sensorUnit = sensorUnit
+        self.sensorDeviceClass = sensorDeviceClass
         // Humidifier/Dehumidifier
         self.currentHumidifierDehumidifierStateId = currentHumidifierDehumidifierStateId?.uuidString
         self.targetHumidifierDehumidifierStateId = targetHumidifierDehumidifierStateId?.uuidString
@@ -538,6 +550,11 @@ public protocol iOS2Mac: NSObjectProtocol {
     @objc public static let smokeSensor = "00000087-0000-1000-8000-0026BB765291"
     @objc public static let carbonMonoxideSensor = "0000007F-0000-1000-8000-0026BB765291"
     @objc public static let carbonDioxideSensor = "00000097-0000-1000-8000-0026BB765291"
+    // Generic read-only Home Assistant sensors (no HomeKit equivalent). Not HAP
+    // UUIDs – HA exposes arbitrary numeric (CO2 ppm, power, lux, ...) and binary
+    // (gas, vibration, sound, ...) sensors that don't map to a fixed HK type.
+    @objc public static let sensor = "ha.sensor.numeric"
+    @objc public static let binarySensor = "ha.sensor.binary"
     @objc public static let humidifierDehumidifier = "000000BD-0000-1000-8000-0026BB765291"
     @objc public static let airPurifier = "000000BB-0000-1000-8000-0026BB765291"
     @objc public static let valve = "000000D0-0000-1000-8000-0026BB765291"

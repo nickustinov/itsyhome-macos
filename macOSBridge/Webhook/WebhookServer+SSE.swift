@@ -255,6 +255,7 @@ extension WebhookServer {
                 add(service.smokeDetectedId, name: "smoke-detected")
                 add(service.carbonMonoxideDetectedId, name: "carbon-monoxide-detected")
                 add(service.carbonDioxideDetectedId, name: "carbon-dioxide-detected")
+                add(service.sensorReadingId, name: "sensor-reading")
                 add(service.currentHumidifierDehumidifierStateId, name: "current-humidifier-dehumidifier-state")
                 add(service.targetHumidifierDehumidifierStateId, name: "target-humidifier-dehumidifier-state")
                 add(service.humidifierThresholdId, name: "humidifier-threshold")

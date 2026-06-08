@@ -370,7 +370,9 @@ class MenuBuilder {
             ServiceTypes.carbonMonoxideSensor,
             ServiceTypes.carbonDioxideSensor,
             ServiceTypes.temperatureSensor,
-            ServiceTypes.humiditySensor
+            ServiceTypes.humiditySensor,
+            ServiceTypes.sensor,
+            ServiceTypes.binarySensor
         ]
 
         let sortedTypes = servicesByType.keys.sorted { type1, type2 in
@@ -387,7 +389,8 @@ class MenuBuilder {
             ServiceTypes.occupancySensor, ServiceTypes.leakSensor,
             ServiceTypes.smokeSensor, ServiceTypes.carbonMonoxideSensor,
             ServiceTypes.carbonDioxideSensor,
-            ServiceTypes.temperatureSensor, ServiceTypes.humiditySensor
+            ServiceTypes.temperatureSensor, ServiceTypes.humiditySensor,
+            ServiceTypes.sensor, ServiceTypes.binarySensor
         ]
 
         func addServiceItems(_ services: [ServiceData]) {
@@ -584,9 +587,12 @@ class MenuBuilder {
              ServiceTypes.occupancySensor, ServiceTypes.leakSensor,
              ServiceTypes.smokeSensor, ServiceTypes.carbonMonoxideSensor,
              ServiceTypes.carbonDioxideSensor,
-             ServiceTypes.temperatureSensor, ServiceTypes.humiditySensor:
+             ServiceTypes.temperatureSensor, ServiceTypes.humiditySensor,
+             ServiceTypes.sensor, ServiceTypes.binarySensor:
             // Temperature/humidity only reach here when the aggregate summary is
-            // off; otherwise they are rolled into a SensorSummaryMenuItem.
+            // off; otherwise they are rolled into a SensorSummaryMenuItem. The
+            // generic sensor/binarySensor types are Home Assistant sensors with
+            // no HomeKit equivalent.
             menuItem = SensorStateMenuItem(serviceData: service, bridge: bridge)
 
         default:

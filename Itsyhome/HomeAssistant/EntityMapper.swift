@@ -82,7 +82,10 @@ final class EntityMapper {
             "tilt", "target_tilt", "door_state", "target_door",
             "speed", "oscillating", "direction", "alarm_state", "alarm_target",
             "target_temp_high", "target_temp_low", "humidity", "target_humidity",
-            "hum_action", "hum_mode", "active", "swing_mode", "valve_state"
+            "hum_action", "hum_mode", "active", "swing_mode", "valve_state",
+            // Read-only sensors
+            "contact_state", "motion", "occupancy", "leak", "smoke", "co",
+            "sensor_reading"
         ]
 
         for entityId in entityStates.keys {
@@ -391,7 +394,7 @@ final class EntityMapper {
     // MARK: - Entity to service mapping
 
     private func mapEntityToService(_ state: HAEntityState) -> ServiceData? {
-        let serviceType = mapDomainToServiceType(state.domain, deviceClass: state.deviceClass)
+        let serviceType = mapDomainToServiceType(state.domain, deviceClass: state.deviceClass, hasNumericState: state.numericState != nil)
         guard let serviceType = serviceType else { return nil }
 
         // Debug logging for light capabilities
@@ -440,6 +443,8 @@ final class EntityMapper {
             targetHorizontalTiltId: state.currentTiltPosition != nil && !isTiltOnlyCover(state) ? characteristicUUID(state.entityId, "target_tilt") : nil,
             // Sensor characteristics (humidity for sensors, climate, and humidifier entities)
             humidityId: state.deviceClass == "humidity" || ((state.domain == "climate" || state.domain == "humidifier") && state.currentHumidity != nil) ? characteristicUUID(state.entityId, "humidity") : nil,
+            // Read-only motion sensor
+            motionDetectedId: serviceType == ServiceTypes.motionSensor ? characteristicUUID(state.entityId, "motion") : nil,
             // HeaterCooler characteristics
             activeId: state.domain == "valve" ? characteristicUUID(state.entityId, "active") : nil,
             coolingThresholdTemperatureId: state.targetTempHigh != nil ? characteristicUUID(state.entityId, "target_temp_high") : nil,
@@ -455,6 +460,16 @@ final class EntityMapper {
             // Garage door characteristics
             currentDoorStateId: state.deviceClass == "garage" ? characteristicUUID(state.entityId, "door_state") : nil,
             targetDoorStateId: state.deviceClass == "garage" ? characteristicUUID(state.entityId, "target_door") : nil,
+            // Read-only binary sensors (contact / occupancy / leak / smoke / CO)
+            contactSensorStateId: serviceType == ServiceTypes.contactSensor ? characteristicUUID(state.entityId, "contact_state") : nil,
+            occupancyDetectedId: serviceType == ServiceTypes.occupancySensor ? characteristicUUID(state.entityId, "occupancy") : nil,
+            leakDetectedId: serviceType == ServiceTypes.leakSensor ? characteristicUUID(state.entityId, "leak") : nil,
+            smokeDetectedId: serviceType == ServiceTypes.smokeSensor ? characteristicUUID(state.entityId, "smoke") : nil,
+            carbonMonoxideDetectedId: serviceType == ServiceTypes.carbonMonoxideSensor ? characteristicUUID(state.entityId, "co") : nil,
+            // Generic Home Assistant sensor (read-only)
+            sensorReadingId: (serviceType == ServiceTypes.sensor || serviceType == ServiceTypes.binarySensor) ? characteristicUUID(state.entityId, "sensor_reading") : nil,
+            sensorUnit: serviceType == ServiceTypes.sensor ? state.unitOfMeasurement : nil,
+            sensorDeviceClass: (serviceType == ServiceTypes.sensor || serviceType == ServiceTypes.binarySensor) ? state.deviceClass : nil,
             // Humidifier characteristics
             currentHumidifierDehumidifierStateId: state.humidifierAction != nil ? characteristicUUID(state.entityId, "hum_action") : nil,
             targetHumidifierDehumidifierStateId: state.domain == "humidifier" && !state.availableModes.isEmpty ? characteristicUUID(state.entityId, "hum_mode") : nil,
@@ -495,7 +510,7 @@ final class EntityMapper {
         return !hasSetPosition && hasSetTiltPosition
     }
 
-    private func mapDomainToServiceType(_ domain: String, deviceClass: String?) -> String? {
+    private func mapDomainToServiceType(_ domain: String, deviceClass: String?, hasNumericState: Bool = false) -> String? {
         switch domain {
         case "light":
             return ServiceTypes.lightbulb
@@ -535,13 +550,41 @@ final class EntityMapper {
             case "humidity":
                 return ServiceTypes.humiditySensor
             default:
-                return nil
+                // Any other sensor with a numeric reading (CO2, power, lux,
+                // pressure, ...) becomes a generic read-only sensor. Text/enum
+                // sensors (no numeric state) are skipped.
+                return hasNumericState ? ServiceTypes.sensor : nil
             }
         case "binary_sensor":
-            // We don't show binary sensors as menu items typically
-            return nil
+            // HK-equivalent classes get a specific type; everything else
+            // (gas, vibration, sound, problem, ...) is a generic binary sensor.
+            return mapBinarySensorDeviceClass(deviceClass) ?? ServiceTypes.binarySensor
         case "alarm_control_panel":
             return ServiceTypes.securitySystem
+        default:
+            return nil
+        }
+    }
+
+    /// Map a binary_sensor device_class to the matching read-only sensor service
+    /// type. Only the classes that have a HomeKit equivalent are shown; generic
+    /// or ambiguous binary sensors (gas, problem, safety, tamper, none, ...) are
+    /// left out so the menu isn't cluttered. HA's CO2 is a numeric sensor, not a
+    /// binary one, so there is no carbon-dioxide case here.
+    private func mapBinarySensorDeviceClass(_ deviceClass: String?) -> String? {
+        switch deviceClass {
+        case "door", "window", "opening", "garage_door":
+            return ServiceTypes.contactSensor
+        case "motion", "moving":
+            return ServiceTypes.motionSensor
+        case "occupancy", "presence":
+            return ServiceTypes.occupancySensor
+        case "moisture":
+            return ServiceTypes.leakSensor
+        case "smoke":
+            return ServiceTypes.smokeSensor
+        case "carbon_monoxide":
+            return ServiceTypes.carbonMonoxideSensor
         default:
             return nil
         }
@@ -667,13 +710,33 @@ final class EntityMapper {
             values[characteristicUUID(entityId, "humidity")] = humidity
         }
 
-        // Sensor entities: temperature/humidity value is the state itself
+        // Sensor entities: the numeric state is the reading. Temperature and
+        // humidity feed the HomeKit-equivalent characteristics; every other
+        // numeric sensor (CO2, power, lux, ...) feeds the generic reading.
         if state.domain == "sensor" {
             if state.deviceClass == "temperature", let temp = state.numericState {
                 values[characteristicUUID(entityId, "current_temp")] = normalizeTemperature(temp)
-            }
-            if state.deviceClass == "humidity", let humidity = state.numericState {
+            } else if state.deviceClass == "humidity", let humidity = state.numericState {
                 values[characteristicUUID(entityId, "humidity")] = humidity
+            } else if let numeric = state.numericState {
+                values[characteristicUUID(entityId, "sensor_reading")] = numeric
+            }
+        }
+
+        // Binary sensor values (read-only): map on/off to the kind's detected
+        // state. Contact-style classes report on = open, matching HomeKit's
+        // ContactSensorState 1 = open; safety classes report on = detected. Skip
+        // unavailable/unknown so it reads as unknown rather than a false "clear".
+        if state.domain == "binary_sensor", state.state == "on" || state.state == "off" {
+            let detected = state.state == "on" ? 1 : 0
+            switch mapBinarySensorDeviceClass(state.deviceClass) {
+            case ServiceTypes.contactSensor: values[characteristicUUID(entityId, "contact_state")] = detected
+            case ServiceTypes.motionSensor: values[characteristicUUID(entityId, "motion")] = detected
+            case ServiceTypes.occupancySensor: values[characteristicUUID(entityId, "occupancy")] = detected
+            case ServiceTypes.leakSensor: values[characteristicUUID(entityId, "leak")] = detected
+            case ServiceTypes.smokeSensor: values[characteristicUUID(entityId, "smoke")] = detected
+            case ServiceTypes.carbonMonoxideSensor: values[characteristicUUID(entityId, "co")] = detected
+            default: values[characteristicUUID(entityId, "sensor_reading")] = detected  // generic binary
             }
         }
 
@@ -864,7 +927,10 @@ final class EntityMapper {
             "tilt", "target_tilt", "door_state", "target_door",
             "speed", "oscillating", "direction", "alarm_state", "alarm_target",
             "target_temp_high", "target_temp_low", "humidity", "target_humidity",
-            "hum_action", "hum_mode", "active", "swing_mode", "valve_state"
+            "hum_action", "hum_mode", "active", "swing_mode", "valve_state",
+            // Read-only sensors
+            "contact_state", "motion", "occupancy", "leak", "smoke", "co",
+            "sensor_reading"
         ]
 
         for charType in possibleTypes {

@@ -87,3 +87,53 @@ enum SensorKind {
         }
     }
 }
+
+// MARK: - Generic Home Assistant sensors
+
+/// Display helpers for generic HA sensors (those without a specific HomeKit
+/// kind): numeric readings shown as value + unit, binary as On/Off, with an
+/// icon chosen by HA device_class.
+enum GenericSensor {
+
+    /// On/Off words for a generic binary sensor.
+    static var binaryLabels: (one: String, zero: String) {
+        (String(localized: "device.sensor.on", defaultValue: "On", bundle: .macOSBridge),
+         String(localized: "device.sensor.off", defaultValue: "Off", bundle: .macOSBridge))
+    }
+
+    /// Format a numeric reading with its unit (e.g. "453 ppm", "85%", "230 V").
+    static func formattedReading(_ value: Double, unit: String?) -> String {
+        let number = value == value.rounded() ? String(format: "%.0f", value) : String(format: "%.1f", value)
+        guard let unit, !unit.isEmpty else { return number }
+        return unit == "%" ? "\(number)%" : "\(number) \(unit)"
+    }
+
+    /// Phosphor icon name for a generic sensor, chosen by HA device_class with a
+    /// gauge (numeric) / circle (binary) fallback.
+    static func iconName(deviceClass: String?, binary: Bool) -> String {
+        switch deviceClass {
+        case "carbon_dioxide": return "cloud"
+        case "power", "energy", "voltage", "current", "power_factor",
+             "apparent_power", "reactive_power", "energy_storage": return "lightning"
+        case "illuminance": return "sun"
+        case "pressure", "atmospheric_pressure": return "gauge"
+        case "battery": return "battery-medium"
+        case "pm25", "pm10", "pm1", "aqi", "volatile_organic_compounds",
+             "volatile_organic_compounds_parts", "nitrogen_dioxide", "nitrogen_monoxide",
+             "nitrous_oxide", "ozone", "sulphur_dioxide", "gas": return "wind"
+        case "signal_strength", "connectivity": return "wifi-high"
+        case "sound", "sound_pressure": return "speaker-high"
+        case "speed", "wind_speed": return "wind"
+        case "distance": return "ruler"
+        case "water", "moisture", "volume", "precipitation", "precipitation_intensity": return "drop"
+        case "frequency": return "wave-sine"
+        case "vibration", "moving": return "wave-sawtooth"
+        case "light": return "lightbulb"
+        case "running": return "play"
+        case "problem", "safety", "tamper": return "warning"
+        case "plug", "outlet": return "plug"
+        case "update": return "arrow-clockwise"
+        default: return binary ? "circle" : "gauge"
+        }
+    }
+}

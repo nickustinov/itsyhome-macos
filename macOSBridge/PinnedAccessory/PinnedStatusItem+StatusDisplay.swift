@@ -36,6 +36,8 @@ extension PinnedStatusItem {
              ServiceTypes.smokeSensor, ServiceTypes.carbonMonoxideSensor,
              ServiceTypes.carbonDioxideSensor:
             return binarySensorStatus(for: service)
+        case ServiceTypes.sensor, ServiceTypes.binarySensor:
+            return genericSensorStatus(for: service)
         default:
             // For lights, switches, outlets, fans, valves, etc. - check on/off state
             let isOn = getOnOffState(for: service)
@@ -255,6 +257,22 @@ extension PinnedStatusItem {
            let value = cachedValues[id].flatMap(ValueConversion.toDouble) {
             text = kind.formattedValue(value)
         }
+        return (IconResolver.icon(for: service), text)
+    }
+
+    /// Generic Home Assistant sensor: numeric reading + unit, or binary On/Off.
+    private func genericSensorStatus(for service: ServiceData) -> (icon: NSImage?, text: String?) {
+        guard let idStr = service.sensorReadingId, let id = UUID(uuidString: idStr) else {
+            return (IconResolver.icon(for: service), nil)
+        }
+        if service.serviceType == ServiceTypes.binarySensor {
+            let raw = cachedValues[id].flatMap(ValueConversion.toInt)
+            let labels = GenericSensor.binaryLabels
+            let text = raw.map { $0 == 1 ? labels.one : labels.zero }
+            return (IconResolver.icon(for: service, filled: raw == 1), text)
+        }
+        let text = cachedValues[id].flatMap(ValueConversion.toDouble)
+            .map { GenericSensor.formattedReading($0, unit: service.sensorUnit) }
         return (IconResolver.icon(for: service), text)
     }
 

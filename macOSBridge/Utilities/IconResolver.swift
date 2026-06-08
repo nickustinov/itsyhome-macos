@@ -16,13 +16,30 @@ enum IconResolver {
         if let customName = PreferencesManager.shared.customIcon(for: service.uniqueIdentifier) {
             return PhosphorIcon.icon(customName, filled: filled)
         }
+        if let generic = genericSensorIconName(for: service) {
+            return PhosphorIcon.icon(generic, filled: filled)
+        }
         return IconMapping.iconForServiceType(service.serviceType, filled: filled)
     }
 
     /// Get icon name for a service, checking custom icons first
     static func iconName(for service: ServiceData) -> String {
         PreferencesManager.shared.customIcon(for: service.uniqueIdentifier)
+            ?? genericSensorIconName(for: service)
             ?? PhosphorIcon.defaultIconName(for: service.serviceType)
+    }
+
+    /// Icon name for a generic Home Assistant sensor, chosen by its device_class
+    /// (nil for everything else, so normal service-type resolution applies).
+    private static func genericSensorIconName(for service: ServiceData) -> String? {
+        switch service.serviceType {
+        case ServiceTypes.sensor:
+            return GenericSensor.iconName(deviceClass: service.sensorDeviceClass, binary: false)
+        case ServiceTypes.binarySensor:
+            return GenericSensor.iconName(deviceClass: service.sensorDeviceClass, binary: true)
+        default:
+            return nil
+        }
     }
 
     /// State-aware icon for a binary sensor (menu row or pinned status item).

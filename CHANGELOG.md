@@ -6,6 +6,7 @@
 - Individual temperature and humidity sensors – new "Summarise temperature and humidity" toggle in Settings → Advanced (on by default). When off, each temperature and humidity sensor is shown as its own row in the menu and in Settings → Accessories instead of a single aggregated per-room range
 - Pin sensors to the menu bar – pinning any sensor now shows its reading next to the icon (e.g. 21.5°, 45 %, Smoke, Motion) and updates live
 - Read-only sensors over webhooks – the binary sensor family is exposed through the local web server: `/list` and `/status` include them, `/info` adds a `detected` bool (reported as unknown when unreadable, never a false "clear"), `/debug` lists their characteristics, and value changes publish over the SSE `/events` stream
+- Home Assistant sensor support – every HA sensor now appears in the menu. Contact, motion, occupancy, leak (moisture), smoke and carbon monoxide binary sensors map to their dedicated rows; any other numeric sensor (CO2, power, pressure, illuminance, air quality, ...) shows its value and unit, and any other binary sensor shows On/Off, each with a device-class icon. Diagnostic sensors stay governed by the entity category filter
 
 ## 2.5.2
 

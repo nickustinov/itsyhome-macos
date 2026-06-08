@@ -54,7 +54,8 @@ class AccessoriesSettingsView: NSView {
                      ServiceTypes.valve, ServiceTypes.faucet, ServiceTypes.slat, ServiceTypes.securitySystem,
                      ServiceTypes.contactSensor, ServiceTypes.motionSensor, ServiceTypes.occupancySensor,
                      ServiceTypes.leakSensor, ServiceTypes.smokeSensor, ServiceTypes.carbonMonoxideSensor,
-                     ServiceTypes.carbonDioxideSensor, ServiceTypes.temperatureSensor, ServiceTypes.humiditySensor]
+                     ServiceTypes.carbonDioxideSensor, ServiceTypes.temperatureSensor, ServiceTypes.humiditySensor,
+                     ServiceTypes.sensor, ServiceTypes.binarySensor]
 
     // MARK: - Initialization
 
