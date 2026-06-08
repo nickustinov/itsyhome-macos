@@ -51,6 +51,13 @@ extension PinnedStatusItem {
         if let id = service.securitySystemCurrentStateId.flatMap({ UUID(uuidString: $0) }) { ids.append(id) }
         if let id = service.securitySystemTargetStateId.flatMap({ UUID(uuidString: $0) }) { ids.append(id) }
         if let id = service.humidityId.flatMap({ UUID(uuidString: $0) }) { ids.append(id) }
+        if let id = service.contactSensorStateId.flatMap({ UUID(uuidString: $0) }) { ids.append(id) }
+        if let id = service.motionDetectedId.flatMap({ UUID(uuidString: $0) }) { ids.append(id) }
+        if let id = service.occupancyDetectedId.flatMap({ UUID(uuidString: $0) }) { ids.append(id) }
+        if let id = service.leakDetectedId.flatMap({ UUID(uuidString: $0) }) { ids.append(id) }
+        if let id = service.smokeDetectedId.flatMap({ UUID(uuidString: $0) }) { ids.append(id) }
+        if let id = service.carbonMonoxideDetectedId.flatMap({ UUID(uuidString: $0) }) { ids.append(id) }
+        if let id = service.carbonDioxideDetectedId.flatMap({ UUID(uuidString: $0) }) { ids.append(id) }
         return ids
     }
 
@@ -97,7 +104,14 @@ extension PinnedStatusItem {
             service.currentPositionId,
             service.lockCurrentStateId,
             service.currentDoorStateId,
-            service.securitySystemCurrentStateId
+            service.securitySystemCurrentStateId,
+            service.contactSensorStateId,
+            service.motionDetectedId,
+            service.occupancyDetectedId,
+            service.leakDetectedId,
+            service.smokeDetectedId,
+            service.carbonMonoxideDetectedId,
+            service.carbonDioxideDetectedId
         ]
 
         return displayIds.compactMap { $0?.uuid }.contains(characteristicId)

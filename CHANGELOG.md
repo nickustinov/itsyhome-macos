@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.6.0
+
+- Sensors in the menu – contact, motion, occupancy, leak, smoke, carbon monoxide and carbon dioxide sensors now appear as read-only rows showing their state (Open/Closed, Motion/Clear, Leak/Dry, Smoke/Clear, ...) with state-aware icons (#32)
+- Individual temperature and humidity sensors – new "Summarise temperature and humidity" toggle in Settings → Advanced (on by default). When off, each temperature and humidity sensor is shown as its own row in the menu and in Settings → Accessories instead of a single aggregated per-room range
+- Pin sensors to the menu bar – pinning any sensor now shows its reading next to the icon (e.g. 21.5°, 45 %, Smoke, Motion) and updates live
+- Read-only sensors over webhooks – the binary sensor family is exposed through the local web server: `/list` and `/status` include them, `/info` adds a `detected` bool (reported as unknown when unreadable, never a false "clear"), `/debug` lists their characteristics, and value changes publish over the SSE `/events` stream
+
 ## 2.5.2
 
 - Scene state + deactivate over webhooks. `/list/scenes` and `/info/scene/<name>` now include an optional `state: { on: Bool }` for HomeKit scenes that have a granular action list (omitted for HA snapshot scenes and other cases where the server can't introspect — clients should fall back to fire-only). The "active" computation matches what the menubar toggle uses: every action's target characteristic must match the device's current value within a per-characteristic tolerance (5 for position/brightness/speed, ~0 for booleans)
