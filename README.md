@@ -271,6 +271,12 @@ Features include color-coded icons per device type, dynamic state display, live 
 
 Source code: [itsyhome-streamdeck](https://github.com/nickustinov/itsyhome-streamdeck)
 
+### Even Realities G2
+
+Itsyhome is available on [Even Realities G2 smartglasses](https://evenhub.evenrealities.com/landing?package_id=com.itsyhome.eveng2). Control your home hands-free, using the R1 smart ring or your voice: browse rooms with a swipe, toggle lights with a tap, adjust the thermostat – every accessory and group in your house, right from the temple touchpad.
+
+[![Itsyhome on Even Realities G2](even-g2.png)](https://evenhub.evenrealities.com/landing?package_id=com.itsyhome.eveng2)
+
 ### OpenClaw (AI agent)
 
 Control your smart home with natural language via [OpenClaw](https://openclaw.ai). The [itsyhome-control](https://clawhub.ai/skills/itsyhome-control) skill connects your AI agent to the webhook server, enabling commands like "turn off the living room lights" or "set bedroom brightness to 40%". Requires the webhook server to be enabled.
