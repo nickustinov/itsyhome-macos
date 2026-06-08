@@ -20,6 +20,8 @@ final class SensorStateMenuItemTests: XCTestCase {
             serviceType: type,
             accessoryName: "Test Accessory",
             roomIdentifier: nil,
+            currentTemperatureId: type == ServiceTypes.temperatureSensor ? charId : nil,
+            humidityId: type == ServiceTypes.humiditySensor ? charId : nil,
             motionDetectedId: type == ServiceTypes.motionSensor ? charId : nil,
             contactSensorStateId: type == ServiceTypes.contactSensor ? charId : nil,
             occupancyDetectedId: type == ServiceTypes.occupancySensor ? charId : nil,
@@ -37,7 +39,9 @@ final class SensorStateMenuItemTests: XCTestCase {
         ServiceTypes.leakSensor,
         ServiceTypes.smokeSensor,
         ServiceTypes.carbonMonoxideSensor,
-        ServiceTypes.carbonDioxideSensor
+        ServiceTypes.carbonDioxideSensor,
+        ServiceTypes.temperatureSensor,
+        ServiceTypes.humiditySensor
     ]
 
     // MARK: - Characteristic routing
@@ -112,6 +116,41 @@ final class SensorStateMenuItemTests: XCTestCase {
 
         item.updateValue(for: UUID(), value: 0)  // different characteristic
         XCTAssertEqual(item.displayedState, "Smoke")
+    }
+
+    // MARK: - Numeric sensors (temperature / humidity)
+
+    // Temperature and humidity render as individual rows (shown when the
+    // aggregate summary is off) and must route to their own characteristic.
+    func testNumericSensorsRouteToCorrectField() {
+        for type in [ServiceTypes.temperatureSensor, ServiceTypes.humiditySensor] {
+            let id = UUID()
+            let item = SensorStateMenuItem(serviceData: makeService(type: type, charId: id), bridge: nil)
+            XCTAssertEqual(item.characteristicIdentifiers, [id], "routing for \(type)")
+        }
+    }
+
+    // Humidity formats as a whole-number percentage (locale-independent).
+    func testHumidityFormatsAsPercent() {
+        let id = UUID()
+        let item = SensorStateMenuItem(serviceData: makeService(type: ServiceTypes.humiditySensor, charId: id), bridge: nil)
+        item.updateValue(for: id, value: 45.0)
+        XCTAssertEqual(item.displayedState, "45%")
+    }
+
+    // Temperature formatting is locale-dependent (°C/°F), so assert it leaves
+    // the placeholder and renders a degree reading rather than a state word.
+    func testTemperatureShowsDegreeReading() {
+        let id = UUID()
+        let item = SensorStateMenuItem(serviceData: makeService(type: ServiceTypes.temperatureSensor, charId: id), bridge: nil)
+        item.updateValue(for: id, value: 21.5)
+        XCTAssertNotEqual(item.displayedState, "—")
+        XCTAssertTrue(item.displayedState.contains("°"), "expected a degree reading, got \(item.displayedState)")
+    }
+
+    func testFreshNumericRowShowsPlaceholder() {
+        let item = SensorStateMenuItem(serviceData: makeService(type: ServiceTypes.temperatureSensor, charId: UUID()), bridge: nil)
+        XCTAssertEqual(item.displayedState, "—")
     }
 
     // MARK: - Construction

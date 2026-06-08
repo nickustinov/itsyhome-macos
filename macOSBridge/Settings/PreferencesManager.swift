@@ -31,6 +31,7 @@ final class PreferencesManager {
         static let temperatureUnit = "temperatureUnit"
         static let entityCategoryFilter = "entityCategoryFilter"
         static let simpleLightControls = "simpleLightControls"
+        static let sensorSummary = "sensorSummary"
 
         // Per-home settings (use with homeKey helper)
         static let orderedFavouriteIds = "orderedFavouriteIds"
@@ -68,7 +69,8 @@ final class PreferencesManager {
             Keys.doorbellAutoCloseDelay: 60,
             Keys.temperatureUnit: "system",
             Keys.entityCategoryFilter: "hideAll",
-            Keys.simpleLightControls: false
+            Keys.simpleLightControls: false,
+            Keys.sensorSummary: true
         ])
 
         // Sync launch at login state with system on init
@@ -176,6 +178,18 @@ final class PreferencesManager {
         get { defaults.bool(forKey: Keys.simpleLightControls) }
         set {
             defaults.set(newValue, forKey: Keys.simpleLightControls)
+            postNotification()
+        }
+    }
+
+    // MARK: - Sensor summary (global)
+
+    /// When on, temperature/humidity sensors are shown as a single aggregated
+    /// range row per room; when off, each is shown as an individual row.
+    var sensorSummary: Bool {
+        get { defaults.bool(forKey: Keys.sensorSummary) }
+        set {
+            defaults.set(newValue, forKey: Keys.sensorSummary)
             postNotification()
         }
     }

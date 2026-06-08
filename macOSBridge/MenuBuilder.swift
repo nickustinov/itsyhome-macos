@@ -259,26 +259,34 @@ class MenuBuilder {
         var humiditySensors: [ServiceData] = []
         var allServices: [ServiceData] = []
 
-        let excludedTypes: Set<String> = [
-            ServiceTypes.temperatureSensor,
-            ServiceTypes.humiditySensor
-        ]
+        // When the aggregate summary is on, standalone temperature/humidity
+        // sensors are pulled out of the per-type rows and rolled into a single
+        // SensorSummaryMenuItem (along with readings embedded in thermostats,
+        // ACs, etc.). When off, they render as individual rows like any other
+        // sensor and no summary is built.
+        let summaryEnabled = PreferencesManager.shared.sensorSummary
+        let excludedTypes: Set<String> = summaryEnabled
+            ? [ServiceTypes.temperatureSensor, ServiceTypes.humiditySensor]
+            : []
 
         for accessory in accessories {
             for service in accessory.services {
-                if service.serviceType == ServiceTypes.temperatureSensor {
+                if summaryEnabled && service.serviceType == ServiceTypes.temperatureSensor {
                     temperatureSensors.append(service)
-                } else if service.serviceType == ServiceTypes.humiditySensor {
+                } else if summaryEnabled && service.serviceType == ServiceTypes.humiditySensor {
                     humiditySensors.append(service)
                 } else if !excludedTypes.contains(service.serviceType) {
                     servicesByType[service.serviceType, default: []].append(service)
                     allServices.append(service)
-                    // Also collect temperature/humidity from thermostats, ACs, etc.
-                    if service.currentTemperatureId != nil {
-                        temperatureSensors.append(service)
-                    }
-                    if service.humidityId != nil {
-                        humiditySensors.append(service)
+                    // Also collect temperature/humidity embedded in thermostats,
+                    // ACs, etc. for the summary (their own rows show it too).
+                    if summaryEnabled {
+                        if service.currentTemperatureId != nil {
+                            temperatureSensors.append(service)
+                        }
+                        if service.humidityId != nil {
+                            humiditySensors.append(service)
+                        }
                     }
                 }
             }
@@ -353,7 +361,16 @@ class MenuBuilder {
             ServiceTypes.valve,
             ServiceTypes.faucet,
             ServiceTypes.slat,
-            ServiceTypes.securitySystem
+            ServiceTypes.securitySystem,
+            ServiceTypes.contactSensor,
+            ServiceTypes.motionSensor,
+            ServiceTypes.occupancySensor,
+            ServiceTypes.leakSensor,
+            ServiceTypes.smokeSensor,
+            ServiceTypes.carbonMonoxideSensor,
+            ServiceTypes.carbonDioxideSensor,
+            ServiceTypes.temperatureSensor,
+            ServiceTypes.humiditySensor
         ]
 
         let sortedTypes = servicesByType.keys.sorted { type1, type2 in
@@ -362,36 +379,55 @@ class MenuBuilder {
             return index1 < index2
         }
 
-        var isFirstGroup = true
-        for serviceType in sortedTypes {
-            guard let services = servicesByType[serviceType] else { continue }
+        // Read-only sensors share a single section: each non-sensor type keeps
+        // its own divider, but all sensor types (and the temperature/humidity
+        // summary) are grouped together under one divider from the rest.
+        let sensorTypes: Set<String> = [
+            ServiceTypes.contactSensor, ServiceTypes.motionSensor,
+            ServiceTypes.occupancySensor, ServiceTypes.leakSensor,
+            ServiceTypes.smokeSensor, ServiceTypes.carbonMonoxideSensor,
+            ServiceTypes.carbonDioxideSensor,
+            ServiceTypes.temperatureSensor, ServiceTypes.humiditySensor
+        ]
 
-            if !isFirstGroup {
-                menu.addItem(NSMenuItem.separator())
-            }
-            isFirstGroup = false
-
-            let sortedServices = services.sorted { $0.name < $1.name }
-
-            for service in sortedServices {
-                var displayService = service
-                if let roomName = roomName {
-                    displayService = service.strippingRoomName(roomName)
-                }
+        func addServiceItems(_ services: [ServiceData]) {
+            for service in services.sorted(by: { $0.name < $1.name }) {
+                let displayService = roomName.map { service.strippingRoomName($0) } ?? service
                 if let item = createMenuItemForService(displayService) {
                     menu.addItem(item)
                 }
             }
         }
 
-        if !temperatureSensors.isEmpty || !humiditySensors.isEmpty {
-            menu.addItem(NSMenuItem.separator())
-            let sensorItem = SensorSummaryMenuItem(
-                temperatureSensors: temperatureSensors,
-                humiditySensors: humiditySensors,
-                bridge: bridge
-            )
-            menu.addItem(sensorItem)
+        var isFirstGroup = true
+        for serviceType in sortedTypes where !sensorTypes.contains(serviceType) {
+            guard let services = servicesByType[serviceType] else { continue }
+            if !isFirstGroup {
+                menu.addItem(NSMenuItem.separator())
+            }
+            isFirstGroup = false
+            addServiceItems(services)
+        }
+
+        // Sensor section: one divider, then every sensor row, then the summary.
+        let sensorTypesPresent = sortedTypes.filter { sensorTypes.contains($0) }
+        let hasSummary = !temperatureSensors.isEmpty || !humiditySensors.isEmpty
+        if !sensorTypesPresent.isEmpty || hasSummary {
+            if !isFirstGroup {
+                menu.addItem(NSMenuItem.separator())
+            }
+            isFirstGroup = false
+            for serviceType in sensorTypesPresent {
+                guard let services = servicesByType[serviceType] else { continue }
+                addServiceItems(services)
+            }
+            if hasSummary {
+                menu.addItem(SensorSummaryMenuItem(
+                    temperatureSensors: temperatureSensors,
+                    humiditySensors: humiditySensors,
+                    bridge: bridge
+                ))
+            }
         }
     }
 
@@ -547,7 +583,10 @@ class MenuBuilder {
         case ServiceTypes.contactSensor, ServiceTypes.motionSensor,
              ServiceTypes.occupancySensor, ServiceTypes.leakSensor,
              ServiceTypes.smokeSensor, ServiceTypes.carbonMonoxideSensor,
-             ServiceTypes.carbonDioxideSensor:
+             ServiceTypes.carbonDioxideSensor,
+             ServiceTypes.temperatureSensor, ServiceTypes.humiditySensor:
+            // Temperature/humidity only reach here when the aggregate summary is
+            // off; otherwise they are rolled into a SensorSummaryMenuItem.
             menuItem = SensorStateMenuItem(serviceData: service, bridge: bridge)
 
         default:

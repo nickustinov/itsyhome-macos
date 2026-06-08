@@ -528,6 +528,7 @@
 		26F19AD6C64B636BBD5C5EE5 /* ph.checkerboard.svg in Resources */ = {isa = PBXBuildFile; fileRef = FCB58143E2CA69073715CCF4 /* ph.checkerboard.svg */; };
 		270E8E3975F61D37B8A5DA3B /* ph.arrows-split.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 41697CB21D8925D6D213F6DE /* ph.arrows-split.fill.svg */; };
 		27499A963A6985CC0BC733E2 /* ph.boules.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 196E8A0239BBEFDF225BA927 /* ph.boules.fill.svg */; };
+		274C2F2E6B4B39F9DD2B1CD3 /* SensorKind.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EDBF399E52E3764273DEA35 /* SensorKind.swift */; };
 		276D6A863B0E130176AB3577 /* ph.arrow-down-left.svg in Resources */ = {isa = PBXBuildFile; fileRef = B603DE3CE6A34D263F2A6F57 /* ph.arrow-down-left.svg */; };
 		2780E8A3CC3916038B2D93EF /* ActionParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E7FF79A158B9BA2B399F2EF /* ActionParser.swift */; };
 		278581FF51037A3D6580147F /* ph.bell-simple-slash.svg in Resources */ = {isa = PBXBuildFile; fileRef = 10EA1295854409F887FA5107 /* ph.bell-simple-slash.svg */; };
@@ -665,6 +666,7 @@
 		315BFD05451EA40905368314 /* ph.arrow-bend-right-down.svg in Resources */ = {isa = PBXBuildFile; fileRef = BE590B38079B6C95A05326CB /* ph.arrow-bend-right-down.svg */; };
 		3167C562F97E98C061F7F530 /* ph.wheelchair-motion.svg in Resources */ = {isa = PBXBuildFile; fileRef = 0BE5A45A1729514B7B30AAFB /* ph.wheelchair-motion.svg */; };
 		316A6A148F42B01FA1790236 /* ph.caret-circle-right.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 71ABBB279993DE84628E795D /* ph.caret-circle-right.fill.svg */; };
+		31920E56BD0B08D97C57157B /* SensorStateMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0E79D6CEA76A3ABBBB02468 /* SensorStateMenuItem.swift */; };
 		3198415C838BC625B82740EC /* ph.ice-cream.svg in Resources */ = {isa = PBXBuildFile; fileRef = 3AC6CF07DFE2E42105F3CA07 /* ph.ice-cream.svg */; };
 		31DB403B988B60CAE091769B /* ph.road-horizon.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 088A7CFD3440823F298E1C4F /* ph.road-horizon.fill.svg */; };
 		321D7B806C96DE0E7F45F27F /* ph.split-vertical.svg in Resources */ = {isa = PBXBuildFile; fileRef = CB78BBDCACDA7BF22EDD3B54 /* ph.split-vertical.svg */; };
@@ -1408,6 +1410,7 @@
 		6A7A0FD948054C4CB3C31B27 /* ph.video-camera-slash.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 31052E395457C9C824D75B80 /* ph.video-camera-slash.fill.svg */; };
 		6A97B8AF18BBE79DD7BA97C4 /* ph.qr-code.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 9E2C50997018D3180C46B47E /* ph.qr-code.fill.svg */; };
 		6AA20BAA16AE42E1B95C2CDD /* ph.flag.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = B2230F06863A111172389284 /* ph.flag.fill.svg */; };
+		6AAF79381BEAA086E2B0C59E /* SensorKind.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EDBF399E52E3764273DEA35 /* SensorKind.swift */; };
 		6AAFE3BCCD96CA97170E96BC /* ph.football.svg in Resources */ = {isa = PBXBuildFile; fileRef = F96ABE639C8A5F4337D4AD7B /* ph.football.svg */; };
 		6ABE7C26E04FB08D8016619A /* ph.arrow-square-up-left.svg in Resources */ = {isa = PBXBuildFile; fileRef = 9EC5D157FC8977D3775EAB26 /* ph.arrow-square-up-left.svg */; };
 		6AD3262D7EC445B45F0491F3 /* ph.headphones.svg in Resources */ = {isa = PBXBuildFile; fileRef = 4C855ED6FF1671D1B17E1325 /* ph.headphones.svg */; };
@@ -2508,6 +2511,7 @@
 		BD7451D3B9C5BDBD30C02247 /* ph.user-rectangle.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 268EE23900AC7342CB2E597A /* ph.user-rectangle.fill.svg */; };
 		BD75AFF58ECDDE51AF673C05 /* ph.chart-pie.svg in Resources */ = {isa = PBXBuildFile; fileRef = 90A57104209D4B11D901B14A /* ph.chart-pie.svg */; };
 		BD8CC083B6C960CE92172856 /* PreferencesManager+Ordering.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F015059030FE61A6C4B4AE5 /* PreferencesManager+Ordering.swift */; };
+		BD9135A70B8B87D700928565 /* SensorStateMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0E79D6CEA76A3ABBBB02468 /* SensorStateMenuItem.swift */; };
 		BD99A842F0C8EDAD9D85038F /* ph.lightbulb.svg in Resources */ = {isa = PBXBuildFile; fileRef = 641B67C71630B41B1D3274E5 /* ph.lightbulb.svg */; };
 		BDB2AF940BB608A11A976278 /* DeviceResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2C2BA989A5E5FBD918CAD29 /* DeviceResolver.swift */; };
 		BDBA3ED8946F33D83E444B5F /* ph.dresser.svg in Resources */ = {isa = PBXBuildFile; fileRef = 1AB2547D2219AB5874BC1D6E /* ph.dresser.svg */; };
@@ -3144,6 +3148,7 @@
 		F07B9A6262126242932B6A7E /* ph.plug.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = CF35FF99CBD00837489C5E2C /* ph.plug.fill.svg */; };
 		F09606F34717EDE6F1A8C30C /* ph.cursor.svg in Resources */ = {isa = PBXBuildFile; fileRef = 5C3879CF2065137F7346C588 /* ph.cursor.svg */; };
 		F0D475122112E46686ADF3C1 /* SensorSummaryMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 117549B5BED7ADDFB473C53C /* SensorSummaryMenuItem.swift */; };
+		F0ED5BBECC6D5A822297D3E6 /* SensorStateMenuItemTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDE1327B194C979618F4F2DB /* SensorStateMenuItemTests.swift */; };
 		F130259043159F1FF4D17B76 /* ph.chat-centered-dots.svg in Resources */ = {isa = PBXBuildFile; fileRef = 5EE238A75A00AFD63D0ECAAB /* ph.chat-centered-dots.svg */; };
 		F1331F09C7C4AFB09AA94224 /* ph.crop.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 92427C26C8AA4BF2473FB4ED /* ph.crop.fill.svg */; };
 		F137149E2D3AAB259AD44FD2 /* ph.brackets-square.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 5E4B01E0EC973D301E53241D /* ph.brackets-square.fill.svg */; };
@@ -3556,6 +3561,7 @@
 		0E69277693B3AF193AEAE444 /* ph.speaker-low.fill.svg */ = {isa = PBXFileReference; path = "ph.speaker-low.fill.svg"; sourceTree = "<group>"; };
 		0E7584378ED036C84CD38261 /* ph.image.fill.svg */ = {isa = PBXFileReference; path = ph.image.fill.svg; sourceTree = "<group>"; };
 		0EDADD9ACBD9ABDE379187A9 /* ph.vibrate.fill.svg */ = {isa = PBXFileReference; path = ph.vibrate.fill.svg; sourceTree = "<group>"; };
+		0EDBF399E52E3764273DEA35 /* SensorKind.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorKind.swift; sourceTree = "<group>"; };
 		0EFB86A59D57A025B1F2DD31 /* ph.arrow-bend-up-right.svg */ = {isa = PBXFileReference; path = "ph.arrow-bend-up-right.svg"; sourceTree = "<group>"; };
 		0F0C3005C51BD6CEDA452635 /* ph.squares-four.svg */ = {isa = PBXFileReference; path = "ph.squares-four.svg"; sourceTree = "<group>"; };
 		0F1C6F6E263384E7E7CC159E /* ph.lego.svg */ = {isa = PBXFileReference; path = ph.lego.svg; sourceTree = "<group>"; };
@@ -5404,6 +5410,7 @@
 		A0A71F23392EA429CFBB9E34 /* CameraViewController+HomeAssistant.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CameraViewController+HomeAssistant.swift"; sourceTree = "<group>"; };
 		A0BE01D4BEA7AD285B4C4611 /* ph.selection.fill.svg */ = {isa = PBXFileReference; path = ph.selection.fill.svg; sourceTree = "<group>"; };
 		A0D6EC1D6BA90E4C8275802E /* ph.split-vertical.fill.svg */ = {isa = PBXFileReference; path = "ph.split-vertical.fill.svg"; sourceTree = "<group>"; };
+		A0E79D6CEA76A3ABBBB02468 /* SensorStateMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorStateMenuItem.swift; sourceTree = "<group>"; };
 		A0F6E6C3A10C8953AD414328 /* ph.chat-circle-dots.svg */ = {isa = PBXFileReference; path = "ph.chat-circle-dots.svg"; sourceTree = "<group>"; };
 		A0F7D45A6094C8C996325854 /* CameraViewController+Snapshots.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CameraViewController+Snapshots.swift"; sourceTree = "<group>"; };
 		A0FCC4E028BCDF117A3BDF43 /* ph.text-superscript.fill.svg */ = {isa = PBXFileReference; path = "ph.text-superscript.fill.svg"; sourceTree = "<group>"; };
@@ -6576,6 +6583,7 @@
 		FDB8E5CEA8BAB2F94290FA16 /* ph.flashlight.fill.svg */ = {isa = PBXFileReference; path = ph.flashlight.fill.svg; sourceTree = "<group>"; };
 		FDC026426437AD78358BA6A3 /* ph.hand-pointing.fill.svg */ = {isa = PBXFileReference; path = "ph.hand-pointing.fill.svg"; sourceTree = "<group>"; };
 		FDD5AD99E2B7ACCA5396303D /* ph.camera.fill.svg */ = {isa = PBXFileReference; path = ph.camera.fill.svg; sourceTree = "<group>"; };
+		FDE1327B194C979618F4F2DB /* SensorStateMenuItemTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorStateMenuItemTests.swift; sourceTree = "<group>"; };
 		FDE8566D48C2E7689A7D46BA /* ph.warning-diamond.svg */ = {isa = PBXFileReference; path = "ph.warning-diamond.svg"; sourceTree = "<group>"; };
 		FDED012396CEE0742A6D1A60 /* ph.volleyball.fill.svg */ = {isa = PBXFileReference; path = ph.volleyball.fill.svg; sourceTree = "<group>"; };
 		FDF05CD84774158836FE9A06 /* ph.skype-logo.svg */ = {isa = PBXFileReference; path = "ph.skype-logo.svg"; sourceTree = "<group>"; };
@@ -9981,6 +9989,7 @@
 				8D6209D5D4AF8B8C8228A9CB /* ProStatusCacheTests.swift */,
 				6FA15C35EE0393A2B3CB900A /* SceneMenuItemTests.swift */,
 				BBD728ACD46FED845464BDCA /* SecuritySystemMenuItemTests.swift */,
+				FDE1327B194C979618F4F2DB /* SensorStateMenuItemTests.swift */,
 				5886C22FD69CFE8D168F619B /* ServiceDataTests.swift */,
 				2F34BC0FC06EE9C93C6BC637 /* SwitchMenuItemTests.swift */,
 				A4588D4410C203F9FB823FC5 /* ThermostatMenuItemTests.swift */,
@@ -10099,6 +10108,8 @@
 				4374C26148C6FEAAFD207413 /* LockMenuItem.swift */,
 				A3AD56C9EA919B09E7896B55 /* SceneMenuItem.swift */,
 				FBD57CCBF703A5861D8AEFB0 /* SecuritySystemMenuItem.swift */,
+				0EDBF399E52E3764273DEA35 /* SensorKind.swift */,
+				A0E79D6CEA76A3ABBBB02468 /* SensorStateMenuItem.swift */,
 				117549B5BED7ADDFB473C53C /* SensorSummaryMenuItem.swift */,
 				28152E4867E889D98BD69E5A /* SlatMenuItem.swift */,
 				51B74BF9E1E02D2CF34C9F37 /* SwitchMenuItem.swift */,
@@ -13453,6 +13464,8 @@
 				0189B807373567481D495882 /* SceneMenuItem.swift in Sources */,
 				3C96631229D69FA5FF3AC750 /* SceneStateHelper.swift in Sources */,
 				680D90D25922D1D80083CFC7 /* SecuritySystemMenuItem.swift in Sources */,
+				274C2F2E6B4B39F9DD2B1CD3 /* SensorKind.swift in Sources */,
+				BD9135A70B8B87D700928565 /* SensorStateMenuItem.swift in Sources */,
 				F0D475122112E46686ADF3C1 /* SensorSummaryMenuItem.swift in Sources */,
 				721D0C78421B4D27A7722A00 /* SettingsCard.swift in Sources */,
 				EF12EC7487E4BF80E0595B48 /* SettingsSectionContainer.swift in Sources */,
@@ -13591,6 +13604,9 @@
 				99982E4387F3386B2896F384 /* SceneStateHelper.swift in Sources */,
 				0D1340AA633BF40EC7B797C4 /* SecuritySystemMenuItem.swift in Sources */,
 				02A44E3CB567D2F45BD9E9AD /* SecuritySystemMenuItemTests.swift in Sources */,
+				6AAF79381BEAA086E2B0C59E /* SensorKind.swift in Sources */,
+				31920E56BD0B08D97C57157B /* SensorStateMenuItem.swift in Sources */,
+				F0ED5BBECC6D5A822297D3E6 /* SensorStateMenuItemTests.swift in Sources */,
 				4DE21C1DE370423C77BB118D /* SensorSummaryMenuItem.swift in Sources */,
 				EB177BFC46F5251C608A5E6E /* ServiceDataTests.swift in Sources */,
 				9F6ADB69D964B6EDECD22CF9 /* SlatMenuItem.swift in Sources */,
@@ -13642,7 +13658,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_MAC_ICON_IN_CATALYST_APP = YES;
 				CODE_SIGN_ENTITLEMENTS = Itsyhome/Itsyhome.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 270;
+				CURRENT_PROJECT_VERSION = 26001;
 				DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER = NO;
 				INFOPLIST_FILE = Itsyhome/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Itsyhome;
@@ -13651,7 +13667,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.5.2;
+				MARKETING_VERSION = 2.6.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.nickustinov.itsyhome;
 				PRODUCT_NAME = Itsyhome;
 				SDKROOT = iphoneos;
@@ -13771,7 +13787,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_MAC_ICON_IN_CATALYST_APP = YES;
 				CODE_SIGN_ENTITLEMENTS = Itsyhome/Itsyhome.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 270;
+				CURRENT_PROJECT_VERSION = 26001;
 				DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER = NO;
 				INFOPLIST_FILE = Itsyhome/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Itsyhome;
@@ -13780,7 +13796,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.5.2;
+				MARKETING_VERSION = 2.6.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.nickustinov.itsyhome;
 				PRODUCT_NAME = Itsyhome;
 				SDKROOT = iphoneos;

@@ -25,6 +25,20 @@ enum IconResolver {
             ?? PhosphorIcon.defaultIconName(for: service.serviceType)
     }
 
+    /// State-aware icon for a binary sensor (menu row or pinned status item).
+    /// A user-chosen custom icon is always honoured (only its fill weight
+    /// reflects state); otherwise the central config's per-state glyphs are used
+    /// (e.g. door-open / door for a contact sensor), falling back to filling the
+    /// default icon when active.
+    static func sensorIcon(for service: ServiceData, active: Bool) -> NSImage? {
+        if PreferencesManager.shared.customIcon(for: service.uniqueIdentifier) != nil {
+            return icon(for: service, filled: active)
+        }
+        let mode = active ? "open" : "closed"
+        return PhosphorIcon.modeIcon(for: service.serviceType, mode: mode, filled: false)
+            ?? icon(for: service, filled: active)
+    }
+
     /// Get icon for a service by ID and type, checking custom icons first
     static func icon(forServiceId serviceId: String, serviceType: String, filled: Bool = false) -> NSImage? {
         if let customName = PreferencesManager.shared.customIcon(for: serviceId) {

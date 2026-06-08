@@ -11,6 +11,7 @@ class AdvancedSection: SettingsCard {
 
     private let temperaturePopUp = NSPopUpButton()
     private let simpleLightSwitch = NSSwitch()
+    private let sensorSummarySwitch = NSSwitch()
 
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -52,6 +53,20 @@ class AdvancedSection: SettingsCard {
         addContentToBox(lightBox, content: simpleLightRow)
         stackView.addArrangedSubview(lightBox)
         lightBox.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
+
+        // Sensor summary box
+        let sensorBox = createCardBox()
+        sensorSummarySwitch.controlSize = .mini
+        sensorSummarySwitch.target = self
+        sensorSummarySwitch.action = #selector(sensorSummarySwitchChanged)
+        let sensorRow = createSettingRow(
+            label: String(localized: "settings.advanced.sensor_summary", defaultValue: "Summarise temperature and humidity", bundle: .macOSBridge),
+            subtitle: String(localized: "settings.advanced.sensor_summary_subtitle", defaultValue: "When off, shows each sensor individually.", bundle: .macOSBridge),
+            control: sensorSummarySwitch
+        )
+        addContentToBox(sensorBox, content: sensorRow)
+        stackView.addArrangedSubview(sensorBox)
+        sensorBox.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
     }
 
     private func createCardBox() -> NSView {
@@ -88,6 +103,12 @@ class AdvancedSection: SettingsCard {
             let subtitleField = createLabel(subtitle, style: .caption)
             subtitleField.lineBreakMode = .byWordWrapping
             subtitleField.maximumNumberOfLines = 2
+            subtitleField.cell?.wraps = true
+            subtitleField.cell?.isScrollable = false
+            // Let the field shrink below its single-line width so long text wraps
+            // instead of widening the (fixed-width) settings window.
+            subtitleField.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+            subtitleField.setContentHuggingPriority(.defaultLow, for: .horizontal)
             labelStack.addArrangedSubview(subtitleField)
         }
 
@@ -117,6 +138,7 @@ class AdvancedSection: SettingsCard {
         default: temperaturePopUp.selectItem(at: 0)
         }
         simpleLightSwitch.state = PreferencesManager.shared.simpleLightControls ? .on : .off
+        sensorSummarySwitch.state = PreferencesManager.shared.sensorSummary ? .on : .off
     }
 
     @objc private func temperatureUnitChanged(_ sender: NSPopUpButton) {
@@ -126,5 +148,9 @@ class AdvancedSection: SettingsCard {
 
     @objc private func simpleLightSwitchChanged(_ sender: NSSwitch) {
         PreferencesManager.shared.simpleLightControls = sender.state == .on
+    }
+
+    @objc private func sensorSummarySwitchChanged(_ sender: NSSwitch) {
+        PreferencesManager.shared.sensorSummary = sender.state == .on
     }
 }

@@ -48,8 +48,13 @@ class AccessoriesSettingsView: NSView {
     var groupsByRoom: [String: [DeviceGroup]] = [:]
 
     let typeOrder = [ServiceTypes.lightbulb, ServiceTypes.switch, ServiceTypes.outlet, ServiceTypes.fan, ServiceTypes.fanV2,
-                     ServiceTypes.heaterCooler, ServiceTypes.thermostat, ServiceTypes.windowCovering,
-                     ServiceTypes.door, ServiceTypes.window, ServiceTypes.lock, ServiceTypes.garageDoorOpener]
+                     ServiceTypes.heaterCooler, ServiceTypes.thermostat, ServiceTypes.humidifierDehumidifier,
+                     ServiceTypes.airPurifier, ServiceTypes.windowCovering,
+                     ServiceTypes.door, ServiceTypes.window, ServiceTypes.lock, ServiceTypes.garageDoorOpener,
+                     ServiceTypes.valve, ServiceTypes.faucet, ServiceTypes.slat, ServiceTypes.securitySystem,
+                     ServiceTypes.contactSensor, ServiceTypes.motionSensor, ServiceTypes.occupancySensor,
+                     ServiceTypes.leakSensor, ServiceTypes.smokeSensor, ServiceTypes.carbonMonoxideSensor,
+                     ServiceTypes.carbonDioxideSensor, ServiceTypes.temperatureSensor, ServiceTypes.humiditySensor]
 
     // MARK: - Initialization
 

@@ -29,6 +29,13 @@ extension PinnedStatusItem {
             return securitySystemStatus(for: service)
         case ServiceTypes.airPurifier:
             return airPurifierStatus(for: service)
+        case ServiceTypes.temperatureSensor, ServiceTypes.humiditySensor:
+            return sensorReadingStatus(for: service)
+        case ServiceTypes.contactSensor, ServiceTypes.motionSensor,
+             ServiceTypes.occupancySensor, ServiceTypes.leakSensor,
+             ServiceTypes.smokeSensor, ServiceTypes.carbonMonoxideSensor,
+             ServiceTypes.carbonDioxideSensor:
+            return binarySensorStatus(for: service)
         default:
             // For lights, switches, outlets, fans, valves, etc. - check on/off state
             let isOn = getOnOffState(for: service)
@@ -236,6 +243,36 @@ extension PinnedStatusItem {
     private func airPurifierStatus(for service: ServiceData) -> (icon: NSImage?, text: String?) {
         let isActive = getOnOffState(for: service)
         return (IconResolver.icon(for: service, filled: isActive), nil)
+    }
+
+    /// Temperature / humidity sensor: show the formatted reading next to the icon.
+    private func sensorReadingStatus(for service: ServiceData) -> (icon: NSImage?, text: String?) {
+        guard let kind = SensorKind(serviceType: service.serviceType) else {
+            return (IconResolver.icon(for: service), nil)
+        }
+        var text: String?
+        if let idStr = kind.stateCharacteristicId(from: service), let id = UUID(uuidString: idStr),
+           let value = cachedValues[id].flatMap(ValueConversion.toDouble) {
+            text = kind.formattedValue(value)
+        }
+        return (IconResolver.icon(for: service), text)
+    }
+
+    /// Binary sensor: state-aware icon plus the current reading word (Open/
+    /// Closed, Smoke/Clear, Leak/Dry, ...) so a pinned sensor always shows its
+    /// state, not just when tripped. Text is omitted only until a value arrives.
+    private func binarySensorStatus(for service: ServiceData) -> (icon: NSImage?, text: String?) {
+        guard let kind = SensorKind(serviceType: service.serviceType) else {
+            return (IconResolver.icon(for: service), nil)
+        }
+        var active = false
+        var text: String?
+        if let idStr = kind.stateCharacteristicId(from: service), let id = UUID(uuidString: idStr),
+           let raw = cachedValues[id].flatMap(ValueConversion.toInt) {
+            active = raw == 1
+            text = active ? kind.stateLabels?.one : kind.stateLabels?.zero
+        }
+        return (IconResolver.sensorIcon(for: service, active: active), text)
     }
 
     func formatTemperature(_ celsius: Double) -> String {

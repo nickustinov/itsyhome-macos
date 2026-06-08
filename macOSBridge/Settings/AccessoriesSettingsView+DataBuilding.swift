@@ -54,7 +54,12 @@ extension AccessoriesSettingsView {
         }
 
         let preferences = PreferencesManager.shared
-        let sensorTypes: Set<String> = [ServiceTypes.temperatureSensor, ServiceTypes.humiditySensor]
+        // Temperature/humidity sensors are only rolled into the aggregate summary
+        // when it's enabled; with the summary off they are individual rows and
+        // must be manageable here like any other accessory.
+        let sensorTypes: Set<String> = preferences.sensorSummary
+            ? [ServiceTypes.temperatureSensor, ServiceTypes.humiditySensor]
+            : []
 
         servicesByRoom = [:]
         noRoomServices = []
@@ -128,7 +133,9 @@ extension AccessoriesSettingsView {
                         items.append(.accessory(service: service, roomHidden: isHidden, roomId: roomId))
                     }
                 } else {
-                    // Default: group services by type with auto separators
+                    // Default: group services by type with auto separators. All
+                    // read-only sensor types share a single section under one
+                    // divider, matching the menu (see MenuBuilder).
                     var servicesByType: [String: [ServiceData]] = [:]
                     for service in services {
                         servicesByType[service.serviceType, default: []].append(service)
@@ -140,18 +147,40 @@ extension AccessoriesSettingsView {
                         return i1 < i2
                     }
 
-                    var isFirstGroup = true
-                    for serviceType in sortedTypes {
-                        guard let typeServices = servicesByType[serviceType] else { continue }
+                    let sensorTypes: Set<String> = [
+                        ServiceTypes.contactSensor, ServiceTypes.motionSensor,
+                        ServiceTypes.occupancySensor, ServiceTypes.leakSensor,
+                        ServiceTypes.smokeSensor, ServiceTypes.carbonMonoxideSensor,
+                        ServiceTypes.carbonDioxideSensor,
+                        ServiceTypes.temperatureSensor, ServiceTypes.humiditySensor
+                    ]
 
+                    func appendServices(_ typeServices: [ServiceData]) {
+                        for service in typeServices.sorted(by: { $0.name < $1.name }) {
+                            items.append(.accessory(service: service, roomHidden: isHidden, roomId: roomId))
+                        }
+                    }
+
+                    var isFirstGroup = true
+                    for serviceType in sortedTypes where !sensorTypes.contains(serviceType) {
+                        guard let typeServices = servicesByType[serviceType] else { continue }
                         if !isFirstGroup {
                             items.append(.separator)
                         }
                         isFirstGroup = false
+                        appendServices(typeServices)
+                    }
 
-                        let sortedServices = typeServices.sorted { $0.name < $1.name }
-                        for service in sortedServices {
-                            items.append(.accessory(service: service, roomHidden: isHidden, roomId: roomId))
+                    // Sensor section: one divider, then every sensor row.
+                    let sensorTypesPresent = sortedTypes.filter { sensorTypes.contains($0) }
+                    if !sensorTypesPresent.isEmpty {
+                        if !isFirstGroup {
+                            items.append(.separator)
+                        }
+                        isFirstGroup = false
+                        for serviceType in sensorTypesPresent {
+                            guard let typeServices = servicesByType[serviceType] else { continue }
+                            appendServices(typeServices)
                         }
                     }
                 }

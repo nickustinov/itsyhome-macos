@@ -2,12 +2,15 @@
 //  SensorStateMenuItem.swift
 //  macOSBridge
 //
-//  Read-only menu row for a binary safety/occupancy sensor (contact, motion,
-//  occupancy, leak, smoke, carbon monoxide, carbon dioxide), styled like SensorSummaryMenuItem:
-//  an icon plus a two-line name / state block. Each kind shows its own state
-//  words (Open/Closed, Motion/Clear, Leak/Dry, ...). The icon is state-aware:
-//  contact sensors swap door-open / door via the central config's modeIcons,
-//  other kinds fill in when active, and a user's custom icon always wins.
+//  Read-only menu row for a single sensor, laid out like the other menu items:
+//  a small icon plus name on the left, with the reading right-aligned. Binary
+//  kinds (contact, motion, occupancy, leak, smoke, carbon monoxide, carbon
+//  dioxide) show a state word (Open/Closed, Motion/Clear, Leak/Dry, ...) with a
+//  state-aware icon; numeric kinds (temperature, humidity) show their formatted
+//  reading, used for individual rows when the aggregate summary is off. The
+//  aggregate temperature/humidity summary keeps its own two-column layout in
+//  SensorSummaryMenuItem. See SensorKind for the per-kind characteristic, words
+//  and formatting.
 //
 
 import AppKit
@@ -15,53 +18,6 @@ import AppKit
 class SensorStateMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable {
 
     weak var bridge: Mac2iOS?
-
-    /// The kind of binary sensor this row represents. Determines which
-    /// characteristic drives the state and which words label it.
-    private enum SensorKind {
-        case contact, motion, occupancy, leak, smoke, carbonMonoxide, carbonDioxide
-
-        init?(serviceType: String) {
-            switch serviceType {
-            case ServiceTypes.contactSensor: self = .contact
-            case ServiceTypes.motionSensor: self = .motion
-            case ServiceTypes.occupancySensor: self = .occupancy
-            case ServiceTypes.leakSensor: self = .leak
-            case ServiceTypes.smokeSensor: self = .smoke
-            case ServiceTypes.carbonMonoxideSensor: self = .carbonMonoxide
-            case ServiceTypes.carbonDioxideSensor: self = .carbonDioxide
-            default: return nil
-            }
-        }
-
-        /// The ServiceData field holding this kind's state characteristic UUID.
-        func stateCharacteristicId(from serviceData: ServiceData) -> String? {
-            switch self {
-            case .contact: return serviceData.contactSensorStateId
-            case .motion: return serviceData.motionDetectedId
-            case .occupancy: return serviceData.occupancyDetectedId
-            case .leak: return serviceData.leakDetectedId
-            case .smoke: return serviceData.smokeDetectedId
-            case .carbonMonoxide: return serviceData.carbonMonoxideDetectedId
-            case .carbonDioxide: return serviceData.carbonDioxideDetectedId
-            }
-        }
-
-        /// Display words for the raw characteristic value. HAP uses 1 for the
-        /// "active" reading on every one of these sensors (open / motion /
-        /// occupied / leak / smoke / CO / CO2) and 0 for the resting state.
-        var stateLabels: (one: String, zero: String) {
-            switch self {
-            case .contact: return ("Open", "Closed")
-            case .motion: return ("Motion", "Clear")
-            case .occupancy: return ("Occupied", "Clear")
-            case .leak: return ("Leak", "Dry")
-            case .smoke: return ("Smoke", "Clear")
-            case .carbonMonoxide: return ("CO", "Clear")
-            case .carbonDioxide: return ("CO2", "Clear")
-            }
-        }
-    }
 
     private let serviceData: ServiceData
     private let kind: SensorKind
@@ -75,8 +31,8 @@ class SensorStateMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRe
         stateCharacteristicId.map { [$0] } ?? []
     }
 
-    /// The currently displayed state word (e.g. "Open", "Leak", "—"). Exposed
-    /// for tests; the underlying label stays private.
+    /// The currently displayed reading (e.g. "Open", "Leak", "21.5°", "—").
+    /// Exposed for tests; the underlying label stays private.
     var displayedState: String { valueLabel.stringValue }
 
     init(serviceData: ServiceData, bridge: Mac2iOS?) {
@@ -87,42 +43,45 @@ class SensorStateMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRe
         self.stateCharacteristicId = kind.stateCharacteristicId(from: serviceData)
             .flatMap { UUID(uuidString: $0) }
 
-        let itemHeight: CGFloat = 44
+        // Single-line row matching the other menu items: small icon + name on
+        // the left, reading right-aligned. (The aggregate temperature/humidity
+        // summary keeps its own taller two-column layout in SensorSummaryMenuItem.)
+        let height = DS.ControlSize.menuItemHeight
         containerView = HighlightingMenuItemView(
-            frame: NSRect(x: 0, y: 0, width: DS.ControlSize.menuItemWidth, height: itemHeight))
+            frame: NSRect(x: 0, y: 0, width: DS.ControlSize.menuItemWidth, height: height))
 
-        let iconSize: CGFloat = 24
-        var currentX = DS.Spacing.md
-
-        // Icon (scaled to fit by the image view)
-        iconView = NSImageView(frame: NSRect(x: currentX, y: 8, width: iconSize, height: iconSize))
-        iconView.contentTintColor = .secondaryLabelColor
+        // Icon
+        let iconY = (height - DS.ControlSize.iconMedium) / 2
+        iconView = NSImageView(frame: NSRect(x: DS.Spacing.md, y: iconY, width: DS.ControlSize.iconMedium, height: DS.ControlSize.iconMedium))
+        iconView.contentTintColor = DS.Colors.iconForeground
         iconView.imageScaling = .scaleProportionallyUpOrDown
         containerView.addSubview(iconView)
-        // Icon is set by setState(nil) below, once the row reflects its state.
+        // Icon image is set by apply(nil) below, once the row reflects its state.
 
-        currentX += iconSize + DS.Spacing.xs
-        let textWidth = DS.ControlSize.menuItemWidth - currentX - DS.Spacing.md
-
-        // Name (top)
-        let titleLabel = NSTextField(labelWithString: serviceData.name)
-        titleLabel.frame = NSRect(x: currentX, y: itemHeight - 10 - 12, width: textWidth, height: 12)
-        titleLabel.font = DS.Typography.labelSmall
-        titleLabel.textColor = .secondaryLabelColor
-        titleLabel.lineBreakMode = .byTruncatingTail
-        containerView.addSubview(titleLabel)
-
-        // State (bottom)
+        // Reading label (right-aligned)
+        let labelY = (height - 17) / 2
+        let valueWidth: CGFloat = 80
+        let valueX = DS.ControlSize.menuItemWidth - valueWidth - DS.Spacing.md
         valueLabel = NSTextField(labelWithString: "—")
-        valueLabel.frame = NSRect(x: currentX, y: 6, width: textWidth, height: 14)
+        valueLabel.frame = NSRect(x: valueX, y: labelY - 1, width: valueWidth, height: 17)
         valueLabel.font = DS.Typography.labelSmall
         valueLabel.textColor = .secondaryLabelColor
+        valueLabel.alignment = .right
         containerView.addSubview(valueLabel)
+
+        // Name label (fills space up to the reading)
+        let labelX = DS.Spacing.md + DS.ControlSize.iconMedium + DS.Spacing.sm
+        let titleLabel = NSTextField(labelWithString: serviceData.name)
+        titleLabel.frame = NSRect(x: labelX, y: labelY, width: valueX - labelX - DS.Spacing.xs, height: 17)
+        titleLabel.font = DS.Typography.label
+        titleLabel.textColor = DS.Colors.foreground
+        titleLabel.lineBreakMode = .byTruncatingTail
+        containerView.addSubview(titleLabel)
 
         super.init(title: "", action: nil, keyEquivalent: "")
         self.view = containerView
 
-        setState(nil)
+        apply(nil)
     }
 
     required init(coder: NSCoder) {
@@ -133,32 +92,29 @@ class SensorStateMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRe
 
     func updateValue(for characteristicId: UUID, value: Any, isLocalChange: Bool = false) {
         guard characteristicId == stateCharacteristicId else { return }
-        setState(ValueConversion.toInt(value))
+        apply(value)
     }
 
     // MARK: - Display
 
-    private func setState(_ raw: Int?) {
-        let labels = kind.stateLabels
-        switch raw {
-        case 1: valueLabel.stringValue = labels.one
-        case 0: valueLabel.stringValue = labels.zero
-        default: valueLabel.stringValue = "—"
-        }
-        updateIcon(active: raw == 1)
-    }
-
-    /// Resolve the row icon for the current state. A user-chosen custom icon is
-    /// always honoured (only its fill weight reflects state); otherwise the
-    /// central config's per-state glyphs are used (e.g. door-open / door for a
-    /// contact sensor), falling back to filling the default icon when active.
-    private func updateIcon(active: Bool) {
-        if PreferencesManager.shared.customIcon(for: serviceData.uniqueIdentifier) != nil {
-            iconView.image = IconResolver.icon(for: serviceData, filled: active)
+    /// Update the value label and icon for a raw characteristic value (nil
+    /// shows the placeholder). Numeric kinds format the reading; binary kinds
+    /// map 1/0 to their state words and drive a state-aware icon.
+    private func apply(_ value: Any?) {
+        if kind.isNumeric {
+            valueLabel.stringValue = value.flatMap(ValueConversion.toDouble)
+                .flatMap(kind.formattedValue) ?? "—"
+            iconView.image = IconResolver.icon(for: serviceData)
             return
         }
-        let mode = active ? "open" : "closed"
-        iconView.image = PhosphorIcon.modeIcon(for: serviceData.serviceType, mode: mode, filled: false)
-            ?? IconResolver.icon(for: serviceData, filled: active)
+        let raw = value.flatMap(ValueConversion.toInt)
+        if let labels = kind.stateLabels {
+            switch raw {
+            case 1: valueLabel.stringValue = labels.one
+            case 0: valueLabel.stringValue = labels.zero
+            default: valueLabel.stringValue = "—"
+            }
+        }
+        iconView.image = IconResolver.sensorIcon(for: serviceData, active: raw == 1)
     }
 }
