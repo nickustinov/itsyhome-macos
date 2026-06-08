@@ -57,4 +57,48 @@ final class ServiceDataTests: XCTestCase {
         let result = service.strippingRoomName("Bedroom")
         XCTAssertEqual(result.name, "Kitchen Light")
     }
+
+    // MARK: - Binary sensor characteristic ids (Codable round-trip)
+
+    // ServiceData crosses the iOS <-> macOSBridge process boundary as JSON, so
+    // the detected-state characteristic ids must survive encode + decode.
+    func testBinarySensorCharacteristicIdsRoundTripThroughCodable() throws {
+        let motion = UUID(), contact = UUID(), occupancy = UUID()
+        let leak = UUID(), smoke = UUID(), co = UUID(), co2 = UUID()
+
+        let original = ServiceData(
+            uniqueIdentifier: UUID(),
+            name: "Sensors",
+            serviceType: ServiceTypes.leakSensor,
+            accessoryName: "Sensors",
+            roomIdentifier: nil,
+            motionDetectedId: motion,
+            contactSensorStateId: contact,
+            occupancyDetectedId: occupancy,
+            leakDetectedId: leak,
+            smokeDetectedId: smoke,
+            carbonMonoxideDetectedId: co,
+            carbonDioxideDetectedId: co2
+        )
+
+        let encoded = try JSONEncoder().encode(original)
+        let decoded = try JSONDecoder().decode(ServiceData.self, from: encoded)
+
+        XCTAssertEqual(decoded.motionDetectedId, motion.uuidString)
+        XCTAssertEqual(decoded.contactSensorStateId, contact.uuidString)
+        XCTAssertEqual(decoded.occupancyDetectedId, occupancy.uuidString)
+        XCTAssertEqual(decoded.leakDetectedId, leak.uuidString)
+        XCTAssertEqual(decoded.smokeDetectedId, smoke.uuidString)
+        XCTAssertEqual(decoded.carbonMonoxideDetectedId, co.uuidString)
+        XCTAssertEqual(decoded.carbonDioxideDetectedId, co2.uuidString)
+    }
+
+    func testBinarySensorCharacteristicIdsDefaultToNil() {
+        let service = makeService(name: "Plain Light")
+        XCTAssertNil(service.occupancyDetectedId)
+        XCTAssertNil(service.leakDetectedId)
+        XCTAssertNil(service.smokeDetectedId)
+        XCTAssertNil(service.carbonMonoxideDetectedId)
+        XCTAssertNil(service.carbonDioxideDetectedId)
+    }
 }

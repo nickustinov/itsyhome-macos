@@ -116,6 +116,12 @@ struct ServiceState: Encodable {
     var saturation: Double?
     var locked: Bool?
     var doorState: String?
+    // Binary safety / occupancy sensors (contact, motion, occupancy, leak,
+    // smoke, carbon monoxide, carbon dioxide). True = the sensor's active
+    // reading (HAP raw value 1): motion/occupied/leak/smoke/CO/CO2 present, or
+    // - for a contact sensor - the contact is open (ContactSensorState 1 =
+    // "not detected").
+    var detected: Bool?
     var speed: Double?
     // Min/Max for stepped rotation-speed characteristics. HomeKit fans can
     // override the default 0–100 range (e.g. 0–6 for a 6-speed ceiling fan);

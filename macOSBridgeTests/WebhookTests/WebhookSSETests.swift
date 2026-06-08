@@ -72,6 +72,35 @@ final class WebhookSSETests: XCTestCase {
         XCTAssertNil(index[UUID().uuidString])
     }
 
+    // Without an index entry, publishCharacteristicChange drops the event, so a
+    // gap here means the sensor never reaches /events. Guard every binary kind.
+    func testCharacteristicIndexIncludesBinarySensors() {
+        let cases: [(charId: UUID, type: String, characteristicName: String, deviceType: String)] = [
+            (UUID(), ServiceTypes.contactSensor, "contact-sensor-state", "contact-sensor"),
+            (UUID(), ServiceTypes.motionSensor, "motion-detected", "motion-sensor"),
+            (UUID(), ServiceTypes.occupancySensor, "occupancy-detected", "occupancy-sensor"),
+            (UUID(), ServiceTypes.leakSensor, "leak-detected", "leak-sensor"),
+            (UUID(), ServiceTypes.smokeSensor, "smoke-detected", "smoke-sensor"),
+            (UUID(), ServiceTypes.carbonMonoxideSensor, "carbon-monoxide-detected", "carbon-monoxide-sensor"),
+            (UUID(), ServiceTypes.carbonDioxideSensor, "carbon-dioxide-detected", "carbon-dioxide-sensor")
+        ]
+        server.rebuildCharacteristicIndex(from: makeSensorMenuData(cases.map { (type: $0.type, charId: $0.charId) }))
+
+        // rebuildCharacteristicIndex applies on the serial queue; enqueueing
+        // after it guarantees the new index is in place before we read it.
+        let applied = expectation(description: "index applied")
+        server.dispatchOnQueue { applied.fulfill() }
+        wait(for: [applied], timeout: 2)
+
+        let index = server.characteristicIndex
+        for c in cases {
+            let context = index[c.charId.uuidString]
+            XCTAssertNotNil(context, "no index entry for \(c.deviceType)")
+            XCTAssertEqual(context?.characteristicName, c.characteristicName)
+            XCTAssertEqual(context?.deviceType, c.deviceType)
+        }
+    }
+
     // MARK: - SSE connection tests
 
     func testSSEConnectionReceivesHeaders() {
@@ -257,6 +286,44 @@ final class WebhookSSETests: XCTestCase {
     }
 
     // MARK: - Test data
+
+    /// One accessory per (serviceType, charId), routing the char id to the
+    /// ServiceData field matching its type. Used to exercise the SSE index.
+    private func makeSensorMenuData(_ sensors: [(type: String, charId: UUID)]) -> MenuData {
+        let roomId = UUID()
+        let services: [ServiceData] = sensors.enumerated().map { index, sensor in
+            ServiceData(
+                uniqueIdentifier: UUID(),
+                name: "Sensor \(index)",
+                serviceType: sensor.type,
+                accessoryName: "Sensor \(index)",
+                roomIdentifier: roomId,
+                motionDetectedId: sensor.type == ServiceTypes.motionSensor ? sensor.charId : nil,
+                contactSensorStateId: sensor.type == ServiceTypes.contactSensor ? sensor.charId : nil,
+                occupancyDetectedId: sensor.type == ServiceTypes.occupancySensor ? sensor.charId : nil,
+                leakDetectedId: sensor.type == ServiceTypes.leakSensor ? sensor.charId : nil,
+                smokeDetectedId: sensor.type == ServiceTypes.smokeSensor ? sensor.charId : nil,
+                carbonMonoxideDetectedId: sensor.type == ServiceTypes.carbonMonoxideSensor ? sensor.charId : nil,
+                carbonDioxideDetectedId: sensor.type == ServiceTypes.carbonDioxideSensor ? sensor.charId : nil
+            )
+        }
+        let accessories = services.map { svc in
+            AccessoryData(
+                uniqueIdentifier: UUID(),
+                name: svc.name,
+                roomIdentifier: roomId,
+                services: [svc],
+                isReachable: true
+            )
+        }
+        return MenuData(
+            homes: [HomeData(uniqueIdentifier: UUID(), name: "Home", isPrimary: true)],
+            rooms: [RoomData(uniqueIdentifier: roomId, name: "Hall")],
+            accessories: accessories,
+            scenes: [],
+            selectedHomeId: nil
+        )
+    }
 
     private func createTestMenuData() -> MenuData {
         let serviceId = UUID()

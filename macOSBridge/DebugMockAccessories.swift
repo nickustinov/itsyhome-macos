@@ -71,6 +71,18 @@ enum DebugMockups {
                     // Mock valve is "in use" (water flowing)
                     valveItem.updateValue(for: inUseId, value: true)
                 }
+
+                if let sensorItem = item as? SensorStateMenuItem {
+                    // Show the "active" reading (open / motion / leak / ...) so
+                    // the tripped state and its icon are visible while testing.
+                    let stateIdStr = service.contactSensorStateId ?? service.motionDetectedId
+                        ?? service.occupancyDetectedId ?? service.leakDetectedId
+                        ?? service.smokeDetectedId ?? service.carbonMonoxideDetectedId
+                        ?? service.carbonDioxideDetectedId
+                    if let stateId = stateIdStr.flatMap({ UUID(uuidString: $0) }) {
+                        sensorItem.updateValue(for: stateId, value: 1)
+                    }
+                }
             }
         }
         menu.addItem(NSMenuItem.separator())
@@ -310,6 +322,62 @@ enum DebugMockups {
                 roomIdentifier: nil,
                 currentPositionId: UUID(),
                 targetPositionId: UUID()
+            ),
+            ServiceData(
+                uniqueIdentifier: UUID(),
+                name: "Mock Contact (Door)",
+                serviceType: ServiceTypes.contactSensor,
+                accessoryName: "Mock",
+                roomIdentifier: nil,
+                contactSensorStateId: UUID()
+            ),
+            ServiceData(
+                uniqueIdentifier: UUID(),
+                name: "Mock Motion",
+                serviceType: ServiceTypes.motionSensor,
+                accessoryName: "Mock",
+                roomIdentifier: nil,
+                motionDetectedId: UUID()
+            ),
+            ServiceData(
+                uniqueIdentifier: UUID(),
+                name: "Mock Occupancy",
+                serviceType: ServiceTypes.occupancySensor,
+                accessoryName: "Mock",
+                roomIdentifier: nil,
+                occupancyDetectedId: UUID()
+            ),
+            ServiceData(
+                uniqueIdentifier: UUID(),
+                name: "Mock Leak",
+                serviceType: ServiceTypes.leakSensor,
+                accessoryName: "Mock",
+                roomIdentifier: nil,
+                leakDetectedId: UUID()
+            ),
+            ServiceData(
+                uniqueIdentifier: UUID(),
+                name: "Mock Smoke",
+                serviceType: ServiceTypes.smokeSensor,
+                accessoryName: "Mock",
+                roomIdentifier: nil,
+                smokeDetectedId: UUID()
+            ),
+            ServiceData(
+                uniqueIdentifier: UUID(),
+                name: "Mock CO",
+                serviceType: ServiceTypes.carbonMonoxideSensor,
+                accessoryName: "Mock",
+                roomIdentifier: nil,
+                carbonMonoxideDetectedId: UUID()
+            ),
+            ServiceData(
+                uniqueIdentifier: UUID(),
+                name: "Mock CO2",
+                serviceType: ServiceTypes.carbonDioxideSensor,
+                accessoryName: "Mock",
+                roomIdentifier: nil,
+                carbonDioxideDetectedId: UUID()
             ),
             ServiceData(
                 uniqueIdentifier: UUID(),

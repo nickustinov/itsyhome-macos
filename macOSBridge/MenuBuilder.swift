@@ -544,6 +544,12 @@ class MenuBuilder {
         case ServiceTypes.slat:
             menuItem = SlatMenuItem(serviceData: service, bridge: bridge)
 
+        case ServiceTypes.contactSensor, ServiceTypes.motionSensor,
+             ServiceTypes.occupancySensor, ServiceTypes.leakSensor,
+             ServiceTypes.smokeSensor, ServiceTypes.carbonMonoxideSensor,
+             ServiceTypes.carbonDioxideSensor:
+            menuItem = SensorStateMenuItem(serviceData: service, bridge: bridge)
+
         default:
             let item = NSMenuItem(title: service.name, action: nil, keyEquivalent: "")
             item.image = IconResolver.icon(for: service)
