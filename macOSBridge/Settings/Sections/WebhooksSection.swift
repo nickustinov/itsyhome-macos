@@ -13,6 +13,7 @@ class WebhooksSection: SettingsCard {
     private var statusLabel: NSTextField!
     private var addressLabel: NSTextField!
     private var portField: NSTextField!
+    private var bindAddressField: NSTextField!
 
     private let actions: [(action: String, format: String, example: String)] = [
         ("Toggle", "toggle/<Room>/<Device>", "toggle/Office/Spotlights"),
@@ -247,6 +248,32 @@ class WebhooksSection: SettingsCard {
         portRow.addArrangedSubview(portField)
         stack.addArrangedSubview(portRow)
 
+        // Bind address row
+        let bindRow = NSStackView()
+        bindRow.orientation = .horizontal
+        bindRow.spacing = 6
+        bindRow.alignment = .centerY
+
+        let bindTitle = createLabel(String(localized: "settings.webhooks.bind_label", defaultValue: "Bind:", bundle: .macOSBridge), style: .body)
+        bindTitle.translatesAutoresizingMaskIntoConstraints = false
+        bindTitle.widthAnchor.constraint(equalToConstant: labelWidth).isActive = true
+        bindAddressField = NSTextField()
+        bindAddressField.font = NSFont.monospacedSystemFont(ofSize: 11, weight: .regular)
+        bindAddressField.placeholderString = "All interfaces"
+        bindAddressField.stringValue = WebhookServer.configuredBindAddress ?? ""
+        bindAddressField.translatesAutoresizingMaskIntoConstraints = false
+        bindAddressField.widthAnchor.constraint(equalToConstant: 140).isActive = true
+        bindAddressField.target = self
+        bindAddressField.action = #selector(bindAddressChanged)
+
+        bindRow.addArrangedSubview(bindTitle)
+        bindRow.addArrangedSubview(bindAddressField)
+        stack.addArrangedSubview(bindRow)
+
+        let restartHint = createLabel("Address/port changes apply on next app launch.", style: .caption)
+        restartHint.textColor = .tertiaryLabelColor
+        stack.addArrangedSubview(restartHint)
+
         return stack
     }
 
@@ -426,6 +453,22 @@ class WebhooksSection: SettingsCard {
                 WebhookServer.shared.start()
             }
         }
+    }
+
+    @objc private func bindAddressChanged(_ sender: NSTextField) {
+        let trimmed = sender.stringValue.trimmingCharacters(in: .whitespaces)
+        if trimmed.isEmpty {
+            UserDefaults.standard.removeObject(forKey: WebhookServer.bindAddressKey)
+            sender.stringValue = ""
+            return
+        }
+        guard WebhookServer.isValidIPAddress(trimmed) else {
+            // Reject invalid input; restore last valid value.
+            sender.stringValue = WebhookServer.configuredBindAddress ?? ""
+            return
+        }
+        UserDefaults.standard.set(trimmed, forKey: WebhookServer.bindAddressKey)
+        sender.stringValue = trimmed
     }
 
     @objc private func statusDidChange() {
