@@ -9659,6 +9659,17 @@
         }
       }
     },
+    "settings.automations.title" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Automations"
+          }
+        }
+      }
+    },
     "settings.cameras.add_accessory" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -13692,6 +13703,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "家庭"
+          }
+        }
+      }
+    },
+    "settings.homekit_bridge.title" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "HomeKit Bridge"
           }
         }
       }

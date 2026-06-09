@@ -119,9 +119,13 @@ final class ProManager: ObservableObject {
         if hasProEntitlement {
             CloudSyncManager.shared.startListening()
             WebhookServer.shared.startIfEnabled()
+            VirtualBridgeService.shared.startIfEnabled()
+            AutomationEngine.shared.startIfEnabled()
         } else {
             CloudSyncManager.shared.stopListening()
             WebhookServer.shared.stop()
+            Task { await VirtualBridgeService.shared.stop() }
+            AutomationEngine.shared.stop()
         }
     }
 
