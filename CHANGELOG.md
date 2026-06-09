@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.6.1
+
+- Fix battery indicator not showing for Home Assistant devices – HA battery sensors are usually marked "diagnostic" and were hidden by the entity category filter before the badge could read them; battery sensors are now resolved from the full entity list so the badge appears regardless of the filter (#113-adjacent)
+- Reduce idle battery/CPU usage – characteristic updates from chatty bridges no longer walk the (hidden) menu while the dropdown is closed; pinned menu-bar items and webhook clients still update live, and the menu refreshes its values when opened (#113)
+- Fix colour changes on Govee/Matter lights being ignored – hue is now written after saturation so the hue value is the one that sticks on Matter bridges, while keeping the small delay that prevents wrong colours on Philips Hue (#127)
+
 ## 2.6.0
 
 - Sensors in the menu – contact, motion, occupancy, leak, smoke, carbon monoxide and carbon dioxide sensors now appear as read-only rows showing their state (Open/Closed, Motion/Clear, Leak/Dry, Smoke/Clear, ...) with state-aware icons (#32)

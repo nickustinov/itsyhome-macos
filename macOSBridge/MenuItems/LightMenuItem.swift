@@ -459,15 +459,20 @@ class LightMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
         lastColorSource = "rgb"
         updateSliderColor()
         if commit {
-            if let hueId = hueCharacteristicId {
-                bridge?.writeCharacteristic(identifier: hueId, value: Float(newHue))
-                notifyLocalChange(characteristicId: hueId, value: Float(newHue))
-            }
+            // Write saturation first, then hue 150ms later. The delay (added in
+            // 2.4.1) keeps the two writes from being simultaneous, which made
+            // Philips Hue bulbs land on the wrong colour. Hue goes LAST so that
+            // on Govee/Matter bridges — where a later write overrides an earlier
+            // one — the hue value is the one that sticks, so colour changes apply
+            // instead of only brightness/saturation moving (#127).
             if let satId = saturationCharacteristicId {
-                // Delay saturation write so the bridge finishes processing hue first
+                bridge?.writeCharacteristic(identifier: satId, value: Float(newSat))
+                notifyLocalChange(characteristicId: satId, value: Float(newSat))
+            }
+            if let hueId = hueCharacteristicId {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { [weak self] in
-                    self?.bridge?.writeCharacteristic(identifier: satId, value: Float(newSat))
-                    self?.notifyLocalChange(characteristicId: satId, value: Float(newSat))
+                    self?.bridge?.writeCharacteristic(identifier: hueId, value: Float(newHue))
+                    self?.notifyLocalChange(characteristicId: hueId, value: Float(newHue))
                 }
             }
         }

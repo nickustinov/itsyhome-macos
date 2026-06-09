@@ -12,17 +12,23 @@ extension MacOSController {
     // MARK: - Menu Updates
 
     func updateMenuItems(for characteristicId: UUID, value: Any, isLocalChange: Bool) {
+        // Pinned status items (visible in the menu bar) and SSE clients always
+        // need live updates, regardless of whether the dropdown is open.
+        updatePinnedStatusItems(for: characteristicId, value: value)
+        WebhookServer.shared.publishCharacteristicChange(characteristicId: characteristicId, value: value)
+
+        // The dropdown's rows aren't visible while it's closed, and menuWillOpen
+        // re-reads every characteristic via refreshCharacteristics(), so skip the
+        // recursive menu/scene walk when idle. This avoids constant main-thread
+        // work from chatty bridges that kept the app awake and drained battery
+        // (#113). Local changes happen with the menu open, so they still apply.
+        guard menuIsOpen || isLocalChange else { return }
+
         updateMenuItemsRecursively(in: mainMenu, characteristicId: characteristicId, value: value, isLocalChange: isLocalChange)
 
         for sceneItem in menuBuilder.sceneMenuItems {
             sceneItem.updateValue(for: characteristicId, value: value, isLocalChange: isLocalChange)
         }
-
-        // Update pinned status items
-        updatePinnedStatusItems(for: characteristicId, value: value)
-
-        // Publish to SSE clients
-        WebhookServer.shared.publishCharacteristicChange(characteristicId: characteristicId, value: value)
     }
 
     func updatePinnedStatusItems(for characteristicId: UUID, value: Any) {

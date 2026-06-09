@@ -1213,6 +1213,28 @@ final class EntityMapperTests: XCTestCase {
         XCTAssertEqual(lightService?.batteryLevelId, mapper.characteristicUUID("sensor.lamp_battery", "sensor_reading").uuidString)
     }
 
+    // Battery sensors are usually entity_category "diagnostic" and hidden by the
+    // default filter; they must still badge their device's rows (#2.6.0 bug).
+    func testHADiagnosticBatterySensorStillBadges() {
+        let defaults = UserDefaults.standard
+        let prev = defaults.string(forKey: "entityCategoryFilter")
+        defaults.set("hideAll", forKey: "entityCategoryFilter")
+        defer {
+            if let prev { defaults.set(prev, forKey: "entityCategoryFilter") }
+            else { defaults.removeObject(forKey: "entityCategoryFilter") }
+        }
+
+        let light = createEntityState(entityId: "light.lamp", state: "on", attributes: ["friendly_name": "Lamp"])
+        let battery = createEntityState(entityId: "sensor.lamp_battery", state: "55", attributes: ["device_class": "battery", "unit_of_measurement": "%"])
+        let batteryReg = HAEntityRegistryEntry(json: ["entity_id": "sensor.lamp_battery", "platform": "test", "device_id": "devA", "entity_category": "diagnostic"])!
+        mapper.loadData(states: [light, battery], entities: [registryEntry("light.lamp", deviceId: "devA"), batteryReg], devices: [], areas: [])
+
+        let services = mapper.generateMenuData().accessories.flatMap { $0.services }
+        XCTAssertEqual(services.count, 1, "diagnostic battery is filtered from rows but the light remains")
+        XCTAssertEqual(services.first?.haEntityId, "light.lamp")
+        XCTAssertEqual(services.first?.batteryLevelId, mapper.characteristicUUID("sensor.lamp_battery", "sensor_reading").uuidString)
+    }
+
     // A device that is only a battery sensor still shows as a normal sensor row.
     func testHABatteryOnlyDeviceShownAsSensor() {
         let battery = createEntityState(entityId: "sensor.leak_battery", state: "75", attributes: ["device_class": "battery", "unit_of_measurement": "%"])

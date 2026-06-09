@@ -195,6 +195,17 @@ final class EntityMapper {
 
         logger.info("Grouped into \(deviceEntities.count) device groups")
 
+        // Battery sensors badge their device's other rows even though they're
+        // usually hidden by the entity-category filter (HA marks battery sensors
+        // as "diagnostic"), so collect them from the full, unfiltered state list.
+        var batteryByDevice: [String: HAEntityState] = [:]
+        for (entityId, state) in entityStates
+        where state.domain == "sensor" && state.deviceClass == "battery" && state.numericState != nil {
+            if let deviceId = entityRegistry[entityId]?.deviceId {
+                batteryByDevice[deviceId] = state
+            }
+        }
+
         // Convert to accessories
         var accessories: [AccessoryData] = []
         var roomAssignments: [String: Int] = [:]
@@ -203,8 +214,9 @@ final class EntityMapper {
             // A device's battery sensor is shown as a badge on its other rows
             // (like the iOS app) rather than as its own row. If the battery is
             // the only thing on the device, it stays a normal sensor row.
-            let batteryEntity = states.first {
-                $0.domain == "sensor" && $0.deviceClass == "battery" && $0.numericState != nil
+            var batteryEntity = deviceId.flatMap { batteryByDevice[$0] }
+            if batteryEntity == nil {
+                batteryEntity = states.first { $0.domain == "sensor" && $0.deviceClass == "battery" && $0.numericState != nil }
             }
             let batteryLevelId = batteryEntity.map { characteristicUUID($0.entityId, "sensor_reading") }
             let hasOtherSupported = states.contains {
