@@ -201,6 +201,9 @@ class WebhooksSection: SettingsCard {
         statusRow.alignment = .centerY
 
         let labelWidth: CGFloat = 60
+        // Uniform row height so label-only rows and control rows share the same
+        // vertical rhythm (the popup/field are taller than a bare label).
+        let rowHeight: CGFloat = 26
 
         let statusTitle = createLabel(String(localized: "settings.webhooks.status_label", defaultValue: "Status:", bundle: .macOSBridge), style: .body)
         statusTitle.translatesAutoresizingMaskIntoConstraints = false
@@ -208,6 +211,7 @@ class WebhooksSection: SettingsCard {
         statusLabel = createLabel(String(localized: "settings.webhooks.stopped", defaultValue: "Stopped", bundle: .macOSBridge), style: .body)
         statusRow.addArrangedSubview(statusTitle)
         statusRow.addArrangedSubview(statusLabel)
+        statusRow.heightAnchor.constraint(equalToConstant: rowHeight).isActive = true
         stack.addArrangedSubview(statusRow)
 
         // Address row
@@ -231,6 +235,7 @@ class WebhooksSection: SettingsCard {
         copyButton.controlSize = .mini
         copyButton.font = .systemFont(ofSize: 9)
         addressRow.addArrangedSubview(copyButton)
+        addressRow.heightAnchor.constraint(equalToConstant: rowHeight).isActive = true
 
         stack.addArrangedSubview(addressRow)
 
@@ -254,6 +259,7 @@ class WebhooksSection: SettingsCard {
 
         portRow.addArrangedSubview(portTitle)
         portRow.addArrangedSubview(portField)
+        portRow.heightAnchor.constraint(equalToConstant: rowHeight).isActive = true
         stack.addArrangedSubview(portRow)
 
         // Bind address row
@@ -279,6 +285,7 @@ class WebhooksSection: SettingsCard {
         bindRow.addArrangedSubview(bindTitle)
         bindRow.addArrangedSubview(bindPopup)
         bindRow.addArrangedSubview(applyButton)
+        bindRow.heightAnchor.constraint(equalToConstant: rowHeight).isActive = true
         stack.addArrangedSubview(bindRow)
 
         rebuildBindMenu()
