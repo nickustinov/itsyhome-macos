@@ -7,6 +7,7 @@
 
 import Foundation
 import Network
+import SystemConfiguration
 
 final class WebhookServer {
 
@@ -42,8 +43,11 @@ final class WebhookServer {
         return false
     }
 
-    let port: UInt16
-    let bindAddress: String?
+    private(set) var port: UInt16
+    private(set) var bindAddress: String?
+
+    /// Whether the user has switched the server on (independent of running state).
+    static var isEnabled: Bool { UserDefaults.standard.bool(forKey: enabledKey) }
 
     enum State: Equatable {
         case stopped
@@ -86,22 +90,64 @@ final class WebhookServer {
         start()
     }
 
+    /// Re-read the configured port + bind address and restart the listener so a
+    /// change takes effect immediately, without an app relaunch. If the server
+    /// is enabled it ends up running on the new endpoint (even when it was in an
+    /// error state); if disabled it just adopts the new values for next start.
+    func applyConfiguration() {
+        let adoptAndStart = { [weak self] in
+            guard let self else { return }
+            self.port = Self.configuredPort
+            self.bindAddress = Self.configuredBindAddress
+            self.startIfEnabled()
+        }
+
+        guard let current = listener else {
+            // Nothing bound yet - adopt the new values straight away.
+            adoptAndStart()
+            return
+        }
+
+        // Tear down the live listener and wait for it to fully cancel before
+        // rebinding: cancel() is async and the old socket still holds the port
+        // until it completes, so an immediate re-bind on the same port can fail.
+        disconnectAllSSEClients()
+        listener = nil
+        state = .stopped
+        current.stateUpdateHandler = { [weak current] newState in
+            guard case .cancelled = newState else { return }
+            current?.stateUpdateHandler = nil
+            DispatchQueue.main.async(execute: adoptAndStart)
+        }
+        current.cancel()
+    }
+
     func start() {
         guard listener == nil else { return }
 
         do {
             let params = NWParameters.tcp
             params.allowLocalEndpointReuse = true
+            let listener: NWListener
             if let addr = bindAddress {
+                // The required endpoint already carries the port; passing `on:` as
+                // well makes Network reject it with NWError 22 (invalid argument),
+                // so the listener must be created without the separate port here.
                 params.requiredLocalEndpoint = NWEndpoint.hostPort(
                     host: NWEndpoint.Host(addr),
                     port: NWEndpoint.Port(rawValue: port)!)
+                listener = try NWListener(using: params)
+            } else {
+                listener = try NWListener(using: params, on: NWEndpoint.Port(rawValue: port)!)
             }
-            let listener = try NWListener(using: params, on: NWEndpoint.Port(rawValue: port)!)
             self.listener = listener
 
-            listener.stateUpdateHandler = { [weak self] newState in
-                guard let self else { return }
+            listener.stateUpdateHandler = { [weak self, weak listener] newState in
+                guard let self, let listener else { return }
+                // Ignore callbacks from a listener we've already replaced: cancel()
+                // is async, so an old listener can report .cancelled after a new one
+                // is already .running and would otherwise clobber it back to stopped.
+                guard listener === self.listener else { return }
                 switch newState {
                 case .ready:
                     self.state = .running
@@ -127,6 +173,9 @@ final class WebhookServer {
 
     func stop() {
         disconnectAllSSEClients()
+        // Detach the handler before cancelling so this listener's async .cancelled
+        // callback can't fire later and overwrite a freshly started listener.
+        listener?.stateUpdateHandler = nil
         listener?.cancel()
         listener = nil
         state = .stopped
@@ -472,6 +521,65 @@ final class WebhookServer {
         }
 
         return address
+    }
+
+    /// Every IPv4 address currently assigned to an up, non-loopback interface,
+    /// paired with a friendly label ("Wi-Fi", "Ethernet", "Tailscale", …). Used
+    /// to populate the Bind picker so the user can only choose addresses this
+    /// Mac can actually bind to.
+    static func localIPAddresses() -> [(label: String, ip: String)] {
+        // BSD interface name (en0, en1, …) -> localized display name.
+        var displayNames: [String: String] = [:]
+        if let interfaces = SCNetworkInterfaceCopyAll() as? [SCNetworkInterface] {
+            for iface in interfaces {
+                if let bsd = SCNetworkInterfaceGetBSDName(iface) as String?,
+                   let name = SCNetworkInterfaceGetLocalizedDisplayName(iface) as String? {
+                    displayNames[bsd] = name
+                }
+            }
+        }
+
+        var ifaddr: UnsafeMutablePointer<ifaddrs>?
+        guard getifaddrs(&ifaddr) == 0, let firstAddr = ifaddr else { return [] }
+        defer { freeifaddrs(ifaddr) }
+
+        var results: [(label: String, ip: String)] = []
+        var seen = Set<String>()
+
+        for ptr in sequence(first: firstAddr, next: { $0.pointee.ifa_next }) {
+            let interface = ptr.pointee
+            guard interface.ifa_addr.pointee.sa_family == UInt8(AF_INET) else { continue }
+            let flags = Int32(interface.ifa_flags)
+            guard flags & IFF_UP == IFF_UP, flags & IFF_LOOPBACK == 0 else { continue }
+
+            let bsd = String(cString: interface.ifa_name)
+            var hostname = [CChar](repeating: 0, count: Int(NI_MAXHOST))
+            getnameinfo(interface.ifa_addr, socklen_t(interface.ifa_addr.pointee.sa_len),
+                        &hostname, socklen_t(hostname.count), nil, 0, NI_NUMERICHOST)
+            let ip = String(cString: hostname)
+            guard !ip.isEmpty, !seen.contains(ip) else { continue }
+            seen.insert(ip)
+
+            let label: String
+            if let name = displayNames[bsd] {
+                label = name
+            } else if isTailscaleAddress(ip) {
+                label = "Tailscale"
+            } else if bsd.hasPrefix("utun") || bsd.hasPrefix("ipsec") || bsd.hasPrefix("ppp") {
+                label = "VPN"
+            } else {
+                label = bsd
+            }
+            results.append((label: label, ip: ip))
+        }
+
+        return results
+    }
+
+    /// Tailscale hands out addresses in the 100.64.0.0/10 CGNAT range.
+    private static func isTailscaleAddress(_ ip: String) -> Bool {
+        let parts = ip.split(separator: ".").compactMap { Int($0) }
+        return parts.count == 4 && parts[0] == 100 && (64...127).contains(parts[1])
     }
 }
 

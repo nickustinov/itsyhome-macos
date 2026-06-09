@@ -15808,6 +15808,83 @@
         }
       }
     },
+    "settings.webhooks.apply" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Apply"
+          }
+        }
+      }
+    },
+    "settings.webhooks.bind_all" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "All interfaces"
+          }
+        }
+      }
+    },
+    "settings.webhooks.bind_custom" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Custom…"
+          }
+        }
+      }
+    },
+    "settings.webhooks.bind_custom_message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "A local IPv4 or IPv6 address this Mac can bind to."
+          }
+        }
+      }
+    },
+    "settings.webhooks.bind_custom_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Enter an IP address"
+          }
+        }
+      }
+    },
+    "settings.webhooks.bind_hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Limit which network the server listens on. Changes take effect when you click Apply."
+          }
+        }
+      }
+    },
+    "settings.webhooks.bind_invalid" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Not a valid IP address"
+          }
+        }
+      }
+    },
     "settings.webhooks.bind_label" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -15819,13 +15896,13 @@
         }
       }
     },
-    "settings.webhooks.bind_placeholder" : {
+    "settings.webhooks.bind_localhost" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "All interfaces"
+            "value" : "This Mac only (127.0.0.1)"
           }
         }
       }
@@ -15984,6 +16061,17 @@
         }
       }
     },
+    "settings.webhooks.error" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Error: %@"
+          }
+        }
+      }
+    },
     "settings.webhooks.port_label" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -16134,17 +16222,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "查詢端點"
-          }
-        }
-      }
-    },
-    "settings.webhooks.restart_hint" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Address/port changes apply on next app launch."
           }
         }
       }

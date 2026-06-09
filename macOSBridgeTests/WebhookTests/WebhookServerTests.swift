@@ -404,6 +404,52 @@ final class WebhookServerTests: XCTestCase {
         XCTAssertEqual(boundServer.state, .stopped)
     }
 
+    /// Regression: a bound listener used to fail with NWError 22 because the port
+    /// was specified both in `requiredLocalEndpoint` and the `on:` argument. It
+    /// must actually reach `.running`, not `.error`.
+    func testServerBoundToLoopbackReachesRunning() {
+        let boundServer = WebhookServer(port: 18425, bindAddress: "127.0.0.1")
+        boundServer.configure(actionEngine: engine)
+        defer { boundServer.stop() }
+        boundServer.start()
+
+        let started = expectation(description: "Bound server reaches running")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            XCTAssertEqual(boundServer.state, .running)
+            started.fulfill()
+        }
+        wait(for: [started], timeout: 2)
+    }
+
+    /// applyConfiguration re-reads the persisted port + bind address and rebinds
+    /// live, so a config change takes effect without recreating the singleton.
+    func testApplyConfigurationRebindsToNewPort() {
+        let originalPort = UserDefaults.standard.object(forKey: WebhookServer.portKey)
+        let originalEnabled = UserDefaults.standard.object(forKey: WebhookServer.enabledKey)
+        defer {
+            if let originalPort { UserDefaults.standard.set(originalPort, forKey: WebhookServer.portKey) }
+            else { UserDefaults.standard.removeObject(forKey: WebhookServer.portKey) }
+            if let originalEnabled { UserDefaults.standard.set(originalEnabled, forKey: WebhookServer.enabledKey) }
+            else { UserDefaults.standard.removeObject(forKey: WebhookServer.enabledKey) }
+        }
+
+        UserDefaults.standard.set(true, forKey: WebhookServer.enabledKey)
+        let svc = WebhookServer(port: 18426)
+        svc.configure(actionEngine: engine)
+        defer { svc.stop() }
+
+        UserDefaults.standard.set(18427, forKey: WebhookServer.portKey)
+        svc.applyConfiguration()
+
+        let applied = expectation(description: "Rebound to new port")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            XCTAssertEqual(svc.port, 18427)
+            XCTAssertEqual(svc.state, .running)
+            applied.fulfill()
+        }
+        wait(for: [applied], timeout: 2)
+    }
+
     // MARK: - IP address test
 
     func testLocalIPAddressReturnsNonNil() {

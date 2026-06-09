@@ -13,7 +13,15 @@ class WebhooksSection: SettingsCard {
     private var statusLabel: NSTextField!
     private var addressLabel: NSTextField!
     private var portField: NSTextField!
-    private var bindAddressField: NSTextField!
+    private var bindPopup: NSPopUpButton!
+    private var applyButton: NSButton!
+
+    /// Example URL fields ("<base>/<suffix>") refreshed whenever the bound
+    /// address changes, so every example below reflects the live endpoint.
+    private var exampleFields: [(field: NSTextField, copy: NSButton, suffix: String)] = []
+
+    /// Menu sentinel for the "Custom…" item in the Bind picker.
+    private static let customBindSentinel = "__custom__"
 
     private let actions: [(action: String, format: String, example: String)] = [
         ("Toggle", "toggle/<Room>/<Device>", "toggle/Office/Spotlights"),
@@ -257,22 +265,27 @@ class WebhooksSection: SettingsCard {
         let bindTitle = createLabel(String(localized: "settings.webhooks.bind_label", defaultValue: "Bind:", bundle: .macOSBridge), style: .body)
         bindTitle.translatesAutoresizingMaskIntoConstraints = false
         bindTitle.widthAnchor.constraint(equalToConstant: labelWidth).isActive = true
-        bindAddressField = NSTextField()
-        bindAddressField.font = NSFont.monospacedSystemFont(ofSize: 11, weight: .regular)
-        bindAddressField.placeholderString = String(localized: "settings.webhooks.bind_placeholder", defaultValue: "All interfaces", bundle: .macOSBridge)
-        bindAddressField.stringValue = WebhookServer.configuredBindAddress ?? ""
-        bindAddressField.translatesAutoresizingMaskIntoConstraints = false
-        bindAddressField.widthAnchor.constraint(equalToConstant: 140).isActive = true
-        bindAddressField.target = self
-        bindAddressField.action = #selector(bindAddressChanged)
+
+        bindPopup = NSPopUpButton(frame: .zero, pullsDown: false)
+        bindPopup.translatesAutoresizingMaskIntoConstraints = false
+        bindPopup.widthAnchor.constraint(greaterThanOrEqualToConstant: 200).isActive = true
+        bindPopup.target = self
+        bindPopup.action = #selector(bindPopupChanged)
+
+        applyButton = NSButton(title: String(localized: "settings.webhooks.apply", defaultValue: "Apply", bundle: .macOSBridge), target: self, action: #selector(applyTapped))
+        applyButton.bezelStyle = .rounded
+        applyButton.controlSize = .small
 
         bindRow.addArrangedSubview(bindTitle)
-        bindRow.addArrangedSubview(bindAddressField)
+        bindRow.addArrangedSubview(bindPopup)
+        bindRow.addArrangedSubview(applyButton)
         stack.addArrangedSubview(bindRow)
 
-        let restartHint = createLabel(String(localized: "settings.webhooks.restart_hint", defaultValue: "Address/port changes apply on next app launch.", bundle: .macOSBridge), style: .caption)
-        restartHint.textColor = .tertiaryLabelColor
-        stack.addArrangedSubview(restartHint)
+        rebuildBindMenu()
+
+        let hint = createLabel(String(localized: "settings.webhooks.bind_hint", defaultValue: "Limit which network the server listens on. Changes take effect when you click Apply.", bundle: .macOSBridge), style: .caption)
+        hint.textColor = .tertiaryLabelColor
+        stack.addArrangedSubview(hint)
 
         return stack
     }
@@ -301,6 +314,7 @@ class WebhooksSection: SettingsCard {
             copyButton.font = .systemFont(ofSize: 9)
             copyButton.toolTip = "\(baseURL)/\(example)"
 
+            exampleFields.append((field: exampleLabel, copy: copyButton, suffix: example))
             rows.append([actionLabel, exampleLabel, copyButton])
         }
 
@@ -337,6 +351,7 @@ class WebhooksSection: SettingsCard {
             copyButton.font = .systemFont(ofSize: 9)
             copyButton.toolTip = "\(baseURL)/\(path)"
 
+            exampleFields.append((field: pathLabel, copy: copyButton, suffix: path))
             rows.append([nameLabel, pathLabel, copyButton])
         }
 
@@ -376,8 +391,15 @@ class WebhooksSection: SettingsCard {
     }
 
     private func addressString() -> String {
-        let ip = WebhookServer.localIPAddress() ?? "localhost"
-        return "http://\(ip):\(WebhookServer.configuredPort)"
+        let port = WebhookServer.configuredPort
+        let host: String
+        if let bind = WebhookServer.configuredBindAddress {
+            // Bracket IPv6 literals for a valid URL.
+            host = bind.contains(":") ? "[\(bind)]" : bind
+        } else {
+            host = WebhookServer.localIPAddress() ?? "localhost"
+        }
+        return "http://\(host):\(port)"
     }
 
     // MARK: - State management
@@ -410,9 +432,76 @@ class WebhooksSection: SettingsCard {
             statusLabel.textColor = .systemGreen
             addressLabel.stringValue = addressString()
         case .error(let message):
-            statusLabel.stringValue = "Error: \(message)"
+            statusLabel.stringValue = String(localized: "settings.webhooks.error", defaultValue: "Error: \(message)", bundle: .macOSBridge)
             statusLabel.textColor = .systemRed
             addressLabel.stringValue = "—"
+        }
+
+        refreshExampleURLs()
+        refreshApplyState()
+    }
+
+    /// Rewrite every example URL to the current endpoint so they track the
+    /// bound address (e.g. switch from the LAN IP to 127.0.0.1).
+    private func refreshExampleURLs() {
+        let base = addressString()
+        for entry in exampleFields {
+            let url = "\(base)/\(entry.suffix)"
+            entry.field.stringValue = url
+            entry.copy.toolTip = url
+        }
+    }
+
+    /// Enable Apply only when the persisted config differs from what the server
+    /// is currently running (or when it errored, so the user can retry).
+    private func refreshApplyState() {
+        guard let applyButton, let bindPopup else { return }
+        let isPro = ProStatusCache.shared.isPro
+        let isEnabled = UserDefaults.standard.bool(forKey: WebhookServer.enabledKey)
+        let server = WebhookServer.shared
+        let changed = server.port != WebhookServer.configuredPort
+            || server.bindAddress != WebhookServer.configuredBindAddress
+        let errored: Bool = { if case .error = server.state { return true } else { return false } }()
+        bindPopup.isEnabled = isPro && isEnabled
+        applyButton.isEnabled = isPro && isEnabled && (changed || errored)
+    }
+
+    /// Build the Bind picker from the addresses this Mac can actually bind to.
+    private func rebuildBindMenu() {
+        guard let bindPopup else { return }
+        let menu = NSMenu()
+        let current = WebhookServer.configuredBindAddress   // nil == all interfaces
+
+        func add(_ title: String, value: String) {
+            let item = NSMenuItem(title: title, action: nil, keyEquivalent: "")
+            item.representedObject = value
+            menu.addItem(item)
+        }
+
+        add(String(localized: "settings.webhooks.bind_all", defaultValue: "All interfaces", bundle: .macOSBridge), value: "")
+        add(String(localized: "settings.webhooks.bind_localhost", defaultValue: "This Mac only (127.0.0.1)", bundle: .macOSBridge), value: "127.0.0.1")
+
+        let detected = WebhookServer.localIPAddresses().filter { $0.ip != "127.0.0.1" }
+        if !detected.isEmpty {
+            menu.addItem(.separator())
+            for entry in detected { add("\(entry.label) – \(entry.ip)", value: entry.ip) }
+        }
+
+        // Surface a configured custom address that isn't one of the detected ones.
+        if let current, current != "127.0.0.1", !detected.contains(where: { $0.ip == current }) {
+            menu.addItem(.separator())
+            add(current, value: current)
+        }
+
+        menu.addItem(.separator())
+        add(String(localized: "settings.webhooks.bind_custom", defaultValue: "Custom…", bundle: .macOSBridge), value: Self.customBindSentinel)
+
+        bindPopup.menu = menu
+        let target = current ?? ""
+        if let match = menu.items.first(where: { ($0.representedObject as? String) == target }) {
+            bindPopup.select(match)
+        } else {
+            bindPopup.selectItem(at: 0)
         }
     }
 
@@ -444,31 +533,59 @@ class WebhooksSection: SettingsCard {
             return
         }
         UserDefaults.standard.set(Int(port), forKey: WebhookServer.portKey)
-
-        // Restart server with new port if running
-        if WebhookServer.shared.state == .running {
-            WebhookServer.shared.stop()
-            // Recreate shared instance with new port (requires app restart for full effect)
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                WebhookServer.shared.start()
-            }
-        }
+        refreshApplyState()
     }
 
-    @objc private func bindAddressChanged(_ sender: NSTextField) {
-        let trimmed = sender.stringValue.trimmingCharacters(in: .whitespaces)
-        if trimmed.isEmpty {
+    @objc private func bindPopupChanged(_ sender: NSPopUpButton) {
+        guard let value = sender.selectedItem?.representedObject as? String else { return }
+
+        if value == Self.customBindSentinel {
+            promptCustomBindAddress()
+            return
+        }
+
+        if value.isEmpty {
             UserDefaults.standard.removeObject(forKey: WebhookServer.bindAddressKey)
-            sender.stringValue = ""
-            return
+        } else {
+            UserDefaults.standard.set(value, forKey: WebhookServer.bindAddressKey)
         }
-        guard WebhookServer.isValidIPAddress(trimmed) else {
-            // Reject invalid input; restore last valid value.
-            sender.stringValue = WebhookServer.configuredBindAddress ?? ""
-            return
+        refreshApplyState()
+    }
+
+    /// Ask for a literal IP the picker can't offer (e.g. a VPN/mesh address that
+    /// isn't up yet). Validated with the same `inet_pton` check as the server.
+    private func promptCustomBindAddress() {
+        let alert = NSAlert()
+        alert.messageText = String(localized: "settings.webhooks.bind_custom_title", defaultValue: "Enter an IP address", bundle: .macOSBridge)
+        alert.informativeText = String(localized: "settings.webhooks.bind_custom_message", defaultValue: "A local IPv4 or IPv6 address this Mac can bind to.", bundle: .macOSBridge)
+
+        let field = NSTextField(frame: NSRect(x: 0, y: 0, width: 220, height: 24))
+        field.stringValue = WebhookServer.configuredBindAddress ?? ""
+        alert.accessoryView = field
+        alert.addButton(withTitle: String(localized: "common.ok", defaultValue: "OK", bundle: .macOSBridge))
+        alert.addButton(withTitle: String(localized: "common.cancel", defaultValue: "Cancel", bundle: .macOSBridge))
+
+        if alert.runModal() == .alertFirstButtonReturn {
+            let trimmed = field.stringValue.trimmingCharacters(in: .whitespaces)
+            if WebhookServer.isValidIPAddress(trimmed) {
+                UserDefaults.standard.set(trimmed, forKey: WebhookServer.bindAddressKey)
+            } else if !trimmed.isEmpty {
+                let err = NSAlert()
+                err.messageText = String(localized: "settings.webhooks.bind_invalid", defaultValue: "Not a valid IP address", bundle: .macOSBridge)
+                err.informativeText = trimmed
+                err.runModal()
+            }
         }
-        UserDefaults.standard.set(trimmed, forKey: WebhookServer.bindAddressKey)
-        sender.stringValue = trimmed
+
+        // Re-sync the picker to whatever ended up persisted (selection or revert).
+        rebuildBindMenu()
+        refreshApplyState()
+    }
+
+    @objc private func applyTapped(_ sender: NSButton) {
+        WebhookServer.shared.applyConfiguration()
+        rebuildBindMenu()
+        updateStatusDisplay()
     }
 
     @objc private func statusDidChange() {
