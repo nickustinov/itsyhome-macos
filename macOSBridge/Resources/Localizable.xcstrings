@@ -15808,6 +15808,28 @@
         }
       }
     },
+    "settings.webhooks.bind_label" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Bind:"
+          }
+        }
+      }
+    },
+    "settings.webhooks.bind_placeholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "All interfaces"
+          }
+        }
+      }
+    },
     "settings.webhooks.control_actions" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -16112,6 +16134,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "查詢端點"
+          }
+        }
+      }
+    },
+    "settings.webhooks.restart_hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Address/port changes apply on next app launch."
           }
         }
       }

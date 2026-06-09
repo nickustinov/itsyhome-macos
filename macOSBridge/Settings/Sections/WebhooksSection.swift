@@ -259,7 +259,7 @@ class WebhooksSection: SettingsCard {
         bindTitle.widthAnchor.constraint(equalToConstant: labelWidth).isActive = true
         bindAddressField = NSTextField()
         bindAddressField.font = NSFont.monospacedSystemFont(ofSize: 11, weight: .regular)
-        bindAddressField.placeholderString = "All interfaces"
+        bindAddressField.placeholderString = String(localized: "settings.webhooks.bind_placeholder", defaultValue: "All interfaces", bundle: .macOSBridge)
         bindAddressField.stringValue = WebhookServer.configuredBindAddress ?? ""
         bindAddressField.translatesAutoresizingMaskIntoConstraints = false
         bindAddressField.widthAnchor.constraint(equalToConstant: 140).isActive = true
@@ -270,7 +270,7 @@ class WebhooksSection: SettingsCard {
         bindRow.addArrangedSubview(bindAddressField)
         stack.addArrangedSubview(bindRow)
 
-        let restartHint = createLabel("Address/port changes apply on next app launch.", style: .caption)
+        let restartHint = createLabel(String(localized: "settings.webhooks.restart_hint", defaultValue: "Address/port changes apply on next app launch.", bundle: .macOSBridge), style: .caption)
         restartHint.textColor = .tertiaryLabelColor
         stack.addArrangedSubview(restartHint)
 
