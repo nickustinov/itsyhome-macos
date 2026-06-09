@@ -352,6 +352,58 @@ final class WebhookServerTests: XCTestCase {
         XCTAssertEqual(WebhookServer.configuredPort, 8423)
     }
 
+    // MARK: - Bind address configuration tests
+
+    func testDefaultBindAddressIsNil() {
+        let original = UserDefaults.standard.object(forKey: WebhookServer.bindAddressKey)
+        defer { restoreBindAddress(original) }
+
+        UserDefaults.standard.removeObject(forKey: WebhookServer.bindAddressKey)
+        XCTAssertNil(WebhookServer.configuredBindAddress)
+    }
+
+    func testValidIPv4BindAddressIsReturned() {
+        let original = UserDefaults.standard.object(forKey: WebhookServer.bindAddressKey)
+        defer { restoreBindAddress(original) }
+
+        UserDefaults.standard.set("100.64.0.1", forKey: WebhookServer.bindAddressKey)
+        XCTAssertEqual(WebhookServer.configuredBindAddress, "100.64.0.1")
+    }
+
+    func testInvalidBindAddressFallsBackToNil() {
+        let original = UserDefaults.standard.object(forKey: WebhookServer.bindAddressKey)
+        defer { restoreBindAddress(original) }
+
+        UserDefaults.standard.set("not-an-ip", forKey: WebhookServer.bindAddressKey)
+        XCTAssertNil(WebhookServer.configuredBindAddress)
+    }
+
+    func testIPv6BindAddressIsAccepted() {
+        let original = UserDefaults.standard.object(forKey: WebhookServer.bindAddressKey)
+        defer { restoreBindAddress(original) }
+
+        UserDefaults.standard.set("::1", forKey: WebhookServer.bindAddressKey)
+        XCTAssertEqual(WebhookServer.configuredBindAddress, "::1")
+    }
+
+    func testIsValidIPAddress() {
+        XCTAssertTrue(WebhookServer.isValidIPAddress("127.0.0.1"))
+        XCTAssertTrue(WebhookServer.isValidIPAddress("100.64.0.1"))
+        XCTAssertTrue(WebhookServer.isValidIPAddress("::1"))
+        XCTAssertTrue(WebhookServer.isValidIPAddress("fe80::1"))
+        XCTAssertFalse(WebhookServer.isValidIPAddress(""))
+        XCTAssertFalse(WebhookServer.isValidIPAddress("999.999.999.999"))
+        XCTAssertFalse(WebhookServer.isValidIPAddress("hello"))
+        XCTAssertFalse(WebhookServer.isValidIPAddress("256.1.1.1"))
+    }
+
+    func testServerWithBindAddressInitializes() {
+        let boundServer = WebhookServer(port: 18424, bindAddress: "127.0.0.1")
+        boundServer.configure(actionEngine: engine)
+
+        XCTAssertEqual(boundServer.state, .stopped)
+    }
+
     // MARK: - IP address test
 
     func testLocalIPAddressReturnsNonNil() {
@@ -496,6 +548,14 @@ final class WebhookServerTests: XCTestCase {
 
         wait(for: [responseExpectation], timeout: 10)
         return httpResponse
+    }
+
+    private func restoreBindAddress(_ original: Any?) {
+        if let original {
+            UserDefaults.standard.set(original, forKey: WebhookServer.bindAddressKey)
+        } else {
+            UserDefaults.standard.removeObject(forKey: WebhookServer.bindAddressKey)
+        }
     }
 }
 

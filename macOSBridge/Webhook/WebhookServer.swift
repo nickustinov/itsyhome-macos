@@ -10,10 +10,11 @@ import Network
 
 final class WebhookServer {
 
-    static let shared = WebhookServer(port: configuredPort)
+    static let shared = WebhookServer(port: configuredPort, bindAddress: configuredBindAddress)
 
     static let defaultPort: UInt16 = 8423
     static let portKey = "webhookServerPort"
+    static let bindAddressKey = "webhookServerBindAddress"
     static let statusChangedNotification = Notification.Name("webhookStatusChangedNotification")
     static let enabledKey = "webhookServerEnabled"
 
@@ -22,7 +23,27 @@ final class WebhookServer {
         return stored > 0 ? UInt16(stored) : defaultPort
     }
 
+    /// Configured bind address. Empty/unset means bind all interfaces
+    /// (default, unchanged behavior). Returns nil when unset, empty, or
+    /// not a valid IP literal so the server falls back to all-interfaces.
+    static var configuredBindAddress: String? {
+        guard let raw = UserDefaults.standard.string(forKey: bindAddressKey) else { return nil }
+        let trimmed = raw.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty, isValidIPAddress(trimmed) else { return nil }
+        return trimmed
+    }
+
+    /// Validate an IPv4 or IPv6 literal using inet_pton (no DNS).
+    static func isValidIPAddress(_ string: String) -> Bool {
+        var v4 = in_addr()
+        if string.withCString({ inet_pton(AF_INET, $0, &v4) }) == 1 { return true }
+        var v6 = in6_addr()
+        if string.withCString({ inet_pton(AF_INET6, $0, &v6) }) == 1 { return true }
+        return false
+    }
+
     let port: UInt16
+    let bindAddress: String?
 
     enum State: Equatable {
         case stopped
@@ -46,8 +67,9 @@ final class WebhookServer {
     var lastPublishedValues: [String: String] = [:]
     var heartbeatTimer: DispatchSourceTimer?
 
-    init(port: UInt16) {
+    init(port: UInt16, bindAddress: String? = nil) {
         self.port = port
+        self.bindAddress = bindAddress
     }
 
     // MARK: - Configuration
@@ -70,6 +92,11 @@ final class WebhookServer {
         do {
             let params = NWParameters.tcp
             params.allowLocalEndpointReuse = true
+            if let addr = bindAddress {
+                params.requiredLocalEndpoint = NWEndpoint.hostPort(
+                    host: NWEndpoint.Host(addr),
+                    port: NWEndpoint.Port(rawValue: port)!)
+            }
             let listener = try NWListener(using: params, on: NWEndpoint.Port(rawValue: port)!)
             self.listener = listener
 
