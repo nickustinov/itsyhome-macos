@@ -28,13 +28,30 @@ final class HistoryStore {
     private var registry: [UUID: SensorMeta] = [:]
     private var series: [UUID: SensorSeries] = [:]
 
+    /// Capture coverage: when the gap since the last touch exceeds this, a new
+    /// session starts (and the chart shows a gap). Twice the heartbeat, so a
+    /// single missed beat never splits a live session.
+    private let sessionGapTolerance: TimeInterval = 10 * 60
+    private(set) var sessions: [CaptureSession] = []
+    private var heartbeat: Timer?
+
     init(storage: HistoryStorage = FileHistoryStorage(),
          now: @escaping () -> Date = { Date() },
          isEnabled: @escaping () -> Bool = { ProStatusCache.shared.isPro && PreferencesManager.shared.historyEnabled }) {
         self.storage = storage
         self.now = now
         self.isEnabled = isEnabled
+        // Coverage must advance while capture is on even if no sensor changes
+        // (change-driven capture produces no samples then). 5 min keeps session
+        // resolution well under the gap tolerance at negligible cost.
+        heartbeat = Timer.scheduledTimer(withTimeInterval: 5 * 60, repeats: true) { [weak self] _ in
+            guard let self, self.isEnabled() else { return }
+            self.touchSession(at: self.now())
+            self.scheduleFlush()
+        }
     }
+
+    deinit { heartbeat?.invalidate() }
 
     /// Called from rebuildMenu: sets the active home + characteristic registry and
     /// loads that home's persisted series.
@@ -44,7 +61,9 @@ final class HistoryStore {
         flushWorkItem?.cancel()
         self.homeId = homeId
         self.registry = registry
-        self.series = storage.load(homeId: homeId)
+        let archive = storage.load(homeId: homeId)
+        self.series = archive.series
+        self.sessions = archive.sessions
     }
 
     func series(for id: UUID) -> SensorSeries? {
@@ -55,6 +74,9 @@ final class HistoryStore {
     func record(id: UUID, value: Any) {
         guard isEnabled(), let meta = registry[id] else { return }
         let timestamp = now()
+        // Coverage extends on every accepted change, even ones the per-series
+        // dedup below drops - the capture pipeline was demonstrably alive.
+        touchSession(at: timestamp)
         switch meta.seriesKind {
         case .numeric:
             guard let v = ValueConversion.toDouble(value) else { return }
@@ -106,8 +128,26 @@ final class HistoryStore {
     func clearAll() {
         flushWorkItem?.cancel()
         series = [:]
-        storage.save(series, homeId: homeId)
+        sessions = []
+        storage.save(HistoryArchive(), homeId: homeId)
         NotificationCenter.default.post(name: Self.didChangeNotification, object: nil)
+    }
+
+    // MARK: - Capture coverage
+
+    /// Extends the current session, or opens a new one after a long silence.
+    private func touchSession(at timestamp: Date) {
+        if var last = sessions.last,
+           timestamp.timeIntervalSince(last.end) <= sessionGapTolerance,
+           timestamp >= last.end {
+            last.end = timestamp
+            sessions[sessions.count - 1] = last
+        } else if sessions.last.map({ timestamp > $0.end }) ?? true {
+            sessions.append(CaptureSession(start: timestamp, end: timestamp))
+        }
+        // Sessions age out alongside the samples they cover.
+        let cutoff = timestamp.addingTimeInterval(-retention)
+        sessions.removeAll { $0.end < cutoff }
     }
 
     // MARK: - Debounced persistence
@@ -130,6 +170,6 @@ final class HistoryStore {
     /// Writes the current series to storage immediately. Exposed for tests and
     /// for app-termination flushes.
     func flush() {
-        storage.save(series, homeId: homeId)
+        storage.save(HistoryArchive(sessions: sessions, series: series), homeId: homeId)
     }
 }

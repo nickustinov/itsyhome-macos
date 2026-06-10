@@ -150,10 +150,11 @@ class SensorStateMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRe
             series: series,
             kind: kind.seriesKind,
             tint: SensorStateMenuItem.tint(for: kind),
+            sessions: HistoryStore.shared.sessions,
             unitFormatter: { kind.formattedValue($0) ?? "" },
             stateFormatter: { state in
-                if state == 1 { return kind.stateLabels?.one ?? "On" }
-                return kind.stateLabels?.zero ?? "Off"
+                if state == 1 { return kind.stateLabels?.one ?? String(localized: "sensor.state.generic.on", defaultValue: "On", bundle: .macOSBridge) }
+                return kind.stateLabels?.zero ?? String(localized: "sensor.state.generic.off", defaultValue: "Off", bundle: .macOSBridge)
             })
         let host = NSMenuItem()
         host.view = detail

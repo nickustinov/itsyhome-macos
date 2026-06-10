@@ -313,6 +313,47 @@ final class WebhookServerTests: XCTestCase {
         }
     }
 
+    func testInfoExposesBatteryLevel() {
+        // A lock with a resolved battery characteristic (the same way the menu
+        // badge gets it - sibling battery service for HK, battery sensor for HA).
+        let lockStateId = UUID()
+        let batteryId = UUID()
+        let lowId = UUID()
+        let roomId = UUID()
+        let lock = ServiceData(
+            uniqueIdentifier: UUID(),
+            name: "Side Door Lock",
+            serviceType: ServiceTypes.lock,
+            accessoryName: "Side Door Lock",
+            roomIdentifier: roomId,
+            lockCurrentStateId: lockStateId,
+            batteryLevelId: batteryId,
+            statusLowBatteryId: lowId
+        )
+        let accessory = AccessoryData(
+            uniqueIdentifier: UUID(), name: "Side Door Lock", roomIdentifier: roomId,
+            services: [lock], isReachable: true)
+        let room = RoomData(uniqueIdentifier: roomId, name: "Office")
+        engine.updateMenuData(MenuData(homes: [], rooms: [room], accessories: [accessory],
+                                       scenes: [], selectedHomeId: nil))
+        mockBridge.characteristicValues[lockStateId] = 1
+        mockBridge.characteristicValues[batteryId] = 85
+        mockBridge.characteristicValues[lowId] = 0
+        server.start()
+
+        let body = sendRequest(path: "/info/Side%20Door%20Lock")?.body ?? ""
+        XCTAssertTrue(body.contains("\"battery\":85"), "battery missing: \(body)")
+        XCTAssertTrue(body.contains("\"batteryLow\":false"), "batteryLow missing: \(body)")
+    }
+
+    func testInfoOmitsBatteryWhenServiceHasNone() {
+        mockBridge.characteristicValues[powerStateId] = true
+        server.start()
+
+        let body = sendRequest(path: "/info/Light")?.body ?? ""
+        XCTAssertFalse(body.contains("\"battery\""), "no battery characteristic -> no field")
+    }
+
     func testInfoLightHasNoDetectedField() {
         mockBridge.characteristicValues[powerStateId] = true
         server.start()

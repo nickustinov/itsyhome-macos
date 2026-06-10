@@ -48,6 +48,22 @@ struct SensorMeta: Equatable {
     let name: String
 }
 
+/// A continuous interval during which capture was running. Chart regions not
+/// covered by any session render as gaps, so "the app wasn't recording" is
+/// distinguishable from "the value held steady" (capture is change-driven, so
+/// sample silence alone cannot tell the two apart).
+struct CaptureSession: Codable, Equatable {
+    var start: Date
+    var end: Date
+}
+
+/// Everything persisted for one home: capture coverage plus per-sensor series.
+struct HistoryArchive: Equatable {
+    var sessions: [CaptureSession] = []
+    var series: [UUID: SensorSeries] = [:]
+    var isEmpty: Bool { sessions.isEmpty && series.isEmpty }
+}
+
 extension SensorKind {
     /// Temperature/humidity are numeric lines; all other kinds are binary timelines.
     var seriesKind: SeriesKind {

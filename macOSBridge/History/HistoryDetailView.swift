@@ -33,6 +33,7 @@ final class HistoryDetailView: NSView {
 
     private let series: SensorSeries
     private let kind: SeriesKind
+    private let sessions: [CaptureSession]
     private let unitFormatter: (Double) -> String
     /// Optional formatter for a binary state int (1 or 0) to a display word.
     /// When nil, "On"/"Off" is used.
@@ -57,10 +58,12 @@ final class HistoryDetailView: NSView {
     init(series: SensorSeries,
          kind: SeriesKind,
          tint: NSColor,
+         sessions: [CaptureSession] = [],
          unitFormatter: @escaping (Double) -> String,
          stateFormatter: ((Int) -> String)? = nil) {
         self.series = series
         self.kind = kind
+        self.sessions = sessions
         self.unitFormatter = unitFormatter
         self.stateFormatter = stateFormatter
         super.init(frame: NSRect(x: 0, y: 0, width: 260, height: 96))
@@ -128,7 +131,7 @@ final class HistoryDetailView: NSView {
         // in-range data (window >= data span), so nothing is hidden.
         let span = earliestTimestamp.map { now.timeIntervalSince($0) } ?? range.seconds
         chart.windowOverride = min(range.seconds, max(5 * 60, span * 1.2))
-        chart.update(series: series, kind: kind, now: now)
+        chart.update(series: series, kind: kind, sessions: sessions, now: now)
         if kind == .numeric, let stats = HistoryRendering.stats(series.numeric.filter { $0.t >= since }) {
             statsLabel.stringValue = String(localized: "history.detail.stats",
                 defaultValue: "min \(unitFormatter(stats.min))   now \(unitFormatter(stats.now))   max \(unitFormatter(stats.max))",

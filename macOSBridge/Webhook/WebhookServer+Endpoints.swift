@@ -765,6 +765,15 @@ extension WebhookServer {
                 state.securityState = SecuritySystemState(rawValue: intValue(value))?.label ?? "disarmed"
             }
         }
+        // Battery (#132). Same source as the menu's battery badge - the ids are
+        // resolved onto the service for both platforms. Nil-returning converter
+        // so an unreadable battery stays absent instead of a fabricated 0.
+        if let value = getValue(service.batteryLevelId), let level = ValueConversion.toInt(value) {
+            state.battery = level
+        }
+        if let value = getValue(service.statusLowBatteryId), let raw = ValueConversion.toInt(value) {
+            state.batteryLow = raw == 1
+        }
 
         // Check if state has any values. speedMin/speedMax are metadata
         // alongside `speed`, so we don't count them on their own.
@@ -774,7 +783,8 @@ extension WebhookServer {
                        state.mode != nil ||
                        state.humidity != nil || state.hue != nil || state.saturation != nil ||
                        state.locked != nil || state.doorState != nil || state.speed != nil ||
-                       state.securityState != nil || state.detected != nil
+                       state.securityState != nil || state.detected != nil ||
+                       state.battery != nil
 
         return ServiceInfoResponse(
             name: service.name,

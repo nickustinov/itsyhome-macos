@@ -129,6 +129,13 @@ struct ServiceState: Encodable {
     var speedMin: Double?
     var speedMax: Double?
     var securityState: String?
+    // Battery, for battery-powered accessories (locks, sensors, blinds, ...).
+    // Resolved the same way as the menu's battery badge: a sibling battery
+    // service for HomeKit, the device's battery sensor for Home Assistant.
+    // Omitted when the device has no battery; unreadable values stay nil
+    // rather than reporting a fabricated 0 (#132).
+    var battery: Int?
+    var batteryLow: Bool?
 }
 
 struct SceneInfoResponse: Encodable {

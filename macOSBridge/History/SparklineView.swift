@@ -29,6 +29,7 @@ final class SparklineView: NSView {
 
     private var series: SensorSeries?
     private var kind: SeriesKind = .numeric
+    private var sessions: [CaptureSession] = []
     private var referenceNow: Date = Date()
 
     /// Tint for the line / "on" segments. Defaults to the control accent.
@@ -58,9 +59,11 @@ final class SparklineView: NSView {
 
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
-    func update(series: SensorSeries, kind: SeriesKind, now: Date = Date()) {
+    func update(series: SensorSeries, kind: SeriesKind,
+                sessions: [CaptureSession] = [], now: Date = Date()) {
         self.series = series
         self.kind = kind
+        self.sessions = sessions
         self.referenceNow = now
         needsDisplay = true
     }
@@ -114,7 +117,9 @@ final class SparklineView: NSView {
             // first in-window transition if capture began inside the window.
             let windowed = series.binary.filter { $0.t > since && $0.t <= referenceNow }
             let state: Int?
-            if let seed = series.binary.last(where: { $0.t <= cursorTime }) {
+            if !sessions.isEmpty, !sessions.contains(where: { $0.start <= cursorTime && cursorTime <= $0.end }) {
+                state = nil   // cursor over a coverage gap: no data, not a held state
+            } else if let seed = series.binary.last(where: { $0.t <= cursorTime }) {
                 state = seed.s
             } else if let first = windowed.first {
                 state = first.s == 1 ? 0 : 1
@@ -150,22 +155,31 @@ final class SparklineView: NSView {
     }
 
     private func drawLine(_ samples: [NumericSample], since: Date) {
-        let pts = HistoryRendering.numericPoints(samples, width: bounds.width, height: bounds.height,
-                                                 since: since, now: referenceNow, minRange: numericMinRange)
-        guard pts.count > 1 else { return }
-        let path = NSBezierPath()
-        path.lineWidth = 1.5
-        path.lineJoinStyle = .round
-        path.lineCapStyle = .round
-        path.move(to: pts[0])
-        for p in pts.dropFirst() { path.line(to: p) }
+        let runs = HistoryRendering.numericPointRuns(samples, width: bounds.width, height: bounds.height,
+                                                     since: since, now: referenceNow,
+                                                     minRange: numericMinRange, sessions: sessions)
         tint.setStroke()
-        path.stroke()
+        tint.setFill()
+        for pts in runs {
+            // A run isolated by gaps still deserves a mark: draw a dot.
+            if pts.count == 1 {
+                NSBezierPath(ovalIn: NSRect(x: pts[0].x - 1.5, y: pts[0].y - 1.5, width: 3, height: 3)).fill()
+                continue
+            }
+            let path = NSBezierPath()
+            path.lineWidth = 1.5
+            path.lineJoinStyle = .round
+            path.lineCapStyle = .round
+            path.move(to: pts[0])
+            for p in pts.dropFirst() { path.line(to: p) }
+            path.stroke()
+        }
     }
 
     private func drawTimeline(_ transitions: [BinaryTransition], since: Date) {
         let segments = HistoryRendering.binarySegments(transitions, width: bounds.width,
-                                                       since: since, now: referenceNow)
+                                                       since: since, now: referenceNow,
+                                                       sessions: sessions)
         // "On" (open/detected) pops in the tint; "off" (resting) is a muted but
         // clearly visible track so a held state reads as a filled bar, not blank.
         let off = NSColor.secondaryLabelColor

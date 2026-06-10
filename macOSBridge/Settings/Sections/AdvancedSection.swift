@@ -69,22 +69,30 @@ class AdvancedSection: SettingsCard {
         stackView.addArrangedSubview(sensorBox)
         sensorBox.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
 
-        // Sensor history toggle box
+        // Sensor history: toggle + clear grouped in one card with a separator
+        // between the rows (same idiom as the doorbell group in Cameras).
         let historyBox = createCardBox()
+        let historyStack = NSStackView()
+        historyStack.orientation = .vertical
+        historyStack.spacing = 0
+        historyStack.alignment = .leading
+        historyStack.translatesAutoresizingMaskIntoConstraints = false
+
         historySwitch.controlSize = .mini
         historySwitch.target = self
         historySwitch.action = #selector(historySwitchChanged(_:))
         let historyRow = createSettingRow(
             label: String(localized: "settings.advanced.history", defaultValue: "Record sensor history", bundle: .macOSBridge),
-            subtitle: String(localized: "settings.advanced.history_subtitle", defaultValue: "Records temperature, humidity and sensor changes as they arrive, keeping the last 30 days.", bundle: .macOSBridge),
+            subtitle: String(localized: "settings.advanced.history_subtitle", defaultValue: "Keeps 30 days of temperature, humidity and sensor changes. Hover a sensor in the menu to see its chart.", bundle: .macOSBridge),
             control: historySwitch
         )
-        addContentToBox(historyBox, content: historyRow)
-        stackView.addArrangedSubview(historyBox)
-        historyBox.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
+        historyStack.addArrangedSubview(historyRow)
+        historyRow.widthAnchor.constraint(equalTo: historyStack.widthAnchor).isActive = true
 
-        // Clear history box (separate box - addContentToBox pins to all 4 edges)
-        let clearBox = createCardBox()
+        let historySeparator = createSeparator()
+        historyStack.addArrangedSubview(historySeparator)
+        historySeparator.widthAnchor.constraint(equalTo: historyStack.widthAnchor).isActive = true
+
         let clearButton = NSButton(
             title: String(localized: "settings.advanced.history_clear", defaultValue: "Clear history", bundle: .macOSBridge),
             target: self, action: #selector(clearHistory))
@@ -94,9 +102,12 @@ class AdvancedSection: SettingsCard {
             label: String(localized: "settings.advanced.history_clear_label", defaultValue: "Stored history", bundle: .macOSBridge),
             control: clearButton
         )
-        addContentToBox(clearBox, content: clearRow)
-        stackView.addArrangedSubview(clearBox)
-        clearBox.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
+        historyStack.addArrangedSubview(clearRow)
+        clearRow.widthAnchor.constraint(equalTo: historyStack.widthAnchor).isActive = true
+
+        addContentToBox(historyBox, content: historyStack, verticalInset: 4)
+        stackView.addArrangedSubview(historyBox)
+        historyBox.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
     }
 
     private func createSettingRow(label: String, subtitle: String? = nil, control: NSView) -> NSView {
@@ -153,6 +164,9 @@ class AdvancedSection: SettingsCard {
         simpleLightSwitch.state = PreferencesManager.shared.simpleLightControls ? .on : .off
         sensorSummarySwitch.state = PreferencesManager.shared.sensorSummary ? .on : .off
         historySwitch.state = PreferencesManager.shared.historyEnabled ? .on : .off
+        // History is a Pro feature; disable (not hide) the switch for free
+        // users so it can't look functional while the store refuses to record.
+        historySwitch.isEnabled = ProStatusCache.shared.isPro
     }
 
     @objc private func temperatureUnitChanged(_ sender: NSPopUpButton) {

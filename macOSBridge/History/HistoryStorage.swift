@@ -9,12 +9,19 @@
 import Foundation
 
 protocol HistoryStorage {
-    func load(homeId: String) -> [UUID: SensorSeries]
-    func save(_ series: [UUID: SensorSeries], homeId: String)
+    func load(homeId: String) -> HistoryArchive
+    func save(_ archive: HistoryArchive, homeId: String)
 }
 
 /// Stores one JSON file per home under Application Support.
 final class FileHistoryStorage: HistoryStorage {
+
+    /// On-disk shape. Series are stored as an array (UUID-keyed dictionaries
+    /// encode as flat pair arrays in JSON, which is harder to inspect).
+    private struct HistoryFile: Codable {
+        var sessions: [CaptureSession]
+        var series: [SensorSeries]
+    }
 
     private let baseDirectory: URL
     private let fileManager = FileManager.default
@@ -37,30 +44,38 @@ final class FileHistoryStorage: HistoryStorage {
         return baseDirectory.appendingPathComponent("\(safe).json")
     }
 
-    func load(homeId: String) -> [UUID: SensorSeries] {
-        guard let data = try? Data(contentsOf: fileURL(homeId: homeId)),
-              let decoded = try? JSONDecoder().decode([SensorSeries].self, from: data) else {
-            return [:]
+    func load(homeId: String) -> HistoryArchive {
+        guard let data = try? Data(contentsOf: fileURL(homeId: homeId)) else { return HistoryArchive() }
+        if let decoded = try? JSONDecoder().decode(HistoryFile.self, from: data) {
+            return HistoryArchive(
+                sessions: decoded.sessions,
+                series: Dictionary(uniqueKeysWithValues: decoded.series.map { ($0.characteristicId, $0) }))
         }
-        return Dictionary(uniqueKeysWithValues: decoded.map { ($0.characteristicId, $0) })
+        // Legacy format (pre-sessions): a bare [SensorSeries] array.
+        if let decoded = try? JSONDecoder().decode([SensorSeries].self, from: data) {
+            return HistoryArchive(
+                series: Dictionary(uniqueKeysWithValues: decoded.map { ($0.characteristicId, $0) }))
+        }
+        return HistoryArchive()
     }
 
-    func save(_ series: [UUID: SensorSeries], homeId: String) {
+    func save(_ archive: HistoryArchive, homeId: String) {
         try? fileManager.createDirectory(at: baseDirectory, withIntermediateDirectories: true)
-        guard let data = try? JSONEncoder().encode(Array(series.values)) else { return }
+        let file = HistoryFile(sessions: archive.sessions, series: Array(archive.series.values))
+        guard let data = try? JSONEncoder().encode(file) else { return }
         try? data.write(to: fileURL(homeId: homeId), options: .atomic)
     }
 }
 
 /// In-memory backend for tests.
 final class InMemoryHistoryStorage: HistoryStorage {
-    private var stores: [String: [UUID: SensorSeries]] = [:]
+    private var stores: [String: HistoryArchive] = [:]
 
-    func load(homeId: String) -> [UUID: SensorSeries] {
-        stores[homeId] ?? [:]
+    func load(homeId: String) -> HistoryArchive {
+        stores[homeId] ?? HistoryArchive()
     }
 
-    func save(_ series: [UUID: SensorSeries], homeId: String) {
-        stores[homeId] = series
+    func save(_ archive: HistoryArchive, homeId: String) {
+        stores[homeId] = archive
     }
 }

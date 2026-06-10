@@ -19004,7 +19004,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Records temperature, humidity and sensor changes as they arrive, keeping the last 30 days."
+            "value" : "Keeps 30 days of temperature, humidity and sensor changes. Hover a sensor in the menu to see its chart."
           }
         }
       }

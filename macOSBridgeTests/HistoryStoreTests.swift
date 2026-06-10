@@ -17,10 +17,10 @@ final class HistoryStoreTests: XCTestCase {
         var series = SensorSeries(characteristicId: id, kind: .numeric)
         series.numeric = [NumericSample(t: Date(timeIntervalSince1970: 1), v: 9.0)]
 
-        storage.save([id: series], homeId: "home-A")
+        storage.save(HistoryArchive(series: [id: series]), homeId: "home-A")
         // A different home must not see home-A's data.
         XCTAssertTrue(storage.load(homeId: "home-B").isEmpty)
-        XCTAssertEqual(storage.load(homeId: "home-A")[id], series)
+        XCTAssertEqual(storage.load(homeId: "home-A").series[id], series)
 
         try? FileManager.default.removeItem(at: tmp)
     }
@@ -120,6 +120,95 @@ final class HistoryStoreTests: XCTestCase {
 
         XCTAssertNil(store.series(for: id))
         XCTAssertTrue(storage.load(homeId: "h").isEmpty)
+    }
+
+    // MARK: - Capture coverage sessions
+
+    func testRecordOpensAndExtendsSession() {
+        var clock = Date(timeIntervalSince1970: 1000)
+        let store = makeStore(now: { clock })
+        let id = UUID()
+        store.configure(homeId: "h", registry: [id: SensorMeta(seriesKind: .numeric, name: "Temp")])
+
+        store.record(id: id, value: 21.0)
+        clock = clock.addingTimeInterval(120)            // within tolerance
+        store.record(id: id, value: 22.0)
+
+        XCTAssertEqual(store.sessions.count, 1)
+        XCTAssertEqual(store.sessions.first?.start, Date(timeIntervalSince1970: 1000))
+        XCTAssertEqual(store.sessions.first?.end, Date(timeIntervalSince1970: 1120))
+    }
+
+    func testRecordAfterLongGapStartsNewSession() {
+        var clock = Date(timeIntervalSince1970: 1000)
+        let store = makeStore(now: { clock })
+        let id = UUID()
+        store.configure(homeId: "h", registry: [id: SensorMeta(seriesKind: .numeric, name: "Temp")])
+
+        store.record(id: id, value: 21.0)
+        clock = clock.addingTimeInterval(60 * 60)        // 1h silence > tolerance
+        store.record(id: id, value: 22.0)
+
+        XCTAssertEqual(store.sessions.count, 2)
+    }
+
+    func testDedupedRecordStillExtendsSession() {
+        var clock = Date(timeIntervalSince1970: 1000)
+        let store = makeStore(now: { clock })
+        let id = UUID()
+        store.configure(homeId: "h", registry: [id: SensorMeta(seriesKind: .numeric, name: "Temp")])
+
+        store.record(id: id, value: 21.0)
+        clock = clock.addingTimeInterval(10)
+        store.record(id: id, value: 21.0)                // deduped sample...
+
+        XCTAssertEqual(store.series(for: id)?.numeric.count, 1)
+        XCTAssertEqual(store.sessions.first?.end, Date(timeIntervalSince1970: 1010))  // ...but coverage extends
+    }
+
+    func testSessionsPersistAndReload() {
+        let storage = InMemoryHistoryStorage()
+        let id = UUID()
+        let meta = SensorMeta(seriesKind: .numeric, name: "Temp")
+        let store1 = HistoryStore(storage: storage, now: { Date(timeIntervalSince1970: 5) }, isEnabled: { true })
+        store1.configure(homeId: "h", registry: [id: meta])
+        store1.record(id: id, value: 21.0)
+        store1.flush()
+
+        let store2 = HistoryStore(storage: storage, now: { Date(timeIntervalSince1970: 6) }, isEnabled: { true })
+        store2.configure(homeId: "h", registry: [id: meta])
+        XCTAssertEqual(store2.sessions.count, 1)
+    }
+
+    func testClearAllClearsSessions() {
+        let store = makeStore(now: { Date(timeIntervalSince1970: 1) })
+        let id = UUID()
+        store.configure(homeId: "h", registry: [id: SensorMeta(seriesKind: .numeric, name: "Temp")])
+        store.record(id: id, value: 10.0)
+        XCTAssertFalse(store.sessions.isEmpty)
+
+        store.clearAll()
+        XCTAssertTrue(store.sessions.isEmpty)
+    }
+
+    func testLegacyFileWithoutSessionsStillLoads() throws {
+        let tmp = URL(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent("history-legacy-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: tmp, withIntermediateDirectories: true)
+        let storage = FileHistoryStorage(baseDirectory: tmp)
+
+        // Legacy format: a bare [SensorSeries] array, no sessions wrapper.
+        let id = UUID()
+        var series = SensorSeries(characteristicId: id, kind: .numeric)
+        series.numeric = [NumericSample(t: Date(timeIntervalSince1970: 1), v: 9.0)]
+        let data = try JSONEncoder().encode([series])
+        try data.write(to: tmp.appendingPathComponent("h.json"))
+
+        let archive = storage.load(homeId: "h")
+        XCTAssertEqual(archive.series[id], series)
+        XCTAssertTrue(archive.sessions.isEmpty)
+
+        try? FileManager.default.removeItem(at: tmp)
     }
 
     func testRecordedDataReloadsFromStorageOnReconfigure() {

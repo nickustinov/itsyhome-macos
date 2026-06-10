@@ -130,4 +130,58 @@ final class HistoryRenderingTests: XCTestCase {
         XCTAssertEqual(v1.frame.width, 48)
         XCTAssertEqual(v2.frame.width, 48)
     }
+
+    // MARK: - Coverage gaps
+
+    func testNumericPointRunsSplitAcrossUncoveredGap() {
+        // Two sessions with an uncovered hour between them.
+        let sessions = [
+            CaptureSession(start: Date(timeIntervalSince1970: 0), end: Date(timeIntervalSince1970: 100)),
+            CaptureSession(start: Date(timeIntervalSince1970: 3700), end: Date(timeIntervalSince1970: 3800)),
+        ]
+        let samples = [
+            NumericSample(t: Date(timeIntervalSince1970: 10), v: 20),
+            NumericSample(t: Date(timeIntervalSince1970: 90), v: 21),
+            NumericSample(t: Date(timeIntervalSince1970: 3750), v: 22),
+        ]
+        let runs = HistoryRendering.numericPointRuns(
+            samples, width: 100, height: 10,
+            since: Date(timeIntervalSince1970: 0), now: Date(timeIntervalSince1970: 3800),
+            sessions: sessions)
+        XCTAssertEqual(runs.map(\.count), [2, 1])   // line breaks at the gap
+    }
+
+    func testNumericPointRunsWithoutSessionsIsOneRun() {
+        let samples = [
+            NumericSample(t: Date(timeIntervalSince1970: 10), v: 20),
+            NumericSample(t: Date(timeIntervalSince1970: 3750), v: 22),
+        ]
+        let runs = HistoryRendering.numericPointRuns(
+            samples, width: 100, height: 10,
+            since: Date(timeIntervalSince1970: 0), now: Date(timeIntervalSince1970: 3800))
+        XCTAssertEqual(runs.map(\.count), [2])      // no coverage info -> no gaps
+    }
+
+    func testBinarySegmentsLeaveGapOutsideCoverage() {
+        // One transition to "on" at t=10 inside a session covering [0, 100];
+        // window extends to t=200 with no coverage after 100.
+        let sessions = [CaptureSession(start: Date(timeIntervalSince1970: 0), end: Date(timeIntervalSince1970: 100))]
+        let transitions = [BinaryTransition(t: Date(timeIntervalSince1970: 10), s: 1)]
+        let segments = HistoryRendering.binarySegments(
+            transitions, width: 200,
+            since: Date(timeIntervalSince1970: 0), now: Date(timeIntervalSince1970: 200),
+            sessions: sessions)
+        // Bar must stop at x=100 (coverage end), leaving [100, 200] blank.
+        let maxX = segments.map { $0.x + $0.width }.max() ?? 0
+        XCTAssertEqual(maxX, 100, accuracy: 0.5)
+    }
+
+    func testBinarySegmentsFillWindowWhenNoSessions() {
+        let transitions = [BinaryTransition(t: Date(timeIntervalSince1970: 10), s: 1)]
+        let segments = HistoryRendering.binarySegments(
+            transitions, width: 200,
+            since: Date(timeIntervalSince1970: 0), now: Date(timeIntervalSince1970: 200))
+        let maxX = segments.map { $0.x + $0.width }.max() ?? 0
+        XCTAssertEqual(maxX, 200, accuracy: 0.5)    // legacy: full window
+    }
 }

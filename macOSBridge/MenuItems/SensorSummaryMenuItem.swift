@@ -195,6 +195,7 @@ class SensorSummaryMenuItem: NSMenuItem, CharacteristicUpdatable, Characteristic
                 series: series,
                 kind: .numeric,
                 tint: NSColor.systemOrange,
+                sessions: HistoryStore.shared.sessions,
                 unitFormatter: { TemperatureFormatter.format($0, decimals: 1) })
             attachSubmenu(detail)
             return
@@ -206,6 +207,7 @@ class SensorSummaryMenuItem: NSMenuItem, CharacteristicUpdatable, Characteristic
                 series: series,
                 kind: .numeric,
                 tint: NSColor.systemTeal,
+                sessions: HistoryStore.shared.sessions,
                 unitFormatter: { String(format: "%.0f%%", $0) })
             attachSubmenu(detail)
             return
