@@ -2,7 +2,9 @@
 //  SensorSummaryMenuItem.swift
 //  macOSBridge
 //
-//  Compact summary of temperature and humidity sensors for a room
+//  Compact summary of temperature and humidity sensors for a room.
+//  When Pro + history is enabled, the row gets a detail submenu (flyout) with
+//  a larger history chart.
 //
 
 import AppKit
@@ -67,10 +69,12 @@ class SensorSummaryMenuItem: NSMenuItem, CharacteristicUpdatable, Characteristic
         tempIconView.isHidden = !hasTemp
         containerView.addSubview(tempIconView)
 
-        currentX += iconSize + DS.Spacing.xs
+        currentX += iconSize + DS.Spacing.xs  // currentX = 12 + 24 + 4 = 40
 
         // Temperature title (top)
-        let titleY = itemHeight - 10 - 12
+        let titleY = itemHeight - 10 - 12  // = 22
+        let valueY: CGFloat = 6
+
         tempTitleLabel = NSTextField(labelWithString: String(localized: "device.sensor.temperature", defaultValue: "Temperature", bundle: .macOSBridge))
         tempTitleLabel.frame = NSRect(x: currentX, y: titleY, width: 80, height: 12)
         tempTitleLabel.font = DS.Typography.labelSmall
@@ -78,8 +82,6 @@ class SensorSummaryMenuItem: NSMenuItem, CharacteristicUpdatable, Characteristic
         tempTitleLabel.isHidden = !hasTemp
         containerView.addSubview(tempTitleLabel)
 
-        // Temperature value (bottom)
-        let valueY: CGFloat = 6
         tempValueLabel = NSTextField(labelWithString: "—")
         tempValueLabel.frame = NSRect(x: currentX, y: valueY, width: 80, height: 14)
         tempValueLabel.font = DS.Typography.labelSmall
@@ -87,7 +89,7 @@ class SensorSummaryMenuItem: NSMenuItem, CharacteristicUpdatable, Characteristic
         tempValueLabel.isHidden = !hasTemp
         containerView.addSubview(tempValueLabel)
 
-        currentX += sectionWidth
+        currentX += sectionWidth  // currentX = 40 + 115 = 155
 
         // Humidity section
         humidityIconView = NSImageView(frame: NSRect(x: currentX, y: iconY, width: iconSize, height: iconSize))
@@ -97,9 +99,8 @@ class SensorSummaryMenuItem: NSMenuItem, CharacteristicUpdatable, Characteristic
         humidityIconView.isHidden = !hasHumidity
         containerView.addSubview(humidityIconView)
 
-        currentX += iconSize + DS.Spacing.xs
+        currentX += iconSize + DS.Spacing.xs  // currentX = 155 + 24 + 4 = 183
 
-        // Humidity title (top)
         humidityTitleLabel = NSTextField(labelWithString: String(localized: "device.sensor.humidity", defaultValue: "Humidity", bundle: .macOSBridge))
         humidityTitleLabel.frame = NSRect(x: currentX, y: titleY, width: 70, height: 12)
         humidityTitleLabel.font = DS.Typography.labelSmall
@@ -107,7 +108,6 @@ class SensorSummaryMenuItem: NSMenuItem, CharacteristicUpdatable, Characteristic
         humidityTitleLabel.isHidden = !hasHumidity
         containerView.addSubview(humidityTitleLabel)
 
-        // Humidity value (bottom)
         humidityValueLabel = NSTextField(labelWithString: "—")
         humidityValueLabel.frame = NSRect(x: currentX, y: valueY, width: 70, height: 14)
         humidityValueLabel.font = DS.Typography.labelSmall
@@ -130,11 +130,13 @@ class SensorSummaryMenuItem: NSMenuItem, CharacteristicUpdatable, Characteristic
                 temperatureValues[characteristicId] = temp
             }
             updateTemperatureDisplay()
+            refreshHistory()
         } else if humidityCharacteristicIds.contains(characteristicId) {
             if let humidity = ValueConversion.toDouble(value) {
                 humidityValues[characteristicId] = humidity
             }
             updateHumidityDisplay()
+            refreshHistory()
         }
     }
 
@@ -149,13 +151,13 @@ class SensorSummaryMenuItem: NSMenuItem, CharacteristicUpdatable, Characteristic
         let maxTemp = values.last ?? 0
 
         if values.count == 1 || minTemp == maxTemp {
-            // Single value
             tempValueLabel.stringValue = TemperatureFormatter.format(minTemp, decimals: 1)
         } else {
-            // Range (smallest – largest)
+            // Range (smallest to largest); hyphens, no en/em dashes.
             let minFormatted = TemperatureFormatter.format(minTemp, decimals: 1)
             let maxFormatted = TemperatureFormatter.format(maxTemp, decimals: 1)
-            tempValueLabel.stringValue = "\(minFormatted.dropLast())–\(maxFormatted)"
+            // Drop the degree symbol from the min value so "19.5°-22°" reads cleanly.
+            tempValueLabel.stringValue = "\(minFormatted.dropLast())-\(maxFormatted)"
         }
     }
 
@@ -170,11 +172,52 @@ class SensorSummaryMenuItem: NSMenuItem, CharacteristicUpdatable, Characteristic
         let maxHumidity = values.last ?? 0
 
         if values.count == 1 || minHumidity == maxHumidity {
-            // Single value
             humidityValueLabel.stringValue = String(format: "%.0f%%", minHumidity)
         } else {
-            // Range (smallest – largest)
-            humidityValueLabel.stringValue = String(format: "%.0f–%.0f%%", minHumidity, maxHumidity)
+            humidityValueLabel.stringValue = String(format: "%.0f-%.0f%%", minHumidity, maxHumidity)
         }
+    }
+
+    // MARK: - History
+
+    private func refreshHistory() {
+        guard ProStatusCache.shared.isPro, PreferencesManager.shared.historyEnabled else { return }
+        // Build the detail submenu (the flyout chart) for the first available series.
+        rebuildSubmenu()
+    }
+
+    private func rebuildSubmenu() {
+        // Prefer temperature; fall back to humidity if there is no temp data.
+        if let tempId = temperatureCharacteristicIds.first,
+           let series = HistoryStore.shared.series(for: tempId),
+           !series.numeric.isEmpty {
+            let detail = HistoryDetailView(
+                series: series,
+                kind: .numeric,
+                tint: NSColor.systemOrange,
+                unitFormatter: { TemperatureFormatter.format($0, decimals: 1) })
+            attachSubmenu(detail)
+            return
+        }
+        if let humidId = humidityCharacteristicIds.first,
+           let series = HistoryStore.shared.series(for: humidId),
+           !series.numeric.isEmpty {
+            let detail = HistoryDetailView(
+                series: series,
+                kind: .numeric,
+                tint: NSColor.systemTeal,
+                unitFormatter: { String(format: "%.0f%%", $0) })
+            attachSubmenu(detail)
+            return
+        }
+        submenu = nil
+    }
+
+    private func attachSubmenu(_ detail: HistoryDetailView) {
+        let host = NSMenuItem()
+        host.view = detail
+        let menu = NSMenu()
+        menu.addItem(host)
+        submenu = menu
     }
 }

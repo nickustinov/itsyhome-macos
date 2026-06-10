@@ -126,6 +126,7 @@ final class ProManager: ObservableObject {
             WebhookServer.shared.stop()
             Task { await VirtualBridgeService.shared.stop() }
             AutomationEngine.shared.stop()
+            HistoryStore.shared.flush()
         }
     }
 

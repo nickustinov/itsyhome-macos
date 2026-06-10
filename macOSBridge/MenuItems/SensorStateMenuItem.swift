@@ -120,6 +120,7 @@ class SensorStateMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRe
             valueLabel.stringValue = value.flatMap(ValueConversion.toDouble)
                 .flatMap(kind.formattedValue) ?? "—"
             iconView.image = IconResolver.icon(for: serviceData)
+            refreshHistory()
             return
         }
         let raw = value.flatMap(ValueConversion.toInt)
@@ -131,6 +132,42 @@ class SensorStateMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRe
             }
         }
         iconView.image = IconResolver.sensorIcon(for: serviceData, active: raw == 1)
+        refreshHistory()
+    }
+
+    // MARK: - History
+
+    private func refreshHistory() {
+        guard let kind, let id = stateCharacteristicId,
+              let series = HistoryStore.shared.series(for: id),
+              !series.numeric.isEmpty || !series.binary.isEmpty else {
+            submenu = nil
+            return
+        }
+
+        // Detail submenu (the expandable chart).
+        let detail = HistoryDetailView(
+            series: series,
+            kind: kind.seriesKind,
+            tint: SensorStateMenuItem.tint(for: kind),
+            unitFormatter: { kind.formattedValue($0) ?? "" },
+            stateFormatter: { state in
+                if state == 1 { return kind.stateLabels?.one ?? "On" }
+                return kind.stateLabels?.zero ?? "Off"
+            })
+        let host = NSMenuItem()
+        host.view = detail
+        let menu = NSMenu()
+        menu.addItem(host)
+        submenu = menu
+    }
+
+    private static func tint(for kind: SensorKind) -> NSColor {
+        switch kind {
+        case .temperature: return NSColor.systemOrange
+        case .humidity: return NSColor.systemTeal
+        default: return NSColor.controlAccentColor
+        }
     }
 
     /// Generic Home Assistant sensor: a binary On/Off, or a numeric reading with

@@ -803,6 +803,11 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
         menuBuilder.buildMenu(into: mainMenu, with: data)
         StartupLogger.log("Menu items built — \(mainMenu.items.count) items")
 
+        HistoryStore.shared.configure(
+            homeId: data.selectedHomeId ?? "default",
+            registry: SensorHistoryRegistry.build(from: data)
+        )
+
         actionEngine.bridge = activeBridge
         actionEngine.updateMenuData(data)
         actionEngine.onCharacteristicWrite = { [weak self] characteristicId, value in
