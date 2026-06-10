@@ -32,6 +32,7 @@ final class PreferencesManager {
         static let entityCategoryFilter = "entityCategoryFilter"
         static let simpleLightControls = "simpleLightControls"
         static let sensorSummary = "sensorSummary"
+        static let historyEnabled = "historyEnabled"
 
         // Per-home settings (use with homeKey helper)
         static let orderedFavouriteIds = "orderedFavouriteIds"
@@ -70,7 +71,8 @@ final class PreferencesManager {
             Keys.temperatureUnit: "system",
             Keys.entityCategoryFilter: "hideAll",
             Keys.simpleLightControls: false,
-            Keys.sensorSummary: true
+            Keys.sensorSummary: true,
+            Keys.historyEnabled: false
         ])
 
         // Sync launch at login state with system on init
@@ -208,6 +210,20 @@ final class PreferencesManager {
         get { defaults.integer(forKey: Keys.doorbellAutoCloseDelay) }
         set {
             defaults.set(newValue, forKey: Keys.doorbellAutoCloseDelay)
+            postNotification()
+        }
+    }
+
+    // MARK: - Sensor history (global)
+
+    /// When on, sensor readings are stored for 30 days and shown as an
+    /// expandable chart in each sensor's submenu. Opt-in (default off) and
+    /// Pro-gated in the UI; the store itself also checks Pro status before
+    /// recording.
+    var historyEnabled: Bool {
+        get { defaults.bool(forKey: Keys.historyEnabled) }
+        set {
+            defaults.set(newValue, forKey: Keys.historyEnabled)
             postNotification()
         }
     }

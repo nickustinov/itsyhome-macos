@@ -20,6 +20,10 @@ extension MacOSController {
         WebhookServer.shared.publishCharacteristicChange(characteristicId: characteristicId, value: value)
         AutomationEngine.shared.handleCharacteristicChange(id: characteristicId, value: value)
 
+        // History capture must see every change, even while the dropdown is
+        // closed, so it sits above the menu-closed guard alongside pinned/SSE.
+        HistoryStore.shared.record(id: characteristicId, value: value)
+
         // The dropdown's rows aren't visible while it's closed, and menuWillOpen
         // re-reads every characteristic via refreshCharacteristics(), so skip the
         // recursive menu/scene walk when idle. This avoids constant main-thread

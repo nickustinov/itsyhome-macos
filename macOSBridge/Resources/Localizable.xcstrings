@@ -18766,6 +18766,138 @@
           }
         }
       }
+    },
+    "history.detail.changes" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld change%2$@ in %3$@"
+          }
+        }
+      }
+    },
+    "history.detail.no_data" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "No data yet"
+          }
+        }
+      }
+    },
+    "history.detail.stats" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "min %1$@   now %2$@   max %3$@"
+          }
+        }
+      }
+    },
+    "history.range.day" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "24h"
+          }
+        }
+      }
+    },
+    "history.range.month" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "30d"
+          }
+        }
+      }
+    },
+    "history.range.week" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "7d"
+          }
+        }
+      }
+    },
+    "history.state.off" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Off"
+          }
+        }
+      }
+    },
+    "history.state.on" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "On"
+          }
+        }
+      }
+    },
+    "settings.advanced.history" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Record sensor history"
+          }
+        }
+      }
+    },
+    "settings.advanced.history_clear" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Clear history"
+          }
+        }
+      }
+    },
+    "settings.advanced.history_clear_label" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Stored history"
+          }
+        }
+      }
+    },
+    "settings.advanced.history_subtitle" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Records temperature, humidity and sensor changes as they arrive, keeping the last 30 days."
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

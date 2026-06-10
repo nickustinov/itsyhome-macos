@@ -12,6 +12,7 @@ class AdvancedSection: SettingsCard {
     private let temperaturePopUp = NSPopUpButton()
     private let simpleLightSwitch = NSSwitch()
     private let sensorSummarySwitch = NSSwitch()
+    private let historySwitch = NSSwitch()
 
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -67,6 +68,35 @@ class AdvancedSection: SettingsCard {
         addContentToBox(sensorBox, content: sensorRow)
         stackView.addArrangedSubview(sensorBox)
         sensorBox.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
+
+        // Sensor history toggle box
+        let historyBox = createCardBox()
+        historySwitch.controlSize = .mini
+        historySwitch.target = self
+        historySwitch.action = #selector(historySwitchChanged(_:))
+        let historyRow = createSettingRow(
+            label: String(localized: "settings.advanced.history", defaultValue: "Record sensor history", bundle: .macOSBridge),
+            subtitle: String(localized: "settings.advanced.history_subtitle", defaultValue: "Records temperature, humidity and sensor changes as they arrive, keeping the last 30 days.", bundle: .macOSBridge),
+            control: historySwitch
+        )
+        addContentToBox(historyBox, content: historyRow)
+        stackView.addArrangedSubview(historyBox)
+        historyBox.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
+
+        // Clear history box (separate box - addContentToBox pins to all 4 edges)
+        let clearBox = createCardBox()
+        let clearButton = NSButton(
+            title: String(localized: "settings.advanced.history_clear", defaultValue: "Clear history", bundle: .macOSBridge),
+            target: self, action: #selector(clearHistory))
+        clearButton.bezelStyle = .rounded
+        clearButton.controlSize = .small
+        let clearRow = createSettingRow(
+            label: String(localized: "settings.advanced.history_clear_label", defaultValue: "Stored history", bundle: .macOSBridge),
+            control: clearButton
+        )
+        addContentToBox(clearBox, content: clearRow)
+        stackView.addArrangedSubview(clearBox)
+        clearBox.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
     }
 
     private func createCardBox() -> NSView {
@@ -139,6 +169,7 @@ class AdvancedSection: SettingsCard {
         }
         simpleLightSwitch.state = PreferencesManager.shared.simpleLightControls ? .on : .off
         sensorSummarySwitch.state = PreferencesManager.shared.sensorSummary ? .on : .off
+        historySwitch.state = PreferencesManager.shared.historyEnabled ? .on : .off
     }
 
     @objc private func temperatureUnitChanged(_ sender: NSPopUpButton) {
@@ -152,5 +183,13 @@ class AdvancedSection: SettingsCard {
 
     @objc private func sensorSummarySwitchChanged(_ sender: NSSwitch) {
         PreferencesManager.shared.sensorSummary = sender.state == .on
+    }
+
+    @objc private func historySwitchChanged(_ sender: NSSwitch) {
+        PreferencesManager.shared.historyEnabled = sender.state == .on
+    }
+
+    @objc private func clearHistory() {
+        HistoryStore.shared.clearAll()
     }
 }
