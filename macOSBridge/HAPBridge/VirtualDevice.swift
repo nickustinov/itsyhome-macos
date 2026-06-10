@@ -76,13 +76,26 @@ extension VirtualSensorType {
     /// The state word shown to the user for each kind (1 = active, 0 = resting).
     func stateWord(on: Bool) -> String {
         switch self {
-        case .contact:        return on ? "Open" : "Closed"
-        case .motion:         return on ? "Motion" : "Clear"
-        case .occupancy:      return on ? "Occupied" : "Clear"
-        case .leak:           return on ? "Leak" : "Dry"
-        case .smoke:          return on ? "Smoke" : "Clear"
-        case .carbonMonoxide: return on ? "CO" : "Clear"
-        case .carbonDioxide:  return on ? "CO\u{2082}" : "Clear"
+        case .contact:        return on ? String(localized: "sensor.state.contact.open", defaultValue: "Open", bundle: .macOSBridge) : String(localized: "sensor.state.contact.closed", defaultValue: "Closed", bundle: .macOSBridge)
+        case .motion:         return on ? String(localized: "sensor.state.motion.on", defaultValue: "Motion", bundle: .macOSBridge) : String(localized: "sensor.state.motion.off", defaultValue: "Clear", bundle: .macOSBridge)
+        case .occupancy:      return on ? String(localized: "sensor.state.occupancy.on", defaultValue: "Occupied", bundle: .macOSBridge) : String(localized: "sensor.state.occupancy.off", defaultValue: "Clear", bundle: .macOSBridge)
+        case .leak:           return on ? String(localized: "sensor.state.leak.on", defaultValue: "Leak", bundle: .macOSBridge) : String(localized: "sensor.state.leak.off", defaultValue: "Dry", bundle: .macOSBridge)
+        case .smoke:          return on ? String(localized: "sensor.state.smoke.on", defaultValue: "Smoke", bundle: .macOSBridge) : String(localized: "sensor.state.smoke.off", defaultValue: "Clear", bundle: .macOSBridge)
+        case .carbonMonoxide: return on ? String(localized: "sensor.state.carbon_monoxide.on", defaultValue: "CO", bundle: .macOSBridge) : String(localized: "sensor.state.carbon_monoxide.off", defaultValue: "Clear", bundle: .macOSBridge)
+        case .carbonDioxide:  return on ? String(localized: "sensor.state.carbon_dioxide.on", defaultValue: "CO\u{2082}", bundle: .macOSBridge) : String(localized: "sensor.state.carbon_dioxide.off", defaultValue: "Clear", bundle: .macOSBridge)
+        }
+    }
+
+    /// The localized sensor-type name shown in pickers and summaries.
+    var displayName: String {
+        switch self {
+        case .contact:        return String(localized: "sensor.type.contact", defaultValue: "Contact", bundle: .macOSBridge)
+        case .motion:         return String(localized: "sensor.type.motion", defaultValue: "Motion", bundle: .macOSBridge)
+        case .occupancy:      return String(localized: "sensor.type.occupancy", defaultValue: "Occupancy", bundle: .macOSBridge)
+        case .leak:           return String(localized: "sensor.type.leak", defaultValue: "Leak", bundle: .macOSBridge)
+        case .smoke:          return String(localized: "sensor.type.smoke", defaultValue: "Smoke", bundle: .macOSBridge)
+        case .carbonMonoxide: return String(localized: "sensor.type.carbon_monoxide", defaultValue: "Carbon Monoxide", bundle: .macOSBridge)
+        case .carbonDioxide:  return String(localized: "sensor.type.carbon_dioxide", defaultValue: "Carbon Dioxide", bundle: .macOSBridge)
         }
     }
 

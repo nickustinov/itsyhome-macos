@@ -111,8 +111,15 @@ class ActionEngine {
 
         switch resolved {
         case .services(let services):
-            // A projected virtual device resolves here; route it to the store
-            // instead of HomeKit. Real services fall through to HomeKit control.
+            // Name-based virtual routing, and its collision behaviour:
+            // a virtual sensor, once paired, returns through HomeKit under HK's
+            // own id, so we recognise it by NAME (see virtualDevice(in:)). A
+            // virtual sensor whose name matches a resolved service therefore
+            // short-circuits to the store (HAP) BEFORE HomeKit control runs.
+            // Consequence: if a real accessory shares a name with a virtual
+            // sensor, control routes to the virtual one - so virtual-device names
+            // should be kept unique from real accessories. Services with no
+            // virtual match fall through to normal HomeKit control below.
             if let vdev = virtualDevice(in: services) {
                 return applyVirtual(vdev, action: action)
             }
@@ -120,8 +127,9 @@ class ActionEngine {
         case .scene(let scene):
             return executeScene(scene, bridge: bridge)
         case .notFound(let query):
-            // Pre-projection (or resolver miss): match a virtual device by name.
-            // Real devices keep precedence - we only reach here when none matched.
+            // Resolver matched no real device: fall back to a virtual match by
+            // name. Real devices keep precedence - we only reach here when none
+            // matched, so this path cannot shadow a real accessory.
             if let vdev = VirtualDeviceStore.shared.device(named: query) {
                 return applyVirtual(vdev, action: action)
             }

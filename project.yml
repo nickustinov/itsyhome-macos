@@ -13,7 +13,7 @@ packages:
     exactVersion: "137.7151.12"
   hap-swift:
     url: https://github.com/mikeburgh/hap-swift.git
-    branch: macos14
+    revision: 6e62417d61522823552417714b62af89b2e211b3
 
 settings:
   base:

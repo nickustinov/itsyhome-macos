@@ -2502,6 +2502,7 @@
 		B9A8B0AD26D9497CA3C7993A /* ph.pause-circle.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 92FB43735AEEAF6D1BEA6D59 /* ph.pause-circle.fill.svg */; };
 		B9C06704C95E4DB8C723A79F /* ph.thermometer-cold.svg in Resources */ = {isa = PBXBuildFile; fileRef = ED744CD65393A4C79C363396 /* ph.thermometer-cold.svg */; };
 		B9C236BE236DA20D17F4386F /* ph.wifi-low.svg in Resources */ = {isa = PBXBuildFile; fileRef = 85980112647A924644D322E3 /* ph.wifi-low.svg */; };
+		B9DDE6B4B8A4E09969F04BB7 /* HAPIdentityKeychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = F28E4C41865A4B7D148863FD /* HAPIdentityKeychain.swift */; };
 		B9EF3D2A55A83732857C3102 /* ph.vignette.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = CAD2AA6351BC0E49135EBC1C /* ph.vignette.fill.svg */; };
 		B9F18BADD10D23BB41580BC4 /* ph.clover.svg in Resources */ = {isa = PBXBuildFile; fileRef = FD16BBF84484FD6F857C241D /* ph.clover.svg */; };
 		B9F4E511D881DC83ECE6F623 /* ph.lock-key.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = E3BA71ADA0D2D3FE82D0F718 /* ph.lock-key.fill.svg */; };
@@ -2584,6 +2585,7 @@
 		C0728FE2E813EB59E3773E10 /* ph.waveform.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 357E9A799F75061FD85787FE /* ph.waveform.fill.svg */; };
 		C0971C587D9BBA1025551C8D /* ph.key.svg in Resources */ = {isa = PBXBuildFile; fileRef = 695B6A50DE1B5F0775CDDECF /* ph.key.svg */; };
 		C0C0F5F4260A6F59906A99B0 /* ph.sneaker-move.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 3FAA5BE535E749BB5A72F10B /* ph.sneaker-move.fill.svg */; };
+		C0E51245A7FAAD3DD50D685B /* HAPIdentityKeychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = F28E4C41865A4B7D148863FD /* HAPIdentityKeychain.swift */; };
 		C0F1597B4185D92A5E5E45CF /* ph.eye-closed.svg in Resources */ = {isa = PBXBuildFile; fileRef = 54AAEAD20351AE9C05C4111A /* ph.eye-closed.svg */; };
 		C0FA76AC5F8A38B45504475D /* ph.eyeglasses.svg in Resources */ = {isa = PBXBuildFile; fileRef = EEE18BE58BA40A98CEDA5B0B /* ph.eyeglasses.svg */; };
 		C0FBCA0C7321118963C3CF5A /* ph.folder-simple-lock.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = B134BBCB34F7FAF9CC2664EC /* ph.folder-simple-lock.fill.svg */; };
@@ -6526,6 +6528,7 @@
 		F27AD71D12106F736B139E74 /* ph.cell-signal-none.svg */ = {isa = PBXFileReference; path = "ph.cell-signal-none.svg"; sourceTree = "<group>"; };
 		F27C6A4E49237FAA46F67C9D /* ph.user-minus.svg */ = {isa = PBXFileReference; path = "ph.user-minus.svg"; sourceTree = "<group>"; };
 		F2888D61E3A08217856C6E70 /* ph.washing-machine.svg */ = {isa = PBXFileReference; path = "ph.washing-machine.svg"; sourceTree = "<group>"; };
+		F28E4C41865A4B7D148863FD /* HAPIdentityKeychain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HAPIdentityKeychain.swift; sourceTree = "<group>"; };
 		F29411290B0D98B4C75C9318 /* ph.pentagon.fill.svg */ = {isa = PBXFileReference; path = ph.pentagon.fill.svg; sourceTree = "<group>"; };
 		F2B85C529AD6481D7F63F119 /* ph.grains-slash.fill.svg */ = {isa = PBXFileReference; path = "ph.grains-slash.fill.svg"; sourceTree = "<group>"; };
 		F2BB059BF1F54562487FE8D2 /* ModeButtonGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModeButtonGroup.swift; sourceTree = "<group>"; };
@@ -6923,6 +6926,7 @@
 			isa = PBXGroup;
 			children = (
 				C74106EAB1CEB975E6B3DFCC /* FilePairingStore.swift */,
+				F28E4C41865A4B7D148863FD /* HAPIdentityKeychain.swift */,
 				1BC9BB856B1F21EB05CC6737 /* HAPService+CarbonDioxide.swift */,
 				8E912B10122DBDD307334052 /* VirtualBridgeService.swift */,
 				6C324A49E5DE7383B3116A5A /* VirtualControl.swift */,
@@ -13544,6 +13548,7 @@
 				C75447EACE1D4BE50218DB35 /* HAHumidifierMenuItem.swift in Sources */,
 				6A08A1E13F3F2DEB3D28188C /* HALockMenuItem.swift in Sources */,
 				D3C658BC3BB56C1E309511C1 /* HAModels.swift in Sources */,
+				B9DDE6B4B8A4E09969F04BB7 /* HAPIdentityKeychain.swift in Sources */,
 				A997078001F9A7A84D60684A /* HAPService+CarbonDioxide.swift in Sources */,
 				E36468EF65BF34164C05B424 /* HASecuritySystemMenuItem.swift in Sources */,
 				DCA1F3C588948A0CA6DF932D /* HASuccessWindowController.swift in Sources */,
@@ -13701,6 +13706,7 @@
 				8FFE17F91B99FCB47BCB29D0 /* HAModels.swift in Sources */,
 				DF2EA2565247431E445B32EE /* HAModelsTests.swift in Sources */,
 				134E7F2B048EE730C61E1506 /* HAPCarbonDioxideTests.swift in Sources */,
+				C0E51245A7FAAD3DD50D685B /* HAPIdentityKeychain.swift in Sources */,
 				5860C2828B56E3A5CB0E557B /* HAPService+CarbonDioxide.swift in Sources */,
 				BAD9A04129591C3A9C0E47AB /* HASecuritySystemMenuItem.swift in Sources */,
 				AD4D681D6C6471E0B10CB188 /* HASuccessWindowController.swift in Sources */,
@@ -14120,8 +14126,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/mikeburgh/hap-swift.git";
 			requirement = {
-				branch = macos14;
-				kind = branch;
+				kind = revision;
+				revision = 6e62417d61522823552417714b62af89b2e211b3;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */

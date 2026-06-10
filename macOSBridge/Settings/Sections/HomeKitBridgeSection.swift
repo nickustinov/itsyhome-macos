@@ -58,7 +58,7 @@ class HomeKitBridgeSection: SettingsCard {
         }
 
         let desc = wrappingLabel(
-            "Publish virtual sensors to Apple Home over HomeKit. Rooms are assigned in Apple Home after pairing.")
+            String(localized: "settings.homekit_bridge.description", defaultValue: "Publish virtual sensors to Apple Home over HomeKit. Rooms are assigned in Apple Home after pairing.", bundle: .macOSBridge))
         stackView.addArrangedSubview(desc)
         stackView.addArrangedSubview(createSpacer(height: 10))
 
@@ -92,7 +92,7 @@ class HomeKitBridgeSection: SettingsCard {
         let container = NSView()
         container.translatesAutoresizingMaskIntoConstraints = false
 
-        let label = createLabel("Enable HomeKit Bridge", style: .body)
+        let label = createLabel(String(localized: "settings.homekit_bridge.enable_toggle", defaultValue: "Enable HomeKit Bridge", bundle: .macOSBridge), style: .body)
         label.translatesAutoresizingMaskIntoConstraints = false
 
         enableSwitch.controlSize = .mini
@@ -124,10 +124,10 @@ class HomeKitBridgeSection: SettingsCard {
         statusRow.orientation = .horizontal
         statusRow.spacing = 6
         statusRow.alignment = .centerY
-        let statusTitle = createLabel("Status:", style: .body)
+        let statusTitle = createLabel(String(localized: "settings.homekit_bridge.status_label", defaultValue: "Status:", bundle: .macOSBridge), style: .body)
         statusTitle.translatesAutoresizingMaskIntoConstraints = false
         statusTitle.widthAnchor.constraint(equalToConstant: 80).isActive = true
-        statusLabel = createLabel("Stopped", style: .body)
+        statusLabel = createLabel(String(localized: "settings.homekit_bridge.status.stopped", defaultValue: "Stopped", bundle: .macOSBridge), style: .body)
         statusRow.addArrangedSubview(statusTitle)
         statusRow.addArrangedSubview(statusLabel)
         stack.addArrangedSubview(statusRow)
@@ -137,19 +137,19 @@ class HomeKitBridgeSection: SettingsCard {
         codeRow.orientation = .horizontal
         codeRow.spacing = 8
         codeRow.alignment = .centerY
-        let codeTitle = createLabel("Setup code:", style: .body)
+        let codeTitle = createLabel(String(localized: "settings.homekit_bridge.setup_code_label", defaultValue: "Setup code:", bundle: .macOSBridge), style: .body)
         codeTitle.translatesAutoresizingMaskIntoConstraints = false
         codeTitle.widthAnchor.constraint(equalToConstant: 80).isActive = true
         codeLabel = createLabel(PreferencesManager.shared.virtualBridgeSetupCode, style: .code)
 
         let infoButton = NSButton(title: "", target: self, action: #selector(showInstructions(_:)))
-        infoButton.image = NSImage(systemSymbolName: "info.circle", accessibilityDescription: "How to pair")
+        infoButton.image = NSImage(systemSymbolName: "info.circle", accessibilityDescription: String(localized: "settings.homekit_bridge.info.accessibility", defaultValue: "How to pair", bundle: .macOSBridge))
         infoButton.imagePosition = .imageOnly
         infoButton.isBordered = false
         infoButton.contentTintColor = .secondaryLabelColor
-        infoButton.toolTip = "How to add this bridge to Apple Home"
+        infoButton.toolTip = String(localized: "settings.homekit_bridge.info.tooltip", defaultValue: "How to add this bridge to Apple Home", bundle: .macOSBridge)
 
-        let resetButton = NSButton(title: "Reset Pairing", target: self, action: #selector(resetPairingAction))
+        let resetButton = NSButton(title: String(localized: "settings.homekit_bridge.reset_pairing_button", defaultValue: "Reset Pairing", bundle: .macOSBridge), target: self, action: #selector(resetPairingAction))
         resetButton.bezelStyle = .rounded
         resetButton.controlSize = .small
 
@@ -171,11 +171,11 @@ class HomeKitBridgeSection: SettingsCard {
         row.alignment = .centerY
         row.translatesAutoresizingMaskIntoConstraints = false
 
-        let title = createLabel("Virtual devices", style: .sectionHeader)
+        let title = createLabel(String(localized: "settings.homekit_bridge.devices_header", defaultValue: "Virtual devices", bundle: .macOSBridge), style: .sectionHeader)
         row.addArrangedSubview(title)
         row.addArrangedSubview(NSView())  // spacer
 
-        let addButton = NSButton(title: "Add Device", target: self, action: #selector(showAddForm))
+        let addButton = NSButton(title: String(localized: "settings.homekit_bridge.add_device_button", defaultValue: "Add Device", bundle: .macOSBridge), target: self, action: #selector(showAddForm))
         addButton.bezelStyle = .rounded
         addButton.controlSize = .small
         row.addArrangedSubview(addButton)
@@ -192,10 +192,10 @@ class HomeKitBridgeSection: SettingsCard {
         panel.alignment = .leading
         panel.translatesAutoresizingMaskIntoConstraints = false
 
-        formTitleLabel = createLabel("New device", style: .sectionHeader)
+        formTitleLabel = createLabel(String(localized: "settings.homekit_bridge.form.new_title", defaultValue: "New device", bundle: .macOSBridge), style: .sectionHeader)
         panel.addArrangedSubview(formTitleLabel)
 
-        nameField.placeholderString = "Name (e.g. Front Door)"
+        nameField.placeholderString = String(localized: "settings.homekit_bridge.form.name_placeholder", defaultValue: "Name (e.g. Front Door)", bundle: .macOSBridge)
         nameField.controlSize = .regular
         panel.addArrangedSubview(labeledRow("Name", nameField))
 
@@ -214,7 +214,7 @@ class HomeKitBridgeSection: SettingsCard {
         criticalNote.textColor = .systemOrange
         panel.addArrangedSubview(criticalNote)
 
-        let note = wrappingLabel("The room is chosen in the Apple Home app after pairing.")
+        let note = wrappingLabel(String(localized: "settings.homekit_bridge.form.room_note", defaultValue: "The room is chosen in the Apple Home app after pairing.", bundle: .macOSBridge))
         note.textColor = .tertiaryLabelColor
         panel.addArrangedSubview(note)
 
@@ -228,12 +228,12 @@ class HomeKitBridgeSection: SettingsCard {
         buttons.alignment = .centerY
         buttons.translatesAutoresizingMaskIntoConstraints = false
         buttons.addArrangedSubview(NSView())  // spacer
-        let cancel = NSButton(title: "Cancel", target: self, action: #selector(cancelAdd))
+        let cancel = NSButton(title: String(localized: "settings.homekit_bridge.form.cancel_button", defaultValue: "Cancel", bundle: .macOSBridge), target: self, action: #selector(cancelAdd))
         cancel.bezelStyle = .rounded
         cancel.controlSize = .small
         cancel.keyEquivalent = "\u{1b}"  // Esc
         buttons.addArrangedSubview(cancel)
-        let save = NSButton(title: "Save", target: self, action: #selector(saveDevice))
+        let save = NSButton(title: String(localized: "settings.homekit_bridge.form.save_button", defaultValue: "Save", bundle: .macOSBridge), target: self, action: #selector(saveDevice))
         save.bezelStyle = .rounded
         save.controlSize = .small
         save.keyEquivalent = "\r"
@@ -281,7 +281,7 @@ class HomeKitBridgeSection: SettingsCard {
         }
         let devices = VirtualDeviceStore.shared.devices
         if devices.isEmpty {
-            devicesStack.addArrangedSubview(createLabel("No virtual devices yet.", style: .caption))
+            devicesStack.addArrangedSubview(createLabel(String(localized: "settings.homekit_bridge.devices_empty", defaultValue: "No virtual devices yet.", bundle: .macOSBridge), style: .caption))
             return
         }
         for device in devices {
@@ -312,7 +312,7 @@ class HomeKitBridgeSection: SettingsCard {
                                    target: self, action: #selector(deviceToggled(_:)))
         stateButton.bezelStyle = .rounded
         stateButton.controlSize = .small
-        stateButton.toolTip = "Toggle state"
+        stateButton.toolTip = String(localized: "settings.homekit_bridge.toggle_state.tooltip", defaultValue: "Toggle state", bundle: .macOSBridge)
         stateButton.identifier = NSUserInterfaceItemIdentifier(device.id.uuidString)
         stateButton.contentTintColor = device.state ? .controlAccentColor : .secondaryLabelColor
         stateButton.translatesAutoresizingMaskIntoConstraints = false
@@ -357,7 +357,7 @@ class HomeKitBridgeSection: SettingsCard {
 
     @objc private func showAddForm() {
         editingDeviceId = nil
-        formTitleLabel.stringValue = "New device"
+        formTitleLabel.stringValue = String(localized: "settings.homekit_bridge.form.new_title", defaultValue: "New device", bundle: .macOSBridge)
         nameField.stringValue = ""
         typePopUp.selectItem(at: 0)
         rolePopUp.selectItem(at: 0)
@@ -369,7 +369,7 @@ class HomeKitBridgeSection: SettingsCard {
 
     private func showEditForm(_ device: VirtualDevice) {
         editingDeviceId = device.id
-        formTitleLabel.stringValue = "Edit device"
+        formTitleLabel.stringValue = String(localized: "settings.homekit_bridge.form.edit_title", defaultValue: "Edit device", bundle: .macOSBridge)
         nameField.stringValue = device.name
         if let idx = orderedTypes.firstIndex(of: device.type) { typePopUp.selectItem(at: idx) }
         if let role = device.role, let idx = orderedRoles.firstIndex(of: role) {
@@ -394,13 +394,13 @@ class HomeKitBridgeSection: SettingsCard {
         roleRow.isHidden = (type != .contact)
         criticalNote.isHidden = !type.isCriticalAlertType
         criticalNote.stringValue = type.isCriticalAlertType
-            ? "Apple Home can raise critical alerts for \(displayName(type)) sensors."
+            ? String(localized: "settings.homekit_bridge.form.critical_note", defaultValue: "Apple Home can raise critical alerts for \(displayName(type)) sensors.", bundle: .macOSBridge)
             : ""
     }
 
     @objc private func saveDevice() {
         let name = nameField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !name.isEmpty else { addErrorLabel.stringValue = "Name is required."; return }
+        guard !name.isEmpty else { addErrorLabel.stringValue = String(localized: "settings.homekit_bridge.form.error.name_required", defaultValue: "Name is required.", bundle: .macOSBridge); return }
         let type = orderedTypes[typePopUp.indexOfSelectedItem]
         let role = orderedRoles[rolePopUp.indexOfSelectedItem]
 
@@ -408,7 +408,7 @@ class HomeKitBridgeSection: SettingsCard {
             let clash = VirtualDeviceStore.shared.devices.contains {
                 $0.id != editId && $0.name.lowercased() == name.lowercased()
             }
-            if clash { addErrorLabel.stringValue = "A device named \"\(name)\" already exists."; return }
+            if clash { addErrorLabel.stringValue = String(localized: "error.virtual_device.duplicate_name", defaultValue: "A device named \"\(name)\" already exists.", bundle: .macOSBridge); return }
             device.name = name
             device.type = type
             device.role = type == .contact ? role : nil
@@ -439,16 +439,16 @@ class HomeKitBridgeSection: SettingsCard {
             automation.actions.contains { if case .setVirtualSensor(let a) = $0 { return a.deviceId == id }; return false }
         }
         let alert = NSAlert()
-        alert.messageText = "Delete \"\(device.name)\"?"
+        alert.messageText = String(localized: "settings.homekit_bridge.delete_alert.title", defaultValue: "Delete \"\(device.name)\"?", bundle: .macOSBridge)
         if usedBy.isEmpty {
-            alert.informativeText = "This virtual sensor will be removed from Apple Home."
+            alert.informativeText = String(localized: "settings.homekit_bridge.delete_alert.message", defaultValue: "This virtual sensor will be removed from Apple Home.", bundle: .macOSBridge)
         } else {
             let names = usedBy.map { "\u{2022} \($0.name)" }.joined(separator: "\n")
             let plural = usedBy.count == 1
-            alert.informativeText = "This sensor is used by \(usedBy.count) automation\(plural ? "" : "s"):\n\(names)\n\nDeleting it will break \(plural ? "that automation" : "those automations")."
+            alert.informativeText = String(localized: "settings.homekit_bridge.delete_alert.used_by", defaultValue: "This sensor is used by \(usedBy.count) automation\(plural ? "" : "s"):\n\(names)\n\nDeleting it will break \(plural ? "that automation" : "those automations").", bundle: .macOSBridge)
         }
-        alert.addButton(withTitle: "Delete")
-        alert.addButton(withTitle: "Cancel")
+        alert.addButton(withTitle: String(localized: "common.delete", defaultValue: "Delete", bundle: .macOSBridge))
+        alert.addButton(withTitle: String(localized: "common.cancel", defaultValue: "Cancel", bundle: .macOSBridge))
         guard alert.runModal() == .alertFirstButtonReturn else { return }
 
         let aid = device.aid
@@ -477,10 +477,10 @@ class HomeKitBridgeSection: SettingsCard {
 
     @objc private func resetPairingAction() {
         let alert = NSAlert()
-        alert.messageText = "Reset HomeKit pairing?"
-        alert.informativeText = "This unpairs the bridge and generates a new setup code. Remove \"Itsyhome Bridge\" from the Apple Home app, then add it again with the new code."
-        alert.addButton(withTitle: "Reset")
-        alert.addButton(withTitle: "Cancel")
+        alert.messageText = String(localized: "settings.homekit_bridge.reset_alert.title", defaultValue: "Reset HomeKit pairing?", bundle: .macOSBridge)
+        alert.informativeText = String(localized: "settings.homekit_bridge.reset_alert.message", defaultValue: "This unpairs the bridge and generates a new setup code. Remove \"Itsyhome Bridge\" from the Apple Home app, then add it again with the new code.", bundle: .macOSBridge)
+        alert.addButton(withTitle: String(localized: "settings.homekit_bridge.reset_alert.confirm_button", defaultValue: "Reset", bundle: .macOSBridge))
+        alert.addButton(withTitle: String(localized: "settings.homekit_bridge.reset_alert.cancel_button", defaultValue: "Cancel", bundle: .macOSBridge))
         guard alert.runModal() == .alertFirstButtonReturn else { return }
         Task {
             await VirtualBridgeService.shared.resetPairing()
@@ -513,13 +513,13 @@ class HomeKitBridgeSection: SettingsCard {
     private func updateStatusDisplay() {
         switch VirtualBridgeService.shared.status {
         case .stopped:
-            statusLabel.stringValue = "Stopped"
+            statusLabel.stringValue = String(localized: "settings.homekit_bridge.status.stopped", defaultValue: "Stopped", bundle: .macOSBridge)
             statusLabel.textColor = .secondaryLabelColor
         case .running:
-            statusLabel.stringValue = "Running"
+            statusLabel.stringValue = String(localized: "settings.homekit_bridge.status.running", defaultValue: "Running", bundle: .macOSBridge)
             statusLabel.textColor = .systemGreen
         case .error(let message):
-            statusLabel.stringValue = "Error: \(message)"
+            statusLabel.stringValue = String(localized: "settings.homekit_bridge.status.error", defaultValue: "Error: \(message)", bundle: .macOSBridge)
             statusLabel.textColor = .systemRed
         }
     }
@@ -536,12 +536,12 @@ class HomeKitBridgeSection: SettingsCard {
         stack.alignment = .leading
         stack.translatesAutoresizingMaskIntoConstraints = false
 
-        stack.addArrangedSubview(createLabel("Add to Apple Home", style: .sectionHeader))
+        stack.addArrangedSubview(createLabel(String(localized: "settings.homekit_bridge.instructions.title", defaultValue: "Add to Apple Home", bundle: .macOSBridge), style: .sectionHeader))
         let steps = [
-            "1. Add a device and enable the bridge.",
-            "2. In the Home app: Add Accessory, then More options.",
-            "3. Pick \u{201C}Itsyhome Bridge\u{201D} and enter the setup code.",
-            "4. Assign each device to a room in the Home app."
+            String(localized: "settings.homekit_bridge.instructions.step1", defaultValue: "1. Add a device and enable the bridge.", bundle: .macOSBridge),
+            String(localized: "settings.homekit_bridge.instructions.step2", defaultValue: "2. In the Home app: Add Accessory, then More options.", bundle: .macOSBridge),
+            String(localized: "settings.homekit_bridge.instructions.step3", defaultValue: "3. Pick \u{201C}Itsyhome Bridge\u{201D} and enter the setup code.", bundle: .macOSBridge),
+            String(localized: "settings.homekit_bridge.instructions.step4", defaultValue: "4. Assign each device to a room in the Home app.", bundle: .macOSBridge)
         ]
         for step in steps {
             let l = createLabel(step, style: .body)
@@ -576,23 +576,15 @@ class HomeKitBridgeSection: SettingsCard {
         return label
     }
 
-    private func displayName(_ type: VirtualSensorType) -> String {
-        switch type {
-        case .contact: return "Contact"
-        case .motion: return "Motion"
-        case .occupancy: return "Occupancy"
-        case .leak: return "Leak"
-        case .smoke: return "Smoke"
-        case .carbonMonoxide: return "Carbon Monoxide"
-        case .carbonDioxide: return "Carbon Dioxide"
-        }
-    }
+    // Type names live on VirtualSensorType.displayName so the bridge and the
+    // automations trigger picker share one localized source.
+    private func displayName(_ type: VirtualSensorType) -> String { type.displayName }
 
     private func displayName(_ role: ContactRole) -> String {
         switch role {
-        case .generic: return "Generic"
-        case .door: return "Door"
-        case .window: return "Window"
+        case .generic: return String(localized: "settings.homekit_bridge.role.generic", defaultValue: "Generic", bundle: .macOSBridge)
+        case .door: return String(localized: "settings.homekit_bridge.role.door", defaultValue: "Door", bundle: .macOSBridge)
+        case .window: return String(localized: "settings.homekit_bridge.role.window", defaultValue: "Window", bundle: .macOSBridge)
         }
     }
 

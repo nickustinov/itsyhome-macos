@@ -17,6 +17,12 @@ import os.log
 // `HAPCore.AccessoryInfo` to disambiguate.
 private typealias HAPInfo = HAPCore.AccessoryInfo
 
+// Main-actor-confined: all mutable state (`bridge`, `service`, `started`,
+// `stateIIDs`, `status`) is touched only from the main actor, so interleaved
+// start/stop/addDevice/setState calls cannot race. The sync entry points the UI
+// and MacOSController call without `await` (`startIfEnabled`, `setupCode`,
+// `status`) are `nonisolated` so non-main-actor callers still reach them.
+@MainActor
 final class VirtualBridgeService {
 
     static let shared = VirtualBridgeService()
@@ -45,14 +51,20 @@ final class VirtualBridgeService {
     }
 
     /// The user-facing setup code (XXX-XX-XXX), persisted; shown in Settings.
-    var setupCode: String { PreferencesManager.shared.virtualBridgeSetupCode }
+    /// `nonisolated`: only reads PreferencesManager, so the UI reads it directly.
+    nonisolated var setupCode: String { PreferencesManager.shared.virtualBridgeSetupCode }
 
     // MARK: Lifecycle
 
-    /// Start only when the user enabled the bridge (and Pro is active). Wired
-    /// into ProManager and the Settings toggle.
-    func startIfEnabled() {
-        guard ProStatusCache.shared.isPro, PreferencesManager.shared.virtualBridgeEnabled else { return }
+    /// Start only when the user enabled the bridge, Pro is active, and we are in
+    /// HomeKit mode. The virtual sensors depend on the Apple Home -> HomeKit
+    /// notify -> ItsyHome round-trip, which does not exist in Home Assistant
+    /// mode, so the bridge is HomeKit-only. `nonisolated` so the sync callers
+    /// (MacOSController, ProManager, the Settings toggle) reach it without await.
+    nonisolated func startIfEnabled() {
+        guard PlatformManager.shared.selectedPlatform == .homeKit,
+              ProStatusCache.shared.isPro,
+              PreferencesManager.shared.virtualBridgeEnabled else { return }
         Task { await start() }
     }
 
@@ -182,18 +194,18 @@ final class VirtualBridgeService {
     }
 
     private static func stableIdentity() -> HAPIdentity {
-        let url = supportDir().appendingPathComponent("identity")
-        if let data = try? Data(contentsOf: url), let identity = try? HAPIdentity(privateKeyData: data) {
+        if let data = HAPIdentityKeychain.load(), let identity = try? HAPIdentity(privateKeyData: data) {
             return identity
         }
         let identity = HAPIdentity()
-        try? identity.privateKeyData.write(to: url, options: .atomic)
+        HAPIdentityKeychain.save(identity.privateKeyData)
         return identity
     }
 
     private static func deletePersistentState() {
+        HAPIdentityKeychain.delete()
         let dir = supportDir()
-        for name in ["deviceID", "identity", "pairings.json"] {
+        for name in ["deviceID", "pairings.json"] {
             try? FileManager.default.removeItem(at: dir.appendingPathComponent(name))
         }
     }

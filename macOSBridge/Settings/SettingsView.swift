@@ -128,6 +128,11 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
             switch self {
             case .homeAssistant:
                 return platform == .homeAssistant
+            case .homeKitBridge, .automations:
+                // Virtual sensors and the automations that drive them depend on
+                // the Apple Home -> HomeKit notify -> ItsyHome round-trip, which
+                // does not exist in Home Assistant mode. HomeKit-only.
+                return platform == .homeKit
             case .accessories:
                 // Show Home section for both platforms (different content)
                 return true

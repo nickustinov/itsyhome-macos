@@ -65,6 +65,9 @@ final class AutomationEngine {
     func startIfEnabled() {
         onMain {
             guard !self.started else { return }
+            // Automations drive virtual HAP sensors, which only work via the
+            // Apple Home round-trip in HomeKit mode - inert in Home Assistant mode.
+            guard PlatformManager.shared.selectedPlatform == .homeKit else { return }
             guard ProStatusCache.shared.isPro else { return }
             self.started = true
             self.load(AutomationStore.shared.automations)
@@ -181,13 +184,24 @@ final class AutomationEngine {
         }
     }
 
+    /// Momentary OFF duration of a re-pulse "blip". Apple Home automations fire
+    /// on a change, not a held state, so each pulse drives the sensor OFF then
+    /// back ON after this delay to produce a fresh edge. Kept short so it reads
+    /// as a transient blip, not a real "cleared" state.
+    private static let pulseBlipSeconds: TimeInterval = 1
+
     private func startPulse(action: SetVirtualSensorAction, rt: Runtime) {
         rt.pulseTimer?.invalidate()
-        rt.pulseTimer = Timer.scheduledTimer(withTimeInterval: max(1, Double(action.rePulse.intervalSeconds)), repeats: true) { [weak self] _ in
+        // Clamp the interval so a full OFF -> (blip) -> ON cycle always finishes
+        // before the next pulse fires. Without this, an interval shorter than the
+        // blip would interleave the off/on writes and could leave the sensor in
+        // the wrong state.
+        let interval = max(Self.pulseBlipSeconds + 1, Double(action.rePulse.intervalSeconds))
+        rt.pulseTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
             guard let self else { return }
-            // Blip: opposite then back, to generate a fresh edge for Apple Home.
+            // Blip: OFF now, back ON after pulseBlipSeconds, so Apple Home sees a fresh edge.
             self.applyActive(action, false)
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2) { self.applyActive(action, true) }
+            DispatchQueue.main.asyncAfter(deadline: .now() + Self.pulseBlipSeconds) { self.applyActive(action, true) }
         }
     }
 

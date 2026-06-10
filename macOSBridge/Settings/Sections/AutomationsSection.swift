@@ -73,7 +73,7 @@ class AutomationsSection: SettingsCard {
         }
 
         let desc = wrappingLabel(
-            "Automations watch a HomeKit accessory and, when it holds a state for a duration, set a virtual sensor (re-pulsing it) - so Apple Home can automate on conditions HomeKit can't compute itself, like \"open for 15 minutes\".")
+            String(localized: "settings.automations.description", defaultValue: "Automations watch a HomeKit accessory and, when it holds a state for a duration, set a virtual sensor (re-pulsing it) - so Apple Home can automate on conditions HomeKit can't compute itself, like \"open for 15 minutes\".", bundle: .macOSBridge))
         stackView.addArrangedSubview(desc)
         stackView.addArrangedSubview(createSpacer(height: 12))
 
@@ -100,9 +100,9 @@ class AutomationsSection: SettingsCard {
         let row = NSStackView()
         row.orientation = .horizontal; row.spacing = 8; row.alignment = .centerY
         row.translatesAutoresizingMaskIntoConstraints = false
-        row.addArrangedSubview(createLabel("Automations", style: .sectionHeader))
+        row.addArrangedSubview(createLabel(String(localized: "settings.automations.title", defaultValue: "Automations", bundle: .macOSBridge), style: .sectionHeader))
         row.addArrangedSubview(NSView())
-        let add = NSButton(title: "Add Automation", target: self, action: #selector(showAddForm))
+        let add = NSButton(title: String(localized: "settings.automations.add_button", defaultValue: "Add Automation", bundle: .macOSBridge), target: self, action: #selector(showAddForm))
         add.bezelStyle = .rounded; add.controlSize = .small
         row.addArrangedSubview(add)
         return row
@@ -119,15 +119,15 @@ class AutomationsSection: SettingsCard {
         panel.addArrangedSubview(sep)
         sep.widthAnchor.constraint(equalTo: panel.widthAnchor).isActive = true
 
-        formTitleLabel = createLabel("New automation", style: .sectionHeader)
+        formTitleLabel = createLabel(String(localized: "settings.automations.form.new_title", defaultValue: "New automation", bundle: .macOSBridge), style: .sectionHeader)
         panel.addArrangedSubview(formTitleLabel)
 
-        nameField.placeholderString = "Name (e.g. Front Door left open)"
+        nameField.placeholderString = String(localized: "settings.automations.form.name_placeholder", defaultValue: "Name (e.g. Front Door left open)", bundle: .macOSBridge)
         nameField.controlSize = .regular
         panel.addArrangedSubview(labeledRow("Name", nameField))
 
         // WHEN
-        panel.addArrangedSubview(createLabel("WHEN", style: .caption))
+        panel.addArrangedSubview(createLabel(String(localized: "settings.automations.form.when_label", defaultValue: "WHEN", bundle: .macOSBridge), style: .caption))
         triggerPopUp.controlSize = .regular
         triggerPopUp.target = self
         triggerPopUp.action = #selector(triggerChanged)
@@ -136,21 +136,24 @@ class AutomationsSection: SettingsCard {
         panel.addArrangedSubview(labeledRow("Is", statePopUp))
 
         // FOR
-        panel.addArrangedSubview(createLabel("FOR", style: .caption))
+        panel.addArrangedSubview(createLabel(String(localized: "settings.automations.form.for_label", defaultValue: "FOR", bundle: .macOSBridge), style: .caption))
         durationField.placeholderString = "0"
         durationField.controlSize = .regular
         durationField.translatesAutoresizingMaskIntoConstraints = false
         durationField.widthAnchor.constraint(equalToConstant: 60).isActive = true
-        durationUnitPopUp.addItems(withTitles: ["Seconds", "Minutes"])
+        durationUnitPopUp.addItems(withTitles: [
+            String(localized: "settings.automations.unit.seconds", defaultValue: "Seconds", bundle: .macOSBridge),
+            String(localized: "settings.automations.unit.minutes", defaultValue: "Minutes", bundle: .macOSBridge)
+        ])
         durationUnitPopUp.selectItem(at: 1)
         durationUnitPopUp.controlSize = .regular
         panel.addArrangedSubview(fieldUnitRow("Duration", durationField, durationUnitPopUp))
-        let durNote = wrappingLabel("0 = fire immediately. Time-of-day and presence conditions stay in Apple Home.")
+        let durNote = wrappingLabel(String(localized: "settings.automations.form.duration_note", defaultValue: "0 = fire immediately. Time-of-day and presence conditions stay in Apple Home.", bundle: .macOSBridge))
         durNote.textColor = .tertiaryLabelColor
         panel.addArrangedSubview(durNote)
 
         // THEN
-        panel.addArrangedSubview(createLabel("THEN set a virtual sensor", style: .caption))
+        panel.addArrangedSubview(createLabel(String(localized: "settings.automations.form.then_label", defaultValue: "THEN set a virtual sensor", bundle: .macOSBridge), style: .caption))
         devicePopUp.controlSize = .regular
         devicePopUp.target = self
         devicePopUp.action = #selector(deviceChanged)
@@ -166,22 +169,25 @@ class AutomationsSection: SettingsCard {
         rePulseField.controlSize = .regular
         rePulseField.translatesAutoresizingMaskIntoConstraints = false
         rePulseField.widthAnchor.constraint(equalToConstant: 60).isActive = true
-        rePulseUnitPopUp.addItems(withTitles: ["Seconds", "Minutes"])
+        rePulseUnitPopUp.addItems(withTitles: [
+            String(localized: "settings.automations.unit.seconds", defaultValue: "Seconds", bundle: .macOSBridge),
+            String(localized: "settings.automations.unit.minutes", defaultValue: "Minutes", bundle: .macOSBridge)
+        ])
         rePulseUnitPopUp.selectItem(at: 1)
         rePulseUnitPopUp.controlSize = .regular
         let pulseRow = NSStackView()
         pulseRow.orientation = .horizontal; pulseRow.spacing = 8; pulseRow.alignment = .centerY
         pulseRow.translatesAutoresizingMaskIntoConstraints = false
-        let pulseLabel = createLabel("Re-pulse", style: .body)
+        let pulseLabel = createLabel(String(localized: "settings.automations.form.repulse_label", defaultValue: "Re-pulse", bundle: .macOSBridge), style: .body)
         pulseLabel.translatesAutoresizingMaskIntoConstraints = false
         pulseLabel.widthAnchor.constraint(equalToConstant: 110).isActive = true
         pulseRow.addArrangedSubview(pulseLabel)
         pulseRow.addArrangedSubview(rePulseSwitch)
-        pulseRow.addArrangedSubview(createLabel("every", style: .caption))
+        pulseRow.addArrangedSubview(createLabel(String(localized: "settings.automations.form.repulse_every", defaultValue: "every", bundle: .macOSBridge), style: .caption))
         pulseRow.addArrangedSubview(rePulseField)
         pulseRow.addArrangedSubview(rePulseUnitPopUp)
         panel.addArrangedSubview(pulseRow)
-        let pulseNote = wrappingLabel("Apple Home automations fire on a change, not a held state. Re-pulse re-fires the sensor on this interval while it's active, so a time- or presence-gated automation can still catch it.")
+        let pulseNote = wrappingLabel(String(localized: "settings.automations.form.repulse_note", defaultValue: "Apple Home automations fire on a change, not a held state. Re-pulse re-fires the sensor on this interval while it's active, so a time- or presence-gated automation can still catch it.", bundle: .macOSBridge))
         pulseNote.textColor = .tertiaryLabelColor
         panel.addArrangedSubview(pulseNote)
 
@@ -193,10 +199,10 @@ class AutomationsSection: SettingsCard {
         buttons.orientation = .horizontal; buttons.spacing = 8; buttons.alignment = .centerY
         buttons.translatesAutoresizingMaskIntoConstraints = false
         buttons.addArrangedSubview(NSView())
-        let cancel = NSButton(title: "Cancel", target: self, action: #selector(cancelForm))
+        let cancel = NSButton(title: String(localized: "settings.automations.form.cancel_button", defaultValue: "Cancel", bundle: .macOSBridge), target: self, action: #selector(cancelForm))
         cancel.bezelStyle = .rounded; cancel.controlSize = .small; cancel.keyEquivalent = "\u{1b}"
         buttons.addArrangedSubview(cancel)
-        let save = NSButton(title: "Save", target: self, action: #selector(saveAutomation))
+        let save = NSButton(title: String(localized: "settings.automations.form.save_button", defaultValue: "Save", bundle: .macOSBridge), target: self, action: #selector(saveAutomation))
         save.bezelStyle = .rounded; save.controlSize = .small; save.keyEquivalent = "\r"
         buttons.addArrangedSubview(save)
         panel.addArrangedSubview(buttons)
@@ -260,36 +266,50 @@ class AutomationsSection: SettingsCard {
                 ]
                 for (idStr, label) in pairs {
                     if let idStr, let id = UUID(uuidString: idStr) {
+                        // `label` stays English (stored key); the shown title uses
+                        // the localized type name.
+                        let typeName = Self.sensorType(forTriggerLabel: label)?.displayName ?? label
                         opts.append(TriggerOption(accessoryName: acc.name, characteristicId: id,
-                            label: label, title: "\(acc.name) - \(label)"))
+                            label: label, title: "\(acc.name) - \(typeName)"))
                     }
                 }
             }
         }
         triggerOptions = opts
         triggerPopUp.removeAllItems()
-        triggerPopUp.addItems(withTitles: opts.isEmpty ? ["No sensors found"] : opts.map(\.title))
+        triggerPopUp.addItems(withTitles: opts.isEmpty ? [String(localized: "settings.automations.trigger.no_sensors", defaultValue: "No sensors found", bundle: .macOSBridge)] : opts.map(\.title))
         triggerChanged()
     }
 
     private func rebuildDeviceOptions() {
         deviceOptions = VirtualDeviceStore.shared.devices
         devicePopUp.removeAllItems()
-        devicePopUp.addItems(withTitles: deviceOptions.isEmpty ? ["No virtual sensors"] : deviceOptions.map(\.name))
+        devicePopUp.addItems(withTitles: deviceOptions.isEmpty ? [String(localized: "settings.automations.device.no_sensors", defaultValue: "No virtual sensors", bundle: .macOSBridge)] : deviceOptions.map(\.name))
         deviceChanged()
     }
 
-    private func words(forLabel label: String) -> (on: String, off: String) {
+    /// Maps a trigger option's stable English label to its sensor type. The
+    /// label is also stored as `Automation.characteristicLabel`, so it stays
+    /// English (a stable key); all display strings come from the type.
+    private static func sensorType(forTriggerLabel label: String) -> VirtualSensorType? {
         switch label {
-        case "Contact": return ("Open", "Closed")
-        case "Motion": return ("Motion", "Clear")
-        case "Occupancy": return ("Occupied", "Clear")
-        case "Leak": return ("Leak", "Dry")
-        case "Smoke": return ("Smoke", "Clear")
-        case "Carbon Monoxide": return ("CO", "Clear")
-        case "Carbon Dioxide": return ("CO2", "Clear")
-        default: return ("On", "Off")
+        case "Contact": return .contact
+        case "Motion": return .motion
+        case "Occupancy": return .occupancy
+        case "Leak": return .leak
+        case "Smoke": return .smoke
+        case "Carbon Monoxide": return .carbonMonoxide
+        case "Carbon Dioxide": return .carbonDioxide
+        default: return nil
         }
+    }
+
+    private func words(forLabel label: String) -> (on: String, off: String) {
+        guard let type = Self.sensorType(forTriggerLabel: label) else {
+            return (String(localized: "sensor.state.generic.on", defaultValue: "On", bundle: .macOSBridge),
+                    String(localized: "sensor.state.generic.off", defaultValue: "Off", bundle: .macOSBridge))
+        }
+        return (type.stateWord(on: true), type.stateWord(on: false))
     }
 
     @objc private func triggerChanged() {
@@ -304,7 +324,7 @@ class AutomationsSection: SettingsCard {
         let idx = devicePopUp.indexOfSelectedItem
         guard idx >= 0, idx < deviceOptions.count else { actionNote.stringValue = ""; return }
         let d = deviceOptions[idx]
-        actionNote.stringValue = "Sets \(d.name) to \(d.type.stateWord(on: true)) while the trigger holds, then back to \(d.type.stateWord(on: false)) when it clears."
+        actionNote.stringValue = String(localized: "settings.automations.form.action_note", defaultValue: "Sets \(d.name) to \(d.type.stateWord(on: true)) while the trigger holds, then back to \(d.type.stateWord(on: false)) when it clears.", bundle: .macOSBridge)
     }
 
     // MARK: - Automations list
@@ -314,7 +334,7 @@ class AutomationsSection: SettingsCard {
         for v in automationsStack.arrangedSubviews { automationsStack.removeArrangedSubview(v); v.removeFromSuperview() }
         let automations = AutomationStore.shared.automations
         if automations.isEmpty {
-            automationsStack.addArrangedSubview(createLabel("No automations yet.", style: .caption))
+            automationsStack.addArrangedSubview(createLabel(String(localized: "settings.automations.empty", defaultValue: "No automations yet.", bundle: .macOSBridge), style: .caption))
             return
         }
         for automation in automations {
@@ -366,10 +386,13 @@ class AutomationsSection: SettingsCard {
         let stateWord = t.value != 0 ? w.on : w.off
         let dur: String
         if let s = automation.durationSeconds, s > 0 {
-            dur = s % 60 == 0 ? " for \(s / 60)m" : " for \(s)s"
+            dur = s % 60 == 0
+                ? String(localized: "settings.automations.summary.duration_minutes", defaultValue: " for \(s / 60)m", bundle: .macOSBridge)
+                : String(localized: "settings.automations.summary.duration_seconds", defaultValue: " for \(s)s", bundle: .macOSBridge)
         } else { dur = "" }
-        let target = VirtualDeviceStore.shared.device(id: a.deviceId)?.name ?? "(missing sensor)"
-        return "\(t.accessoryName) \(stateWord)\(dur) -> \(target)"
+        let target = VirtualDeviceStore.shared.device(id: a.deviceId)?.name
+            ?? String(localized: "settings.automations.summary.missing_sensor", defaultValue: "(missing sensor)", bundle: .macOSBridge)
+        return String(localized: "settings.automations.summary.format", defaultValue: "\(t.accessoryName) \(stateWord)\(dur) -> \(target)", bundle: .macOSBridge)
     }
 
     private func iconButton(_ symbol: String, action: Selector, id: UUID) -> NSButton {
@@ -397,16 +420,16 @@ class AutomationsSection: SettingsCard {
 
     private func statusText(_ id: UUID) -> (String, NSColor) {
         guard let automation = AutomationStore.shared.automation(id: id) else { return ("", .secondaryLabelColor) }
-        if automationTargetMissing(automation) { return ("Sensor deleted", .systemRed) }
-        if !automation.enabled { return ("Disabled", .tertiaryLabelColor) }
+        if automationTargetMissing(automation) { return (String(localized: "settings.automations.status.sensor_deleted", defaultValue: "Sensor deleted", bundle: .macOSBridge), .systemRed) }
+        if !automation.enabled { return (String(localized: "settings.automations.status.disabled", defaultValue: "Disabled", bundle: .macOSBridge), .tertiaryLabelColor) }
         switch AutomationEngine.shared.runtimeState(automationId: id) {
         case .active:
-            return ("Active", .systemGreen)
+            return (String(localized: "settings.automations.status.active", defaultValue: "Active", bundle: .macOSBridge), .systemGreen)
         case .armed:
-            if let r = AutomationEngine.shared.armedRemaining(automationId: id) { return ("Waiting \(r)s", .systemOrange) }
-            return ("Waiting", .systemOrange)
+            if let r = AutomationEngine.shared.armedRemaining(automationId: id) { return (String(localized: "settings.automations.status.waiting_countdown", defaultValue: "Waiting \(r)s", bundle: .macOSBridge), .systemOrange) }
+            return (String(localized: "settings.automations.status.waiting", defaultValue: "Waiting", bundle: .macOSBridge), .systemOrange)
         case .idle:
-            return ("Idle", .secondaryLabelColor)
+            return (String(localized: "settings.automations.status.idle", defaultValue: "Idle", bundle: .macOSBridge), .secondaryLabelColor)
         }
     }
 
@@ -420,7 +443,7 @@ class AutomationsSection: SettingsCard {
 
     @objc private func showAddForm() {
         editingAutomationId = nil
-        formTitleLabel.stringValue = "New automation"
+        formTitleLabel.stringValue = String(localized: "settings.automations.form.new_title", defaultValue: "New automation", bundle: .macOSBridge)
         nameField.stringValue = ""
         rebuildTriggerOptions()
         rebuildDeviceOptions()
@@ -435,7 +458,7 @@ class AutomationsSection: SettingsCard {
 
     private func showEditForm(_ automation: Automation) {
         editingAutomationId = automation.id
-        formTitleLabel.stringValue = "Edit automation"
+        formTitleLabel.stringValue = String(localized: "settings.automations.form.edit_title", defaultValue: "Edit automation", bundle: .macOSBridge)
         nameField.stringValue = automation.name
         rebuildTriggerOptions()
         rebuildDeviceOptions()
@@ -506,10 +529,10 @@ class AutomationsSection: SettingsCard {
         guard let s = sender.identifier?.rawValue, let id = UUID(uuidString: s),
               let automation = AutomationStore.shared.automation(id: id) else { return }
         let alert = NSAlert()
-        alert.messageText = "Delete \"\(automation.name)\"?"
-        alert.informativeText = "This automation will be removed."
-        alert.addButton(withTitle: "Delete")
-        alert.addButton(withTitle: "Cancel")
+        alert.messageText = String(localized: "settings.automations.delete_alert.title", defaultValue: "Delete \"\(automation.name)\"?", bundle: .macOSBridge)
+        alert.informativeText = String(localized: "settings.automations.delete_alert.message", defaultValue: "This automation will be removed.", bundle: .macOSBridge)
+        alert.addButton(withTitle: String(localized: "common.delete", defaultValue: "Delete", bundle: .macOSBridge))
+        alert.addButton(withTitle: String(localized: "common.cancel", defaultValue: "Cancel", bundle: .macOSBridge))
         guard alert.runModal() == .alertFirstButtonReturn else { return }
         AutomationStore.shared.remove(id: id)
         AutomationEngine.shared.reload()

@@ -28,9 +28,15 @@ struct AutomationDraft {
     }
 
     func validationError() -> String? {
-        if name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { return "Name is required." }
-        if trigger == nil { return "Choose a trigger." }
-        if actionDeviceId == nil { return "Choose a virtual sensor to drive." }
+        if name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return String(localized: "settings.automations.validation.name_required", defaultValue: "Name is required.", bundle: .macOSBridge)
+        }
+        if trigger == nil {
+            return String(localized: "settings.automations.validation.no_trigger", defaultValue: "Choose a trigger.", bundle: .macOSBridge)
+        }
+        if actionDeviceId == nil {
+            return String(localized: "settings.automations.validation.no_device", defaultValue: "Choose a virtual sensor to drive.", bundle: .macOSBridge)
+        }
         return nil
     }
 

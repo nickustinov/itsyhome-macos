@@ -33,7 +33,7 @@ final class VirtualDeviceStore {
         case duplicateName(String)
         var errorDescription: String? {
             switch self {
-            case .duplicateName(let n): return "A device named \"\(n)\" already exists."
+            case .duplicateName(let n): return String(localized: "error.virtual_device.duplicate_name", defaultValue: "A device named \"\(n)\" already exists.", bundle: .macOSBridge)
             }
         }
     }
