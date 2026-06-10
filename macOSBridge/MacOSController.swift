@@ -811,6 +811,14 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
 
         WebhookServer.shared.configure(actionEngine: actionEngine)
         WebhookServer.shared.rebuildCharacteristicIndex(from: data)
+
+        // Publish the virtual HAP bridge if the user enabled it (idempotent).
+        VirtualBridgeService.shared.startIfEnabled()
+
+        // Rules engine: give it a way to read current characteristic values, then
+        // start it (idempotent once running).
+        AutomationEngine.shared.valueProvider = { [weak self] id in self?.getCharacteristicValue(identifier: id) }
+        AutomationEngine.shared.startIfEnabled()
         let camerasEnabled = PreferencesManager.shared.camerasEnabled
         let isPro = ProStatusCache.shared.isPro
         let shouldShow = data.hasCameras && camerasEnabled && isPro

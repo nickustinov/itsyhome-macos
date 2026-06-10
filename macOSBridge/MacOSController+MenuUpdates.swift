@@ -12,10 +12,13 @@ extension MacOSController {
     // MARK: - Menu Updates
 
     func updateMenuItems(for characteristicId: UUID, value: Any, isLocalChange: Bool) {
-        // Pinned status items (visible in the menu bar) and SSE clients always
-        // need live updates, regardless of whether the dropdown is open.
+        // Pinned status items (visible in the menu bar), SSE clients, and the
+        // automation engine always need live updates, regardless of whether the
+        // dropdown is open: the engine evaluates state-duration triggers (e.g.
+        // "door open for 15 min") continuously, not just while the menu is open.
         updatePinnedStatusItems(for: characteristicId, value: value)
         WebhookServer.shared.publishCharacteristicChange(characteristicId: characteristicId, value: value)
+        AutomationEngine.shared.handleCharacteristicChange(id: characteristicId, value: value)
 
         // The dropdown's rows aren't visible while it's closed, and menuWillOpen
         // re-reads every characteristic via refreshCharacteristics(), so skip the

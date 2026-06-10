@@ -11,6 +11,9 @@ packages:
   LiveKitWebRTC:
     url: https://github.com/livekit/webrtc-xcframework.git
     exactVersion: "137.7151.12"
+  hap-swift:
+    url: https://github.com/mikeburgh/hap-swift.git
+    revision: 6e62417d61522823552417714b62af89b2e211b3
 
 settings:
   base:
@@ -105,6 +108,10 @@ targets:
         embed: false
       - sdk: CoreLocation.framework
         embed: false
+      - package: hap-swift
+        product: HAPSwift
+      - package: hap-swift
+        product: HAPApple
 
   # Unit tests for macOSBridge
   macOSBridgeTests:
@@ -139,9 +146,19 @@ targets:
       - path: macOSBridge/Settings/PreferencesManager+Shortcuts.swift
       - path: macOSBridge/Settings/PreferencesManager+Icons.swift
       - path: macOSBridge/Settings/PreferencesManager+Networks.swift
+      - path: macOSBridge/Settings/PreferencesManager+VirtualBridge.swift
       - path: Itsyhome/Shared
         buildPhase: sources
       - path: Itsyhome/HomeAssistant
         buildPhase: sources
     dependencies:
       - target: macOSBridge
+      # The test target compiles the macOSBridge sources directly (incl.
+      # HAPBridge/*), which import HAPCore/HAPSwift/HAPApple, so it must link
+      # the hap-swift products too.
+      - package: hap-swift
+        product: HAPSwift
+      - package: hap-swift
+        product: HAPApple
+      - package: hap-swift
+        product: HAPCore

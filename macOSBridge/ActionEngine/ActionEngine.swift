@@ -111,14 +111,63 @@ class ActionEngine {
 
         switch resolved {
         case .services(let services):
+            // Name-based virtual routing, and its collision behaviour:
+            // a virtual sensor, once paired, returns through HomeKit under HK's
+            // own id, so we recognise it by NAME (see virtualDevice(in:)). A
+            // virtual sensor whose name matches a resolved service therefore
+            // short-circuits to the store (HAP) BEFORE HomeKit control runs.
+            // Consequence: if a real accessory shares a name with a virtual
+            // sensor, control routes to the virtual one - so virtual-device names
+            // should be kept unique from real accessories. Services with no
+            // virtual match fall through to normal HomeKit control below.
+            if let vdev = virtualDevice(in: services) {
+                return applyVirtual(vdev, action: action)
+            }
             return executeOnServices(services, action: action, bridge: bridge)
         case .scene(let scene):
             return executeScene(scene, bridge: bridge)
         case .notFound(let query):
+            // Resolver matched no real device: fall back to a virtual match by
+            // name. Real devices keep precedence - we only reach here when none
+            // matched, so this path cannot shadow a real accessory.
+            if let vdev = VirtualDeviceStore.shared.device(named: query) {
+                return applyVirtual(vdev, action: action)
+            }
             return .error(.targetNotFound(query))
         case .ambiguous(let options):
             return .error(.ambiguousTarget(options.map(\.name)))
         }
+    }
+
+    // MARK: - Virtual devices
+
+    /// A resolved service is a virtual device when its name matches one in the
+    /// VirtualDeviceStore. (Once paired, the device comes back through HomeKit
+    /// with HomeKit's own id, so we match on name rather than identifier.)
+    private func virtualDevice(in services: [ServiceData]) -> VirtualDevice? {
+        for s in services {
+            if let dev = VirtualDeviceStore.shared.device(named: s.name)
+                ?? VirtualDeviceStore.shared.device(named: s.accessoryName) {
+                return dev
+            }
+        }
+        return nil
+    }
+
+    /// Apply a control verb to a read-only virtual sensor: update the store and
+    /// push the new state to HAP. Apple Home then notifies every HomeKit client
+    /// (including ItsyHome itself), so the menu and SSE update via that round-trip.
+    private func applyVirtual(_ device: VirtualDevice, action: Action) -> ActionResult {
+        let newState: Bool
+        if case .toggle = action {
+            newState = VirtualControl.nextState(forToggleFrom: device.state)
+        } else if let b = VirtualControl.boolean(for: action) {
+            newState = b
+        } else {
+            return .error(.executionFailed("\(device.name) is a read-only sensor"))
+        }
+        VirtualControl.setState(device, on: newState)
+        return .success
     }
 
     func executeMultiple(targets: [String], action: Action) -> ActionResult {
