@@ -34,8 +34,11 @@ A native macOS menu bar app for controlling your HomeKit and Home Assistant smar
 - **Deeplinks** - Control devices from Shortcuts, Alfred, Raycast, Stream Deck *(Pro)*
 - **Cameras** - Live video feed with overlay action buttons to control nearby accessories *(Pro)*
 - **Doorbell notifications** - Automatic camera view with live stream when a doorbell rings *(Pro)*
+- **Sensors** - Contact, motion, occupancy, leak, smoke, CO and CO2 sensors as read-only rows, with battery indicators and pinnable menu bar readings
 - **Webhooks/CLI** - Built-in HTTP server with a dedicated CLI tool *(Pro)*
 - **Event stream (SSE)** - Real-time device state changes via Server-Sent Events for external automation *(Pro)*
+- **Virtual HomeKit sensors** - Publish Itsyhome's own bridge to Apple Home with virtual sensors, driven by webhooks or built-in automations *(Pro)*
+- **Sensor history** - 30-day charts for temperature, humidity and binary sensors, right in the menu *(Pro)*
 - **[Itsytv](https://itsytv.app)** - Free companion app for controlling Apple TV from your menu bar
 
 ## Supported devices
@@ -58,7 +61,9 @@ A native macOS menu bar app for controlling your HomeKit and Home Assistant smar
 | Security systems | Off/Stay/Away/Night modes, triggered state indicator |
 | Cameras | Live video feed with overlay action buttons to control nearby accessories *(Pro)* |
 | Doorbells | Automatic camera view on ring with live stream and configurable chime sound *(Pro)* |
-| Temperature & Humidity sensors | Summary display per room with ranges |
+| Temperature & Humidity sensors | Summary display per room with ranges, or individual sensor rows |
+| Binary sensors | Contact, motion, occupancy, leak, smoke, CO and CO2 state rows with state-aware icons |
+| Battery-powered accessories | Inline battery level indicator next to the device name |
 
 ### Home Assistant
 
@@ -80,6 +85,8 @@ Connects via WebSocket API for real-time updates. On first launch, choose your p
 | `alarm_control_panel` | Off/Stay/Away/Night modes, triggered state indicator |
 | `camera` | Live snapshots and WebRTC streaming *(Pro)* |
 | `scene` | Activation with state tracking via scene config |
+| `binary_sensor` | Contact, motion, occupancy, moisture, smoke and CO classes map to dedicated rows; any other class shows On/Off |
+| `sensor` | Any numeric sensor (CO2, power, pressure, illuminance, ...) shows its value and unit with a device-class icon |
 
 **Notes:**
 - Entities are automatically grouped by device and area
@@ -95,6 +102,14 @@ View live video feeds from your cameras directly in the menu bar. Supports HomeK
 ### Doorbell notifications
 
 When a doorbell rings, the camera panel automatically opens in the top-right corner of the screen with a pinned live stream of the doorbell camera. Supports HomeKit doorbells and Home Assistant doorbell events. A configurable chime sound plays on ring. Both the automatic camera display and the sound can be independently toggled in Settings → Cameras.
+
+### Virtual HomeKit sensors & automations
+
+Itsyhome can publish its own bridge to Apple Home over HAP, carrying read-only virtual sensors (contact, motion, occupancy, leak, smoke, CO, CO2). Manage them in Settings → HomeKit bridge and pair by scanning a QR code (or typing the setup code); pairings and the bridge identity persist across restarts, with the identity key stored in the Keychain. Sensor state is set by name through the regular webhook verbs, or by built-in automations: "WHEN a HomeKit accessory holds a state FOR a duration THEN set a virtual sensor", with optional re-pulsing - so Apple Home can automate on conditions HomeKit can't compute itself, like "door open for 15 minutes". HomeKit mode only.
+
+### Sensor history
+
+Opt-in 30-day history for every sensor, shown as a chart in the sensor's submenu: a line for temperature and humidity (thermostat and AC current temperature included), an on/off timeline for binary sensors, with hover readout and a 24h/7d/30d range toggle. Captured off the existing update path - no extra polling - and stored locally per home. Periods when nothing was recording (app closed, Mac asleep) show as gaps in the chart. Enable it in Settings → Advanced.
 
 ### iCloud sync
 
@@ -152,7 +167,7 @@ open "itsyhome://brightness/50/Bedroom/Lamp"
 
 A built-in HTTP server that lets you control and query your smart home devices from any tool on your network — terminal, scripts, other apps, or the dedicated [itsyhome CLI](https://github.com/nickustinov/itsyhome-cli). Works with both HomeKit and Home Assistant.
 
-Enable the server in Settings → Webhooks/CLI. Default port: `8423`.
+Enable the server in Settings → Webhooks/CLI. Default port: `8423`. The server can optionally be bound to a single interface address (e.g. a Tailscale mesh IP) so it's reachable over a private network only.
 
 **Control endpoints:**
 
@@ -193,7 +208,7 @@ curl http://localhost:8423/refresh
 | `/list/groups` | List all device groups (includes room info for room-scoped groups) |
 | `/list/groups/<room>` | List groups available in a specific room (room-scoped + global) |
 | `/list/favourites` | List items pinned as favourites (services, device groups, scenes, rooms). Alias: `/list/favorites` |
-| `/info/<target>` | Detailed device/room info with current state. For scenes, includes `state: { on }` matching `/list/scenes` |
+| `/info/<target>` | Detailed device/room info with current state. Battery-powered accessories include `battery` (0-100) and `batteryLow`. For scenes, includes `state: { on }` matching `/list/scenes` |
 | `/icon/<name>` | PNG of a Phosphor icon. Query params: `?fill=1` for filled variant, `?size=64` for size in pixels |
 | `/events` | SSE event stream for real-time characteristic changes |
 
@@ -345,7 +360,7 @@ options:
 
 settings:
   base:
-    DEVELOPMENT_TEAM: YOUR_TEAM_ID  # Uncomment and set your team ID
+    DEVELOPMENT_TEAM: YOUR_TEAM_ID  # Set your team ID
 ```
 
 ### 4. Generate the Xcode project
@@ -395,6 +410,10 @@ macOSBridge/                       # Native AppKit plugin for menu bar
 │   └── DeviceResolver.swift       # Resolves targets to devices
 ├── HomeAssistant/                 # HA-specific UI components
 │   └── HomeAssistantBridge.swift  # Mac2iOS adapter for HA platform
+├── HAPBridge/                     # Virtual HomeKit bridge published over HAP (Pro)
+├── Automations/                   # Automations driving virtual sensors (Pro)
+├── History/                       # Sensor history capture, storage and charts (Pro)
+├── PinnedAccessory/               # Menu bar pinned items
 ├── PlatformPicker/                # First-launch platform selection UI
 ├── MenuItems/                     # Device-specific menu item views
 ├── DesignSystem/                  # shadcn/ui-inspired design tokens
@@ -463,6 +482,9 @@ Test coverage includes:
 | `PreferencesManagerTests` | Settings persistence |
 | `IconResolverTests` | Device icon resolution |
 | `ProStatusCacheTests` | Pro status caching |
+| `Automation*Tests` | Automation model, store, builder, engine core and runtime |
+| `VirtualDevice*Tests`, `HAP*Tests` | Virtual device store and model, HAP sensor mapping, setup QR payload |
+| `History*Tests`, `SensorHistoryRegistryTests` | History capture, retention, coverage sessions and chart geometry |
 
 ## Debugging
 

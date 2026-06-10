@@ -88,6 +88,9 @@ class AdvancedSection: SettingsCard {
         )
         historyStack.addArrangedSubview(historyRow)
         historyRow.widthAnchor.constraint(equalTo: historyStack.widthAnchor).isActive = true
+        // The two-line footnote fills its fixed-height row, leaving its last
+        // line glued to the separator - give the hairline air above it.
+        historyStack.setCustomSpacing(8, after: historyRow)
 
         let historySeparator = createSeparator()
         historyStack.addArrangedSubview(historySeparator)
