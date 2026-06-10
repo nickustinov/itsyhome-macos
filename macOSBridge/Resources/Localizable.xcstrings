@@ -10050,7 +10050,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Carbon Dioxide"
+            "value" : "Carbon dioxide"
           }
         }
       }
@@ -10061,7 +10061,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Carbon Monoxide"
+            "value" : "Carbon monoxide"
           }
         }
       }
@@ -10853,7 +10853,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Add Automation"
+            "value" : "Add automation"
           }
         }
       }
@@ -10913,6 +10913,17 @@
         }
       }
     },
+    "settings.automations.form.accessory_label" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Accessory"
+          }
+        }
+      }
+    },
     "settings.automations.form.action_note" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -10931,6 +10942,17 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Cancel"
+          }
+        }
+      }
+    },
+    "settings.automations.form.duration_label" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Duration"
           }
         }
       }
@@ -10964,6 +10986,28 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "FOR"
+          }
+        }
+      }
+    },
+    "settings.automations.form.is_label" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Is"
+          }
+        }
+      }
+    },
+    "settings.automations.form.name_label" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Name"
           }
         }
       }
@@ -11030,6 +11074,17 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Save"
+          }
+        }
+      }
+    },
+    "settings.automations.form.sensor_label" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Sensor"
           }
         }
       }
@@ -15286,7 +15341,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Add Device"
+            "value" : "Add device"
           }
         }
       }
@@ -15363,7 +15418,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Enable HomeKit Bridge"
+            "value" : "Enable HomeKit bridge"
           }
         }
       }
@@ -15412,6 +15467,17 @@
         }
       }
     },
+    "settings.homekit_bridge.form.name_label" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Name"
+          }
+        }
+      }
+    },
     "settings.homekit_bridge.form.name_placeholder" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -15430,6 +15496,17 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "New device"
+          }
+        }
+      }
+    },
+    "settings.homekit_bridge.form.role_label" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Role"
           }
         }
       }
@@ -15456,6 +15533,17 @@
         }
       }
     },
+    "settings.homekit_bridge.form.type_label" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Type"
+          }
+        }
+      }
+    },
     "settings.homekit_bridge.info.accessibility" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -15474,6 +15562,17 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "How to add this bridge to Apple Home"
+          }
+        }
+      }
+    },
+    "settings.homekit_bridge.instructions.scan_hint" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Scan with the iPhone camera or the Home app, or add manually:"
           }
         }
       }
@@ -15583,7 +15682,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Reset Pairing"
+            "value" : "Reset pairing"
           }
         }
       }
@@ -15676,13 +15775,24 @@
         }
       }
     },
+    "settings.homekit_bridge.status.waiting_for_devices" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Waiting – add a virtual device to start"
+          }
+        }
+      }
+    },
     "settings.homekit_bridge.title" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "HomeKit Bridge"
+            "value" : "HomeKit bridge"
           }
         }
       }

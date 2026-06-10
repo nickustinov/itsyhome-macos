@@ -55,6 +55,54 @@ class SettingsCard: NSView {
         return separator
     }
 
+    func createCardBox() -> NSView {
+        let box = CardBoxView()
+        box.translatesAutoresizingMaskIntoConstraints = false
+        return box
+    }
+
+    func addContentToBox(_ box: NSView, content: NSView, verticalInset: CGFloat = 10) {
+        content.translatesAutoresizingMaskIntoConstraints = false
+        box.addSubview(content)
+        NSLayoutConstraint.activate([
+            content.topAnchor.constraint(equalTo: box.topAnchor, constant: verticalInset),
+            content.leadingAnchor.constraint(equalTo: box.leadingAnchor, constant: 12),
+            content.trailingAnchor.constraint(equalTo: box.trailingAnchor, constant: -12),
+            content.bottomAnchor.constraint(equalTo: box.bottomAnchor, constant: -verticalInset)
+        ])
+    }
+
+    func createSpacer(height: CGFloat) -> NSView {
+        let spacer = NSView()
+        spacer.translatesAutoresizingMaskIntoConstraints = false
+        spacer.heightAnchor.constraint(equalToConstant: height).isActive = true
+        return spacer
+    }
+
+    func wrappingLabel(_ text: String) -> NSTextField {
+        let label = createLabel(text, style: .caption)
+        label.lineBreakMode = .byWordWrapping
+        label.maximumNumberOfLines = 0
+        label.preferredMaxLayoutWidth = 460
+        return label
+    }
+
+    /// A form row: fixed-width label column followed by a control.
+    func labeledRow(_ label: String, _ control: NSView) -> NSView {
+        let row = NSStackView()
+        row.orientation = .horizontal
+        row.spacing = 8
+        row.alignment = .centerY
+        row.translatesAutoresizingMaskIntoConstraints = false
+        let labelField = createLabel(label, style: .body)
+        labelField.translatesAutoresizingMaskIntoConstraints = false
+        labelField.widthAnchor.constraint(equalToConstant: 110).isActive = true
+        control.translatesAutoresizingMaskIntoConstraints = false
+        row.addArrangedSubview(labelField)
+        row.addArrangedSubview(control)
+        return row
+    }
+
     func createLabel(_ text: String, style: LabelStyle = .body) -> NSTextField {
         let label = NSTextField(labelWithString: text)
         switch style {

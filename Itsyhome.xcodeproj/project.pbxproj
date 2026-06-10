@@ -1487,6 +1487,7 @@
 		6E332413D206C25EBCCC03DF /* WebhookServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0096925C98FD6B955AB016 /* WebhookServer.swift */; };
 		6E34356F197A390978C98DCA /* ph.user-circle-check.svg in Resources */ = {isa = PBXBuildFile; fileRef = B8DFC0BA3471BEF8880C0B40 /* ph.user-circle-check.svg */; };
 		6E3AA6AF1163C015AEFB2619 /* ph.globe-simple-x.svg in Resources */ = {isa = PBXBuildFile; fileRef = 8870A5867B0B66AFB1F228D2 /* ph.globe-simple-x.svg */; };
+		6E3C9416D13179DA16A7DC49 /* HAPSetupQRCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA1576526D52B2C23AC86377 /* HAPSetupQRCode.swift */; };
 		6E6BF460C164E03C263E90F7 /* URLSchemeHandlerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99DC1291FE6F040A1673F599 /* URLSchemeHandlerTests.swift */; };
 		6E895011BC88BD75C860824D /* ph.radioactive.svg in Resources */ = {isa = PBXBuildFile; fileRef = 0B575A962A4153327B71E9E3 /* ph.radioactive.svg */; };
 		6E9314D0D7F9B9DA4B4F5A9B /* ph.arrow-elbow-up-right.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 2D920BF20D932A947D58223B /* ph.arrow-elbow-up-right.fill.svg */; };
@@ -1860,6 +1861,7 @@
 		8ACE76AE9603FD766E561562 /* ph.chat-slash.svg in Resources */ = {isa = PBXBuildFile; fileRef = 70A2365FE65BC5322F00F3DB /* ph.chat-slash.svg */; };
 		8ADC412402B80C311AC5017D /* ph.student.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = C06A0067C8F80C05088CB8BC /* ph.student.fill.svg */; };
 		8AEB034B37042A4411DFB258 /* ph.heart-half.svg in Resources */ = {isa = PBXBuildFile; fileRef = A1A89D22049DEDEB9DB41D0C /* ph.heart-half.svg */; };
+		8AEDFA741B8700DE06DE6528 /* HAPSetupQRCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA1576526D52B2C23AC86377 /* HAPSetupQRCode.swift */; };
 		8AF16328335F7F97CC2418B0 /* ph.align-top.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 58CE50F21D76893F5F2482CE /* ph.align-top.fill.svg */; };
 		8AF27332419466FEAD9B25B8 /* ph.grid-nine.svg in Resources */ = {isa = PBXBuildFile; fileRef = 719DDAEC9B3B2314F97AB6CF /* ph.grid-nine.svg */; };
 		8B0641E6B8187A8C68693DDD /* ph.line-segments.svg in Resources */ = {isa = PBXBuildFile; fileRef = 8C21CFFDB8A7375FC084F55C /* ph.line-segments.svg */; };
@@ -3176,6 +3178,7 @@
 		EF12EC7487E4BF80E0595B48 /* SettingsSectionContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7EC2BE57F565949161AF7B5 /* SettingsSectionContainer.swift */; };
 		EF212BE6ABDEA537377423F3 /* ph.television.svg in Resources */ = {isa = PBXBuildFile; fileRef = 4CEC70DEEEDEC9CA0A58C6B8 /* ph.television.svg */; };
 		EF360C3F5AA85A50C390E0A8 /* ph.megaphone.fill.svg in Resources */ = {isa = PBXBuildFile; fileRef = 3E8295BF8ECF28A75BD9A63F /* ph.megaphone.fill.svg */; };
+		EF3DAD964B187970CBEC4FAF /* HAPSetupQRCodeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEE337CC7FEB48174E8DFD0F /* HAPSetupQRCodeTests.swift */; };
 		EF627CAE8D43378D71B98DDA /* ph.clock-counter-clockwise.svg in Resources */ = {isa = PBXBuildFile; fileRef = B6DF5FD69804FC9A39752C33 /* ph.clock-counter-clockwise.svg */; };
 		EF71F7BF7CBB102EE011BB0E /* ph.escalator-down.svg in Resources */ = {isa = PBXBuildFile; fileRef = 71FAA5AC8A94C79E3C8C4CCD /* ph.escalator-down.svg */; };
 		EF8FA13EA1B6EB5486C88D4D /* ph.recycle.svg in Resources */ = {isa = PBXBuildFile; fileRef = 5518FB5F9724F8AD7E7C143A /* ph.recycle.svg */; };
@@ -6080,6 +6083,7 @@
 		CE95C52B4D0420F84C3EF1D7 /* ph.tram.fill.svg */ = {isa = PBXFileReference; path = ph.tram.fill.svg; sourceTree = "<group>"; };
 		CE9B6F93832B18F7DD5F63E8 /* ph.paragraph.svg */ = {isa = PBXFileReference; path = ph.paragraph.svg; sourceTree = "<group>"; };
 		CEAAF2D31367EF4865F7A682 /* ph.phone-outgoing.fill.svg */ = {isa = PBXFileReference; path = "ph.phone-outgoing.fill.svg"; sourceTree = "<group>"; };
+		CEE337CC7FEB48174E8DFD0F /* HAPSetupQRCodeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HAPSetupQRCodeTests.swift; sourceTree = "<group>"; };
 		CF2B0CF087E825458C78C625 /* ph.folder-simple-dashed.fill.svg */ = {isa = PBXFileReference; path = "ph.folder-simple-dashed.fill.svg"; sourceTree = "<group>"; };
 		CF35FF99CBD00837489C5E2C /* ph.plug.fill.svg */ = {isa = PBXFileReference; path = ph.plug.fill.svg; sourceTree = "<group>"; };
 		CF40D87558704F7345DF0A6F /* ph.cat.svg */ = {isa = PBXFileReference; path = ph.cat.svg; sourceTree = "<group>"; };
@@ -6417,6 +6421,7 @@
 		E9ECB06F60B904627D7B37B1 /* ph.seatbelt.fill.svg */ = {isa = PBXFileReference; path = ph.seatbelt.fill.svg; sourceTree = "<group>"; };
 		EA0539A8E6F2610C350FC8A4 /* ph.wechat-logo.fill.svg */ = {isa = PBXFileReference; path = "ph.wechat-logo.fill.svg"; sourceTree = "<group>"; };
 		EA1057D3BBB558FA76CDD0A4 /* ph.currency-dollar-simple.svg */ = {isa = PBXFileReference; path = "ph.currency-dollar-simple.svg"; sourceTree = "<group>"; };
+		EA1576526D52B2C23AC86377 /* HAPSetupQRCode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HAPSetupQRCode.swift; sourceTree = "<group>"; };
 		EA162715DD42060E43918E33 /* ph.person-simple-run.svg */ = {isa = PBXFileReference; path = "ph.person-simple-run.svg"; sourceTree = "<group>"; };
 		EA19630F07C030B7C2627188 /* ph.trademark-registered.fill.svg */ = {isa = PBXFileReference; path = "ph.trademark-registered.fill.svg"; sourceTree = "<group>"; };
 		EA443139D1012B0C226811E5 /* ph.flag-pennant.svg */ = {isa = PBXFileReference; path = "ph.flag-pennant.svg"; sourceTree = "<group>"; };
@@ -6928,6 +6933,7 @@
 				C74106EAB1CEB975E6B3DFCC /* FilePairingStore.swift */,
 				F28E4C41865A4B7D148863FD /* HAPIdentityKeychain.swift */,
 				1BC9BB856B1F21EB05CC6737 /* HAPService+CarbonDioxide.swift */,
+				EA1576526D52B2C23AC86377 /* HAPSetupQRCode.swift */,
 				8E912B10122DBDD307334052 /* VirtualBridgeService.swift */,
 				6C324A49E5DE7383B3116A5A /* VirtualControl.swift */,
 				5DE3BCEF7D494D0692CB50AB /* VirtualDevice.swift */,
@@ -10085,6 +10091,7 @@
 				71887325832D4E805F89008F /* GarageDoorMenuItemTests.swift */,
 				D059BD954847C83814172714 /* HACoverMenuItemTests.swift */,
 				3961BC62634C9BBF8E78E1FA /* HAPCarbonDioxideTests.swift */,
+				CEE337CC7FEB48174E8DFD0F /* HAPSetupQRCodeTests.swift */,
 				180BEA38542C4E634A93B690 /* HumidifierMenuItemTests.swift */,
 				64DD4EA4CF7186C846E795AD /* IconOverrideTests.swift */,
 				1013245D5960DD38DB94DEE0 /* IconResolverTests.swift */,
@@ -10335,6 +10342,7 @@
 				};
 			};
 			buildConfigurationList = 8489DF86026CFE345AE26F24 /* Build configuration list for PBXProject "Itsyhome" */;
+			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -10359,7 +10367,6 @@
 				5352D9EE68FFE70DDEAAEA68 /* XCRemoteSwiftPackageReference "hap-swift" */,
 			);
 			preferredProjectObjectVersion = 77;
-			productRefGroup = 2AAE444238D06D49873AE95B /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -13550,6 +13557,7 @@
 				D3C658BC3BB56C1E309511C1 /* HAModels.swift in Sources */,
 				B9DDE6B4B8A4E09969F04BB7 /* HAPIdentityKeychain.swift in Sources */,
 				A997078001F9A7A84D60684A /* HAPService+CarbonDioxide.swift in Sources */,
+				8AEDFA741B8700DE06DE6528 /* HAPSetupQRCode.swift in Sources */,
 				E36468EF65BF34164C05B424 /* HASecuritySystemMenuItem.swift in Sources */,
 				DCA1F3C588948A0CA6DF932D /* HASuccessWindowController.swift in Sources */,
 				9117D00CD3A0C24D4B12E783 /* HAURLValidator.swift in Sources */,
@@ -13708,6 +13716,8 @@
 				134E7F2B048EE730C61E1506 /* HAPCarbonDioxideTests.swift in Sources */,
 				C0E51245A7FAAD3DD50D685B /* HAPIdentityKeychain.swift in Sources */,
 				5860C2828B56E3A5CB0E557B /* HAPService+CarbonDioxide.swift in Sources */,
+				6E3C9416D13179DA16A7DC49 /* HAPSetupQRCode.swift in Sources */,
+				EF3DAD964B187970CBEC4FAF /* HAPSetupQRCodeTests.swift in Sources */,
 				BAD9A04129591C3A9C0E47AB /* HASecuritySystemMenuItem.swift in Sources */,
 				AD4D681D6C6471E0B10CB188 /* HASuccessWindowController.swift in Sources */,
 				9786E847561D50EAA9FA857F /* HAURLValidator.swift in Sources */,
@@ -13828,7 +13838,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_MAC_ICON_IN_CATALYST_APP = YES;
 				CODE_SIGN_ENTITLEMENTS = Itsyhome/Itsyhome.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 27001;
+				CURRENT_PROJECT_VERSION = 28001;
 				DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER = NO;
 				INFOPLIST_FILE = Itsyhome/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Itsyhome;
@@ -13837,7 +13847,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.7.0;
+				MARKETING_VERSION = 2.8.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.nickustinov.itsyhome;
 				PRODUCT_NAME = Itsyhome;
 				SDKROOT = iphoneos;
@@ -13957,7 +13967,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_MAC_ICON_IN_CATALYST_APP = YES;
 				CODE_SIGN_ENTITLEMENTS = Itsyhome/Itsyhome.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 27001;
+				CURRENT_PROJECT_VERSION = 28001;
 				DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER = NO;
 				INFOPLIST_FILE = Itsyhome/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Itsyhome;
@@ -13966,7 +13976,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.7.0;
+				MARKETING_VERSION = 2.8.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.nickustinov.itsyhome;
 				PRODUCT_NAME = Itsyhome;
 				SDKROOT = iphoneos;

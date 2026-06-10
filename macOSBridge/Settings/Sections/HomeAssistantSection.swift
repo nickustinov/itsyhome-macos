@@ -65,21 +65,21 @@ class HomeAssistantSection: SettingsCard, NSTextFieldDelegate {
         // Connection status box
         let statusBox = createCardBox()
         let statusContent = createStatusSection()
-        addContentToBox(statusBox, content: statusContent)
+        addContentToBox(statusBox, content: statusContent, verticalInset: 12)
         stackView.addArrangedSubview(statusBox)
         statusBox.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
 
         // Server configuration box
         let configBox = createCardBox()
         let configContent = createConfigSection()
-        addContentToBox(configBox, content: configContent)
+        addContentToBox(configBox, content: configContent, verticalInset: 12)
         stackView.addArrangedSubview(configBox)
         configBox.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
 
         // Actions box
         let actionsBox = createCardBox()
         let actionsContent = createActionsSection()
-        addContentToBox(actionsBox, content: actionsContent)
+        addContentToBox(actionsBox, content: actionsContent, verticalInset: 12)
         stackView.addArrangedSubview(actionsBox)
         actionsBox.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
 
@@ -99,7 +99,7 @@ class HomeAssistantSection: SettingsCard, NSTextFieldDelegate {
             label: String(localized: "settings.home_assistant.entity_categories", defaultValue: "Entity categories", bundle: .macOSBridge),
             control: entityCategoryPopUp
         )
-        addContentToBox(filterBox, content: filterRow)
+        addContentToBox(filterBox, content: filterRow, verticalInset: 12)
         stackView.addArrangedSubview(filterBox)
         filterBox.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
     }
@@ -219,23 +219,6 @@ class HomeAssistantSection: SettingsCard, NSTextFieldDelegate {
         container.addArrangedSubview(disconnectButton)
 
         return container
-    }
-
-    private func createCardBox() -> NSView {
-        let box = CardBoxView()
-        box.translatesAutoresizingMaskIntoConstraints = false
-        return box
-    }
-
-    private func addContentToBox(_ box: NSView, content: NSView) {
-        content.translatesAutoresizingMaskIntoConstraints = false
-        box.addSubview(content)
-        NSLayoutConstraint.activate([
-            content.topAnchor.constraint(equalTo: box.topAnchor, constant: 12),
-            content.leadingAnchor.constraint(equalTo: box.leadingAnchor, constant: 12),
-            content.trailingAnchor.constraint(equalTo: box.trailingAnchor, constant: -12),
-            content.bottomAnchor.constraint(equalTo: box.bottomAnchor, constant: -12)
-        ])
     }
 
     private func loadCredentials() {

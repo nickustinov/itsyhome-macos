@@ -36,7 +36,7 @@ class AdvancedSection: SettingsCard {
         temperaturePopUp.target = self
         temperaturePopUp.action = #selector(temperatureUnitChanged)
         let tempRow = createSettingRow(label: String(localized: "settings.general.temperature_units", defaultValue: "Temperature units", bundle: .macOSBridge), control: temperaturePopUp)
-        addContentToBox(tempBox, content: tempRow)
+        addContentToBox(tempBox, content: tempRow, verticalInset: 4)
         stackView.addArrangedSubview(tempBox)
         tempBox.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
 
@@ -50,7 +50,7 @@ class AdvancedSection: SettingsCard {
             subtitle: String(localized: "settings.general.simple_light_controls_subtitle", defaultValue: "Hide brightness and colour controls for lights.", bundle: .macOSBridge),
             control: simpleLightSwitch
         )
-        addContentToBox(lightBox, content: simpleLightRow)
+        addContentToBox(lightBox, content: simpleLightRow, verticalInset: 4)
         stackView.addArrangedSubview(lightBox)
         lightBox.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
 
@@ -64,26 +64,9 @@ class AdvancedSection: SettingsCard {
             subtitle: String(localized: "settings.advanced.sensor_summary_subtitle", defaultValue: "When off, shows each sensor individually.", bundle: .macOSBridge),
             control: sensorSummarySwitch
         )
-        addContentToBox(sensorBox, content: sensorRow)
+        addContentToBox(sensorBox, content: sensorRow, verticalInset: 4)
         stackView.addArrangedSubview(sensorBox)
         sensorBox.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
-    }
-
-    private func createCardBox() -> NSView {
-        let box = CardBoxView()
-        box.translatesAutoresizingMaskIntoConstraints = false
-        return box
-    }
-
-    private func addContentToBox(_ box: NSView, content: NSView) {
-        content.translatesAutoresizingMaskIntoConstraints = false
-        box.addSubview(content)
-        NSLayoutConstraint.activate([
-            content.topAnchor.constraint(equalTo: box.topAnchor, constant: 4),
-            content.leadingAnchor.constraint(equalTo: box.leadingAnchor, constant: 12),
-            content.trailingAnchor.constraint(equalTo: box.trailingAnchor, constant: -12),
-            content.bottomAnchor.constraint(equalTo: box.bottomAnchor, constant: -4)
-        ])
     }
 
     private func createSettingRow(label: String, subtitle: String? = nil, control: NSView) -> NSView {

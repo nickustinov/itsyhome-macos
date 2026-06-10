@@ -86,7 +86,7 @@ class NetworksSection: SettingsCard {
             subtitle: String(localized: "settings.networks.enable_subtitle", defaultValue: "Switch home or server based on your WiFi network.", bundle: .macOSBridge),
             control: enableSwitch
         )
-        addContentToBox(enableBox, content: enableRow)
+        addContentToBox(enableBox, content: enableRow, verticalInset: 4)
         stackView.addArrangedSubview(enableBox)
         enableBox.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
 
@@ -97,7 +97,7 @@ class NetworksSection: SettingsCard {
             label: String(localized: "settings.networks.current_network", defaultValue: "Current network", bundle: .macOSBridge),
             control: ssidLabel
         )
-        addContentToBox(networkBox, content: ssidRow)
+        addContentToBox(networkBox, content: ssidRow, verticalInset: 4)
         stackView.addArrangedSubview(networkBox)
         networkBox.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
         currentNetworkBox = networkBox
@@ -105,7 +105,7 @@ class NetworksSection: SettingsCard {
         // Permission denied card
         let deniedBox = createCardBox()
         let deniedContent = createPermissionDeniedContent()
-        addContentToBox(deniedBox, content: deniedContent)
+        addContentToBox(deniedBox, content: deniedContent, verticalInset: 4)
         stackView.addArrangedSubview(deniedBox)
         deniedBox.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
         permissionDeniedBox = deniedBox
@@ -113,27 +113,10 @@ class NetworksSection: SettingsCard {
         // Rules card
         let rBox = createCardBox()
         let rulesContent = createRulesContent()
-        addContentToBox(rBox, content: rulesContent)
+        addContentToBox(rBox, content: rulesContent, verticalInset: 4)
         stackView.addArrangedSubview(rBox)
         rBox.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
         rulesBox = rBox
-    }
-
-    private func createCardBox() -> NSView {
-        let box = CardBoxView()
-        box.translatesAutoresizingMaskIntoConstraints = false
-        return box
-    }
-
-    private func addContentToBox(_ box: NSView, content: NSView) {
-        content.translatesAutoresizingMaskIntoConstraints = false
-        box.addSubview(content)
-        NSLayoutConstraint.activate([
-            content.topAnchor.constraint(equalTo: box.topAnchor, constant: 4),
-            content.leadingAnchor.constraint(equalTo: box.leadingAnchor, constant: 12),
-            content.trailingAnchor.constraint(equalTo: box.trailingAnchor, constant: -12),
-            content.bottomAnchor.constraint(equalTo: box.bottomAnchor, constant: -4)
-        ])
     }
 
     private func createSettingRow(label: String, subtitle: String? = nil, control: NSView) -> NSView {

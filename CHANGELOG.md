@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.8.0
+
+- Virtual HomeKit sensors (Pro) – Itsyhome can now publish its own bridge to Apple Home over HAP, carrying read-only virtual sensors (contact, motion, occupancy, leak, smoke, CO, CO2). Manage them in Settings → HomeKit Bridge: enable the bridge, pair it with the setup code, add/edit/remove devices and flip their state to test. Pairings and the bridge identity persist across restarts (identity key stored in the Keychain), and the sensors can be driven by name through the existing webhook verbs (#129, thanks @mikeburgh)
+- Automations (Pro) – "WHEN a HomeKit accessory holds a state FOR a duration THEN set a virtual sensor", with optional re-pulsing so time- or presence-gated Apple Home automations still catch a held state. Lets Apple Home automate on conditions HomeKit can't compute itself, like "door open for 15 minutes" (#129, thanks @mikeburgh)
+- QR pairing – the HomeKit Bridge pairing popover now shows a scannable setup code (X-HM payload), so the bridge can be added by pointing the iPhone camera or the Home app at the screen instead of typing the code
+- Automations now live at the bottom of the HomeKit Bridge settings pane instead of a separate tab – they only drive virtual sensors, so the two belong together
+- Settings polish – the HomeKit Bridge and Automations sections use the same grouped card styling as the rest of Settings
+
 ## 2.7.0
 
 - Bind the webhook server to a specific local IP – Settings → Webhooks has a new "Bind" field that restricts the local web server to a single interface address (e.g. a Tailscale mesh IP) instead of listening on all interfaces, so the endpoint is reachable over a private network without router port-forwarding. Empty keeps the default (all interfaces); an invalid address is rejected and falls back to all interfaces so a typo can never brick the server (#126)

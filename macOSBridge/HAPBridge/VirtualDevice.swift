@@ -94,8 +94,8 @@ extension VirtualSensorType {
         case .occupancy:      return String(localized: "sensor.type.occupancy", defaultValue: "Occupancy", bundle: .macOSBridge)
         case .leak:           return String(localized: "sensor.type.leak", defaultValue: "Leak", bundle: .macOSBridge)
         case .smoke:          return String(localized: "sensor.type.smoke", defaultValue: "Smoke", bundle: .macOSBridge)
-        case .carbonMonoxide: return String(localized: "sensor.type.carbon_monoxide", defaultValue: "Carbon Monoxide", bundle: .macOSBridge)
-        case .carbonDioxide:  return String(localized: "sensor.type.carbon_dioxide", defaultValue: "Carbon Dioxide", bundle: .macOSBridge)
+        case .carbonMonoxide: return String(localized: "sensor.type.carbon_monoxide", defaultValue: "Carbon monoxide", bundle: .macOSBridge)
+        case .carbonDioxide:  return String(localized: "sensor.type.carbon_dioxide", defaultValue: "Carbon dioxide", bundle: .macOSBridge)
         }
     }
 

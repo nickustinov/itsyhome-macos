@@ -29,6 +29,11 @@ final class VirtualBridgeService {
 
     static let statusChangedNotification = Notification.Name("virtualBridgeStatusChanged")
 
+    /// 4-char HAP setup ID: hashed with the device ID into the mDNS "sh" record
+    /// by the advertiser, and embedded in the pairing QR code so the Home app
+    /// can match the scanned code to this bridge.
+    static let setupID = "ACMN"
+
     enum Status: Equatable { case stopped, running, error(String) }
     private(set) var status: Status = .stopped {
         didSet { NotificationCenter.default.post(name: Self.statusChangedNotification, object: nil) }
@@ -88,6 +93,7 @@ final class VirtualBridgeService {
                 bridge: bridge,
                 setupCode: setupCode,
                 deviceID: Self.stableDeviceID(),
+                setupID: Self.setupID,
                 identity: Self.stableIdentity(),
                 pairingStore: FilePairingStore(fileURL: Self.supportDir().appendingPathComponent("pairings.json")))
             self.service = service
@@ -122,6 +128,10 @@ final class VirtualBridgeService {
         guard let bridge else { return }
         await bridge.removeAccessory(aid: aid)   // triggers re-advertise via change handler
         stateIIDs[aid] = nil
+        // The caller has already updated the store. An accessory-less bridge is
+        // pointless (start() refuses to boot one), so removing the last device
+        // stops the bridge; adding one again restarts it via addDevice().
+        if store.devices.isEmpty { await stop() }
     }
 
     /// Re-publish a device after an edit (name/type/role changed): remove the

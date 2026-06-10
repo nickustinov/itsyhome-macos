@@ -174,30 +174,6 @@ class DeeplinksSection: SettingsCard {
         return stack
     }
 
-    private func createCardBox() -> NSView {
-        let box = CardBoxView()
-        box.translatesAutoresizingMaskIntoConstraints = false
-        return box
-    }
-
-    private func addContentToBox(_ box: NSView, content: NSView) {
-        content.translatesAutoresizingMaskIntoConstraints = false
-        box.addSubview(content)
-        NSLayoutConstraint.activate([
-            content.topAnchor.constraint(equalTo: box.topAnchor, constant: 10),
-            content.leadingAnchor.constraint(equalTo: box.leadingAnchor, constant: 12),
-            content.trailingAnchor.constraint(equalTo: box.trailingAnchor, constant: -12),
-            content.bottomAnchor.constraint(equalTo: box.bottomAnchor, constant: -10)
-        ])
-    }
-
-    private func createSpacer(height: CGFloat) -> NSView {
-        let spacer = NSView()
-        spacer.translatesAutoresizingMaskIntoConstraints = false
-        spacer.heightAnchor.constraint(equalToConstant: height).isActive = true
-        return spacer
-    }
-
     @objc private func copyURL(_ sender: NSButton) {
         guard let url = sender.toolTip else { return }
         NSPasteboard.general.clearContents()

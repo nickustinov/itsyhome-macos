@@ -19,9 +19,10 @@ class HomeKitBridgeSection: SettingsCard {
 
     private var devicesHeader: NSView!
     private let devicesStack = NSStackView()
+    private var devicesBox: NSView!
 
     // Inline add / edit form (replaces the device list while open)
-    private let addContainer = NSView()
+    private var formBox: NSView!
     private let nameField = NSTextField()
     private let typePopUp = NSPopUpButton()
     private let rolePopUp = NSPopUpButton()
@@ -35,7 +36,11 @@ class HomeKitBridgeSection: SettingsCard {
         [.contact, .motion, .occupancy, .leak, .smoke, .carbonMonoxide, .carbonDioxide]
     private let orderedRoles: [ContactRole] = [.generic, .door, .window]
 
-    private lazy var instructionsPopover: NSPopover = makeInstructionsPopover()
+    /// Embedded below the bridge content - automations belong to the bridge.
+    private let automationsSection = AutomationsSection()
+
+    /// Rebuilt on each show so the QR code always reflects the current setup code.
+    private var instructionsPopover: NSPopover?
 
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -54,18 +59,28 @@ class HomeKitBridgeSection: SettingsCard {
     private func setupContent() {
         if !ProStatusCache.shared.isPro {
             stackView.addArrangedSubview(Self.createProBanner())
-            stackView.addArrangedSubview(createSpacer(height: 8))
+            stackView.addArrangedSubview(createSpacer(height: 12))
         }
 
         let desc = wrappingLabel(
             String(localized: "settings.homekit_bridge.description", defaultValue: "Publish virtual sensors to Apple Home over HomeKit. Rooms are assigned in Apple Home after pairing.", bundle: .macOSBridge))
         stackView.addArrangedSubview(desc)
-        stackView.addArrangedSubview(createSpacer(height: 10))
+        desc.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
+        stackView.addArrangedSubview(createSpacer(height: 4))
 
-        stackView.addArrangedSubview(createEnableRow())
+        let enableBox = createCardBox()
+        addContentToBox(enableBox, content: createEnableRow())
+        stackView.addArrangedSubview(enableBox)
+        enableBox.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
+
         stackView.addArrangedSubview(createSpacer(height: 8))
-        stackView.addArrangedSubview(createStatusContent())
-        stackView.addArrangedSubview(createSpacer(height: 14))
+
+        let statusBox = createCardBox()
+        addContentToBox(statusBox, content: createStatusContent())
+        stackView.addArrangedSubview(statusBox)
+        statusBox.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
+
+        stackView.addArrangedSubview(createSpacer(height: 12))
 
         devicesHeader = createDevicesHeader()
         stackView.addArrangedSubview(devicesHeader)
@@ -75,29 +90,45 @@ class HomeKitBridgeSection: SettingsCard {
         devicesStack.spacing = 6
         devicesStack.alignment = .leading
         devicesStack.translatesAutoresizingMaskIntoConstraints = false
-        stackView.addArrangedSubview(devicesStack)
-        devicesStack.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
+        devicesBox = createCardBox()
+        addContentToBox(devicesBox, content: devicesStack)
+        stackView.addArrangedSubview(devicesBox)
+        devicesBox.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
 
+        formBox = createCardBox()
         setupAddForm()
-        stackView.addArrangedSubview(addContainer)
-        addContainer.isHidden = true
-        addContainer.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
+        stackView.addArrangedSubview(formBox)
+        formBox.isHidden = true
+        formBox.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
+
+        // Automations drive the virtual sensors published by this bridge, so
+        // they live at the bottom of the same pane rather than in their own tab.
+        stackView.addArrangedSubview(createSpacer(height: 16))
+        stackView.addArrangedSubview(automationsSection)
+        automationsSection.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
 
         enableSwitch.state = PreferencesManager.shared.virtualBridgeEnabled ? .on : .off
         rebuildDevicesList()
         updateStatusDisplay()
     }
 
+    /// Forward live accessory data to the embedded automations section (its
+    /// trigger picker lists HomeKit sensors).
+    func configure(with data: MenuData) {
+        automationsSection.configure(with: data)
+    }
+
     private func createEnableRow() -> NSView {
         let container = NSView()
         container.translatesAutoresizingMaskIntoConstraints = false
 
-        let label = createLabel(String(localized: "settings.homekit_bridge.enable_toggle", defaultValue: "Enable HomeKit Bridge", bundle: .macOSBridge), style: .body)
+        let label = createLabel(String(localized: "settings.homekit_bridge.enable_toggle", defaultValue: "Enable HomeKit bridge", bundle: .macOSBridge), style: .body)
         label.translatesAutoresizingMaskIntoConstraints = false
 
         enableSwitch.controlSize = .mini
         enableSwitch.target = self
         enableSwitch.action = #selector(enableSwitchChanged)
+        enableSwitch.isEnabled = ProStatusCache.shared.isPro
         enableSwitch.translatesAutoresizingMaskIntoConstraints = false
 
         container.addSubview(label)
@@ -149,7 +180,7 @@ class HomeKitBridgeSection: SettingsCard {
         infoButton.contentTintColor = .secondaryLabelColor
         infoButton.toolTip = String(localized: "settings.homekit_bridge.info.tooltip", defaultValue: "How to add this bridge to Apple Home", bundle: .macOSBridge)
 
-        let resetButton = NSButton(title: String(localized: "settings.homekit_bridge.reset_pairing_button", defaultValue: "Reset Pairing", bundle: .macOSBridge), target: self, action: #selector(resetPairingAction))
+        let resetButton = NSButton(title: String(localized: "settings.homekit_bridge.reset_pairing_button", defaultValue: "Reset pairing", bundle: .macOSBridge), target: self, action: #selector(resetPairingAction))
         resetButton.bezelStyle = .rounded
         resetButton.controlSize = .small
 
@@ -175,11 +206,12 @@ class HomeKitBridgeSection: SettingsCard {
         row.addArrangedSubview(title)
         row.addArrangedSubview(NSView())  // spacer
 
-        let addButton = NSButton(title: String(localized: "settings.homekit_bridge.add_device_button", defaultValue: "Add Device", bundle: .macOSBridge), target: self, action: #selector(showAddForm))
+        let addButton = NSButton(title: String(localized: "settings.homekit_bridge.add_device_button", defaultValue: "Add device", bundle: .macOSBridge), target: self, action: #selector(showAddForm))
         addButton.bezelStyle = .rounded
         addButton.controlSize = .small
         row.addArrangedSubview(addButton)
 
+        row.heightAnchor.constraint(equalToConstant: 32).isActive = true
         return row
     }
 
@@ -197,17 +229,17 @@ class HomeKitBridgeSection: SettingsCard {
 
         nameField.placeholderString = String(localized: "settings.homekit_bridge.form.name_placeholder", defaultValue: "Name (e.g. Front Door)", bundle: .macOSBridge)
         nameField.controlSize = .regular
-        panel.addArrangedSubview(labeledRow("Name", nameField))
+        panel.addArrangedSubview(labeledRow(String(localized: "settings.homekit_bridge.form.name_label", defaultValue: "Name", bundle: .macOSBridge), nameField))
 
         for type in orderedTypes { typePopUp.addItem(withTitle: displayName(type)) }
         typePopUp.controlSize = .regular
         typePopUp.target = self
         typePopUp.action = #selector(typeChanged)
-        panel.addArrangedSubview(labeledRow("Type", typePopUp))
+        panel.addArrangedSubview(labeledRow(String(localized: "settings.homekit_bridge.form.type_label", defaultValue: "Type", bundle: .macOSBridge), typePopUp))
 
         for role in orderedRoles { rolePopUp.addItem(withTitle: displayName(role)) }
         rolePopUp.controlSize = .regular
-        roleRow = labeledRow("Role", rolePopUp)
+        roleRow = labeledRow(String(localized: "settings.homekit_bridge.form.role_label", defaultValue: "Role", bundle: .macOSBridge), rolePopUp)
         panel.addArrangedSubview(roleRow)
 
         criticalNote = wrappingLabel("")
@@ -241,35 +273,14 @@ class HomeKitBridgeSection: SettingsCard {
         panel.addArrangedSubview(buttons)
         buttons.widthAnchor.constraint(equalTo: panel.widthAnchor).isActive = true
 
-        addContainer.addSubview(panel)
-        NSLayoutConstraint.activate([
-            panel.topAnchor.constraint(equalTo: addContainer.topAnchor),
-            panel.leadingAnchor.constraint(equalTo: addContainer.leadingAnchor),
-            panel.trailingAnchor.constraint(equalTo: addContainer.trailingAnchor),
-            panel.bottomAnchor.constraint(equalTo: addContainer.bottomAnchor)
-        ])
-    }
-
-    private func labeledRow(_ label: String, _ control: NSView) -> NSView {
-        let row = NSStackView()
-        row.orientation = .horizontal
-        row.spacing = 8
-        row.alignment = .centerY
-        row.translatesAutoresizingMaskIntoConstraints = false
-        let l = createLabel(label, style: .body)
-        l.translatesAutoresizingMaskIntoConstraints = false
-        l.widthAnchor.constraint(equalToConstant: 110).isActive = true
-        control.translatesAutoresizingMaskIntoConstraints = false
-        row.addArrangedSubview(l)
-        row.addArrangedSubview(control)
-        return row
+        addContentToBox(formBox, content: panel)
     }
 
     /// Swap the device list for the add/edit form (and back).
     private func setFormVisible(_ visible: Bool) {
         devicesHeader.isHidden = visible
-        devicesStack.isHidden = visible
-        addContainer.isHidden = !visible
+        devicesBox.isHidden = visible
+        formBox.isHidden = !visible
     }
 
     // MARK: - Device list
@@ -349,10 +360,15 @@ class HomeKitBridgeSection: SettingsCard {
         } else {
             Task { await VirtualBridgeService.shared.stop() }
         }
+        // start() is a silent no-op with zero devices (no status notification
+        // fires), so refresh here to surface the "waiting for devices" hint.
+        updateStatusDisplay()
     }
 
     @objc private func showInstructions(_ sender: NSButton) {
-        instructionsPopover.show(relativeTo: sender.bounds, of: sender, preferredEdge: .maxY)
+        let popover = makeInstructionsPopover()
+        instructionsPopover = popover
+        popover.show(relativeTo: sender.bounds, of: sender, preferredEdge: .maxY)
     }
 
     @objc private func showAddForm() {
@@ -507,14 +523,25 @@ class HomeKitBridgeSection: SettingsCard {
     }
 
     @objc private func storeDidChange() {
-        DispatchQueue.main.async { [weak self] in self?.rebuildDevicesList() }
+        DispatchQueue.main.async { [weak self] in
+            self?.rebuildDevicesList()
+            self?.updateStatusDisplay()   // adding/removing the last device flips the waiting hint
+        }
     }
 
     private func updateStatusDisplay() {
         switch VirtualBridgeService.shared.status {
         case .stopped:
-            statusLabel.stringValue = String(localized: "settings.homekit_bridge.status.stopped", defaultValue: "Stopped", bundle: .macOSBridge)
-            statusLabel.textColor = .secondaryLabelColor
+            // The bridge deliberately doesn't start with zero devices, and the
+            // start call is a silent no-op - explain what's missing instead of
+            // showing a bare "Stopped".
+            if PreferencesManager.shared.virtualBridgeEnabled, VirtualDeviceStore.shared.devices.isEmpty {
+                statusLabel.stringValue = String(localized: "settings.homekit_bridge.status.waiting_for_devices", defaultValue: "Waiting – add a virtual device to start", bundle: .macOSBridge)
+                statusLabel.textColor = .systemOrange
+            } else {
+                statusLabel.stringValue = String(localized: "settings.homekit_bridge.status.stopped", defaultValue: "Stopped", bundle: .macOSBridge)
+                statusLabel.textColor = .secondaryLabelColor
+            }
         case .running:
             statusLabel.stringValue = String(localized: "settings.homekit_bridge.status.running", defaultValue: "Running", bundle: .macOSBridge)
             statusLabel.textColor = .systemGreen
@@ -537,6 +564,32 @@ class HomeKitBridgeSection: SettingsCard {
         stack.translatesAutoresizingMaskIntoConstraints = false
 
         stack.addArrangedSubview(createLabel(String(localized: "settings.homekit_bridge.instructions.title", defaultValue: "Add to Apple Home", bundle: .macOSBridge), style: .sectionHeader))
+
+        if let uri = HAPSetupQRCode.setupURI(setupCode: PreferencesManager.shared.virtualBridgeSetupCode,
+                                             setupID: VirtualBridgeService.setupID),
+           let qr = HAPSetupQRCode.qrImage(uri: uri, size: 140) {
+            let imageView = NSImageView(image: qr)
+            imageView.translatesAutoresizingMaskIntoConstraints = false
+            let wrap = NSView()
+            wrap.translatesAutoresizingMaskIntoConstraints = false
+            wrap.addSubview(imageView)
+            NSLayoutConstraint.activate([
+                imageView.widthAnchor.constraint(equalToConstant: 140),
+                imageView.heightAnchor.constraint(equalToConstant: 140),
+                imageView.topAnchor.constraint(equalTo: wrap.topAnchor, constant: 4),
+                imageView.bottomAnchor.constraint(equalTo: wrap.bottomAnchor, constant: -4),
+                imageView.centerXAnchor.constraint(equalTo: wrap.centerXAnchor)
+            ])
+            stack.addArrangedSubview(wrap)
+            wrap.widthAnchor.constraint(equalTo: stack.widthAnchor).isActive = true
+
+            let scanHint = createLabel(String(localized: "settings.homekit_bridge.instructions.scan_hint", defaultValue: "Scan with the iPhone camera or the Home app, or add manually:", bundle: .macOSBridge), style: .caption)
+            scanHint.lineBreakMode = .byWordWrapping
+            scanHint.maximumNumberOfLines = 0
+            scanHint.preferredMaxLayoutWidth = 280
+            stack.addArrangedSubview(scanHint)
+        }
+
         let steps = [
             String(localized: "settings.homekit_bridge.instructions.step1", defaultValue: "1. Add a device and enable the bridge.", bundle: .macOSBridge),
             String(localized: "settings.homekit_bridge.instructions.step2", defaultValue: "2. In the Home app: Add Accessory, then More options.", bundle: .macOSBridge),
@@ -562,19 +615,12 @@ class HomeKitBridgeSection: SettingsCard {
         let vc = NSViewController()
         vc.view = container
         pop.contentViewController = vc
-        pop.contentSize = NSSize(width: 320, height: 188)
+        container.widthAnchor.constraint(equalToConstant: 320).isActive = true
+        pop.contentSize = NSSize(width: 320, height: container.fittingSize.height)
         return pop
     }
 
     // MARK: - Helpers
-
-    private func wrappingLabel(_ text: String) -> NSTextField {
-        let label = createLabel(text, style: .caption)
-        label.lineBreakMode = .byWordWrapping
-        label.maximumNumberOfLines = 0
-        label.preferredMaxLayoutWidth = 460
-        return label
-    }
 
     // Type names live on VirtualSensorType.displayName so the bridge and the
     // automations trigger picker share one localized source.
@@ -586,12 +632,5 @@ class HomeKitBridgeSection: SettingsCard {
         case .door: return String(localized: "settings.homekit_bridge.role.door", defaultValue: "Door", bundle: .macOSBridge)
         case .window: return String(localized: "settings.homekit_bridge.role.window", defaultValue: "Window", bundle: .macOSBridge)
         }
-    }
-
-    private func createSpacer(height: CGFloat) -> NSView {
-        let spacer = NSView()
-        spacer.translatesAutoresizingMaskIntoConstraints = false
-        spacer.heightAnchor.constraint(equalToConstant: height).isActive = true
-        return spacer
     }
 }

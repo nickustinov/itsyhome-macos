@@ -49,7 +49,7 @@ class GeneralSection: SettingsCard {
         // Platform picker box
         let platformBox = createCardBox()
         let platformContent = createPlatformPickerSection()
-        addContentToBox(platformBox, content: platformContent)
+        addContentToBox(platformBox, content: platformContent, verticalInset: 4)
         stackView.addArrangedSubview(platformBox)
         platformBox.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
 
@@ -59,7 +59,7 @@ class GeneralSection: SettingsCard {
         launchSwitch.target = self
         launchSwitch.action = #selector(launchSwitchChanged)
         let launchRow = createSettingRow(label: String(localized: "settings.general.launch_at_login", defaultValue: "Launch Itsyhome at login", bundle: .macOSBridge), control: launchSwitch)
-        addContentToBox(launchBox, content: launchRow)
+        addContentToBox(launchBox, content: launchRow, verticalInset: 4)
         stackView.addArrangedSubview(launchBox)
         launchBox.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
 
@@ -69,7 +69,7 @@ class GeneralSection: SettingsCard {
         syncSwitch.target = self
         syncSwitch.action = #selector(syncSwitchChanged)
         let syncRow = createSyncSettingRow()
-        addContentToBox(syncBox, content: syncRow)
+        addContentToBox(syncBox, content: syncRow, verticalInset: 4)
         stackView.addArrangedSubview(syncBox)
         syncBox.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
 
@@ -390,23 +390,6 @@ class GeneralSection: SettingsCard {
         }
 
         return grid
-    }
-
-    private func createCardBox() -> NSView {
-        let box = CardBoxView()
-        box.translatesAutoresizingMaskIntoConstraints = false
-        return box
-    }
-
-    private func addContentToBox(_ box: NSView, content: NSView) {
-        content.translatesAutoresizingMaskIntoConstraints = false
-        box.addSubview(content)
-        NSLayoutConstraint.activate([
-            content.topAnchor.constraint(equalTo: box.topAnchor, constant: 4),
-            content.leadingAnchor.constraint(equalTo: box.leadingAnchor, constant: 12),
-            content.trailingAnchor.constraint(equalTo: box.trailingAnchor, constant: -12),
-            content.bottomAnchor.constraint(equalTo: box.bottomAnchor, constant: -4)
-        ])
     }
 
     private func createSettingRow(label: String, subtitle: String? = nil, control: NSView) -> NSView {

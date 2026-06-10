@@ -2,12 +2,13 @@
 //  AutomationsSection.swift
 //  macOSBridge
 //
-//  Settings pane for automations: a list of automations each showing a live
-//  status (idle / waiting / active), with an inline WHEN / FOR / THEN builder
-//  that replaces the list. v1 builds "WHEN <accessory> reaches a state FOR
-//  <duration> THEN set a virtual sensor (re-pulsing it)". Mirrors the
-//  HomeKitBridgeSection idiom. The engine runs whenever Pro is active; each
-//  automation has its own enabled toggle (no master switch).
+//  Automations section, embedded at the bottom of the HomeKit Bridge settings
+//  pane (the automations drive virtual sensors, so they live together): a list
+//  of automations each showing a live status (idle / waiting / active), with an
+//  inline WHEN / FOR / THEN builder that replaces the list. v1 builds "WHEN
+//  <accessory> reaches a state FOR <duration> THEN set a virtual sensor
+//  (re-pulsing it)". The engine runs whenever Pro is active; each automation
+//  has its own enabled toggle (no master switch).
 //
 import AppKit
 
@@ -15,9 +16,10 @@ class AutomationsSection: SettingsCard {
 
     private var automationsHeader: NSView!
     private let automationsStack = NSStackView()
+    private var automationsBox: NSView!
 
     // Inline builder
-    private let formContainer = NSView()
+    private var formBox: NSView!
     private var formTitleLabel: NSTextField!
     private let nameField = NSTextField()
     private let triggerPopUp = NSPopUpButton()
@@ -66,15 +68,13 @@ class AutomationsSection: SettingsCard {
 
     // MARK: - Layout
 
+    // No Pro banner here: this section is embedded in HomeKitBridgeSection,
+    // which already shows one.
     private func setupContent() {
-        if !ProStatusCache.shared.isPro {
-            stackView.addArrangedSubview(Self.createProBanner())
-            stackView.addArrangedSubview(createSpacer(height: 8))
-        }
-
         let desc = wrappingLabel(
             String(localized: "settings.automations.description", defaultValue: "Automations watch a HomeKit accessory and, when it holds a state for a duration, set a virtual sensor (re-pulsing it) - so Apple Home can automate on conditions HomeKit can't compute itself, like \"open for 15 minutes\".", bundle: .macOSBridge))
         stackView.addArrangedSubview(desc)
+        desc.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
         stackView.addArrangedSubview(createSpacer(height: 12))
 
         automationsHeader = createAutomationsHeader()
@@ -85,13 +85,16 @@ class AutomationsSection: SettingsCard {
         automationsStack.spacing = 6
         automationsStack.alignment = .leading
         automationsStack.translatesAutoresizingMaskIntoConstraints = false
-        stackView.addArrangedSubview(automationsStack)
-        automationsStack.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
+        automationsBox = createCardBox()
+        addContentToBox(automationsBox, content: automationsStack)
+        stackView.addArrangedSubview(automationsBox)
+        automationsBox.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
 
+        formBox = createCardBox()
         setupForm()
-        stackView.addArrangedSubview(formContainer)
-        formContainer.isHidden = true
-        formContainer.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
+        stackView.addArrangedSubview(formBox)
+        formBox.isHidden = true
+        formBox.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
 
         rebuildAutomationsList()
     }
@@ -102,9 +105,10 @@ class AutomationsSection: SettingsCard {
         row.translatesAutoresizingMaskIntoConstraints = false
         row.addArrangedSubview(createLabel(String(localized: "settings.automations.title", defaultValue: "Automations", bundle: .macOSBridge), style: .sectionHeader))
         row.addArrangedSubview(NSView())
-        let add = NSButton(title: String(localized: "settings.automations.add_button", defaultValue: "Add Automation", bundle: .macOSBridge), target: self, action: #selector(showAddForm))
+        let add = NSButton(title: String(localized: "settings.automations.add_button", defaultValue: "Add automation", bundle: .macOSBridge), target: self, action: #selector(showAddForm))
         add.bezelStyle = .rounded; add.controlSize = .small
         row.addArrangedSubview(add)
+        row.heightAnchor.constraint(equalToConstant: 32).isActive = true
         return row
     }
 
@@ -115,25 +119,21 @@ class AutomationsSection: SettingsCard {
         panel.orientation = .vertical; panel.spacing = 8; panel.alignment = .leading
         panel.translatesAutoresizingMaskIntoConstraints = false
 
-        let sep = createSeparator()
-        panel.addArrangedSubview(sep)
-        sep.widthAnchor.constraint(equalTo: panel.widthAnchor).isActive = true
-
         formTitleLabel = createLabel(String(localized: "settings.automations.form.new_title", defaultValue: "New automation", bundle: .macOSBridge), style: .sectionHeader)
         panel.addArrangedSubview(formTitleLabel)
 
         nameField.placeholderString = String(localized: "settings.automations.form.name_placeholder", defaultValue: "Name (e.g. Front Door left open)", bundle: .macOSBridge)
         nameField.controlSize = .regular
-        panel.addArrangedSubview(labeledRow("Name", nameField))
+        panel.addArrangedSubview(labeledRow(String(localized: "settings.automations.form.name_label", defaultValue: "Name", bundle: .macOSBridge), nameField))
 
         // WHEN
         panel.addArrangedSubview(createLabel(String(localized: "settings.automations.form.when_label", defaultValue: "WHEN", bundle: .macOSBridge), style: .caption))
         triggerPopUp.controlSize = .regular
         triggerPopUp.target = self
         triggerPopUp.action = #selector(triggerChanged)
-        panel.addArrangedSubview(labeledRow("Accessory", triggerPopUp))
+        panel.addArrangedSubview(labeledRow(String(localized: "settings.automations.form.accessory_label", defaultValue: "Accessory", bundle: .macOSBridge), triggerPopUp))
         statePopUp.controlSize = .regular
-        panel.addArrangedSubview(labeledRow("Is", statePopUp))
+        panel.addArrangedSubview(labeledRow(String(localized: "settings.automations.form.is_label", defaultValue: "Is", bundle: .macOSBridge), statePopUp))
 
         // FOR
         panel.addArrangedSubview(createLabel(String(localized: "settings.automations.form.for_label", defaultValue: "FOR", bundle: .macOSBridge), style: .caption))
@@ -147,7 +147,7 @@ class AutomationsSection: SettingsCard {
         ])
         durationUnitPopUp.selectItem(at: 1)
         durationUnitPopUp.controlSize = .regular
-        panel.addArrangedSubview(fieldUnitRow("Duration", durationField, durationUnitPopUp))
+        panel.addArrangedSubview(fieldUnitRow(String(localized: "settings.automations.form.duration_label", defaultValue: "Duration", bundle: .macOSBridge), durationField, durationUnitPopUp))
         let durNote = wrappingLabel(String(localized: "settings.automations.form.duration_note", defaultValue: "0 = fire immediately. Time-of-day and presence conditions stay in Apple Home.", bundle: .macOSBridge))
         durNote.textColor = .tertiaryLabelColor
         panel.addArrangedSubview(durNote)
@@ -157,7 +157,7 @@ class AutomationsSection: SettingsCard {
         devicePopUp.controlSize = .regular
         devicePopUp.target = self
         devicePopUp.action = #selector(deviceChanged)
-        panel.addArrangedSubview(labeledRow("Sensor", devicePopUp))
+        panel.addArrangedSubview(labeledRow(String(localized: "settings.automations.form.sensor_label", defaultValue: "Sensor", bundle: .macOSBridge), devicePopUp))
         actionNote = wrappingLabel("")
         actionNote.textColor = .secondaryLabelColor
         panel.addArrangedSubview(actionNote)
@@ -208,26 +208,7 @@ class AutomationsSection: SettingsCard {
         panel.addArrangedSubview(buttons)
         buttons.widthAnchor.constraint(equalTo: panel.widthAnchor).isActive = true
 
-        formContainer.addSubview(panel)
-        NSLayoutConstraint.activate([
-            panel.topAnchor.constraint(equalTo: formContainer.topAnchor),
-            panel.leadingAnchor.constraint(equalTo: formContainer.leadingAnchor),
-            panel.trailingAnchor.constraint(equalTo: formContainer.trailingAnchor),
-            panel.bottomAnchor.constraint(equalTo: formContainer.bottomAnchor)
-        ])
-    }
-
-    private func labeledRow(_ label: String, _ control: NSView) -> NSView {
-        let row = NSStackView()
-        row.orientation = .horizontal; row.spacing = 8; row.alignment = .centerY
-        row.translatesAutoresizingMaskIntoConstraints = false
-        let l = createLabel(label, style: .body)
-        l.translatesAutoresizingMaskIntoConstraints = false
-        l.widthAnchor.constraint(equalToConstant: 110).isActive = true
-        control.translatesAutoresizingMaskIntoConstraints = false
-        row.addArrangedSubview(l)
-        row.addArrangedSubview(control)
-        return row
+        addContentToBox(formBox, content: panel)
     }
 
     private func fieldUnitRow(_ label: String, _ field: NSTextField, _ unit: NSPopUpButton) -> NSView {
@@ -245,8 +226,8 @@ class AutomationsSection: SettingsCard {
 
     private func setFormVisible(_ visible: Bool) {
         automationsHeader.isHidden = visible
-        automationsStack.isHidden = visible
-        formContainer.isHidden = !visible
+        automationsBox.isHidden = visible
+        formBox.isHidden = !visible
     }
 
     // MARK: - Options
@@ -553,20 +534,4 @@ class AutomationsSection: SettingsCard {
         DispatchQueue.main.async { [weak self] in self?.rebuildAutomationsList() }
     }
 
-    // MARK: - Helpers
-
-    private func wrappingLabel(_ text: String) -> NSTextField {
-        let l = createLabel(text, style: .caption)
-        l.lineBreakMode = .byWordWrapping
-        l.maximumNumberOfLines = 0
-        l.preferredMaxLayoutWidth = 460
-        return l
-    }
-
-    private func createSpacer(height: CGFloat) -> NSView {
-        let s = NSView()
-        s.translatesAutoresizingMaskIntoConstraints = false
-        s.heightAnchor.constraint(equalToConstant: height).isActive = true
-        return s
-    }
 }

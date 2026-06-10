@@ -74,7 +74,6 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
         case deeplinks
         case webhooks
         case homeKitBridge
-        case automations
         case itsyhomeIOS
         case itsytv
         case about
@@ -89,8 +88,7 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
             case .advanced: return String(localized: "settings.advanced.title", defaultValue: "Advanced", bundle: .macOSBridge)
             case .deeplinks: return String(localized: "settings.deeplinks.title", defaultValue: "Deeplinks", bundle: .macOSBridge)
             case .webhooks: return String(localized: "settings.webhooks.title", defaultValue: "Webhooks/CLI", bundle: .macOSBridge)
-            case .homeKitBridge: return String(localized: "settings.homekit_bridge.title", defaultValue: "HomeKit Bridge", bundle: .macOSBridge)
-            case .automations: return String(localized: "settings.automations.title", defaultValue: "Automations", bundle: .macOSBridge)
+            case .homeKitBridge: return String(localized: "settings.homekit_bridge.title", defaultValue: "HomeKit bridge", bundle: .macOSBridge)
             case .itsyhomeIOS: return String(localized: "settings.itsyhome_ios.section_title", defaultValue: "Itsyhome for iOS", bundle: .macOSBridge)
             case .itsytv: return String(localized: "settings.itsytv.title", defaultValue: "Apple TV remote", bundle: .macOSBridge)
             case .about: return String(localized: "settings.about.title", defaultValue: "About", bundle: .macOSBridge)
@@ -108,7 +106,6 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
             case .deeplinks: return "link"
             case .webhooks: return "globe"
             case .homeKitBridge: return "bridge"
-            case .automations: return "flow-arrow"
             case .itsyhomeIOS: return "device-mobile"
             case .itsytv: return "television"
             case .about: return "info"
@@ -117,7 +114,7 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
 
         var isProFeature: Bool {
             switch self {
-            case .cameras, .networks, .deeplinks, .webhooks, .itsyhomeIOS, .homeKitBridge, .automations: return true
+            case .cameras, .networks, .deeplinks, .webhooks, .itsyhomeIOS, .homeKitBridge: return true
             default: return false
             }
         }
@@ -128,7 +125,7 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
             switch self {
             case .homeAssistant:
                 return platform == .homeAssistant
-            case .homeKitBridge, .automations:
+            case .homeKitBridge:
                 // Virtual sensors and the automations that drive them depend on
                 // the Apple Home -> HomeKit notify -> ItsyHome round-trip, which
                 // does not exist in Home Assistant mode. HomeKit-only.
@@ -157,7 +154,6 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
     private var deeplinksSection: DeeplinksSection?
     private var webhooksSection: WebhooksSection?
     private var homeKitBridgeSection: HomeKitBridgeSection?
-    private var automationsSection: AutomationsSection?
     private var itsyhomeIOSSection: ItsyhomeIOSSection?
     private var itsytvSection: ItsytvSection?
     private var aboutSection: AboutSection?
@@ -177,7 +173,7 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
         accessoriesSection?.configure(with: data)
         camerasSection?.configure(with: data)
         networksSection?.configure(with: data)
-        automationsSection?.configure(with: data)
+        homeKitBridgeSection?.configure(with: data)
     }
 
     override func viewDidMoveToWindow() {
@@ -353,17 +349,11 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
         case .homeKitBridge:
             if homeKitBridgeSection == nil {
                 homeKitBridgeSection = HomeKitBridgeSection()
-            }
-            contentView = homeKitBridgeSection!
-
-        case .automations:
-            if automationsSection == nil {
-                automationsSection = AutomationsSection()
                 if let data = menuData {
-                    automationsSection?.configure(with: data)
+                    homeKitBridgeSection?.configure(with: data)
                 }
             }
-            contentView = automationsSection!
+            contentView = homeKitBridgeSection!
 
         case .itsyhomeIOS:
             if itsyhomeIOSSection == nil {
