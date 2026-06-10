@@ -48,8 +48,8 @@ targets:
         DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER: NO
         TARGETED_DEVICE_FAMILY: "6"
         # App metadata
-        MARKETING_VERSION: "2.8.0"
-        CURRENT_PROJECT_VERSION: "28001"
+        MARKETING_VERSION: "2.7.0"
+        CURRENT_PROJECT_VERSION: "27002"
         INFOPLIST_KEY_CFBundleDisplayName: Itsyhome
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.utilities
     scheme:

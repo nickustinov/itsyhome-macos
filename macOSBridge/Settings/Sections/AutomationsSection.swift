@@ -71,15 +71,15 @@ class AutomationsSection: SettingsCard {
     // No Pro banner here: this section is embedded in HomeKitBridgeSection,
     // which already shows one.
     private func setupContent() {
+        automationsHeader = createAutomationsHeader()
+        stackView.addArrangedSubview(automationsHeader)
+        automationsHeader.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
+
         let desc = wrappingLabel(
             String(localized: "settings.automations.description", defaultValue: "Automations watch a HomeKit accessory and, when it holds a state for a duration, set a virtual sensor (re-pulsing it) - so Apple Home can automate on conditions HomeKit can't compute itself, like \"open for 15 minutes\".", bundle: .macOSBridge))
         stackView.addArrangedSubview(desc)
         desc.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
-        stackView.addArrangedSubview(createSpacer(height: 12))
-
-        automationsHeader = createAutomationsHeader()
-        stackView.addArrangedSubview(automationsHeader)
-        automationsHeader.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
+        stackView.addArrangedSubview(createSpacer(height: 4))
 
         automationsStack.orientation = .vertical
         automationsStack.spacing = 6
