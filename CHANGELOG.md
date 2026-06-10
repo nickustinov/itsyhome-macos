@@ -1,7 +1,8 @@
 # Changelog
 
-## 2.6.1
+## 2.7.0
 
+- Bind the webhook server to a specific local IP – Settings → Webhooks has a new "Bind" field that restricts the local web server to a single interface address (e.g. a Tailscale mesh IP) instead of listening on all interfaces, so the endpoint is reachable over a private network without router port-forwarding. Empty keeps the default (all interfaces); an invalid address is rejected and falls back to all interfaces so a typo can never brick the server (#126)
 - Fix battery indicator not showing for Home Assistant devices – HA battery sensors are usually marked "diagnostic" and were hidden by the entity category filter before the badge could read them; battery sensors are now resolved from the full entity list so the badge appears regardless of the filter (#113-adjacent)
 - Reduce idle battery/CPU usage – characteristic updates from chatty bridges no longer walk the (hidden) menu while the dropdown is closed; pinned menu-bar items and webhook clients still update live, and the menu refreshes its values when opened (#113)
 - Fix colour changes on Govee/Matter lights being ignored – hue is now written after saturation so the hue value is the one that sticks on Matter bridges, while keeping the small delay that prevents wrong colours on Philips Hue (#127)
