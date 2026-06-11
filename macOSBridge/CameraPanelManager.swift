@@ -25,6 +25,7 @@ final class CameraPanelManager {
     private var pendingAutoOpenReveal = false
     private var clickOutsideMonitor: Any?
     private var localClickMonitor: Any?
+    private var escKeyMonitor: Any?
     private var cameraPanelPollTimer: DispatchSourceTimer?
     private var cameraWindowObserver: NSObjectProtocol?
     private(set) var isPinned = false
@@ -100,7 +101,7 @@ final class CameraPanelManager {
         isPinned = false
         isAutoOpenMode = false
         pendingAutoOpenReveal = false
-        removeClickOutsideMonitor()
+        removeDismissMonitors()
         // Reset window size/position before hiding to avoid slide animation on next open
         if let window = cameraPanelWindow {
             cameraPanelSize = NSSize(width: 300, height: 300)
@@ -123,12 +124,12 @@ final class CameraPanelManager {
         guard let window = cameraPanelWindow else { return }
 
         if pinned {
-            removeClickOutsideMonitor()
+            removeDismissMonitors()
             window.level = .floating
         } else {
             window.level = .popUpMenu
             if window.isVisible {
-                setupClickOutsideMonitor()
+                setupDismissMonitors()
             }
         }
     }
@@ -200,7 +201,7 @@ final class CameraPanelManager {
             window.minSize = NSSize(width: width, height: height)
             window.maxSize = NSSize(width: width, height: height)
             if window.isVisible {
-                setupClickOutsideMonitor()
+                setupDismissMonitors()
             }
         }
 
@@ -215,7 +216,7 @@ final class CameraPanelManager {
             }
             window.alphaValue = 1.0
             window.makeKeyAndOrderFront(nil)
-            setupClickOutsideMonitor()
+            setupDismissMonitors()
             cameraStatusItem?.button?.highlight(true)
             startAutoCloseTimer()
             return
@@ -266,7 +267,7 @@ final class CameraPanelManager {
         // "activate app" gesture and only the second click registers.
         NSApp.activate(ignoringOtherApps: true)
         panel.makeKeyAndOrderFront(nil)
-        setupClickOutsideMonitor()
+        setupDismissMonitors()
         // Re-apply highlight after mouse event completes (system resets it on mouseUp)
         DispatchQueue.main.async {
             self.cameraStatusItem?.button?.highlight(true)
@@ -435,7 +436,7 @@ final class CameraPanelManager {
         autoCloseTimer = nil
     }
 
-    // MARK: - Click Outside Monitor
+    // MARK: - Dismiss monitors (click outside, Esc)
 
     private func isPointInsidePanelOrStatusButton(_ screenPoint: NSPoint) -> Bool {
         if let panel = cameraPanelWindow, panel.frame.contains(screenPoint) {
@@ -451,8 +452,8 @@ final class CameraPanelManager {
         return false
     }
 
-    private func setupClickOutsideMonitor() {
-        removeClickOutsideMonitor()
+    private func setupDismissMonitors() {
+        removeDismissMonitors()
 
         let dismissCheck: () -> Void = { [weak self] in
             guard let self = self else { return }
@@ -485,9 +486,18 @@ final class CameraPanelManager {
             self.dismissCameraPanel()
             return event
         }
+
+        // Close on Esc, like a regular menu. The monitor only exists while the
+        // panel is shown unpinned, so a pinned window keeps normal key handling.
+        escKeyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            guard let self = self, self.cameraPanelWindow?.isVisible == true,
+                  event.keyCode == 53 else { return event }
+            self.dismissCameraPanel()
+            return nil
+        }
     }
 
-    private func removeClickOutsideMonitor() {
+    private func removeDismissMonitors() {
         if let monitor = clickOutsideMonitor {
             NSEvent.removeMonitor(monitor)
             clickOutsideMonitor = nil
@@ -495,6 +505,10 @@ final class CameraPanelManager {
         if let monitor = localClickMonitor {
             NSEvent.removeMonitor(monitor)
             localClickMonitor = nil
+        }
+        if let monitor = escKeyMonitor {
+            NSEvent.removeMonitor(monitor)
+            escKeyMonitor = nil
         }
     }
 }
