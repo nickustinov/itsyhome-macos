@@ -799,14 +799,19 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
         HotkeyManager.shared.registerShortcuts()
 
         menuBuilder.bridge = activeBridge
-        StartupLogger.log("Building menu items...")
-        menuBuilder.buildMenu(into: mainMenu, with: data)
-        StartupLogger.log("Menu items built — \(mainMenu.items.count) items")
 
+        // Load persisted history BEFORE building the menu so each sensor row can
+        // build its history submenu from loaded data. Otherwise rarely-changing
+        // rows (contact/motion) stay empty until they next change, while temps
+        // repopulate via their stream. See SensorStateMenuItem.refreshHistory.
         HistoryStore.shared.configure(
             homeId: data.selectedHomeId ?? "default",
             registry: SensorHistoryRegistry.build(from: data)
         )
+
+        StartupLogger.log("Building menu items...")
+        menuBuilder.buildMenu(into: mainMenu, with: data)
+        StartupLogger.log("Menu items built — \(mainMenu.items.count) items")
 
         actionEngine.bridge = activeBridge
         actionEngine.updateMenuData(data)
