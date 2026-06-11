@@ -138,6 +138,13 @@ class SensorStateMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRe
     // MARK: - History
 
     private func refreshHistory() {
+        // Match the summary row: history is a Pro feature gated on the toggle, so
+        // "Record sensor history" off means no chart on any row (not just the
+        // temperature/humidity summary).
+        guard ProStatusCache.shared.isPro, PreferencesManager.shared.historyEnabled else {
+            submenu = nil
+            return
+        }
         guard let kind, let id = stateCharacteristicId,
               let series = HistoryStore.shared.series(for: id),
               !series.numeric.isEmpty || !series.binary.isEmpty else {
