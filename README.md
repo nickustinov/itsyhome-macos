@@ -22,7 +22,7 @@ A native macOS menu bar app for controlling your HomeKit and Home Assistant smar
   </tr>
   <tr>
     <td width="50%" valign="top"><a href="https://itsyhome.app/ios"><img src="itsyhome-ios.png" alt="Itsyhome iOS app screenshot"></a></td>
-    <td width="50%" valign="top"><img src="itsyhome-tvos.png" alt="Itsyhome tvOS app screenshot"></td>
+    <td width="50%" valign="top"><img src="itsyhome-tvos.png" alt="Itsyhome tvOS app screenshot"><br><img src="itsyhome-tvos-cameras.png" alt="Itsyhome tvOS cameras screenshot"></td>
   </tr>
 </table>
 
