@@ -27,16 +27,23 @@ final class HLSStreamPlayer: NSObject {
     private var playerView: UIView?
     private var statusObserver: NSKeyValueObservation?
     private var errorObserver: NSKeyValueObservation?
+    private var didActivateAudioSession = false
 
     var onError: ((Error) -> Void)?
     var onReady: (() -> Void)?
 
     var view: UIView? { playerView }
 
+    deinit {
+        stop()
+    }
+
     // MARK: - Playback
 
     func play(url: URL) {
         logger.info("Starting HLS playback: \(url.absoluteString)")
+
+        activateAudioSessionIfNeeded()
 
         let asset = AVURLAsset(url: url)
         let playerItem = AVPlayerItem(asset: asset)
@@ -111,9 +118,35 @@ final class HLSStreamPlayer: NSObject {
         playerLayer = nil
         playerView = nil
         player = nil
+
+        deactivateAudioSessionIfNeeded()
     }
 
     func setMuted(_ muted: Bool) {
         player?.isMuted = muted
+    }
+
+    private func activateAudioSessionIfNeeded() {
+        guard !didActivateAudioSession else { return }
+
+        let audioSession = AVAudioSession.sharedInstance()
+        do {
+            try audioSession.setCategory(.playback, options: [.mixWithOthers])
+            try audioSession.setActive(true)
+            didActivateAudioSession = true
+        } catch {
+            logger.error("Failed to activate HLS audio session: \(error.localizedDescription)")
+        }
+    }
+
+    private func deactivateAudioSessionIfNeeded() {
+        guard didActivateAudioSession else { return }
+
+        do {
+            try AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+            didActivateAudioSession = false
+        } catch {
+            logger.error("Failed to deactivate HLS audio session: \(error.localizedDescription)")
+        }
     }
 }
