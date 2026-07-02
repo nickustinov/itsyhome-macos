@@ -26,6 +26,7 @@ final class WebRTCStreamClient: NSObject {
 
     private var entityId: String?
     private var signaling: HACameraSignaling?
+    private var didActivateAudioSession = false
 
     // MARK: - Initialization
 
@@ -46,7 +47,7 @@ final class WebRTCStreamClient: NSObject {
     func connect(entityId: String, signaling: HACameraSignaling, dataChannelLabel: String? = nil) async throws {
         self.entityId = entityId
         self.signaling = signaling
-        configureAudioSession(active: true)
+        setAudioSessionActive(true)
 
         // Configure ICE servers (STUN only — HA WebRTC typically uses direct connectivity)
         let stunServer = LKRTCIceServer(urlStrings: ["stun:stun.l.google.com:19302"])
@@ -160,17 +161,47 @@ final class WebRTCStreamClient: NSObject {
         }
 
         // Deactivate/activate audio session to restore system volume when muted
-        configureAudioSession(active: enabled)
+        setAudioSessionActive(enabled)
     }
 
-    private func configureAudioSession(active: Bool) {
+    private func setAudioSessionActive(_ active: Bool) {
+        if active {
+            activateAudioSessionIfNeeded()
+        } else {
+            deactivateAudioSessionIfNeeded()
+        }
+    }
+
+    private func activateAudioSessionIfNeeded() {
+        guard !didActivateAudioSession else { return }
+
         let configuration = LKRTCAudioSessionConfiguration.webRTC()
         configuration.categoryOptions.insert(.mixWithOthers)
         LKRTCAudioSessionConfiguration.setWebRTC(configuration)
 
         let audioSession = LKRTCAudioSession.sharedInstance()
         audioSession.lockForConfiguration()
-        try? audioSession.setConfiguration(configuration, active: active)
+        do {
+            try audioSession.setConfiguration(configuration)
+            try audioSession.setActive(true)
+            didActivateAudioSession = true
+        } catch {
+            logger.error("Failed to activate WebRTC audio session: \(error.localizedDescription)")
+        }
+        audioSession.unlockForConfiguration()
+    }
+
+    private func deactivateAudioSessionIfNeeded() {
+        guard didActivateAudioSession else { return }
+
+        let audioSession = LKRTCAudioSession.sharedInstance()
+        audioSession.lockForConfiguration()
+        do {
+            try audioSession.setActive(false)
+            didActivateAudioSession = false
+        } catch {
+            logger.error("Failed to deactivate WebRTC audio session: \(error.localizedDescription)")
+        }
         audioSession.unlockForConfiguration()
     }
 
@@ -183,7 +214,7 @@ final class WebRTCStreamClient: NSObject {
         peerConnection?.close()
         peerConnection = nil
         videoView = nil
-        configureAudioSession(active: false)
+        deactivateAudioSessionIfNeeded()
     }
 
 }
