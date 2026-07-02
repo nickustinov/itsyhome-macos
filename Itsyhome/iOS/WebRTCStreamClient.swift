@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import AVFoundation
 import LiveKitWebRTC
 import os.log
 
@@ -45,6 +46,7 @@ final class WebRTCStreamClient: NSObject {
     func connect(entityId: String, signaling: HACameraSignaling, dataChannelLabel: String? = nil) async throws {
         self.entityId = entityId
         self.signaling = signaling
+        configureAudioSession(active: true)
 
         // Configure ICE servers (STUN only — HA WebRTC typically uses direct connectivity)
         let stunServer = LKRTCIceServer(urlStrings: ["stun:stun.l.google.com:19302"])
@@ -158,13 +160,17 @@ final class WebRTCStreamClient: NSObject {
         }
 
         // Deactivate/activate audio session to restore system volume when muted
+        configureAudioSession(active: enabled)
+    }
+
+    private func configureAudioSession(active: Bool) {
+        let configuration = LKRTCAudioSessionConfiguration.webRTC()
+        configuration.categoryOptions.insert(.mixWithOthers)
+        LKRTCAudioSessionConfiguration.setWebRTC(configuration)
+
         let audioSession = LKRTCAudioSession.sharedInstance()
         audioSession.lockForConfiguration()
-        if enabled {
-            try? audioSession.setActive(true)
-        } else {
-            try? audioSession.setActive(false)
-        }
+        try? audioSession.setConfiguration(configuration, active: active)
         audioSession.unlockForConfiguration()
     }
 
@@ -177,6 +183,7 @@ final class WebRTCStreamClient: NSObject {
         peerConnection?.close()
         peerConnection = nil
         videoView = nil
+        configureAudioSession(active: false)
     }
 
 }

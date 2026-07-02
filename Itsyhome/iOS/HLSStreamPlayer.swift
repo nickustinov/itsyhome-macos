@@ -38,6 +38,10 @@ final class HLSStreamPlayer: NSObject {
     func play(url: URL) {
         logger.info("Starting HLS playback: \(url.absoluteString)")
 
+        let audioSession = AVAudioSession.sharedInstance()
+        try? audioSession.setCategory(.playback, options: [.mixWithOthers])
+        try? audioSession.setActive(true)
+
         let asset = AVURLAsset(url: url)
         let playerItem = AVPlayerItem(asset: asset)
 
@@ -111,6 +115,8 @@ final class HLSStreamPlayer: NSObject {
         playerLayer = nil
         playerView = nil
         player = nil
+
+        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
     }
 
     func setMuted(_ muted: Bool) {
