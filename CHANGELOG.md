@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.8.0
+
+- Fix camera streams ducking system audio – opening an HLS or WebRTC camera stream no longer lowers the volume of music, podcasts or other playback; the stream players now use a non-ducking audio session that is activated and deactivated in balance with the stream lifecycle (#138, thanks @mvanhorn)
+
 ## 2.7.0
 
 - Virtual HomeKit sensors with automations (Pro) – Itsyhome can now publish its own bridge to Apple Home over HAP, carrying read-only virtual sensors (contact, motion, occupancy, leak, smoke, CO, CO2). Manage them in Settings → HomeKit bridge: enable the bridge, pair it by scanning the QR code (or typing the setup code), add/edit/remove devices and flip their state to test. The sensors can be set by name through the existing webhook verbs, or by the new built-in automations in the same pane: "WHEN a HomeKit accessory holds a state FOR a duration THEN set a virtual sensor", with optional re-pulsing – so Apple Home can automate on conditions HomeKit can't compute itself, like "door open for 15 minutes". Pairings and the bridge identity persist across restarts, with the identity key stored in the Keychain (#129, thanks @mikeburgh)
