@@ -38,24 +38,8 @@ class MenuBuilder {
             menu.addItem(NSMenuItem.separator())
         }
 
-        // Scenes (if not hidden)
-        let preferences = PreferencesManager.shared
-        if !data.scenes.isEmpty && !preferences.hideScenesSection {
-            addScenes(to: menu, scenes: data.scenes)
-            menu.addItem(NSMenuItem.separator())
-        }
-
-        // Filter hidden services and rooms
-        let filteredAccessories = filterHiddenServices(from: data.accessories)
-        let visibleRooms = data.rooms.filter { !preferences.isHidden(roomId: $0.uniqueIdentifier) }
-
-        if visibleRooms.isEmpty && filteredAccessories.isEmpty {
-            let emptyItem = NSMenuItem(title: String(localized: "menu.no_devices", defaultValue: "No devices found", bundle: .macOSBridge), action: nil, keyEquivalent: "")
-            emptyItem.isEnabled = false
-            menu.addItem(emptyItem)
-        } else {
-            addRoomsAndAccessories(to: menu, rooms: visibleRooms, accessories: filteredAccessories)
-        }
+        // Scenes, rooms and batteries in the user's saved order, then "Other".
+        addOrderedSections(to: menu, from: data)
     }
 
     // MARK: - Favourites
@@ -173,13 +157,23 @@ class MenuBuilder {
         menu.addItem(scenesItem)
     }
 
-    // MARK: - Rooms and accessories
+    // MARK: - Ordered top-level sections (scenes, rooms, batteries)
 
-    func addRoomsAndAccessories(to menu: NSMenu, rooms: [RoomData], accessories: [AccessoryData]) {
+    /// Adds the reorderable top-level sections in the user's saved order
+    /// (menuSectionOrder: scenes and batteries tokens interleaved with room
+    /// ids and user divider tokens), then the fixed "Other" section.
+    /// Separators appear exactly at the user's dividers, with leading,
+    /// trailing and doubled-up separators suppressed when the sections around
+    /// them have nothing to show.
+    func addOrderedSections(to menu: NSMenu, from data: MenuData) {
+        let preferences = PreferencesManager.shared
+
+        let filteredAccessories = filterHiddenServices(from: data.accessories)
+        let visibleRooms = data.rooms.filter { !preferences.isHidden(roomId: $0.uniqueIdentifier) }
+
         var accessoriesByRoom: [String: [AccessoryData]] = [:]
         var noRoomAccessories: [AccessoryData] = []
-
-        for accessory in accessories {
+        for accessory in filteredAccessories {
             if let roomId = accessory.roomIdentifier {
                 accessoriesByRoom[roomId, default: []].append(accessory)
             } else {
@@ -187,15 +181,13 @@ class MenuBuilder {
             }
         }
 
-        // Build groups by room lookup
-        let preferences = PreferencesManager.shared
+        // Build groups by room lookup, ordered within each room
         var groupsByRoom: [String: [DeviceGroup]] = [:]
         for group in preferences.deviceGroups {
             if let roomId = group.roomId {
                 groupsByRoom[roomId, default: []].append(group)
             }
         }
-        // Order groups within each room
         for (roomId, roomGroups) in groupsByRoom {
             let savedOrder = preferences.groupOrder(forRoom: roomId)
             groupsByRoom[roomId] = roomGroups.sorted { g1, g2 in
@@ -205,44 +197,54 @@ class MenuBuilder {
             }
         }
 
-        let savedOrder = preferences.roomOrder
-        let orderedRooms = rooms.sorted { r1, r2 in
-            let i1 = savedOrder.firstIndex(of: r1.uniqueIdentifier) ?? Int.max
-            let i2 = savedOrder.firstIndex(of: r2.uniqueIdentifier) ?? Int.max
-            return i1 < i2
+        var emittedAny = false
+        var pendingDivider = false
+        func flushPendingDivider() {
+            if pendingDivider {
+                menu.addItem(NSMenuItem.separator())
+                pendingDivider = false
+            }
         }
 
-        for room in orderedRooms {
-            let roomAccessories = accessoriesByRoom[room.uniqueIdentifier] ?? []
-            let roomGroups = groupsByRoom[room.uniqueIdentifier] ?? []
-
-            // Skip rooms with no accessories and no groups
-            guard !roomAccessories.isEmpty || !roomGroups.isEmpty else {
+        let tokens = preferences.reconciledMenuSectionOrder(roomIds: data.rooms.map { $0.uniqueIdentifier })
+        for token in tokens {
+            if token.hasPrefix(PreferencesManager.dividerPrefix) {
+                // Only becomes a separator once another section follows it, so
+                // hidden/empty sections never leave stray or doubled lines.
+                if emittedAny { pendingDivider = true }
                 continue
             }
+            switch token {
+            case PreferencesManager.scenesSectionToken:
+                let hasVisibleScenes = data.scenes.contains { !preferences.isHidden(sceneId: $0.uniqueIdentifier) }
+                guard hasVisibleScenes, !preferences.hideScenesSection else { continue }
+                flushPendingDivider()
+                addScenes(to: menu, scenes: data.scenes)
+                emittedAny = true
 
-            let icon = IconResolver.icon(forRoomId: room.uniqueIdentifier, roomName: room.name)
-            let roomItem = createSubmenuItem(title: room.name, icon: icon)
+            case PreferencesManager.batteriesSectionToken:
+                guard !preferences.hideBatteriesSection,
+                      let batteriesItem = BatteriesMenuItem(accessories: filteredAccessories, bridge: bridge) else { continue }
+                batteriesItem.view = Self.makeSubmenuItemView(title: batteriesItem.title, icon: PhosphorIcon.regular("battery-medium"))
+                flushPendingDivider()
+                menu.addItem(batteriesItem)
+                emittedAny = true
 
-            let submenu = StayOpenMenu()
+            default:
+                guard let room = visibleRooms.first(where: { $0.uniqueIdentifier == token }) else { continue }
+                let roomAccessories = accessoriesByRoom[room.uniqueIdentifier] ?? []
+                let roomGroups = groupsByRoom[room.uniqueIdentifier] ?? []
 
-            // Add groups at the top of the room submenu
-            if let menuData = currentMenuData {
-                for group in roomGroups {
-                    addGroupItem(to: submenu, group: group, menuData: menuData)
-                }
-                // Add separator after groups if there are both groups and accessories
-                if !roomGroups.isEmpty && !roomAccessories.isEmpty {
-                    submenu.addItem(NSMenuItem.separator())
-                }
+                // Skip rooms with no accessories and no groups
+                guard !roomAccessories.isEmpty || !roomGroups.isEmpty else { continue }
+                flushPendingDivider()
+                addRoomItem(to: menu, room: room, accessories: roomAccessories, groups: roomGroups)
+                emittedAny = true
             }
-
-            addServicesGroupedByType(to: submenu, accessories: roomAccessories, roomName: room.name, roomId: room.uniqueIdentifier)
-            roomItem.submenu = submenu
-            menu.addItem(roomItem)
         }
 
         if !noRoomAccessories.isEmpty && !preferences.hideOtherSection {
+            flushPendingDivider()
             let icon = PhosphorIcon.regular("squares-four")
             let otherItem = createSubmenuItem(title: String(localized: "menu.other", defaultValue: "Other", bundle: .macOSBridge), icon: icon)
 
@@ -250,7 +252,39 @@ class MenuBuilder {
             addServicesGroupedByType(to: submenu, accessories: noRoomAccessories)
             otherItem.submenu = submenu
             menu.addItem(otherItem)
+            emittedAny = true
         }
+
+        if visibleRooms.isEmpty && filteredAccessories.isEmpty {
+            if emittedAny {
+                menu.addItem(NSMenuItem.separator())
+            }
+            let emptyItem = NSMenuItem(title: String(localized: "menu.no_devices", defaultValue: "No devices found", bundle: .macOSBridge), action: nil, keyEquivalent: "")
+            emptyItem.isEnabled = false
+            menu.addItem(emptyItem)
+        }
+    }
+
+    private func addRoomItem(to menu: NSMenu, room: RoomData, accessories: [AccessoryData], groups: [DeviceGroup]) {
+        let icon = IconResolver.icon(forRoomId: room.uniqueIdentifier, roomName: room.name)
+        let roomItem = createSubmenuItem(title: room.name, icon: icon)
+
+        let submenu = StayOpenMenu()
+
+        // Add groups at the top of the room submenu
+        if let menuData = currentMenuData {
+            for group in groups {
+                addGroupItem(to: submenu, group: group, menuData: menuData)
+            }
+            // Add separator after groups if there are both groups and accessories
+            if !groups.isEmpty && !accessories.isEmpty {
+                submenu.addItem(NSMenuItem.separator())
+            }
+        }
+
+        addServicesGroupedByType(to: submenu, accessories: accessories, roomName: room.name, roomId: room.uniqueIdentifier)
+        roomItem.submenu = submenu
+        menu.addItem(roomItem)
     }
 
     func addServicesGroupedByType(to menu: NSMenu, accessories: [AccessoryData], roomName: String? = nil, roomId: String? = nil) {
@@ -437,6 +471,15 @@ class MenuBuilder {
     // MARK: - Submenu items (rooms, etc.)
 
     func createSubmenuItem(title: String, icon: NSImage?) -> NSMenuItem {
+        let item = NSMenuItem(title: title, action: nil, keyEquivalent: "")
+        item.view = Self.makeSubmenuItemView(title: title, icon: icon)
+        return item
+    }
+
+    /// The shared row view for items that open a submenu: icon, name and a
+    /// trailing chevron. Also used by menu item subclasses (BatteriesMenuItem)
+    /// that need the same look on a custom NSMenuItem.
+    static func makeSubmenuItemView(title: String, icon: NSImage?) -> NSView {
         let height = DS.ControlSize.menuItemHeight
         let width = DS.ControlSize.menuItemWidth
 
@@ -471,9 +514,7 @@ class MenuBuilder {
         nameLabel.lineBreakMode = .byTruncatingTail
         containerView.addSubview(nameLabel)
 
-        let item = NSMenuItem(title: title, action: nil, keyEquivalent: "")
-        item.view = containerView
-        return item
+        return containerView
     }
 
     func createActionItem(title: String, icon: NSImage?, action: @escaping () -> Void) -> NSMenuItem {

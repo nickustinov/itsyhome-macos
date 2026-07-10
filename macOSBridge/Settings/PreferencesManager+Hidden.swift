@@ -73,6 +73,16 @@ extension PreferencesManager {
         }
     }
 
+    // MARK: - Hide batteries section (per-home)
+
+    var hideBatteriesSection: Bool {
+        get { defaults.bool(forKey: homeKey(Keys.hideBatteriesSection)) }
+        set {
+            defaults.set(newValue, forKey: homeKey(Keys.hideBatteriesSection))
+            postNotification()
+        }
+    }
+
     // MARK: - Hide "Other" section (per-home)
 
     var hideOtherSection: Bool {

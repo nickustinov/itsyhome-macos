@@ -14,8 +14,9 @@ extension AccessoriesSettingsView {
     func rebuildAllData() {
         rebuildGroupData()
         rebuildFavouritesList()
-        rebuildRoomData()
+        // Scenes before rooms: the rooms table hosts the scenes section rows.
         rebuildSceneData()
+        rebuildRoomData()
     }
 
     func rebuildFavouritesList() {
@@ -76,25 +77,30 @@ extension AccessoriesSettingsView {
             }
         }
 
-        // Order rooms by saved order, with unseen rooms appended at end
-        // Show all rooms so users can hide rooms that only have cameras or unsupported sensors
-        let roomsWithServices = data.rooms
-        let savedOrder = preferences.roomOrder
-        var ordered: [RoomData] = []
-        for roomId in savedOrder {
-            if let room = roomsWithServices.first(where: { $0.uniqueIdentifier == roomId }) {
-                ordered.append(room)
-            }
+        // Resolve the top-level section order (rooms interleaved with the
+        // scenes/batteries tokens), persisting any drift. Shows all rooms so
+        // users can hide rooms that only have cameras or unsupported sensors.
+        let tokens = preferences.normalizeMenuSectionOrder(roomIds: data.rooms.map { $0.uniqueIdentifier })
+        orderedRooms = tokens.compactMap { token in
+            data.rooms.first { $0.uniqueIdentifier == token }
         }
-        for room in roomsWithServices where !ordered.contains(where: { $0.uniqueIdentifier == room.uniqueIdentifier }) {
-            ordered.append(room)
-        }
-        orderedRooms = ordered
-        preferences.roomOrder = ordered.map { $0.uniqueIdentifier }
 
-        // Build flat table items
+        // Build flat table items in section order
         var items: [RoomTableItem] = []
-        for room in ordered {
+        for token in tokens {
+            if token.hasPrefix(PreferencesManager.dividerPrefix) {
+                items.append(.sectionDivider(token: token))
+                continue
+            }
+            if token == PreferencesManager.scenesSectionToken {
+                appendScenesItems(to: &items)
+                continue
+            }
+            if token == PreferencesManager.batteriesSectionToken {
+                appendBatteriesItems(to: &items, accessories: data.accessories)
+                continue
+            }
+            guard let room = data.rooms.first(where: { $0.uniqueIdentifier == token }) else { continue }
             let roomId = room.uniqueIdentifier
             let isHidden = preferences.isHidden(roomId: roomId)
             let isCollapsed = !expandedSections.contains(roomId)
@@ -190,6 +196,28 @@ extension AccessoriesSettingsView {
         roomTableItems = items
     }
 
+    /// Scenes section rows (header plus, when expanded, one row per scene)
+    /// hosted in the rooms table so the section can be dragged among rooms.
+    private func appendScenesItems(to items: inout [RoomTableItem]) {
+        guard !sceneItems.isEmpty else { return }
+        let preferences = PreferencesManager.shared
+        let isHidden = preferences.hideScenesSection
+        let isCollapsed = !expandedSections.contains("scenes")
+        items.append(.scenesHeader(isHidden: isHidden, isCollapsed: isCollapsed, sceneCount: sceneItems.count))
+        if !isCollapsed {
+            for scene in sceneItems {
+                items.append(.scene(scene: scene, sectionHidden: isHidden))
+            }
+        }
+    }
+
+    /// Batteries section header (#144). Counts every battery-powered device,
+    /// hidden or not, so the row reflects what the submenu can show.
+    private func appendBatteriesItems(to items: inout [RoomTableItem], accessories: [AccessoryData]) {
+        let deviceCount = BatteriesMenuItem.devices(from: accessories).count
+        guard deviceCount > 0 else { return }
+        items.append(.batteriesHeader(isHidden: PreferencesManager.shared.hideBatteriesSection, deviceCount: deviceCount))
+    }
 
     func rebuildSceneData() {
         guard let data = menuData else {
@@ -271,7 +299,7 @@ extension AccessoriesSettingsView {
         var height: CGFloat = 0
         for (index, item) in roomTableItems.enumerated() {
             switch item {
-            case .separator, .groupSeparator, .divider:
+            case .separator, .groupSeparator, .divider, .sectionDivider:
                 height += 12
             default:
                 height += L.rowHeight

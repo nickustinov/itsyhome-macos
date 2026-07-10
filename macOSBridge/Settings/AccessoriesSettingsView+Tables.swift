@@ -60,7 +60,7 @@ extension AccessoriesSettingsView {
             name: String(localized: "menu.scenes", defaultValue: "Scenes", bundle: .macOSBridge),
             icon: PhosphorIcon.regular("sparkle"),
             count: sceneCount,
-            reserveDragHandleSpace: true,
+            showDragHandle: true,
             showChevron: true,
             isCollapsed: isCollapsed,
             isItemHidden: isHidden,
@@ -78,7 +78,25 @@ extension AccessoriesSettingsView {
         }
         rowView.onPinToggled = { [weak self] in
             PreferencesManager.shared.togglePinnedScenesSection()
-            self?.updateScenesSection()
+            self?.updateRoomsSection()
+        }
+        return rowView
+    }
+
+    func createBatteriesHeaderStrip(isHidden: Bool, deviceCount: Int) -> NSView {
+        let config = AccessoryRowConfig(
+            name: String(localized: "menu.batteries", defaultValue: "Batteries", bundle: .macOSBridge),
+            icon: PhosphorIcon.regular("battery-medium"),
+            count: deviceCount,
+            showDragHandle: true,
+            isItemHidden: isHidden,
+            showEyeButton: true,
+            isSectionHeader: true
+        )
+        let rowView = AccessoryRowView(config: config)
+        rowView.onEyeToggled = { [weak self] in
+            PreferencesManager.shared.hideBatteriesSection.toggle()
+            self?.updateRoomsSection()
         }
         return rowView
     }
@@ -154,12 +172,12 @@ extension AccessoriesSettingsView {
         } else {
             expandedSections.insert(scenesKey)
         }
-        updateScenesSection()
+        updateRoomsSection()
     }
 
     func scenesEyeTapped() {
         PreferencesManager.shared.hideScenesSection.toggle()
-        updateScenesSection()
+        updateRoomsSection()
     }
 
     func otherChevronTapped() {
@@ -237,12 +255,55 @@ extension AccessoriesSettingsView {
 
         case .header(let room, _, _, _):
             let menu = NSMenu()
+            menu.addItem(addSectionDividerItem(beforeToken: room.uniqueIdentifier))
+            menu.addItem(NSMenuItem.separator())
             menu.addItem(resetOrderItem(roomId: room.uniqueIdentifier))
+            return menu
+
+        case .scenesHeader:
+            let menu = NSMenu()
+            menu.addItem(addSectionDividerItem(beforeToken: PreferencesManager.scenesSectionToken))
+            return menu
+
+        case .batteriesHeader:
+            let menu = NSMenu()
+            menu.addItem(addSectionDividerItem(beforeToken: PreferencesManager.batteriesSectionToken))
+            return menu
+
+        case .sectionDivider(let token):
+            let menu = NSMenu()
+            let remove = NSMenuItem(
+                title: String(localized: "settings.accessories.remove_divider", defaultValue: "Remove divider", bundle: .macOSBridge),
+                action: #selector(removeSectionDivider(_:)), keyEquivalent: "")
+            remove.target = self
+            remove.representedObject = token as NSString
+            menu.addItem(remove)
             return menu
 
         default:
             return nil
         }
+    }
+
+    private func addSectionDividerItem(beforeToken token: String) -> NSMenuItem {
+        let item = NSMenuItem(
+            title: String(localized: "settings.accessories.add_divider_above", defaultValue: "Add divider above", bundle: .macOSBridge),
+            action: #selector(addSectionDividerAbove(_:)), keyEquivalent: "")
+        item.target = self
+        item.representedObject = token as NSString
+        return item
+    }
+
+    @objc private func addSectionDividerAbove(_ sender: NSMenuItem) {
+        guard let token = sender.representedObject as? String else { return }
+        PreferencesManager.shared.addMenuSectionDivider(beforeToken: token)
+        rebuild()
+    }
+
+    @objc private func removeSectionDivider(_ sender: NSMenuItem) {
+        guard let token = sender.representedObject as? String else { return }
+        PreferencesManager.shared.removeMenuSectionDivider(token: token)
+        rebuild()
     }
 
     private func resetOrderItem(roomId: String) -> NSMenuItem {
@@ -340,15 +401,15 @@ class RoomsTableView: NSTableView {
         if clickedRow >= 0, let items = roomTableItems?(), clickedRow < items.count {
             let item = items[clickedRow]
             switch item {
-            case .header:
-                break // headers are always draggable
+            case .header, .scenesHeader, .batteriesHeader, .sectionDivider:
+                break // section headers and top-level dividers are always draggable
             case .group(_, let roomId):
                 // Only allow drag if the room has more than one group
                 if let roomId = roomId, (groupCountForRoom?(roomId) ?? 0) <= 1 {
                     return
                 }
-            case .accessory, .divider:
-                break // accessories and user dividers are draggable for room reordering
+            case .accessory, .divider, .scene:
+                break // rows are draggable for reordering within their section
             default:
                 return
             }

@@ -3,6 +3,10 @@
 ## 2.8.0
 
 - Fix camera streams ducking system audio – opening an HLS or WebRTC camera stream no longer lowers the volume of music, podcasts or other playback; the stream players now use a non-ducking audio session that is activated and deactivated in balance with the stream lifecycle (#138, thanks @mvanhorn)
+- Batteries submenu – every battery-powered device in one "Batteries" submenu, sorted by charge level with the lowest first so devices that need charging surface at the top. Each row shows the device icon, name and the same battery gauge + percentage as the inline badge (red when the device reports low battery), updating and re-sorting live while the menu is open. Devices are deduped per accessory and it works on both HomeKit and Home Assistant. On by default whenever battery devices exist; hide it with the eye icon in Settings → Home (#144)
+- Reorder the top-level menu by drag – the Scenes section (with its scene rows) and the new Batteries section now live in the Settings → Home list alongside rooms, each with a drag handle, so they can be dragged to any position in the menu instead of being fixed above and below the rooms. Existing room orders are preserved, and the webhook API and cloud sync keep seeing the same room ordering as before
+- Top-level dividers – the separators between the menu's sections (Scenes, rooms, Batteries) are now real, user-managed dividers shown in Settings → Home, exactly like the ones inside rooms: drag them anywhere, right-click a section to add a divider above it, right-click a divider to remove it. Existing layouts keep their separators via seeded dividers
+- Accessory rows in Settings → Home now show a drag handle, matching rooms, groups and scenes (they were always draggable, just without the visual cue)
 
 ## 2.7.0
 

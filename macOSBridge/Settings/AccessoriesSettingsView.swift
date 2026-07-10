@@ -19,9 +19,6 @@ class AccessoriesSettingsView: NSView {
 
     private var favouritesSection: SettingsSectionContainer!
     private var globalGroupsSection: SettingsSectionContainer!
-    private var scenesHeaderContainer: SimpleHeightContainer!
-    private var scenesTableSection: SettingsSectionContainer!
-    private var scenesSeparator: NSView!
     private var roomsSection: SimpleHeightContainer!
     private var otherHeaderContainer: SimpleHeightContainer!
     private var otherContentContainer: SimpleHeightContainer!
@@ -30,7 +27,6 @@ class AccessoriesSettingsView: NSView {
 
     var favouritesTableView: NSTableView!
     var globalGroupsTableView: GroupsTableView!
-    var scenesTableView: NSTableView!
     var roomsTableView: RoomsTableView!
 
     // MARK: - Data
@@ -131,28 +127,14 @@ class AccessoriesSettingsView: NSView {
         globalGroupsSection.setContent(globalGroupsTableView)
         addSection(globalGroupsSection)
 
-        // Scenes header (always present if there are scenes, but content toggles)
-        scenesHeaderContainer = SimpleHeightContainer()
-        addSection(scenesHeaderContainer)
-
-        // Scenes table section
-        scenesTableSection = SettingsSectionContainer()
-        scenesTableView = createTableView(dragType: .sceneItem)
-        scenesTableSection.setContent(scenesTableView)
-        addSection(scenesTableSection)
-
-        // Separator after scenes
-        scenesSeparator = createSectionSeparator()
-        addSection(scenesSeparator)
-
-        // Rooms section
+        // Rooms section (also hosts the orderable scenes and batteries sections)
         roomsSection = SimpleHeightContainer()
         roomsTableView = RoomsTableView()
         roomsTableView.roomTableItems = { [weak self] in self?.roomTableItems ?? [] }
         roomsTableView.groupCountForRoom = { [weak self] roomId in self?.groupsByRoom[roomId]?.count ?? 0 }
         roomsTableView.contextMenuForRow = { [weak self] row in self?.roomsContextMenu(forRow: row) }
         configureTableView(roomsTableView, dragType: .roomItem, intercellSpacing: 4)
-        roomsTableView.registerForDraggedTypes([.roomItem, .roomGroupItem, .roomAccessoryItem])
+        roomsTableView.registerForDraggedTypes([.roomItem, .roomGroupItem, .roomAccessoryItem, .sceneItem])
         roomsTableView.translatesAutoresizingMaskIntoConstraints = false
         roomsSection.addSubview(roomsTableView)
         NSLayoutConstraint.activate([
@@ -241,7 +223,6 @@ class AccessoriesSettingsView: NSView {
         rebuildAllData()
         updateFavouritesSection()
         updateGlobalGroupsSection()
-        updateScenesSection()
         updateRoomsSection()
         updateOtherSection()
     }
@@ -268,39 +249,6 @@ class AccessoriesSettingsView: NSView {
             let height = CGFloat(globalGroups.count) * AccessoryRowLayout.rowHeight
             globalGroupsSection.setContentHeight(height)
             globalGroupsTableView.reloadData()
-        }
-    }
-
-    func updateScenesSection() {
-        guard let data = menuData else {
-            scenesHeaderContainer.isHidden = true
-            scenesTableSection.isHidden = true
-            scenesSeparator.isHidden = true
-            return
-        }
-
-        let hasScenes = !data.scenes.isEmpty
-        scenesHeaderContainer.isHidden = !hasScenes
-        scenesSeparator.isHidden = !hasScenes
-
-        if hasScenes {
-            let preferences = PreferencesManager.shared
-            let scenesKey = "scenes"
-            let isHidden = preferences.hideScenesSection
-            let isCollapsed = !expandedSections.contains(scenesKey)
-
-            // Update header
-            updateScenesHeader(isHidden: isHidden, isCollapsed: isCollapsed)
-
-            // Update table visibility and content
-            scenesTableSection.isHidden = isCollapsed
-            if !isCollapsed {
-                let height = CGFloat(sceneItems.count) * AccessoryRowLayout.rowHeight
-                scenesTableSection.setContentHeight(height)
-                scenesTableView.reloadData()
-            }
-        } else {
-            scenesTableSection.isHidden = true
         }
     }
 
@@ -338,22 +286,6 @@ class AccessoriesSettingsView: NSView {
         }
     }
 
-    private func updateScenesHeader(isHidden: Bool, isCollapsed: Bool) {
-        let L = AccessoryRowLayout.self
-        scenesHeaderContainer.subviews.forEach { $0.removeFromSuperview() }
-
-        let header = createScenesHeaderStrip(isHidden: isHidden, isCollapsed: isCollapsed, sceneCount: sceneItems.count)
-        header.translatesAutoresizingMaskIntoConstraints = false
-        scenesHeaderContainer.addSubview(header)
-        NSLayoutConstraint.activate([
-            header.topAnchor.constraint(equalTo: scenesHeaderContainer.topAnchor),
-            header.leadingAnchor.constraint(equalTo: scenesHeaderContainer.leadingAnchor),
-            header.trailingAnchor.constraint(equalTo: scenesHeaderContainer.trailingAnchor),
-            header.bottomAnchor.constraint(equalTo: scenesHeaderContainer.bottomAnchor)
-        ])
-        scenesHeaderContainer.setHeight(L.rowHeight)
-    }
-
     private func updateOtherHeader(isHidden: Bool, isCollapsed: Bool) {
         let L = AccessoryRowLayout.self
         otherHeaderContainer.subviews.forEach { $0.removeFromSuperview() }
@@ -387,7 +319,8 @@ class AccessoriesSettingsView: NSView {
         stack.translatesAutoresizingMaskIntoConstraints = false
 
         for service in sorted {
-            let row = createAccessoryRow(service: service, roomHidden: false)
+            // Not in a table – these rows cannot be dragged, so no handle.
+            let row = createAccessoryRow(service: service, roomHidden: false, showDragHandle: false)
             row.translatesAutoresizingMaskIntoConstraints = false
             stack.addArrangedSubview(row)
             row.widthAnchor.constraint(equalTo: stack.widthAnchor).isActive = true

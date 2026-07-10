@@ -47,6 +47,111 @@ extension PreferencesManager {
         roomOrder = order
     }
 
+    // MARK: - Menu section order (per-home)
+
+    /// Tokens for the non-room sections that can be ordered among rooms at the
+    /// top level of the menu. The "section:" prefix cannot collide with room
+    /// UUID strings.
+    static let scenesSectionToken = "section:scenes"
+    static let batteriesSectionToken = "section:batteries"
+
+    /// Top-level menu order: room ids interleaved with the scenes/batteries
+    /// section tokens and user divider tokens ("divider:<uuid>", same form as
+    /// in-room dividers). Authoritative for the menu and the settings list;
+    /// `roomOrder` is kept as the derived room-only subsequence for consumers
+    /// that only understand rooms (webhook API, cloud sync).
+    var menuSectionOrder: [String] {
+        get { defaults.stringArray(forKey: homeKey(Keys.menuSectionOrder)) ?? [] }
+        set {
+            defaults.set(newValue, forKey: homeKey(Keys.menuSectionOrder))
+            roomOrder = newValue.filter { !$0.hasPrefix("section:") && !$0.hasPrefix(Self.dividerPrefix) }
+        }
+    }
+
+    /// Resolve the saved section order against the rooms that actually exist:
+    /// stale entries are dropped, new rooms are appended after the last room
+    /// (falling back to just before a trailing batteries token), and missing
+    /// section tokens are seeded at their default positions – scenes first,
+    /// batteries last, with a divider on each side of the rooms block,
+    /// matching the classic menu layout. User dividers are kept wherever they
+    /// are. Pure: persists nothing, so it is safe to call while building the
+    /// menu.
+    func reconciledMenuSectionOrder(roomIds: [String]) -> [String] {
+        let sections = [Self.scenesSectionToken, Self.batteriesSectionToken]
+        let validIds = Set(roomIds)
+
+        // First run: classic layout, dividers around the rooms block, rooms in
+        // the legacy roomOrder sequence.
+        if menuSectionOrder.isEmpty {
+            var rooms = roomOrder.filter { validIds.contains($0) }
+            for id in roomIds where !rooms.contains(id) { rooms.append(id) }
+            return [Self.scenesSectionToken, "\(Self.dividerPrefix)\(UUID().uuidString)"]
+                + rooms
+                + ["\(Self.dividerPrefix)\(UUID().uuidString)", Self.batteriesSectionToken]
+        }
+
+        var order: [String] = []
+        for token in menuSectionOrder where sections.contains(token) || validIds.contains(token) || token.hasPrefix(Self.dividerPrefix) {
+            if !order.contains(token) { order.append(token) }
+        }
+        if !order.contains(Self.scenesSectionToken) {
+            order.insert(Self.scenesSectionToken, at: 0)
+        }
+        if !order.contains(Self.batteriesSectionToken) {
+            order.append(Self.batteriesSectionToken)
+        }
+
+        // Append rooms not yet in the saved order, respecting the legacy
+        // roomOrder sequence.
+        let known = Set(order)
+        var newRooms = roomOrder.filter { validIds.contains($0) && !known.contains($0) }
+        for id in roomIds where !known.contains(id) && !newRooms.contains(id) {
+            newRooms.append(id)
+        }
+        if !newRooms.isEmpty {
+            let insertIndex = order.lastIndex(where: { validIds.contains($0) })
+                .map { $0 + 1 }
+                ?? (order.last == Self.batteriesSectionToken ? order.count - 1 : order.count)
+            order.insert(contentsOf: newRooms, at: insertIndex)
+        }
+        return order
+    }
+
+    /// Insert a top-level divider just above the given section token
+    /// (room id, scenes or batteries token).
+    func addMenuSectionDivider(beforeToken token: String) {
+        var order = menuSectionOrder
+        guard let index = order.firstIndex(of: token) else { return }
+        order.insert("\(Self.dividerPrefix)\(UUID().uuidString)", at: index)
+        menuSectionOrder = order
+    }
+
+    func removeMenuSectionDivider(token: String) {
+        var order = menuSectionOrder
+        order.removeAll { $0 == token }
+        menuSectionOrder = order
+    }
+
+    /// Persist the reconciled order (and its roomOrder mirror) when it drifted
+    /// from what is saved. Called from the settings screen, not the menu
+    /// builder, so building the menu never re-posts a preferences change.
+    func normalizeMenuSectionOrder(roomIds: [String]) -> [String] {
+        let order = reconciledMenuSectionOrder(roomIds: roomIds)
+        if order != menuSectionOrder {
+            menuSectionOrder = order
+        }
+        return order
+    }
+
+    func moveMenuSection(from sourceIndex: Int, to destinationIndex: Int) {
+        var order = menuSectionOrder
+        guard sourceIndex >= 0, sourceIndex < order.count,
+              destinationIndex >= 0, destinationIndex < order.count else { return }
+        let item = order.remove(at: sourceIndex)
+        order.insert(item, at: destinationIndex)
+        menuSectionOrder = order
+    }
+
     // MARK: - Scene order (per-home)
 
     var sceneOrder: [String] {

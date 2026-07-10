@@ -18965,6 +18965,17 @@
         }
       }
     },
+    "menu.batteries" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Batteries"
+          }
+        }
+      }
+    },
     "settings.advanced.history" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {

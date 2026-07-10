@@ -41,6 +41,15 @@ enum RoomTableItem {
     case separator
     /// User-inserted divider, persisted in PreferencesManager.accessoryOrderByRoom.
     case divider(token: String, roomId: String)
+    /// Scenes section header, orderable among rooms like any section.
+    case scenesHeader(isHidden: Bool, isCollapsed: Bool, sceneCount: Int)
+    /// One scene row under the scenes header.
+    case scene(scene: SceneData, sectionHidden: Bool)
+    /// Batteries section header (#144), orderable among rooms.
+    case batteriesHeader(isHidden: Bool, deviceCount: Int)
+    /// User divider between top-level sections, persisted in
+    /// PreferencesManager.menuSectionOrder.
+    case sectionDivider(token: String)
 
     var isHeader: Bool {
         if case .header = self { return true }
@@ -50,5 +59,18 @@ enum RoomTableItem {
     var isGroup: Bool {
         if case .group = self { return true }
         return false
+    }
+
+    /// Token identifying a draggable top-level row in
+    /// PreferencesManager.menuSectionOrder (section headers and top-level
+    /// dividers); nil for rows inside a section.
+    var sectionToken: String? {
+        switch self {
+        case .header(let room, _, _, _): return room.uniqueIdentifier
+        case .scenesHeader: return PreferencesManager.scenesSectionToken
+        case .batteriesHeader: return PreferencesManager.batteriesSectionToken
+        case .sectionDivider(let token): return token
+        default: return nil
+        }
     }
 }
