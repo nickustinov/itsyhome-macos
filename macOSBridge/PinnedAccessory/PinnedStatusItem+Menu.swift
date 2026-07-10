@@ -34,27 +34,26 @@ extension PinnedStatusItem {
             }
 
         case .room(let room, let services):
-            // Add groups that belong to this room first
+            // Same layout as the room's submenu in the main menu: groups and
+            // services in the user's saved order (groups on top by default).
+            var roomGroups: [DeviceGroup] = []
             if ProStatusCache.shared.isPro {
                 let preferences = PreferencesManager.shared
-                let roomGroups = preferences.deviceGroups.filter { $0.roomId == room.uniqueIdentifier }
                 let savedOrder = preferences.groupOrder(forRoom: room.uniqueIdentifier)
-                let orderedGroups = roomGroups.sorted { g1, g2 in
-                    let i1 = savedOrder.firstIndex(of: g1.id) ?? Int.max
-                    let i2 = savedOrder.firstIndex(of: g2.id) ?? Int.max
-                    return i1 < i2
-                }
-                for group in orderedGroups where group.showGroupSwitch {
-                    let item = GroupMenuItem(group: group, menuData: menuData, bridge: builder.bridge)
-                    menu.addItem(item)
-                    menuItems.append(item)
-                }
-                if !orderedGroups.isEmpty && !services.isEmpty {
-                    menu.addItem(NSMenuItem.separator())
-                }
+                roomGroups = preferences.deviceGroups
+                    .filter { $0.roomId == room.uniqueIdentifier }
+                    .sorted { g1, g2 in
+                        let i1 = savedOrder.firstIndex(of: g1.id) ?? Int.max
+                        let i2 = savedOrder.firstIndex(of: g2.id) ?? Int.max
+                        return i1 < i2
+                    }
             }
-            // Add all services in the room
-            builder.addServicesGroupedByType(to: menu, accessories: servicesAsAccessories(services))
+            builder.addServicesGroupedByType(
+                to: menu,
+                accessories: servicesAsAccessories(services),
+                roomId: room.uniqueIdentifier,
+                groups: roomGroups
+            )
             collectMenuItems(from: menu)
 
         case .scene(let scene):
@@ -81,8 +80,13 @@ extension PinnedStatusItem {
                 menu.addItem(NSMenuItem.separator())
             }
 
-            // Add individual accessories from the group
-            builder.addServicesGroupedByType(to: menu, accessories: servicesAsAccessories(services))
+            // Individual accessories in the group's deviceIds order (the one
+            // set by dragging in Settings → Home), not grouped by type.
+            for service in services {
+                if let item = builder.createMenuItemForService(service) {
+                    menu.addItem(item)
+                }
+            }
             collectMenuItems(from: menu)
         }
 

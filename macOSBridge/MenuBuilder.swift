@@ -26,74 +26,46 @@ class MenuBuilder {
         // Debug mock accessories (toggle DebugShowMockAccessories to enable)
         DebugMockups.addMockItems(to: menu, builder: self)
 
-        // Favourites section
-        let hasFavourites = addFavouritesSection(to: menu, from: data)
-        if hasFavourites {
-            menu.addItem(NSMenuItem.separator())
-        }
-
-        // Groups section
-        let hasGroups = addGroupsSection(to: menu, from: data)
-        if hasGroups {
-            menu.addItem(NSMenuItem.separator())
-        }
-
-        // Scenes, rooms and batteries in the user's saved order, then "Other".
+        // Every top-level section in the user's saved layout.
         addOrderedSections(to: menu, from: data)
     }
 
     // MARK: - Favourites
 
-    @discardableResult
-    func addFavouritesSection(to menu: NSMenu, from data: MenuData) -> Bool {
+    /// Menu items for the favourites section, in the user's order. Scene
+    /// items are tracked in sceneMenuItems for live state updates.
+    private func buildFavouriteItems(from data: MenuData) -> [NSMenuItem] {
         let preferences = PreferencesManager.shared
 
         let sceneLookup = Dictionary(data.scenes.map { ($0.uniqueIdentifier, $0) }, uniquingKeysWith: { _, last in last })
         let allServices = data.accessories.flatMap { $0.services }
         let serviceLookup = Dictionary(allServices.map { ($0.uniqueIdentifier, $0) }, uniquingKeysWith: { _, last in last })
 
-        var addedAny = false
-
+        var items: [NSMenuItem] = []
         for id in preferences.orderedFavouriteIds {
             if let scene = sceneLookup[id] {
                 let item = SceneMenuItem(sceneData: scene, bridge: bridge)
-                menu.addItem(item)
+                items.append(item)
                 sceneMenuItems.append(item)
-                addedAny = true
-            } else if let service = serviceLookup[id] {
-                if let item = createMenuItemForService(service) {
-                    menu.addItem(item)
-                    addedAny = true
-                }
+            } else if let service = serviceLookup[id], let item = createMenuItemForService(service) {
+                items.append(item)
             }
         }
-
-        return addedAny
+        return items
     }
 
     // MARK: - Groups
 
-    @discardableResult
-    func addGroupsSection(to menu: NSMenu, from data: MenuData) -> Bool {
+    /// Global groups (no room assignment) in the user's order.
+    private func orderedGlobalGroups() -> [DeviceGroup] {
         let preferences = PreferencesManager.shared
-        // Only show global groups (no room assignment) at the top level
         let globalGroups = preferences.deviceGroups.filter { $0.roomId == nil }
-
-        guard !globalGroups.isEmpty else { return false }
-
-        // Order by globalGroupOrder
         let savedOrder = preferences.globalGroupOrder
-        let orderedGroups = globalGroups.sorted { g1, g2 in
+        return globalGroups.sorted { g1, g2 in
             let i1 = savedOrder.firstIndex(of: g1.id) ?? Int.max
             let i2 = savedOrder.firstIndex(of: g2.id) ?? Int.max
             return i1 < i2
         }
-
-        for group in orderedGroups {
-            addGroupItem(to: menu, group: group, menuData: data)
-        }
-
-        return true
     }
 
     private func addGroupItem(to menu: NSMenu, group: DeviceGroup, menuData: MenuData) {
@@ -108,17 +80,13 @@ class MenuBuilder {
                 submenu.addItem(NSMenuItem.separator())
             }
 
-            let services = group.resolveServices(in: menuData)
-            let accessories = services.map { service in
-                AccessoryData(
-                    uniqueIdentifier: service.uniqueIdentifier,
-                    name: service.accessoryName,
-                    roomIdentifier: service.roomIdentifier,
-                    services: [service],
-                    isReachable: service.isReachable
-                )
+            // Render in deviceIds order (reorderable in Settings → Home),
+            // not grouped by type – the pinned menu uses the same order.
+            for service in group.resolveServices(in: menuData) {
+                if let item = createMenuItemForService(service) {
+                    submenu.addItem(item)
+                }
             }
-            addServicesGroupedByType(to: submenu, accessories: accessories)
 
             submenuItem.submenu = submenu
             menu.addItem(submenuItem)
@@ -157,14 +125,13 @@ class MenuBuilder {
         menu.addItem(scenesItem)
     }
 
-    // MARK: - Ordered top-level sections (scenes, rooms, batteries)
+    // MARK: - Ordered top-level sections
 
-    /// Adds the reorderable top-level sections in the user's saved order
-    /// (menuSectionOrder: scenes and batteries tokens interleaved with room
-    /// ids and user divider tokens), then the fixed "Other" section.
-    /// Separators appear exactly at the user's dividers, with leading,
-    /// trailing and doubled-up separators suppressed when the sections around
-    /// them have nothing to show.
+    /// Adds every top-level section in the user's saved layout (menuLayout:
+    /// favourites, global groups, scenes, rooms, other and batteries tokens
+    /// interleaved with user divider tokens). Separators appear exactly at
+    /// the user's dividers, with leading, trailing and doubled-up separators
+    /// suppressed when the sections around them have nothing to show.
     func addOrderedSections(to menu: NSMenu, from data: MenuData) {
         let preferences = PreferencesManager.shared
 
@@ -206,7 +173,7 @@ class MenuBuilder {
             }
         }
 
-        let tokens = preferences.reconciledMenuSectionOrder(roomIds: data.rooms.map { $0.uniqueIdentifier })
+        let tokens = preferences.reconciledMenuLayout(roomIds: data.rooms.map { $0.uniqueIdentifier })
         for token in tokens {
             if token.hasPrefix(PreferencesManager.dividerPrefix) {
                 // Only becomes a separator once another section follows it, so
@@ -215,11 +182,38 @@ class MenuBuilder {
                 continue
             }
             switch token {
+            case PreferencesManager.favouritesSectionToken:
+                let favouriteItems = buildFavouriteItems(from: data)
+                guard !favouriteItems.isEmpty else { continue }
+                flushPendingDivider()
+                favouriteItems.forEach { menu.addItem($0) }
+                emittedAny = true
+
+            case PreferencesManager.groupsSectionToken:
+                let globalGroups = orderedGlobalGroups()
+                guard !globalGroups.isEmpty else { continue }
+                flushPendingDivider()
+                for group in globalGroups {
+                    addGroupItem(to: menu, group: group, menuData: data)
+                }
+                emittedAny = true
+
             case PreferencesManager.scenesSectionToken:
                 let hasVisibleScenes = data.scenes.contains { !preferences.isHidden(sceneId: $0.uniqueIdentifier) }
                 guard hasVisibleScenes, !preferences.hideScenesSection else { continue }
                 flushPendingDivider()
                 addScenes(to: menu, scenes: data.scenes)
+                emittedAny = true
+
+            case PreferencesManager.otherSectionToken:
+                guard !noRoomAccessories.isEmpty, !preferences.hideOtherSection else { continue }
+                flushPendingDivider()
+                let icon = PhosphorIcon.regular("squares-four")
+                let otherItem = createSubmenuItem(title: String(localized: "menu.other", defaultValue: "Other", bundle: .macOSBridge), icon: icon)
+                let submenu = StayOpenMenu()
+                addServicesGroupedByType(to: submenu, accessories: noRoomAccessories)
+                otherItem.submenu = submenu
+                menu.addItem(otherItem)
                 emittedAny = true
 
             case PreferencesManager.batteriesSectionToken:
@@ -243,18 +237,6 @@ class MenuBuilder {
             }
         }
 
-        if !noRoomAccessories.isEmpty && !preferences.hideOtherSection {
-            flushPendingDivider()
-            let icon = PhosphorIcon.regular("squares-four")
-            let otherItem = createSubmenuItem(title: String(localized: "menu.other", defaultValue: "Other", bundle: .macOSBridge), icon: icon)
-
-            let submenu = StayOpenMenu()
-            addServicesGroupedByType(to: submenu, accessories: noRoomAccessories)
-            otherItem.submenu = submenu
-            menu.addItem(otherItem)
-            emittedAny = true
-        }
-
         if visibleRooms.isEmpty && filteredAccessories.isEmpty {
             if emittedAny {
                 menu.addItem(NSMenuItem.separator())
@@ -270,24 +252,16 @@ class MenuBuilder {
         let roomItem = createSubmenuItem(title: room.name, icon: icon)
 
         let submenu = StayOpenMenu()
-
-        // Add groups at the top of the room submenu
-        if let menuData = currentMenuData {
-            for group in groups {
-                addGroupItem(to: submenu, group: group, menuData: menuData)
-            }
-            // Add separator after groups if there are both groups and accessories
-            if !groups.isEmpty && !accessories.isEmpty {
-                submenu.addItem(NSMenuItem.separator())
-            }
-        }
-
-        addServicesGroupedByType(to: submenu, accessories: accessories, roomName: room.name, roomId: room.uniqueIdentifier)
+        addServicesGroupedByType(to: submenu, accessories: accessories, roomName: room.name, roomId: room.uniqueIdentifier, groups: groups)
         roomItem.submenu = submenu
         menu.addItem(roomItem)
     }
 
-    func addServicesGroupedByType(to menu: NSMenu, accessories: [AccessoryData], roomName: String? = nil, roomId: String? = nil) {
+    /// Renders a section's rows. With a custom saved order (roomId set and
+    /// accessoryOrder non-empty) rows follow that order, with groups
+    /// interleaved wherever the user dragged them; otherwise groups sit on
+    /// top and services are grouped by type.
+    func addServicesGroupedByType(to menu: NSMenu, accessories: [AccessoryData], roomName: String? = nil, roomId: String? = nil, groups: [DeviceGroup] = []) {
         var servicesByType: [String: [ServiceData]] = [:]
         var temperatureSensors: [ServiceData] = []
         var humiditySensors: [ServiceData] = []
@@ -326,10 +300,12 @@ class MenuBuilder {
             }
         }
 
-        // Custom per-room order overrides the default type grouping.
+        // Custom per-room order overrides the default type grouping. Tokens
+        // are service ids, group ids or divider tokens.
         let savedOrder: [String] = roomId.map { PreferencesManager.shared.accessoryOrder(forRoom: $0) } ?? []
         if !savedOrder.isEmpty {
             let serviceLookup = Dictionary(allServices.map { ($0.uniqueIdentifier, $0) }, uniquingKeysWith: { a, _ in a })
+            let groupLookup = Dictionary(groups.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
             var seen: Set<String> = []
             var lastWasDivider = true  // suppress leading divider
             for token in savedOrder {
@@ -338,6 +314,10 @@ class MenuBuilder {
                         menu.addItem(NSMenuItem.separator())
                         lastWasDivider = true
                     }
+                } else if let group = groupLookup[token], let menuData = currentMenuData {
+                    addGroupItem(to: menu, group: group, menuData: menuData)
+                    lastWasDivider = false
+                    seen.insert(token)
                 } else if let service = serviceLookup[token] {
                     var displayService = service
                     if let roomName = roomName {
@@ -350,11 +330,24 @@ class MenuBuilder {
                     seen.insert(token)
                 }
             }
-            // Append any new services not yet in the saved order
-            for service in allServices where !seen.contains(service.uniqueIdentifier) {
-                if !lastWasDivider, menu.items.last?.isSeparatorItem == false {
+            // Append anything not yet in the saved order (newly created
+            // groups, newly discovered services).
+            var appendedSeparator = false
+            func separatorBeforeAppendedItems() {
+                if !appendedSeparator, !lastWasDivider, menu.items.last?.isSeparatorItem == false {
                     menu.addItem(NSMenuItem.separator())
                 }
+                appendedSeparator = true
+            }
+            if let menuData = currentMenuData {
+                for group in groups where !seen.contains(group.id) {
+                    separatorBeforeAppendedItems()
+                    addGroupItem(to: menu, group: group, menuData: menuData)
+                    lastWasDivider = false
+                }
+            }
+            for service in allServices where !seen.contains(service.uniqueIdentifier) {
+                separatorBeforeAppendedItems()
                 var displayService = service
                 if let roomName = roomName {
                     displayService = service.strippingRoomName(roomName)
@@ -375,6 +368,16 @@ class MenuBuilder {
                 menu.addItem(sensorItem)
             }
             return
+        }
+
+        // Default layout: groups on top, then services grouped by type.
+        if !groups.isEmpty, let menuData = currentMenuData {
+            for group in groups {
+                addGroupItem(to: menu, group: group, menuData: menuData)
+            }
+            if !allServices.isEmpty {
+                menu.addItem(NSMenuItem.separator())
+            }
         }
 
         let typeOrder: [String] = [

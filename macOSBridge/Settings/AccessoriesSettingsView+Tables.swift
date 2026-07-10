@@ -54,6 +54,49 @@ extension AccessoriesSettingsView: IconPickerPopoverDelegate {
 
 extension AccessoriesSettingsView {
 
+    func createFavouritesHeaderStrip(isCollapsed: Bool, count: Int) -> NSView {
+        let config = AccessoryRowConfig(
+            name: String(localized: "settings.home.favourites", defaultValue: "Favourites", bundle: .macOSBridge),
+            icon: PhosphorIcon.regular("star"),
+            count: count,
+            showDragHandle: true,
+            showChevron: count > 0,
+            isCollapsed: isCollapsed,
+            isSectionHeader: true
+        )
+        let rowView = AccessoryRowView(config: config)
+        rowView.onChevronToggled = { [weak self] in
+            self?.toggleSectionExpanded("favourites")
+        }
+        return rowView
+    }
+
+    func createGroupsHeaderStrip(isCollapsed: Bool, count: Int) -> NSView {
+        let config = AccessoryRowConfig(
+            name: String(localized: "settings.home.groups", defaultValue: "Groups", bundle: .macOSBridge),
+            icon: PhosphorIcon.regular("squares-four"),
+            count: count,
+            showDragHandle: true,
+            showChevron: count > 0,
+            isCollapsed: isCollapsed,
+            isSectionHeader: true
+        )
+        let rowView = AccessoryRowView(config: config)
+        rowView.onChevronToggled = { [weak self] in
+            self?.toggleSectionExpanded("groups")
+        }
+        return rowView
+    }
+
+    func toggleSectionExpanded(_ key: String) {
+        if expandedSections.contains(key) {
+            expandedSections.remove(key)
+        } else {
+            expandedSections.insert(key)
+        }
+        updateRoomsSection()
+    }
+
     func createScenesHeaderStrip(isHidden: Bool, isCollapsed: Bool, sceneCount: Int) -> NSView {
         let isPinned = PreferencesManager.shared.isPinnedScenesSection
         let config = AccessoryRowConfig(
@@ -61,7 +104,7 @@ extension AccessoriesSettingsView {
             icon: PhosphorIcon.regular("sparkle"),
             count: sceneCount,
             showDragHandle: true,
-            showChevron: true,
+            showChevron: sceneCount > 0,
             isCollapsed: isCollapsed,
             isItemHidden: isHidden,
             isPinned: isPinned,
@@ -101,10 +144,13 @@ extension AccessoriesSettingsView {
         return rowView
     }
 
-    func createOtherHeaderStrip(isHidden: Bool, isCollapsed: Bool) -> NSView {
+    func createOtherHeaderStrip(isHidden: Bool, isCollapsed: Bool, count: Int) -> NSView {
         let config = AccessoryRowConfig(
             name: String(localized: "menu.other", defaultValue: "Other", bundle: .macOSBridge),
-            showChevron: true,
+            icon: PhosphorIcon.regular("squares-four"),
+            count: count,
+            showDragHandle: true,
+            showChevron: count > 0,
             isCollapsed: isCollapsed,
             isItemHidden: isHidden,
             showEyeButton: true,
@@ -166,13 +212,7 @@ extension AccessoriesSettingsView {
     // MARK: - Toggle Actions (targeted updates)
 
     func scenesChevronTapped() {
-        let scenesKey = "scenes"
-        if expandedSections.contains(scenesKey) {
-            expandedSections.remove(scenesKey)
-        } else {
-            expandedSections.insert(scenesKey)
-        }
-        updateRoomsSection()
+        toggleSectionExpanded("scenes")
     }
 
     func scenesEyeTapped() {
@@ -181,29 +221,17 @@ extension AccessoriesSettingsView {
     }
 
     func otherChevronTapped() {
-        let otherKey = "other"
-        if expandedSections.contains(otherKey) {
-            expandedSections.remove(otherKey)
-        } else {
-            expandedSections.insert(otherKey)
-        }
-        updateOtherSection()
+        toggleSectionExpanded("other")
     }
 
     func otherEyeTapped() {
         PreferencesManager.shared.hideOtherSection.toggle()
-        updateOtherSection()
+        updateRoomsSection()
     }
 
     private func roomChevronToggled(roomIndex: Int) {
         guard roomIndex < orderedRooms.count else { return }
-        let roomId = orderedRooms[roomIndex].uniqueIdentifier
-        if expandedSections.contains(roomId) {
-            expandedSections.remove(roomId)
-        } else {
-            expandedSections.insert(roomId)
-        }
-        updateRoomsSection()
+        toggleSectionExpanded(orderedRooms[roomIndex].uniqueIdentifier)
     }
 
     private func roomEyeToggled(roomIndex: Int) {
@@ -260,14 +288,9 @@ extension AccessoriesSettingsView {
             menu.addItem(resetOrderItem(roomId: room.uniqueIdentifier))
             return menu
 
-        case .scenesHeader:
+        case .favouritesHeader, .groupsHeader, .scenesHeader, .batteriesHeader, .otherHeader:
             let menu = NSMenu()
-            menu.addItem(addSectionDividerItem(beforeToken: PreferencesManager.scenesSectionToken))
-            return menu
-
-        case .batteriesHeader:
-            let menu = NSMenu()
-            menu.addItem(addSectionDividerItem(beforeToken: PreferencesManager.batteriesSectionToken))
+            menu.addItem(addSectionDividerItem(beforeToken: item.sectionToken ?? ""))
             return menu
 
         case .sectionDivider(let token):
@@ -329,20 +352,25 @@ extension AccessoriesSettingsView {
             case .header(let room, _, _, _):
                 if inRoom { break }
                 inRoom = (room.uniqueIdentifier == roomId)
+            case .group(let group, _) where inRoom:
+                if i == row { insertIndex = tokens.count }
+                tokens.append(group.id)
             case .accessory(let service, _, _) where inRoom:
                 if i == row { insertIndex = tokens.count }
                 tokens.append(service.uniqueIdentifier)
             case .divider(let token, _) where inRoom:
                 if i == row { insertIndex = tokens.count }
                 tokens.append(token)
-            case .separator where inRoom:
-                if i == row { insertIndex = tokens.count }
-                tokens.append("\(PreferencesManager.dividerPrefix)\(UUID().uuidString)")
+            case .separator, .groupSeparator:
+                if inRoom {
+                    if i == row { insertIndex = tokens.count }
+                    tokens.append(PreferencesManager.newDividerToken())
+                }
             default:
                 break
             }
         }
-        tokens.insert("\(PreferencesManager.dividerPrefix)\(UUID().uuidString)", at: min(insertIndex, tokens.count))
+        tokens.insert(PreferencesManager.newDividerToken(), at: min(insertIndex, tokens.count))
         PreferencesManager.shared.setAccessoryOrder(tokens, forRoom: roomId)
         rebuild()
     }
@@ -362,22 +390,11 @@ extension AccessoriesSettingsView {
     }
 }
 
-// MARK: - Groups table view (prevents dragging when only one group)
-
-class GroupsTableView: NSTableView {
-
-    override func mouseDown(with event: NSEvent) {
-        guard numberOfRows > 1 else { return }
-        super.mouseDown(with: event)
-    }
-}
-
-// MARK: - Rooms table view (prevents dragging accessory rows)
+// MARK: - Rooms table view (drag rules per row kind)
 
 class RoomsTableView: NSTableView {
 
     var roomTableItems: (() -> [RoomTableItem])?
-    var groupCountForRoom: ((String) -> Int)?
     var contextMenuForRow: ((Int) -> NSMenu?)?
 
     override func menu(for event: NSEvent) -> NSMenu? {
@@ -399,19 +416,14 @@ class RoomsTableView: NSTableView {
         let clickedRow = row(at: point)
 
         if clickedRow >= 0, let items = roomTableItems?(), clickedRow < items.count {
-            let item = items[clickedRow]
-            switch item {
-            case .header, .scenesHeader, .batteriesHeader, .sectionDivider:
+            switch items[clickedRow] {
+            case .header, .favouritesHeader, .groupsHeader, .scenesHeader,
+                 .batteriesHeader, .otherHeader, .sectionDivider:
                 break // section headers and top-level dividers are always draggable
-            case .group(_, let roomId):
-                // Only allow drag if the room has more than one group
-                if let roomId = roomId, (groupCountForRoom?(roomId) ?? 0) <= 1 {
-                    return
-                }
-            case .accessory, .divider, .scene:
+            case .group, .accessory, .divider, .favourite, .globalGroup, .scene, .groupDevice:
                 break // rows are draggable for reordering within their section
             default:
-                return
+                return // auto separators, "Other" accessories
             }
         }
 

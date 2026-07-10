@@ -532,18 +532,6 @@ final class PreferencesManagerTests: XCTestCase {
         XCTAssertEqual(prefs.groupOrder(forRoom: "room-1"), ["g1", "g2"])
     }
 
-    func testMoveGroupInRoom() {
-        prefs.setGroupOrder(["g1", "g2", "g3"], forRoom: "room-1")
-        prefs.moveGroupInRoom("room-1", from: 0, to: 2)
-        XCTAssertEqual(prefs.groupOrder(forRoom: "room-1"), ["g2", "g3", "g1"])
-    }
-
-    func testMoveGroupInRoomToBeginning() {
-        prefs.setGroupOrder(["g1", "g2", "g3"], forRoom: "room-1")
-        prefs.moveGroupInRoom("room-1", from: 2, to: 0)
-        XCTAssertEqual(prefs.groupOrder(forRoom: "room-1"), ["g3", "g1", "g2"])
-    }
-
     func testSetEmptyGroupOrderRemovesRoom() {
         prefs.setGroupOrder(["g1"], forRoom: "room-1")
         prefs.setGroupOrder([], forRoom: "room-1")

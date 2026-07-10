@@ -15,18 +15,12 @@ class AccessoriesSettingsView: NSView {
     var menuData: MenuData?
     private var isUISetup = false
 
-    // MARK: - Persistent section containers
+    // MARK: - Persistent containers
 
-    private var favouritesSection: SettingsSectionContainer!
-    private var globalGroupsSection: SettingsSectionContainer!
     private var roomsSection: SimpleHeightContainer!
-    private var otherHeaderContainer: SimpleHeightContainer!
-    private var otherContentContainer: SimpleHeightContainer!
 
-    // MARK: - Persistent table views
+    // MARK: - Persistent table view
 
-    var favouritesTableView: NSTableView!
-    var globalGroupsTableView: GroupsTableView!
     var roomsTableView: RoomsTableView!
 
     // MARK: - Data
@@ -114,27 +108,14 @@ class AccessoriesSettingsView: NSView {
         stackView.addArrangedSubview(createButton)
         addSpacer(height: 16)
 
-        // Favourites section
-        favouritesSection = SettingsSectionContainer()
-        favouritesTableView = createTableView(dragType: .favouriteItem)
-        favouritesSection.setContent(favouritesTableView)
-        addSection(favouritesSection)
-
-        // Global groups section
-        globalGroupsSection = SettingsSectionContainer()
-        globalGroupsTableView = GroupsTableView()
-        configureTableView(globalGroupsTableView, dragType: .globalGroupItem)
-        globalGroupsSection.setContent(globalGroupsTableView)
-        addSection(globalGroupsSection)
-
-        // Rooms section (also hosts the orderable scenes and batteries sections)
+        // One table hosts every section (favourites, groups, scenes, rooms,
+        // batteries, other) so they can all be reordered together.
         roomsSection = SimpleHeightContainer()
         roomsTableView = RoomsTableView()
         roomsTableView.roomTableItems = { [weak self] in self?.roomTableItems ?? [] }
-        roomsTableView.groupCountForRoom = { [weak self] roomId in self?.groupsByRoom[roomId]?.count ?? 0 }
         roomsTableView.contextMenuForRow = { [weak self] row in self?.roomsContextMenu(forRow: row) }
         configureTableView(roomsTableView, dragType: .roomItem, intercellSpacing: 4)
-        roomsTableView.registerForDraggedTypes([.roomItem, .roomGroupItem, .roomAccessoryItem, .sceneItem])
+        roomsTableView.registerForDraggedTypes([.roomItem, .roomAccessoryItem, .sceneItem, .favouriteItem, .globalGroupItem, .groupDeviceItem])
         roomsTableView.translatesAutoresizingMaskIntoConstraints = false
         roomsSection.addSubview(roomsTableView)
         NSLayoutConstraint.activate([
@@ -145,21 +126,6 @@ class AccessoriesSettingsView: NSView {
         ])
         addSection(roomsSection)
         addSpacer(height: 12)
-
-        // Other section header
-        otherHeaderContainer = SimpleHeightContainer()
-        addSection(otherHeaderContainer)
-
-        // Other section content
-        otherContentContainer = SimpleHeightContainer()
-        addSection(otherContentContainer)
-        addSpacer(height: 12)
-    }
-
-    private func createTableView(dragType: NSPasteboard.PasteboardType) -> NSTableView {
-        let tableView = NSTableView()
-        configureTableView(tableView, dragType: dragType)
-        return tableView
     }
 
     private func configureTableView(_ tableView: NSTableView, dragType: NSPasteboard.PasteboardType, intercellSpacing: CGFloat = 0) {
@@ -198,58 +164,11 @@ class AccessoriesSettingsView: NSView {
         spacer.heightAnchor.constraint(equalToConstant: height).isActive = true
     }
 
-    private func createSectionSeparator() -> NSView {
-        let container = NSView()
-        container.translatesAutoresizingMaskIntoConstraints = false
-
-        let separator = NSBox()
-        separator.boxType = .separator
-        separator.translatesAutoresizingMaskIntoConstraints = false
-        container.addSubview(separator)
-
-        NSLayoutConstraint.activate([
-            container.heightAnchor.constraint(equalToConstant: 16),
-            separator.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 8),
-            separator.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -8),
-            separator.centerYAnchor.constraint(equalTo: container.centerYAnchor)
-        ])
-
-        return container
-    }
-
     // MARK: - Section Updates
 
     private func updateAllSections() {
         rebuildAllData()
-        updateFavouritesSection()
-        updateGlobalGroupsSection()
         updateRoomsSection()
-        updateOtherSection()
-    }
-
-    func updateFavouritesSection() {
-        rebuildFavouritesList()
-
-        let isEmpty = favouriteItems.isEmpty
-        favouritesSection.isHidden = isEmpty
-
-        if !isEmpty {
-            let height = CGFloat(favouriteItems.count) * AccessoryRowLayout.rowHeight
-            favouritesSection.setContentHeight(height)
-            favouritesTableView.reloadData()
-        }
-    }
-
-    func updateGlobalGroupsSection() {
-        // globalGroups already rebuilt in rebuildAllData
-        let isEmpty = globalGroups.isEmpty
-        globalGroupsSection.isHidden = isEmpty
-
-        if !isEmpty {
-            let height = CGFloat(globalGroups.count) * AccessoryRowLayout.rowHeight
-            globalGroupsSection.setContentHeight(height)
-            globalGroupsTableView.reloadData()
-        }
     }
 
     func updateRoomsSection() {
@@ -263,80 +182,6 @@ class AccessoriesSettingsView: NSView {
             roomsSection.setHeight(height)
             roomsTableView.reloadData()
         }
-    }
-
-    func updateOtherSection() {
-        let hasOther = !noRoomServices.isEmpty
-        otherHeaderContainer.isHidden = !hasOther
-        otherContentContainer.isHidden = !hasOther
-
-        if hasOther {
-            let otherKey = "other"
-            let isCollapsed = !expandedSections.contains(otherKey)
-            let isHidden = PreferencesManager.shared.hideOtherSection
-
-            updateOtherHeader(isHidden: isHidden, isCollapsed: isCollapsed)
-
-            if isCollapsed {
-                otherContentContainer.isHidden = true
-            } else {
-                otherContentContainer.isHidden = false
-                updateOtherContent()
-            }
-        }
-    }
-
-    private func updateOtherHeader(isHidden: Bool, isCollapsed: Bool) {
-        let L = AccessoryRowLayout.self
-        otherHeaderContainer.subviews.forEach { $0.removeFromSuperview() }
-
-        let header = createOtherHeaderStrip(isHidden: isHidden, isCollapsed: isCollapsed)
-        header.translatesAutoresizingMaskIntoConstraints = false
-        otherHeaderContainer.addSubview(header)
-        NSLayoutConstraint.activate([
-            header.topAnchor.constraint(equalTo: otherHeaderContainer.topAnchor),
-            header.leadingAnchor.constraint(equalTo: otherHeaderContainer.leadingAnchor),
-            header.trailingAnchor.constraint(equalTo: otherHeaderContainer.trailingAnchor),
-            header.bottomAnchor.constraint(equalTo: otherHeaderContainer.bottomAnchor)
-        ])
-        otherHeaderContainer.setHeight(L.rowHeight)
-    }
-
-    private func updateOtherContent() {
-        let L = AccessoryRowLayout.self
-        otherContentContainer.subviews.forEach { $0.removeFromSuperview() }
-
-        let sorted = noRoomServices.sorted { s1, s2 in
-            let i1 = typeOrder.firstIndex(of: s1.serviceType) ?? Int.max
-            let i2 = typeOrder.firstIndex(of: s2.serviceType) ?? Int.max
-            return i1 != i2 ? i1 < i2 : s1.name < s2.name
-        }
-
-        let stack = NSStackView()
-        stack.orientation = .vertical
-        stack.spacing = 0
-        stack.alignment = .leading
-        stack.translatesAutoresizingMaskIntoConstraints = false
-
-        for service in sorted {
-            // Not in a table – these rows cannot be dragged, so no handle.
-            let row = createAccessoryRow(service: service, roomHidden: false, showDragHandle: false)
-            row.translatesAutoresizingMaskIntoConstraints = false
-            stack.addArrangedSubview(row)
-            row.widthAnchor.constraint(equalTo: stack.widthAnchor).isActive = true
-            row.heightAnchor.constraint(equalToConstant: L.rowHeight).isActive = true
-        }
-
-        otherContentContainer.addSubview(stack)
-        NSLayoutConstraint.activate([
-            stack.topAnchor.constraint(equalTo: otherContentContainer.topAnchor),
-            stack.leadingAnchor.constraint(equalTo: otherContentContainer.leadingAnchor),
-            stack.trailingAnchor.constraint(equalTo: otherContentContainer.trailingAnchor),
-            stack.bottomAnchor.constraint(equalTo: otherContentContainer.bottomAnchor)
-        ])
-
-        let height = CGFloat(sorted.count) * L.rowHeight
-        otherContentContainer.setHeight(height)
     }
 
     // MARK: - Group Actions

@@ -49,7 +49,7 @@ final class PreferencesManager {
         static let cameraOrder = "cameraOrder"
         static let cameraOverlayAccessories = "cameraOverlayAccessories"
         static let roomOrder = "roomOrder"
-        static let menuSectionOrder = "menuSectionOrder"
+        static let menuLayout = "menuLayout"
         static let sceneOrder = "sceneOrder"
         static let pinnedServiceIds = "pinnedServiceIds"
         static let pinnedServiceShowName = "pinnedServiceShowName"

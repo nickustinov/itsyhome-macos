@@ -19019,6 +19019,28 @@
           }
         }
       }
+    },
+    "settings.home.favourites" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Favourites"
+          }
+        }
+      }
+    },
+    "settings.home.groups" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Groups"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

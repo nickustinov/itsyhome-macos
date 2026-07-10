@@ -77,30 +77,67 @@ extension AccessoriesSettingsView {
             }
         }
 
-        // Resolve the top-level section order (rooms interleaved with the
-        // scenes/batteries tokens), persisting any drift. Shows all rooms so
-        // users can hide rooms that only have cameras or unsupported sensors.
-        let tokens = preferences.normalizeMenuSectionOrder(roomIds: data.rooms.map { $0.uniqueIdentifier })
+        // Resolve the saved top-level layout (all sections and dividers),
+        // persisting any drift. Shows all rooms so users can hide rooms that
+        // only have cameras or unsupported sensors.
+        let tokens = preferences.normalizeMenuLayout(roomIds: data.rooms.map { $0.uniqueIdentifier })
         orderedRooms = tokens.compactMap { token in
             data.rooms.first { $0.uniqueIdentifier == token }
         }
 
-        // Build flat table items in section order
+        // Build flat table items in section order. Mirrors the menu: empty
+        // sections are skipped (they appear once they have content), and a
+        // divider row only shows when visible sections sit on both sides of
+        // it – suppressed divider tokens stay in the layout and reappear
+        // together with their section.
         var items: [RoomTableItem] = []
+        var pendingDivider: String?
+        var emittedAny = false
+
+        /// Runs a section builder; when it emitted rows, materialise any
+        /// pending divider above them.
+        func appendSection(_ build: (inout [RoomTableItem]) -> Void) {
+            let start = items.count
+            build(&items)
+            guard items.count > start else { return }
+            if let divider = pendingDivider {
+                items.insert(.sectionDivider(token: divider), at: start)
+                pendingDivider = nil
+            }
+            emittedAny = true
+        }
+
         for token in tokens {
             if token.hasPrefix(PreferencesManager.dividerPrefix) {
-                items.append(.sectionDivider(token: token))
+                if emittedAny { pendingDivider = token }
+                continue
+            }
+            if token == PreferencesManager.favouritesSectionToken {
+                appendSection { self.appendFavouritesItems(to: &$0) }
+                continue
+            }
+            if token == PreferencesManager.groupsSectionToken {
+                appendSection { self.appendGlobalGroupsItems(to: &$0, data: data) }
                 continue
             }
             if token == PreferencesManager.scenesSectionToken {
-                appendScenesItems(to: &items)
+                appendSection { self.appendScenesItems(to: &$0) }
+                continue
+            }
+            if token == PreferencesManager.otherSectionToken {
+                appendSection { self.appendOtherItems(to: &$0) }
                 continue
             }
             if token == PreferencesManager.batteriesSectionToken {
-                appendBatteriesItems(to: &items, accessories: data.accessories)
+                appendSection { self.appendBatteriesItems(to: &$0, accessories: data.accessories) }
                 continue
             }
             guard let room = data.rooms.first(where: { $0.uniqueIdentifier == token }) else { continue }
+            if let divider = pendingDivider {
+                items.append(.sectionDivider(token: divider))
+                pendingDivider = nil
+            }
+            emittedAny = true
             let roomId = room.uniqueIdentifier
             let isHidden = preferences.isHidden(roomId: roomId)
             let isCollapsed = !expandedSections.contains(roomId)
@@ -110,35 +147,39 @@ extension AccessoriesSettingsView {
             items.append(.header(room: room, isHidden: isHidden, isCollapsed: isCollapsed, serviceCount: services.count))
 
             if !isCollapsed {
-                // Add groups at the top of each room
-                for group in roomGroups {
-                    items.append(.group(group: group, roomId: roomId))
-                }
-
-                // Add separator after groups if there are both groups and services
-                if !roomGroups.isEmpty && !services.isEmpty {
-                    items.append(.groupSeparator)
-                }
-
                 let savedOrder = preferences.accessoryOrder(forRoom: roomId)
                 if !savedOrder.isEmpty {
-                    // Custom order: render in the saved sequence, with user dividers
-                    // and any newly-discovered services appended at the end.
+                    // Custom order: groups, services and user dividers in the
+                    // saved sequence, with anything new appended at the end.
                     let serviceLookup = Dictionary(services.map { ($0.uniqueIdentifier, $0) }, uniquingKeysWith: { a, _ in a })
-                    var seenServiceIds: Set<String> = []
+                    let groupLookup = Dictionary(roomGroups.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+                    var seenIds: Set<String> = []
                     for token in savedOrder {
                         if token.hasPrefix(PreferencesManager.dividerPrefix) {
                             items.append(.divider(token: token, roomId: roomId))
+                        } else if let group = groupLookup[token] {
+                            appendGroupRow(group, roomId: roomId, to: &items, data: data)
+                            seenIds.insert(token)
                         } else if let service = serviceLookup[token] {
                             items.append(.accessory(service: service, roomHidden: isHidden, roomId: roomId))
-                            seenServiceIds.insert(token)
+                            seenIds.insert(token)
                         }
                     }
-                    // Append any new services that weren't in the saved order
-                    for service in services where !seenServiceIds.contains(service.uniqueIdentifier) {
+                    // Append anything that wasn't in the saved order yet
+                    for group in roomGroups where !seenIds.contains(group.id) {
+                        appendGroupRow(group, roomId: roomId, to: &items, data: data)
+                    }
+                    for service in services where !seenIds.contains(service.uniqueIdentifier) {
                         items.append(.accessory(service: service, roomHidden: isHidden, roomId: roomId))
                     }
                 } else {
+                    // Groups at the top of each room, then services by type
+                    for group in roomGroups {
+                        appendGroupRow(group, roomId: roomId, to: &items, data: data)
+                    }
+                    if !roomGroups.isEmpty && !services.isEmpty {
+                        items.append(.groupSeparator)
+                    }
                     // Default: group services by type with auto separators. All
                     // read-only sensor types share a single section under one
                     // divider, matching the menu (see MenuBuilder).
@@ -194,6 +235,66 @@ extension AccessoriesSettingsView {
             }
         }
         roomTableItems = items
+    }
+
+    /// Favourites section rows (header plus, when expanded, one row per
+    /// favourite in the user's order).
+    private func appendFavouritesItems(to items: inout [RoomTableItem]) {
+        guard !favouriteItems.isEmpty else { return }
+        let isCollapsed = !expandedSections.contains("favourites")
+        items.append(.favouritesHeader(isCollapsed: isCollapsed, count: favouriteItems.count))
+        if !isCollapsed {
+            for item in favouriteItems {
+                items.append(.favourite(item: item))
+            }
+        }
+    }
+
+    /// Global groups section rows (header plus, when expanded, one row per
+    /// group, each expandable to its member devices).
+    private func appendGlobalGroupsItems(to items: inout [RoomTableItem], data: MenuData) {
+        guard !globalGroups.isEmpty else { return }
+        let isCollapsed = !expandedSections.contains("groups")
+        items.append(.groupsHeader(isCollapsed: isCollapsed, count: globalGroups.count))
+        if !isCollapsed {
+            for group in globalGroups {
+                items.append(.globalGroup(group: group))
+                appendGroupDevices(of: group, to: &items, data: data)
+            }
+        }
+    }
+
+    /// A room group row, followed by its member devices when expanded.
+    private func appendGroupRow(_ group: DeviceGroup, roomId: String, to items: inout [RoomTableItem], data: MenuData) {
+        items.append(.group(group: group, roomId: roomId))
+        appendGroupDevices(of: group, to: &items, data: data)
+    }
+
+    /// Member devices of an expanded group, in deviceIds order – the order
+    /// the group's submenu and pinned menu use.
+    private func appendGroupDevices(of group: DeviceGroup, to items: inout [RoomTableItem], data: MenuData) {
+        guard expandedSections.contains(group.id) else { return }
+        for service in group.resolveServices(in: data) {
+            items.append(.groupDevice(service: service, groupId: group.id))
+        }
+    }
+
+    /// "Other" section rows: header plus, when expanded, the no-room services
+    /// grouped by type (this section has no custom ordering).
+    private func appendOtherItems(to items: inout [RoomTableItem]) {
+        guard !noRoomServices.isEmpty else { return }
+        let isHidden = PreferencesManager.shared.hideOtherSection
+        let isCollapsed = !expandedSections.contains("other")
+        items.append(.otherHeader(isHidden: isHidden, isCollapsed: isCollapsed, count: noRoomServices.count))
+        guard !isCollapsed else { return }
+        let sorted = noRoomServices.sorted { s1, s2 in
+            let i1 = typeOrder.firstIndex(of: s1.serviceType) ?? Int.max
+            let i2 = typeOrder.firstIndex(of: s2.serviceType) ?? Int.max
+            return i1 != i2 ? i1 < i2 : s1.name < s2.name
+        }
+        for service in sorted {
+            items.append(.otherAccessory(service: service, sectionHidden: isHidden))
+        }
     }
 
     /// Scenes section rows (header plus, when expanded, one row per scene)
