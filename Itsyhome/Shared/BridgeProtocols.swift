@@ -6,6 +6,20 @@
 //
 
 import Foundation
+import CoreGraphics
+
+// MARK: - Camera panel size bounds
+
+/// Grid-mode size bounds for the camera panel, shared by the AppKit window
+/// (min/max size + frame clamps) and the Catalyst scene's sizeRestrictions.
+/// The two sides MUST stay identical: a setFrame outside the scene's
+/// restrictions traps the Catalyst window.
+public enum CameraPanelBounds {
+    public static let minWidth: CGFloat = 300
+    public static let minHeight: CGFloat = 200
+    public static let maxWidth: CGFloat = 1600
+    public static let maxHeight: CGFloat = 1400
+}
 
 // MARK: - Codable data transfer objects for JSON serialization
 

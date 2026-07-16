@@ -31,6 +31,11 @@ final class CameraStreamEngine: NSObject {
     private var controls: [UUID: HMCameraStreamControl] = [:]
     private var renderViews: [UUID: HMCameraView] = [:]
     private var releaseWorkItem: DispatchWorkItem?
+    /// Controls whose stop confirmation hasn't arrived yet. Restarting the
+    /// same control before its async didStop lands lets that confirmation
+    /// tear down the new session, so restarts are queued behind it.
+    private var stoppingControls: [ObjectIdentifier: UUID] = [:]
+    private var pendingRestarts: [UUID: HMAccessory] = [:]
 
     func stream(for cameraId: UUID) -> HMCameraStream? { streams[cameraId] }
     func control(for cameraId: UUID) -> HMCameraStreamControl? { controls[cameraId] }
@@ -55,11 +60,22 @@ final class CameraStreamEngine: NSObject {
         }
     }
 
+    /// Whether the accessory can stream at all (some cameras are snapshot-only).
+    func canStream(_ accessory: HMAccessory) -> Bool {
+        accessory.cameraProfiles?.first?.streamControl != nil
+    }
+
     func startStream(for accessory: HMAccessory) {
         cancelScheduledRelease()
         let cameraId = accessory.uniqueIdentifier
         guard controls[cameraId] == nil else { return } // live or negotiating
         guard let control = accessory.cameraProfiles?.first?.streamControl else { return }
+        if stoppingControls[ObjectIdentifier(control)] != nil {
+            // The control is still tearing down its previous session – queue
+            // the restart behind the stop confirmation.
+            pendingRestarts[cameraId] = accessory
+            return
+        }
         controls[cameraId] = control
         control.delegate = self
         control.startStream()
@@ -93,6 +109,7 @@ final class CameraStreamEngine: NSObject {
 
     func stopAll() {
         cancelScheduledRelease()
+        pendingRestarts.removeAll()
         for cameraId in Array(controls.keys) {
             stopStream(for: cameraId)
         }
@@ -100,10 +117,21 @@ final class CameraStreamEngine: NSObject {
 
     private func stopStream(for cameraId: UUID) {
         guard let control = controls.removeValue(forKey: cameraId) else { return }
-        control.delegate = nil
-        control.stopStream()
         streams.removeValue(forKey: cameraId)
         renderViews[cameraId]?.cameraSource = nil
+        // Keep the delegate so the stop confirmation is observed and any
+        // queued restart of this control runs strictly after it.
+        let key = ObjectIdentifier(control)
+        stoppingControls[key] = cameraId
+        control.stopStream()
+        // Safety net: if HomeKit never confirms the stop, release the queue
+        // after a beat instead of wedging the camera forever.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
+            guard let self, let cameraId = self.stoppingControls.removeValue(forKey: key) else { return }
+            if let accessory = self.pendingRestarts.removeValue(forKey: cameraId) {
+                self.startStream(for: accessory)
+            }
+        }
     }
 
     private func cameraId(for control: HMCameraStreamControl) -> UUID? {
@@ -129,6 +157,14 @@ extension CameraStreamEngine: HMCameraStreamControlDelegate {
 
     func cameraStreamControl(_ cameraStreamControl: HMCameraStreamControl, didStopStreamWithError error: Error?) {
         DispatchQueue.main.async {
+            // A stop we initiated ourselves: run any queued restart, and
+            // never touch the maps – they may already hold the new session.
+            if let cameraId = self.stoppingControls.removeValue(forKey: ObjectIdentifier(cameraStreamControl)) {
+                if let accessory = self.pendingRestarts.removeValue(forKey: cameraId) {
+                    self.startStream(for: accessory)
+                }
+                return
+            }
             guard let cameraId = self.cameraId(for: cameraStreamControl) else { return }
             self.controls.removeValue(forKey: cameraId)
             self.streams.removeValue(forKey: cameraId)

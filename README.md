@@ -39,7 +39,7 @@ A native macOS menu bar app for controlling your HomeKit and Home Assistant smar
 - **Menu bar pinning** - Pin rooms, devices, scenes, or groups as separate menu bar items with optional keyboard shortcuts
 - **iCloud sync** - Sync favourites, groups, and settings across your Macs *(Pro)*
 - **Deeplinks** - Control devices from Shortcuts, Alfred, Raycast, Stream Deck *(Pro)*
-- **Cameras** - Live video feed with overlay action buttons to control nearby accessories *(Pro)*
+- **Cameras** - Live multi-stream camera grid with custom layouts and overlay action buttons to control nearby accessories *(Pro)*
 - **Doorbell notifications** - Automatic camera view with live stream when a doorbell rings *(Pro)*
 - **Sensors** - Contact, motion, occupancy, leak, smoke, CO and CO2 sensors as read-only rows, with battery indicators and pinnable menu bar readings
 - **Webhooks/CLI** - Built-in HTTP server with a dedicated CLI tool *(Pro)*
@@ -104,7 +104,7 @@ Connects via WebSocket API for real-time updates. On first launch, choose your p
 
 ### Cameras
 
-View live video feeds from your cameras directly in the menu bar. Supports HomeKit cameras and Home Assistant cameras with WebRTC streaming. Overlay action buttons let you control nearby accessories without leaving the camera view — toggle lights and outlets, open garage doors and gates, or lock and unlock doors.
+View all your cameras at once in a live grid, right in the menu bar. Every HomeKit camera streams simultaneously; arrange them in 1-3 columns, mark cameras as full-width tiles, and resize the panel by dragging a corner - it stays anchored under the menu bar icon and remembers your size. Clicking a tile opens the camera full-panel with zoom, audio and push-to-talk, claiming the already-running stream so there is no renegotiation delay. Home Assistant cameras show snapshot tiles with tap-to-stream over WebRTC or HLS. Overlay action buttons let you control nearby accessories without leaving the camera view - toggle lights and outlets, open garage doors and gates, or lock and unlock doors.
 
 ### Doorbell notifications
 

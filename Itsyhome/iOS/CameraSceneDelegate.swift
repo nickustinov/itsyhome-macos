@@ -75,9 +75,9 @@ class CameraSceneDelegate: UIResponder, UIWindowSceneDelegate {
         let rows = (count + columns - 1) / columns
 
         if rows <= 3 {
-            return min(1400, sectionTop + CGFloat(rows) * rowHeight + CGFloat(rows - 1) * lineSpacing + sectionBottom)
+            return min(CameraPanelBounds.maxHeight, sectionTop + CGFloat(rows) * rowHeight + CGFloat(rows - 1) * lineSpacing + sectionBottom)
         } else {
-            return min(1400, sectionTop + 3 * rowHeight + 2 * lineSpacing + lineSpacing + rowHeight * 0.5)
+            return min(CameraPanelBounds.maxHeight, sectionTop + 3 * rowHeight + 2 * lineSpacing + lineSpacing + rowHeight * 0.5)
         }
     }
 }

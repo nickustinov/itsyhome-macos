@@ -56,4 +56,16 @@ enum TemperatureFormatter {
     static func fahrenheitToCelsius(_ fahrenheit: Double) -> Double {
         (fahrenheit - 32.0) * 5.0 / 9.0
     }
+
+    /// One user-facing degree step from a Celsius value, in the current
+    /// display unit. In Fahrenheit mode the step moves the displayed °F
+    /// integer by exactly one degree – stepping the Celsius value directly
+    /// moves 1.8 °F and skips displayed degrees (72 → 70).
+    static func step(_ celsius: Double, by direction: Double) -> Double {
+        guard usesFahrenheit else { return celsius + direction }
+        // Mirror format(decimals: 0)'s ceil so the result lands exactly one
+        // displayed degree away from what the label currently shows.
+        let displayed = ceil(celsiusToFahrenheit(celsius))
+        return fahrenheitToCelsius(displayed + direction)
+    }
 }

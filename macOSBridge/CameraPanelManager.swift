@@ -25,9 +25,19 @@ final class CameraPanelManager {
     /// Whether the panel is currently in stream (detail) mode – decides which
     /// frame persistence a user resize belongs to.
     private var isStreamModeActive = false
-    /// The default grid width computed by the Catalyst side; when it changes
-    /// (columns setting), the user's manual grid size is reset.
-    private var lastDefaultGridWidth: CGFloat = 0
+    /// A resize requested while the user was dragging a corner, applied when
+    /// the drag ends (mutating geometry inside a live resize traps).
+    private var pendingResize: (width: CGFloat, height: CGFloat, aspectRatio: CGFloat, isStream: Bool, animated: Bool)?
+
+    /// The default grid width computed by the Catalyst side (columns
+    /// setting). Persisted so a columns change made while the panel's window
+    /// doesn't exist – or in a previous launch – still resets the user's
+    /// manual grid size on the next open.
+    private static let gridDefaultWidthKey = "cameraPanelGridDefaultWidth"
+    private var lastDefaultGridWidth: CGFloat {
+        get { UserDefaults.standard.double(forKey: Self.gridDefaultWidthKey) }
+        set { UserDefaults.standard.set(newValue, forKey: Self.gridDefaultWidthKey) }
+    }
 
     /// User-chosen grid size from a corner drag, persisted across launches.
     private static let gridSizeKey = "cameraPanelGridSize"
@@ -199,6 +209,17 @@ final class CameraPanelManager {
         if isAutoOpenMode && !isStreamMode {
             return
         }
+
+        // Never mutate the window (or the mode flag) while the user is
+        // dragging a corner – snapshot/aspect-ratio callbacks and doorbell
+        // auto-opens can fire mid-drag, and a programmatic setFrame inside
+        // AppKit's live-resize event loop traps. The request is applied when
+        // the drag ends.
+        if let window = cameraPanelWindow, window.inLiveResize {
+            pendingResize = (width, height, aspectRatio, isStreamMode, animated)
+            return
+        }
+
         isStreamModeActive = isStreamMode
 
         // The grid honours a user corner-drag over the computed content size,
@@ -218,8 +239,8 @@ final class CameraPanelManager {
             // very tall rows) but the window must stay within its size
             // restrictions and the screen – setFrame beyond them crashes the
             // Catalyst window.
-            width = min(max(width, 300), 1600)
-            height = min(max(height, 200), 1400)
+            width = min(max(width, CameraPanelBounds.minWidth), CameraPanelBounds.maxWidth)
+            height = min(max(height, CameraPanelBounds.minHeight), CameraPanelBounds.maxHeight)
         }
 
         cameraPanelSize = NSSize(width: width, height: height)
@@ -227,12 +248,6 @@ final class CameraPanelManager {
             lastGridSize = cameraPanelSize
         }
         guard let window = cameraPanelWindow else { return }
-
-        // Never mutate the window while the user is dragging a corner –
-        // snapshot/aspect-ratio callbacks can fire mid-drag and a programmatic
-        // setFrame inside AppKit's live-resize event loop traps. The user's
-        // drag wins; didEndLiveResize persists their size.
-        guard !window.inLiveResize else { return }
 
         if isStreamMode {
             window.styleMask.insert(.resizable)
@@ -257,8 +272,8 @@ final class CameraPanelManager {
             window.isMovable = false
             window.isMovableByWindowBackground = false
             window.resizeIncrements = NSSize(width: 1, height: 1)
-            window.minSize = NSSize(width: 300, height: 200)
-            window.maxSize = NSSize(width: 1600, height: 1400)
+            window.minSize = NSSize(width: CameraPanelBounds.minWidth, height: CameraPanelBounds.minHeight)
+            window.maxSize = NSSize(width: CameraPanelBounds.maxWidth, height: CameraPanelBounds.maxHeight)
             if window.isVisible {
                 setupDismissMonitors()
             }
@@ -429,6 +444,13 @@ final class CameraPanelManager {
                 self.lastGridSize = window.frame.size
                 self.recenterUnderStatusItem(window)
             }
+            // Apply a resize that arrived mid-drag (e.g. a doorbell stream)
+            if let pending = self.pendingResize {
+                self.pendingResize = nil
+                self.resizeCameraPanel(width: pending.width, height: pending.height,
+                                       aspectRatio: pending.aspectRatio,
+                                       isStream: pending.isStream, animated: pending.animated)
+            }
         }
 
         // The grid hangs off the status item like a dropdown: while the user
@@ -520,7 +542,8 @@ final class CameraPanelManager {
     }
 
     private func positionCameraPanelTopRight(_ window: NSWindow, width: CGFloat, height: CGFloat) {
-        guard let screen = NSScreen.main else { return }
+        // Same live-resize invariant as every other setFrame path.
+        guard !window.inLiveResize, let screen = NSScreen.main else { return }
         let visibleFrame = screen.visibleFrame
         let padding: CGFloat = 16
         let x = visibleFrame.maxX - width - padding

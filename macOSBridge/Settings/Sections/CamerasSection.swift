@@ -143,25 +143,30 @@ class CamerasSection: NSView {
         gridStack.addArrangedSubview(columnsRow)
         columnsRow.widthAnchor.constraint(equalTo: gridStack.widthAnchor).isActive = true
 
-        let gridSeparator = NSBox()
-        gridSeparator.boxType = .separator
-        gridSeparator.translatesAutoresizingMaskIntoConstraints = false
-        gridStack.addArrangedSubview(gridSeparator)
-        gridSeparator.widthAnchor.constraint(equalTo: gridStack.widthAnchor).isActive = true
+        // Live tiles are HomeKit-only – Home Assistant streams are negotiated
+        // per view (WebRTC/HLS) and stay snapshot-based in the grid, so the
+        // switch would be meaningless there.
+        if PlatformManager.shared.selectedPlatform == .homeKit {
+            let gridSeparator = NSBox()
+            gridSeparator.boxType = .separator
+            gridSeparator.translatesAutoresizingMaskIntoConstraints = false
+            gridStack.addArrangedSubview(gridSeparator)
+            gridSeparator.widthAnchor.constraint(equalTo: gridStack.widthAnchor).isActive = true
 
-        liveSwitch.controlSize = .mini
-        liveSwitch.target = self
-        liveSwitch.action = #selector(liveSwitchChanged)
-        liveSwitch.isEnabled = isPro && camerasOnForGrid
-        liveSwitch.state = PreferencesManager.shared.cameraGridLive ? .on : .off
+            liveSwitch.controlSize = .mini
+            liveSwitch.target = self
+            liveSwitch.action = #selector(liveSwitchChanged)
+            liveSwitch.isEnabled = isPro && camerasOnForGrid
+            liveSwitch.state = PreferencesManager.shared.cameraGridLive ? .on : .off
 
-        let liveRow = createSettingRow(
-            label: String(localized: "settings.cameras.grid_live", defaultValue: "Live video in grid", bundle: .macOSBridge),
-            subtitle: String(localized: "settings.cameras.grid_live_description", defaultValue: "Stream every HomeKit camera live in the grid. When off, tiles show periodic snapshots.", bundle: .macOSBridge),
-            control: liveSwitch
-        )
-        gridStack.addArrangedSubview(liveRow)
-        liveRow.widthAnchor.constraint(equalTo: gridStack.widthAnchor).isActive = true
+            let liveRow = createSettingRow(
+                label: String(localized: "settings.cameras.grid_live", defaultValue: "Live video in grid", bundle: .macOSBridge),
+                subtitle: String(localized: "settings.cameras.grid_live_description", defaultValue: "Stream every HomeKit camera live in the grid. When off, tiles show periodic snapshots.", bundle: .macOSBridge),
+                control: liveSwitch
+            )
+            gridStack.addArrangedSubview(liveRow)
+            liveRow.widthAnchor.constraint(equalTo: gridStack.widthAnchor).isActive = true
+        }
 
         gridBox.addSubview(gridStack)
         NSLayoutConstraint.activate([
@@ -833,6 +838,12 @@ class CamerasSection: NSView {
             subtitleField.textColor = .secondaryLabelColor
             subtitleField.lineBreakMode = .byWordWrapping
             subtitleField.maximumNumberOfLines = 2
+            subtitleField.cell?.wraps = true
+            subtitleField.cell?.isScrollable = false
+            // Let the field shrink below its single-line width so long text
+            // wraps instead of widening the (fixed-width) settings window.
+            subtitleField.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+            subtitleField.setContentHuggingPriority(.defaultLow, for: .horizontal)
             labelStack.addArrangedSubview(subtitleField)
         }
 

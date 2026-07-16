@@ -16,6 +16,10 @@ extension CameraViewController {
     /// engine keeps the session; no second stream is started. If the stream
     /// isn't live yet the engine starts one and the spinner waits for it.
     func startStream(for accessory: HMAccessory) {
+        // Snapshot-only cameras have no stream control – the engine would
+        // silently do nothing and strand the user on an endless spinner.
+        guard streamEngine.canStream(accessory) else { return }
+
         // A previously claimed camera (doorbell switch) goes back to the grid
         // with its stream still running.
         if let previous = activeStreamAccessory, previous.uniqueIdentifier != accessory.uniqueIdentifier {
@@ -145,13 +149,16 @@ extension CameraViewController {
         updatePanelSize(width: gridPanelWidth, height: height, animated: false)
         startSnapshotTimer()
         // Covers the doorbell case where the panel opened straight into the
-        // detail view and the rest of the grid never started streaming. In
+        // detail view and the rest of the grid never started streaming. Only
+        // while the panel is visible – when backToGrid runs as part of the
+        // panel hiding, starting streams here would cancel the release grace
+        // panelDidHide just scheduled and leave streams running forever. In
         // snapshot mode the detail stream must not linger as a live tile.
         if !isHomeAssistant {
-            if liveGridEnabled {
-                streamEngine.startStreams(for: cameraAccessories)
-            } else {
+            if !liveGridEnabled {
                 streamEngine.stopAll()
+            } else if panelVisible {
+                streamEngine.startStreams(for: cameraAccessories)
             }
         }
     }
@@ -199,6 +206,6 @@ extension CameraViewController {
 
     private func resetDoorbellButtonState() {
         backButton.setImage(UIImage(systemName: "chevron.left")?.withTintColor(.white, renderingMode: .alwaysOriginal), for: .normal)
-        backButton.setTitle(" Back", for: .normal)
+        backButton.setTitle(" " + String(localized: "common.back", defaultValue: "Back", bundle: .macOSBridge), for: .normal)
     }
 }

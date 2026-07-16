@@ -428,11 +428,11 @@ class ThermostatMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
     }
 
     @objc private func decreaseTemp(_ sender: NSButton) {
-        setTargetTemp(targetTemp - 1)
+        setTargetTemp(TemperatureFormatter.step(targetTemp, by: -1))
     }
 
     @objc private func increaseTemp(_ sender: NSButton) {
-        setTargetTemp(targetTemp + 1)
+        setTargetTemp(TemperatureFormatter.step(targetTemp, by: 1))
     }
 
     // MARK: - Threshold controls (Auto mode)
@@ -460,18 +460,18 @@ class ThermostatMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
     }
 
     @objc private func decreaseHeatThreshold(_ sender: NSButton) {
-        setHeatingThreshold(heatingThreshold - 1)
+        setHeatingThreshold(TemperatureFormatter.step(heatingThreshold, by: -1))
     }
 
     @objc private func increaseHeatThreshold(_ sender: NSButton) {
-        setHeatingThreshold(heatingThreshold + 1)
+        setHeatingThreshold(TemperatureFormatter.step(heatingThreshold, by: 1))
     }
 
     @objc private func decreaseCoolThreshold(_ sender: NSButton) {
-        setCoolingThreshold(coolingThreshold - 1)
+        setCoolingThreshold(TemperatureFormatter.step(coolingThreshold, by: -1))
     }
 
     @objc private func increaseCoolThreshold(_ sender: NSButton) {
-        setCoolingThreshold(coolingThreshold + 1)
+        setCoolingThreshold(TemperatureFormatter.step(coolingThreshold, by: 1))
     }
 }

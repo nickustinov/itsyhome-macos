@@ -19,9 +19,9 @@ extension CameraViewController {
         }
 
         for accessory in cameraAccessories {
-            // A live tile needs no snapshot, and captures compete with the
-            // streams for the HomeKit daemon pipe.
-            guard streamEngine.stream(for: accessory.uniqueIdentifier) == nil,
+            // A live or negotiating tile needs no snapshot, and captures
+            // compete with stream negotiation for the HomeKit daemon pipe.
+            guard streamEngine.control(for: accessory.uniqueIdentifier) == nil,
                   let profile = accessory.cameraProfiles?.first,
                   let snapshotControl = profile.snapshotControl else { continue }
 

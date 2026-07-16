@@ -284,6 +284,12 @@ class CameraViewController: UIViewController {
     func reconcileGridStreams() {
         guard !isHomeAssistant, liveGridEnabled else {
             streamEngine.stopAll()
+            // Live tiles suppressed snapshot capture, so without a refresh
+            // the grid would sit on black/stale tiles until the next timer
+            // tick (up to 30s).
+            if !isHomeAssistant, panelVisible {
+                takeAllSnapshots()
+            }
             return
         }
         streamEngine.stopStreams(notIn: Set(cameraAccessories.map { $0.uniqueIdentifier }))
@@ -375,7 +381,7 @@ class CameraViewController: UIViewController {
     private func streamDoorbellCamera(id cameraId: UUID) {
         isDoorbellMode = true
         backButton.setImage(UIImage(systemName: "xmark")?.withTintColor(.white, renderingMode: .alwaysOriginal), for: .normal)
-        backButton.setTitle(" Close", for: .normal)
+        backButton.setTitle(" " + String(localized: "camera.panel.close", defaultValue: "Close", bundle: .macOSBridge), for: .normal)
 
         if isHomeAssistant {
             // If already streaming this camera, just ensure pinned
@@ -514,7 +520,7 @@ class CameraViewController: UIViewController {
 
     private func setupEmptyState() {
         emptyLabel = UILabel()
-        emptyLabel.text = "No cameras found"
+        emptyLabel.text = String(localized: "camera.panel.no_cameras", defaultValue: "No cameras found", bundle: .macOSBridge)
         emptyLabel.textColor = .secondaryLabel
         emptyLabel.font = .systemFont(ofSize: 14, weight: .medium)
         emptyLabel.textAlignment = .center
@@ -578,7 +584,7 @@ class CameraViewController: UIViewController {
 
         backButton = UIButton(type: .custom)
         backButton.setImage(UIImage(systemName: "chevron.left")?.withTintColor(.white, renderingMode: .alwaysOriginal), for: .normal)
-        backButton.setTitle(" Back", for: .normal)
+        backButton.setTitle(" " + String(localized: "common.back", defaultValue: "Back", bundle: .macOSBridge), for: .normal)
         backButton.setTitleColor(.white, for: .normal)
         backButton.titleLabel?.font = .systemFont(ofSize: 13, weight: .medium)
         backButton.backgroundColor = UIColor(white: 0, alpha: 0.5)
@@ -634,10 +640,10 @@ class CameraViewController: UIViewController {
                 windowScene.sizeRestrictions?.minimumSize = CGSize(width: minWidth, height: minWidth / aspectRatio)
                 windowScene.sizeRestrictions?.maximumSize = CGSize(width: maxWidth, height: maxWidth / aspectRatio)
             } else {
-                // Grid mode is freely resizable by corner drag; these bounds
-                // mirror the NSWindow min/max on the AppKit side.
-                windowScene.sizeRestrictions?.minimumSize = CGSize(width: 300, height: 200)
-                windowScene.sizeRestrictions?.maximumSize = CGSize(width: 1600, height: 1400)
+                // Grid mode is freely resizable by corner drag; shared
+                // constants keep these identical to the NSWindow min/max.
+                windowScene.sizeRestrictions?.minimumSize = CGSize(width: CameraPanelBounds.minWidth, height: CameraPanelBounds.minHeight)
+                windowScene.sizeRestrictions?.maximumSize = CGSize(width: CameraPanelBounds.maxWidth, height: CameraPanelBounds.maxHeight)
             }
         }
         #endif
@@ -671,7 +677,7 @@ class CameraViewController: UIViewController {
         // Cap at the window's maximum height (portrait cameras produce very
         // tall rows) – anything beyond scrolls. The AppKit side additionally
         // clamps to the actual screen.
-        let maxHeight: CGFloat = 1400
+        let maxHeight = CameraPanelBounds.maxHeight
         if rowHeights.count <= 3 {
             let total = rowHeights.reduce(0, +)
             return min(maxHeight, Self.sectionTop + total + CGFloat(rowHeights.count - 1) * Self.lineSpacing + Self.sectionBottom)

@@ -947,7 +947,18 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
     }
 
     @objc private func quit(_ sender: Any?) {
-        NSApplication.shared.terminate(nil)
+        // Never terminate synchronously from inside the status-item menu's
+        // tracking session: cancelTracking() is only serviced on a later
+        // run-loop pass, and a process dying mid-tracking leaves the Dock's
+        // auto-hide suppression stuck until the WindowServer resets. The main
+        // queue isn't drained in the event-tracking run-loop mode, so this
+        // block runs exactly after the menu has unwound.
+        DispatchQueue.main.async { [weak self] in
+            // Orderly teardown of WindowServer-registered state: the camera
+            // panel's pop-up/floating window and its global event monitors.
+            self?.cameraPanelManager.dismissCameraPanel()
+            NSApplication.shared.terminate(nil)
+        }
     }
 
     // MARK: - NSMenuDelegate

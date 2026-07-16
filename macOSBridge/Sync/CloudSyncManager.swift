@@ -6,6 +6,9 @@
 //
 
 import Foundation
+import os.log
+
+private let logger = Logger(subsystem: "com.nickustinov.itsyhome", category: "CloudSync")
 
 final class CloudSyncManager {
 
@@ -20,6 +23,12 @@ final class CloudSyncManager {
     private var isSyncing = false
     private var isApplyingCloudChanges = false
     private var translator = CloudSyncTranslator()
+
+    /// Homes whose cloud state has been pulled this run. Uploads are held
+    /// back until the home's initial pull has happened – otherwise a fresh
+    /// install (empty local arrays) uploads first and deletes the cloud keys
+    /// the other Mac pushed, before ever reading them.
+    private var pulledHomeIds: Set<String> = []
 
     private enum Keys {
         static let syncEnabled = "cloudSyncEnabled"
@@ -39,6 +48,19 @@ final class CloudSyncManager {
     func updateMenuData(_ data: MenuData) {
         translator.updateMenuData(data)
         translator.updateGroupIds(Set(PreferencesManager.shared.deviceGroups.map { $0.id }))
+
+        // The startup pull in startListening usually runs before HomeKit has
+        // delivered any accessories (translator empty) and silently no-ops.
+        // The arrival of menu data is the real "ready" signal – pull once per
+        // home here, which also unblocks uploads for that home.
+        guard isListening, ProStatusCache.shared.isPro, isSyncEnabled,
+              let homeId = PreferencesManager.shared.currentHomeId,
+              !pulledHomeIds.contains(homeId) else { return }
+        logger.info("Menu data ready – running initial pull for current home")
+        isSyncing = true
+        cloudStore.synchronize()
+        pullFromCloudStore()
+        isSyncing = false
     }
 
     // MARK: - Public API
@@ -135,9 +157,16 @@ final class CloudSyncManager {
     private func pullFromCloudStore() {
         guard let homeId = PreferencesManager.shared.currentHomeId,
               let homeName = PreferencesManager.shared.currentHomeName else {
+            logger.info("Pull skipped – no current home selected yet")
             return
         }
-        guard translator.hasData else { return }
+        guard translator.hasData else {
+            logger.info("Pull skipped – accessory data not loaded yet")
+            return
+        }
+
+        // The pull ran with real data: uploads for this home are safe now.
+        pulledHomeIds.insert(homeId)
 
         isApplyingCloudChanges = true
 
@@ -176,6 +205,8 @@ final class CloudSyncManager {
         if pullEncodedKey(prefix: "customIcons", homeName: homeName, homeId: homeId) {
             appliedCount += 1
         }
+
+        logger.info("Pull complete – applied \(appliedCount) key(s)")
 
         if appliedCount > 0 {
             lastSyncTimestamp = Date()
@@ -243,9 +274,19 @@ final class CloudSyncManager {
     private func uploadAllSyncableKeys() {
         guard let homeId = PreferencesManager.shared.currentHomeId,
               let homeName = PreferencesManager.shared.currentHomeName else {
+            logger.info("Upload skipped – no current home selected yet")
             return
         }
-        guard translator.hasData else { return }
+        guard translator.hasData else {
+            logger.info("Upload skipped – accessory data not loaded yet")
+            return
+        }
+        // Never upload before this home's initial pull: a fresh install's
+        // empty arrays would delete the cloud copies before reading them.
+        guard pulledHomeIds.contains(homeId) else {
+            logger.info("Upload skipped – waiting for initial pull of this home")
+            return
+        }
 
         for prefix in serviceIdKeys {
             uploadIdKey(prefix: prefix, type: .service, homeName: homeName, homeId: homeId)
@@ -267,6 +308,7 @@ final class CloudSyncManager {
 
         cloudStore.synchronize()
         lastSyncTimestamp = Date()
+        logger.info("Upload complete")
     }
 
     private func uploadIdKey(prefix: String, type: CloudSyncTranslator.IdType, homeName: String, homeId: String) {
