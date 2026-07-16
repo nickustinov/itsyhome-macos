@@ -6,6 +6,7 @@
 //
 
 import AppKit
+import Combine
 
 class AdvancedSection: SettingsCard {
 
@@ -13,11 +14,13 @@ class AdvancedSection: SettingsCard {
     private let simpleLightSwitch = NSSwitch()
     private let sensorSummarySwitch = NSSwitch()
     private let historySwitch = NSSwitch()
+    private var cancellables = Set<AnyCancellable>()
 
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         setupContent()
         loadPreferences()
+        setupBindings()
     }
 
     required init?(coder: NSCoder) {
@@ -170,6 +173,15 @@ class AdvancedSection: SettingsCard {
         // History is a Pro feature; disable (not hide) the switch for free
         // users so it can't look functional while the store refuses to record.
         historySwitch.isEnabled = ProStatusCache.shared.isPro
+    }
+
+    private func setupBindings() {
+        // The section is cached for the window's lifetime, so the Pro gate
+        // must track purchases made after this pane was first shown.
+        ProManager.shared.$isPro
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] isPro in self?.historySwitch.isEnabled = isPro }
+            .store(in: &cancellables)
     }
 
     @objc private func temperatureUnitChanged(_ sender: NSPopUpButton) {

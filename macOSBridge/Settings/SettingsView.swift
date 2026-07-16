@@ -268,6 +268,7 @@ class SettingsView: NSView, NSTableViewDataSource, NSTableViewDelegate {
         networksSection = nil
         deeplinksSection = nil
         webhooksSection = nil
+        homeKitBridgeSection = nil
 
         // Reload sidebar to update PRO badges
         let selectedRow = sidebarTableView.selectedRow
