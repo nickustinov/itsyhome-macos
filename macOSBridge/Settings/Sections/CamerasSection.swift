@@ -16,6 +16,8 @@ class CamerasSection: NSView {
 
     private let stackView = NSStackView()
     private let cameraSwitch = NSSwitch()
+    private let gridColumnsPopup = NSPopUpButton()
+    private let liveSwitch = NSSwitch()
     private let doorbellSwitch = NSSwitch()
     private let doorbellSoundSwitch = NSSwitch()
     private let autoCloseSwitch = NSSwitch()
@@ -106,6 +108,71 @@ class CamerasSection: NSView {
 
         stackView.addArrangedSubview(box)
         box.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
+
+        addSpacer(height: 8)
+
+        // Grid card: columns + live video
+        let gridBox = CardBoxView()
+        gridBox.translatesAutoresizingMaskIntoConstraints = false
+
+        let gridStack = NSStackView()
+        gridStack.orientation = .vertical
+        gridStack.spacing = 0
+        gridStack.alignment = .leading
+        gridStack.translatesAutoresizingMaskIntoConstraints = false
+
+        let camerasOnForGrid = PreferencesManager.shared.camerasEnabled
+
+        gridColumnsPopup.removeAllItems()
+        gridColumnsPopup.addItems(withTitles: [
+            String(localized: "settings.cameras.grid_columns_1", defaultValue: "1 column", bundle: .macOSBridge),
+            String(localized: "settings.cameras.grid_columns_2", defaultValue: "2 columns", bundle: .macOSBridge),
+            String(localized: "settings.cameras.grid_columns_3", defaultValue: "3 columns", bundle: .macOSBridge)
+        ])
+        gridColumnsPopup.selectItem(at: PreferencesManager.shared.cameraGridColumns - 1)
+        gridColumnsPopup.controlSize = .small
+        gridColumnsPopup.target = self
+        gridColumnsPopup.action = #selector(gridColumnsChanged)
+        gridColumnsPopup.isEnabled = isPro && camerasOnForGrid
+
+        let columnsRow = createSettingRow(
+            label: String(localized: "settings.cameras.grid_columns", defaultValue: "Grid columns", bundle: .macOSBridge),
+            subtitle: String(localized: "settings.cameras.grid_columns_description", defaultValue: "How many cameras sit side by side in the panel. Mark a camera full width below with the arrows button.", bundle: .macOSBridge),
+            control: gridColumnsPopup
+        )
+        gridStack.addArrangedSubview(columnsRow)
+        columnsRow.widthAnchor.constraint(equalTo: gridStack.widthAnchor).isActive = true
+
+        let gridSeparator = NSBox()
+        gridSeparator.boxType = .separator
+        gridSeparator.translatesAutoresizingMaskIntoConstraints = false
+        gridStack.addArrangedSubview(gridSeparator)
+        gridSeparator.widthAnchor.constraint(equalTo: gridStack.widthAnchor).isActive = true
+
+        liveSwitch.controlSize = .mini
+        liveSwitch.target = self
+        liveSwitch.action = #selector(liveSwitchChanged)
+        liveSwitch.isEnabled = isPro && camerasOnForGrid
+        liveSwitch.state = PreferencesManager.shared.cameraGridLive ? .on : .off
+
+        let liveRow = createSettingRow(
+            label: String(localized: "settings.cameras.grid_live", defaultValue: "Live video in grid", bundle: .macOSBridge),
+            subtitle: String(localized: "settings.cameras.grid_live_description", defaultValue: "Stream every HomeKit camera live in the grid. When off, tiles show periodic snapshots.", bundle: .macOSBridge),
+            control: liveSwitch
+        )
+        gridStack.addArrangedSubview(liveRow)
+        liveRow.widthAnchor.constraint(equalTo: gridStack.widthAnchor).isActive = true
+
+        gridBox.addSubview(gridStack)
+        NSLayoutConstraint.activate([
+            gridStack.topAnchor.constraint(equalTo: gridBox.topAnchor, constant: 4),
+            gridStack.leadingAnchor.constraint(equalTo: gridBox.leadingAnchor, constant: 12),
+            gridStack.trailingAnchor.constraint(equalTo: gridBox.trailingAnchor, constant: -12),
+            gridStack.bottomAnchor.constraint(equalTo: gridBox.bottomAnchor, constant: -4)
+        ])
+
+        stackView.addArrangedSubview(gridBox)
+        gridBox.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
 
         addSpacer(height: 8)
 
@@ -401,6 +468,23 @@ class CamerasSection: NSView {
             motionButton = btn
         }
 
+        // Full-width tile toggle (grid span)
+        let isFullWidth = PreferencesManager.shared.isFullWidth(cameraId: camera.uniqueIdentifier)
+        let widthButton = NSButton()
+        widthButton.bezelStyle = .inline
+        widthButton.isBordered = false
+        widthButton.imagePosition = .imageOnly
+        widthButton.imageScaling = .scaleProportionallyUpOrDown
+        widthButton.image = isFullWidth ? PhosphorIcon.fill("arrows-out-line-horizontal") : PhosphorIcon.regular("arrows-out-line-horizontal")
+        widthButton.contentTintColor = isFullWidth ? .secondaryLabelColor : .tertiaryLabelColor
+        widthButton.toolTip = String(localized: "settings.cameras.full_width_tooltip", defaultValue: "Show as full-width tile in the camera grid", bundle: .macOSBridge)
+        widthButton.target = self
+        widthButton.action = #selector(fullWidthToggleTapped(_:))
+        widthButton.tag = row
+        widthButton.isEnabled = isPro
+        widthButton.translatesAutoresizingMaskIntoConstraints = false
+        container.addSubview(widthButton)
+
         let nameLabel = NSTextField(labelWithString: camera.name)
         nameLabel.font = .systemFont(ofSize: 13)
         nameLabel.textColor = .labelColor
@@ -416,9 +500,9 @@ class CamerasSection: NSView {
         addButton.translatesAutoresizingMaskIntoConstraints = false
         container.addSubview(addButton)
 
-        let namePreviousAnchor: NSLayoutXAxisAnchor
+        let widthPreviousAnchor: NSLayoutXAxisAnchor
         if let motionBtn = motionButton {
-            namePreviousAnchor = motionBtn.trailingAnchor
+            widthPreviousAnchor = motionBtn.trailingAnchor
             NSLayoutConstraint.activate([
                 motionBtn.leadingAnchor.constraint(equalTo: eyeButton.trailingAnchor, constant: 4),
                 motionBtn.centerYAnchor.constraint(equalTo: addButton.centerYAnchor),
@@ -426,8 +510,16 @@ class CamerasSection: NSView {
                 motionBtn.heightAnchor.constraint(equalToConstant: 20),
             ])
         } else {
-            namePreviousAnchor = eyeButton.trailingAnchor
+            widthPreviousAnchor = eyeButton.trailingAnchor
         }
+
+        let namePreviousAnchor: NSLayoutXAxisAnchor = widthButton.trailingAnchor
+        NSLayoutConstraint.activate([
+            widthButton.leadingAnchor.constraint(equalTo: widthPreviousAnchor, constant: 4),
+            widthButton.centerYAnchor.constraint(equalTo: addButton.centerYAnchor),
+            widthButton.widthAnchor.constraint(equalToConstant: 20),
+            widthButton.heightAnchor.constraint(equalToConstant: 20),
+        ])
 
         NSLayoutConstraint.activate([
             dragHandle.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 8),
@@ -530,6 +622,21 @@ class CamerasSection: NSView {
 
     @objc private func cameraSwitchChanged(_ sender: NSSwitch) {
         PreferencesManager.shared.camerasEnabled = sender.state == .on
+        rebuildContent()
+    }
+
+    @objc private func gridColumnsChanged(_ sender: NSPopUpButton) {
+        PreferencesManager.shared.cameraGridColumns = sender.indexOfSelectedItem + 1
+    }
+
+    @objc private func liveSwitchChanged(_ sender: NSSwitch) {
+        PreferencesManager.shared.cameraGridLive = sender.state == .on
+    }
+
+    @objc private func fullWidthToggleTapped(_ sender: NSButton) {
+        guard sender.tag < cameras.count else { return }
+        let camera = cameras[sender.tag]
+        PreferencesManager.shared.toggleFullWidth(cameraId: camera.uniqueIdentifier)
         rebuildContent()
     }
 

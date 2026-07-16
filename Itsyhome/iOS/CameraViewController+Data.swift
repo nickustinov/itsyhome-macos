@@ -44,7 +44,7 @@ extension CameraViewController {
 
         if activeStreamControl == nil && homeKitManager?.pendingDoorbellCameraId == nil && Self.pendingAutoOpenCameraId == nil {
             let height = computeGridHeight()
-            macOSController?.resizeCameraPanel(width: Self.gridWidth, height: height, aspectRatio: Self.defaultAspectRatio, animated: false)
+            macOSController?.resizeCameraPanel(width: gridPanelWidth, height: height, aspectRatio: Self.defaultAspectRatio, isStream: false, animated: false)
         }
     }
 

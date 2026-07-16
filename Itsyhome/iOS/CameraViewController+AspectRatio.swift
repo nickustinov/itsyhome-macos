@@ -47,7 +47,7 @@ extension CameraViewController {
         if !hasPendingOrActiveStream {
             collectionView.collectionViewLayout.invalidateLayout()
             let height = computeGridHeight()
-            updatePanelSize(width: Self.gridWidth, height: height, animated: false)
+            updatePanelSize(width: gridPanelWidth, height: height, animated: false)
         }
     }
 
@@ -81,7 +81,7 @@ extension CameraViewController {
         if !hasPendingOrActiveStream {
             collectionView.collectionViewLayout.invalidateLayout()
             let height = computeGridHeight()
-            updatePanelSize(width: Self.gridWidth, height: height, animated: false)
+            updatePanelSize(width: gridPanelWidth, height: height, animated: false)
         }
     }
 }

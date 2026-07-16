@@ -22,7 +22,6 @@ class CameraViewController: UIViewController {
     var emptyLabel: UILabel!
     var streamContainerView: UIView!
     var zoomScrollView: UIScrollView!
-    var streamCameraView: HMCameraView!
     var streamSpinner: UIActivityIndicatorView!
     var backButton: UIButton!
     var pinButton: UIButton!
@@ -35,7 +34,7 @@ class CameraViewController: UIViewController {
 
     // MARK: - Layout constants
 
-    static let gridWidth: CGFloat = 300
+    static let columnWidth: CGFloat = 276
     static let streamWidth: CGFloat = 530
     static let defaultAspectRatio: CGFloat = 16.0 / 9.0
 
@@ -49,8 +48,70 @@ class CameraViewController: UIViewController {
 
     var cameraAccessories: [HMAccessory] = []
     var snapshotControls: [UUID: HMCameraSnapshotControl] = [:]
-    var activeStreamControl: HMCameraStreamControl?
+    let streamEngine = CameraStreamEngine()
     var activeStreamAccessory: HMAccessory?
+    /// The engine render view currently claimed by the detail view.
+    var activeLiveView: HMCameraView?
+    /// Whether the panel window is currently on screen (streams are only
+    /// started while it is, and released with a grace period after it hides).
+    var panelVisible = false
+
+    /// The detail view's stream control – nil whenever no detail is open,
+    /// even while grid streams run.
+    var activeStreamControl: HMCameraStreamControl? {
+        activeStreamAccessory.flatMap { streamEngine.control(for: $0.uniqueIdentifier) }
+    }
+
+    // MARK: - Grid preferences (written by Settings → Cameras via
+    // PreferencesManager; same process, same UserDefaults)
+
+    var gridColumns: Int {
+        let stored = UserDefaults.standard.object(forKey: "cameraGridColumns") as? Int ?? 2
+        return max(1, min(3, stored))
+    }
+
+    var liveGridEnabled: Bool {
+        UserDefaults.standard.object(forKey: "cameraGridLive") as? Bool ?? true
+    }
+
+    var fullWidthCameraIds: Set<String> {
+        let key: String
+        if isHomeAssistant {
+            key = "fullWidthCameraIds"
+        } else {
+            let homeId = homeKitManager?.selectedHomeIdentifier?.uuidString ?? ""
+            key = "fullWidthCameraIds_\(homeId)"
+        }
+        return Set(UserDefaults.standard.stringArray(forKey: key) ?? [])
+    }
+
+    /// Default panel width for the columns setting – the size the panel opens
+    /// at until the user drags a corner (their size then takes precedence,
+    /// kept on the AppKit side).
+    var gridPanelWidth: CGFloat {
+        Self.sectionSide * 2 + CGFloat(gridColumns) * Self.columnWidth + CGFloat(gridColumns - 1) * Self.lineSpacing
+    }
+
+    /// Width the tiles actually flow into – the live view width once the
+    /// window exists (it can differ from the default after a corner drag).
+    var gridContentWidth: CGFloat {
+        let viewWidth = view.bounds.width
+        return (viewWidth > 0 ? viewWidth : gridPanelWidth) - Self.sectionSide * 2
+    }
+
+    /// A tile spans one column, or the full row when marked full-width
+    /// (single-column grids are always full width). Column tiles divide the
+    /// current content width evenly so the grid scales with the window.
+    func tileSize(at index: Int) -> CGSize {
+        let uuid = cameraUUID(at: index)
+        let columns = gridColumns
+        let contentWidth = gridContentWidth
+        let isFull = columns == 1 || fullWidthCameraIds.contains(uuid.uuidString)
+        let columnWidth = floor((contentWidth - CGFloat(columns - 1) * Self.lineSpacing) / CGFloat(columns))
+        let width = isFull ? contentWidth : columnWidth
+        let ratio = cameraAspectRatios[uuid] ?? Self.defaultAspectRatio
+        return CGSize(width: width, height: width / ratio + Self.labelHeight)
+    }
 
     // HA camera state
     var haCameras: [CameraData] = []
@@ -139,6 +200,7 @@ class CameraViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = UIColor(white: 0.12, alpha: 1.0)
+        streamEngine.delegate = self
         loadPersistedAspectRatios()
         setupCollectionView()
         setupEmptyState()
@@ -192,28 +254,47 @@ class CameraViewController: UIViewController {
     @objc private func preferencesDidChange() {
         guard !hasPendingOrActiveStream else { return }
         loadCameras()
+        reconcileGridStreams()
         emptyLabel.isHidden = cameraCount > 0
         collectionView.isHidden = cameraCount == 0
         collectionView.reloadData()
 
         let height = computeGridHeight()
-        updatePanelSize(width: Self.gridWidth, height: height, animated: false)
+        updatePanelSize(width: gridPanelWidth, height: height, animated: false)
     }
 
     @objc private func homeDidChange() {
         if hasPendingOrActiveStream {
             backToGrid()
         }
+        streamEngine.stopAll()
         loadCameras()
+        reconcileGridStreams()
         emptyLabel.isHidden = cameraCount > 0
         collectionView.isHidden = cameraCount == 0
         collectionView.reloadData()
 
         let height = computeGridHeight()
-        updatePanelSize(width: Self.gridWidth, height: height, animated: false)
+        updatePanelSize(width: gridPanelWidth, height: height, animated: false)
+    }
+
+    /// Aligns running streams with the current camera list and the live-grid
+    /// preference: stops streams for cameras that left the list (or all of
+    /// them in snapshot mode) and, while the panel is visible, starts the rest.
+    func reconcileGridStreams() {
+        guard !isHomeAssistant, liveGridEnabled else {
+            streamEngine.stopAll()
+            return
+        }
+        streamEngine.stopStreams(notIn: Set(cameraAccessories.map { $0.uniqueIdentifier }))
+        if panelVisible {
+            streamEngine.startStreams(for: cameraAccessories)
+        }
     }
 
     @objc private func panelDidShow() {
+        panelVisible = true
+        streamEngine.cancelScheduledRelease()
         // Check for pending auto-open (motion/doorbell from macOS controller, both platforms)
         if let cameraId = Self.pendingAutoOpenCameraId {
             Self.pendingAutoOpenCameraId = nil
@@ -232,14 +313,18 @@ class CameraViewController: UIViewController {
         startTimestampTimer()
         if isHomeAssistant {
             refreshHAOverlayStates()
+        } else if liveGridEnabled {
+            streamEngine.startStreams(for: cameraAccessories)
         }
         let height = computeGridHeight()
-        updatePanelSize(width: Self.gridWidth, height: height, animated: false)
+        updatePanelSize(width: gridPanelWidth, height: height, animated: false)
     }
 
     @objc private func panelDidHide() {
+        panelVisible = false
         stopSnapshotTimer()
         stopTimestampTimer()
+        streamEngine.scheduleRelease()
         if hasPendingOrActiveStream {
             backToGrid()
         }
@@ -326,15 +411,8 @@ class CameraViewController: UIViewController {
                 return
             }
 
-            // If streaming another camera, stop it first
-            if activeStreamControl != nil {
-                activeStreamControl?.stopStream()
-                activeStreamControl = nil
-                activeStreamAccessory = nil
-                streamCameraView.cameraSource = nil
-            }
-
-            // Find the doorbell camera accessory
+            // Find the doorbell camera accessory. startStream hands any
+            // previously claimed camera back to the grid, stream still live.
             guard let accessory = homeKitManager?.cameraAccessories.first(where: {
                 $0.uniqueIdentifier == cameraId
             }) else { return }
@@ -353,6 +431,8 @@ class CameraViewController: UIViewController {
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        panelVisible = true
+        streamEngine.cancelScheduledRelease()
 
         if !hasLoadedInitialData && cameraCount > 0 {
             hasLoadedInitialData = true
@@ -378,17 +458,33 @@ class CameraViewController: UIViewController {
         guard !hasPendingOrActiveStream else { return }
 
         let height = computeGridHeight()
-        updatePanelSize(width: Self.gridWidth, height: height, animated: false)
+        updatePanelSize(width: gridPanelWidth, height: height, animated: false)
 
         collectionView.setContentOffset(.zero, animated: false)
         startSnapshotTimer()
         startTimestampTimer()
+        if !isHomeAssistant && liveGridEnabled {
+            streamEngine.startStreams(for: cameraAccessories)
+        }
     }
 
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
+        panelVisible = false
         stopSnapshotTimer()
         stopTimestampTimer()
+        streamEngine.scheduleRelease()
+    }
+
+    /// Reflow the grid when the window width changes (corner drag).
+    private var lastLayoutWidth: CGFloat = 0
+
+    override func viewWillLayoutSubviews() {
+        super.viewWillLayoutSubviews()
+        let width = view.bounds.width
+        guard width > 0, width != lastLayoutWidth else { return }
+        lastLayoutWidth = width
+        collectionView.collectionViewLayout.invalidateLayout()
     }
 
     // MARK: - Setup
@@ -480,21 +576,6 @@ class CameraViewController: UIViewController {
             streamSpinner.centerYAnchor.constraint(equalTo: streamContainerView.centerYAnchor)
         ])
 
-        // HMCameraView for HomeKit streams – lives inside zoomScrollView
-        streamCameraView = HMCameraView()
-        streamCameraView.translatesAutoresizingMaskIntoConstraints = false
-        streamCameraView.isUserInteractionEnabled = false
-        zoomScrollView.addSubview(streamCameraView)
-
-        NSLayoutConstraint.activate([
-            streamCameraView.topAnchor.constraint(equalTo: zoomScrollView.contentLayoutGuide.topAnchor),
-            streamCameraView.leadingAnchor.constraint(equalTo: zoomScrollView.contentLayoutGuide.leadingAnchor),
-            streamCameraView.trailingAnchor.constraint(equalTo: zoomScrollView.contentLayoutGuide.trailingAnchor),
-            streamCameraView.bottomAnchor.constraint(equalTo: zoomScrollView.contentLayoutGuide.bottomAnchor),
-            streamCameraView.widthAnchor.constraint(equalTo: zoomScrollView.frameLayoutGuide.widthAnchor),
-            streamCameraView.heightAnchor.constraint(equalTo: zoomScrollView.frameLayoutGuide.heightAnchor)
-        ])
-
         backButton = UIButton(type: .custom)
         backButton.setImage(UIImage(systemName: "chevron.left")?.withTintColor(.white, renderingMode: .alwaysOriginal), for: .normal)
         backButton.setTitle(" Back", for: .normal)
@@ -544,55 +625,69 @@ class CameraViewController: UIViewController {
 
     // MARK: - Panel size
 
-    func updatePanelSize(width: CGFloat, height: CGFloat, aspectRatio: CGFloat = 16.0 / 9.0, animated: Bool) {
+    func updatePanelSize(width: CGFloat, height: CGFloat, aspectRatio: CGFloat = 16.0 / 9.0, isStream: Bool = false, animated: Bool) {
         #if targetEnvironment(macCatalyst)
         if let windowScene = view.window?.windowScene {
-            let isStreamMode = width > 400
-            if isStreamMode {
+            if isStream {
                 let minWidth: CGFloat = 400
                 let maxWidth: CGFloat = 1200
                 windowScene.sizeRestrictions?.minimumSize = CGSize(width: minWidth, height: minWidth / aspectRatio)
                 windowScene.sizeRestrictions?.maximumSize = CGSize(width: maxWidth, height: maxWidth / aspectRatio)
             } else {
-                windowScene.sizeRestrictions?.minimumSize = CGSize(width: width, height: height)
-                windowScene.sizeRestrictions?.maximumSize = CGSize(width: width, height: height)
+                // Grid mode is freely resizable by corner drag; these bounds
+                // mirror the NSWindow min/max on the AppKit side.
+                windowScene.sizeRestrictions?.minimumSize = CGSize(width: 300, height: 200)
+                windowScene.sizeRestrictions?.maximumSize = CGSize(width: 1600, height: 1400)
             }
         }
         #endif
-        macOSController?.resizeCameraPanel(width: width, height: height, aspectRatio: aspectRatio, animated: animated)
+        macOSController?.resizeCameraPanel(width: width, height: height, aspectRatio: aspectRatio, isStream: isStream, animated: animated)
     }
 
     func computeGridHeight() -> CGFloat {
         let count = cameraCount
         guard count > 0 else { return 150 }
 
-        let cellWidth = Self.gridWidth - Self.sectionSide * 2
-
-        // Compute individual cell heights based on detected aspect ratios
-        var cellHeights: [CGFloat] = []
+        // Simulate the flow layout's row wrapping: tiles fill a row until the
+        // next one doesn't fit; the row is as tall as its tallest tile.
+        let contentWidth = gridContentWidth
+        var rowHeights: [CGFloat] = []
+        var rowWidth: CGFloat = 0
+        var rowHeight: CGFloat = 0
         for i in 0..<count {
-            let uuid = cameraUUID(at: i)
-            let ratio = cameraAspectRatios[uuid] ?? Self.defaultAspectRatio
-            cellHeights.append(cellWidth / ratio + Self.labelHeight)
+            let size = tileSize(at: i)
+            let needed = rowWidth == 0 ? size.width : rowWidth + Self.lineSpacing + size.width
+            if needed > contentWidth + 0.5, rowWidth > 0 {
+                rowHeights.append(rowHeight)
+                rowWidth = size.width
+                rowHeight = size.height
+            } else {
+                rowWidth = needed
+                rowHeight = max(rowHeight, size.height)
+            }
         }
+        rowHeights.append(rowHeight)
 
-        if count <= 3 {
-            let totalCells = cellHeights.reduce(0, +)
-            return Self.sectionTop + totalCells + CGFloat(count - 1) * Self.lineSpacing + Self.sectionBottom
+        // Cap at the window's maximum height (portrait cameras produce very
+        // tall rows) – anything beyond scrolls. The AppKit side additionally
+        // clamps to the actual screen.
+        let maxHeight: CGFloat = 1400
+        if rowHeights.count <= 3 {
+            let total = rowHeights.reduce(0, +)
+            return min(maxHeight, Self.sectionTop + total + CGFloat(rowHeights.count - 1) * Self.lineSpacing + Self.sectionBottom)
         } else {
-            // Show first 3 cells plus half of the 4th to hint at scrollability
-            let firstThree = cellHeights.prefix(3).reduce(0, +)
-            let fourth = cellHeights.count > 3 ? cellHeights[3] : cellHeights.last!
-            return Self.sectionTop + firstThree + 2 * Self.lineSpacing + Self.lineSpacing + fourth * 0.5
+            // Show first 3 rows plus half of the 4th to hint at scrollability
+            let firstThree = rowHeights.prefix(3).reduce(0, +)
+            return min(maxHeight, Self.sectionTop + firstThree + 2 * Self.lineSpacing + Self.lineSpacing + rowHeights[3] * 0.5)
         }
     }
 
     // MARK: - Public
 
     func stopAllStreams() {
-        activeStreamControl?.stopStream()
-        activeStreamControl = nil
+        streamEngine.stopAll()
         activeStreamAccessory = nil
+        activeLiveView = nil
         webrtcClient?.disconnect()
         webrtcClient = nil
         hlsPlayer?.stop()
@@ -654,8 +749,8 @@ extension CameraViewController: UIScrollViewDelegate {
         if let snapshotView = snapshotStreamImageView, snapshotView.superview == zoomScrollView {
             return snapshotView
         }
-        if streamCameraView.superview == zoomScrollView {
-            return streamCameraView
+        if let liveView = activeLiveView, liveView.superview == zoomScrollView {
+            return liveView
         }
         return nil
     }

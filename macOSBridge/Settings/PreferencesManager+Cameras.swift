@@ -84,4 +84,57 @@ extension PreferencesManager {
     var hasAnyMotionOpenEnabled: Bool {
         !motionOpenCameraIds.isEmpty
     }
+
+    // MARK: - Camera grid (columns, live tiles, per-camera spans)
+
+    private static let cameraGridColumnsKey = "cameraGridColumns"
+    private static let cameraGridLiveKey = "cameraGridLive"
+    private static let fullWidthCameraIdsKey = "fullWidthCameraIds"
+
+    /// Number of tile columns in the camera panel grid (1–3, global)
+    var cameraGridColumns: Int {
+        get {
+            let stored = defaults.object(forKey: Self.cameraGridColumnsKey) as? Int ?? 2
+            return max(1, min(3, stored))
+        }
+        set {
+            defaults.set(max(1, min(3, newValue)), forKey: Self.cameraGridColumnsKey)
+            postNotification()
+        }
+    }
+
+    /// Whether grid tiles show live streams (HomeKit) instead of snapshots
+    var cameraGridLive: Bool {
+        get { defaults.object(forKey: Self.cameraGridLiveKey) as? Bool ?? true }
+        set {
+            defaults.set(newValue, forKey: Self.cameraGridLiveKey)
+            postNotification()
+        }
+    }
+
+    /// Set of camera IDs whose grid tile spans the full panel width (per-home)
+    var fullWidthCameraIds: Set<String> {
+        get {
+            let array = defaults.stringArray(forKey: homeKey(Self.fullWidthCameraIdsKey)) ?? []
+            return Set(array)
+        }
+        set {
+            defaults.set(Array(newValue), forKey: homeKey(Self.fullWidthCameraIdsKey))
+            postNotification()
+        }
+    }
+
+    func isFullWidth(cameraId: String) -> Bool {
+        fullWidthCameraIds.contains(cameraId)
+    }
+
+    func toggleFullWidth(cameraId: String) {
+        var ids = fullWidthCameraIds
+        if ids.contains(cameraId) {
+            ids.remove(cameraId)
+        } else {
+            ids.insert(cameraId)
+        }
+        fullWidthCameraIds = ids
+    }
 }

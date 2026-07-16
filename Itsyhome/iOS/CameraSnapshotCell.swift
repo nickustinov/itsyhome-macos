@@ -16,7 +16,11 @@ class CameraSnapshotCell: UICollectionViewCell {
     let snapshotImageView = UIImageView()
     private let nameLabel = UILabel()
     private let timestampLabel = UILabel()
+    private let liveDot = UIView()
     private var overlayStack: UIStackView!
+    /// Engine-owned live render view, reparented into this cell while its
+    /// camera streams. Never created here – see CameraStreamEngine.
+    private weak var liveView: HMCameraView?
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -61,6 +65,17 @@ class CameraSnapshotCell: UICollectionViewCell {
         timestampLabel.textAlignment = .right
         contentView.addSubview(timestampLabel)
 
+        // Orange dot marking a live tile (shown instead of the snapshot age)
+        liveDot.translatesAutoresizingMaskIntoConstraints = false
+        liveDot.backgroundColor = .systemOrange
+        liveDot.layer.cornerRadius = 4
+        liveDot.layer.shadowColor = UIColor.black.cgColor
+        liveDot.layer.shadowOffset = CGSize(width: 0, height: 1)
+        liveDot.layer.shadowOpacity = 0.8
+        liveDot.layer.shadowRadius = 2
+        liveDot.isHidden = true
+        contentView.addSubview(liveDot)
+
         overlayStack = UIStackView()
         overlayStack.axis = .horizontal
         overlayStack.spacing = 4
@@ -85,6 +100,11 @@ class CameraSnapshotCell: UICollectionViewCell {
             timestampLabel.topAnchor.constraint(equalTo: cameraView.topAnchor, constant: 4),
             timestampLabel.trailingAnchor.constraint(equalTo: cameraView.trailingAnchor, constant: -6),
 
+            liveDot.topAnchor.constraint(equalTo: cameraView.topAnchor, constant: 8),
+            liveDot.trailingAnchor.constraint(equalTo: cameraView.trailingAnchor, constant: -6),
+            liveDot.widthAnchor.constraint(equalToConstant: 8),
+            liveDot.heightAnchor.constraint(equalToConstant: 8),
+
             overlayStack.leadingAnchor.constraint(equalTo: cameraView.leadingAnchor, constant: 4),
             overlayStack.bottomAnchor.constraint(equalTo: cameraView.bottomAnchor, constant: -4)
         ])
@@ -101,12 +121,45 @@ class CameraSnapshotCell: UICollectionViewCell {
     }
 
     func configureForHomeKit() {
+        detachLiveView()
         cameraView.isHidden = false
         snapshotImageView.isHidden = true
         snapshotImageView.image = nil
     }
 
+    /// Reparents the camera's persistent render view into this cell, above
+    /// the snapshot views and below the name/timestamp/pill chrome.
+    func attachLiveView(_ view: HMCameraView) {
+        if view !== liveView { detachLiveView() }
+        liveView = view
+        view.translatesAutoresizingMaskIntoConstraints = false
+        if view.superview !== contentView {
+            contentView.insertSubview(view, belowSubview: nameLabel)
+            NSLayoutConstraint.activate([
+                view.topAnchor.constraint(equalTo: contentView.topAnchor),
+                view.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+                view.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+                view.bottomAnchor.constraint(equalTo: contentView.bottomAnchor)
+            ])
+        }
+        cameraView.isHidden = true
+        snapshotImageView.isHidden = true
+    }
+
+    func detachLiveView() {
+        if let view = liveView, view.superview === contentView {
+            view.removeFromSuperview()
+        }
+        liveView = nil
+    }
+
+    func showLive() {
+        timestampLabel.text = nil
+        liveDot.isHidden = false
+    }
+
     func updateTimestamp(since date: Date?) {
+        liveDot.isHidden = true
         guard let date = date else {
             timestampLabel.text = nil
             return
@@ -300,12 +353,14 @@ class CameraSnapshotCell: UICollectionViewCell {
 
     override func prepareForReuse() {
         super.prepareForReuse()
+        detachLiveView()
         cameraView.cameraSource = nil
         cameraView.isHidden = false
         snapshotImageView.image = nil
         snapshotImageView.isHidden = true
         nameLabel.text = nil
         timestampLabel.text = nil
+        liveDot.isHidden = true
         overlayStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
     }
 }

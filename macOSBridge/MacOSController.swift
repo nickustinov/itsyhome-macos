@@ -699,9 +699,9 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
         // No longer used — macOS side polls instead
     }
 
-    @objc public func resizeCameraPanel(width: CGFloat, height: CGFloat, aspectRatio: CGFloat, animated: Bool) {
+    @objc public func resizeCameraPanel(width: CGFloat, height: CGFloat, aspectRatio: CGFloat, isStream: Bool, animated: Bool) {
         DispatchQueue.main.async { [weak self] in
-            self?.cameraPanelManager.resizeCameraPanel(width: width, height: height, aspectRatio: aspectRatio, animated: animated)
+            self?.cameraPanelManager.resizeCameraPanel(width: width, height: height, aspectRatio: aspectRatio, isStream: isStream, animated: animated)
         }
     }
 

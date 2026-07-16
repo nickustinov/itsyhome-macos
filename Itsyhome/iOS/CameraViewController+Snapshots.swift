@@ -19,7 +19,10 @@ extension CameraViewController {
         }
 
         for accessory in cameraAccessories {
-            guard let profile = accessory.cameraProfiles?.first,
+            // A live tile needs no snapshot, and captures compete with the
+            // streams for the HomeKit daemon pipe.
+            guard streamEngine.stream(for: accessory.uniqueIdentifier) == nil,
+                  let profile = accessory.cameraProfiles?.first,
                   let snapshotControl = profile.snapshotControl else { continue }
 
             snapshotControl.delegate = self
@@ -64,7 +67,11 @@ extension CameraViewController {
                   let indexPath = collectionView.indexPath(for: cell),
                   indexPath.item < cameraCount else { continue }
             let uuid = cameraUUID(at: indexPath.item)
-            snapshotCell.updateTimestamp(since: snapshotTimestamps[uuid])
+            if !isHomeAssistant, streamEngine.stream(for: uuid) != nil {
+                snapshotCell.showLive()
+            } else {
+                snapshotCell.updateTimestamp(since: snapshotTimestamps[uuid])
+            }
         }
     }
 }

@@ -12,15 +12,19 @@ extension CameraViewController {
 
     // MARK: - HomeKit streaming
 
+    /// Opens the detail view for a camera by claiming its grid stream – the
+    /// engine keeps the session; no second stream is started. If the stream
+    /// isn't live yet the engine starts one and the spinner waits for it.
     func startStream(for accessory: HMAccessory) {
-        guard let profile = accessory.cameraProfiles?.first,
-              let streamControl = profile.streamControl else { return }
+        // A previously claimed camera (doorbell switch) goes back to the grid
+        // with its stream still running.
+        if let previous = activeStreamAccessory, previous.uniqueIdentifier != accessory.uniqueIdentifier {
+            releaseDetailLiveView()
+        }
 
         activeStreamAccessory = accessory
 
         streamContainerView.isHidden = false
-        streamCameraView.isHidden = true
-        streamSpinner.startAnimating()
         collectionView.isHidden = true
         stopSnapshotTimer()
 
@@ -28,13 +32,59 @@ extension CameraViewController {
 
         let ratio = cameraAspectRatios[accessory.uniqueIdentifier] ?? Self.defaultAspectRatio
         let streamHeight = Self.streamWidth / ratio
-        updatePanelSize(width: Self.streamWidth, height: streamHeight, aspectRatio: ratio, animated: false)
+        updatePanelSize(width: Self.streamWidth, height: streamHeight, aspectRatio: ratio, isStream: true, animated: false)
         updateStreamOverlays(for: accessory)
         updateAudioControls(for: accessory)
 
-        activeStreamControl = streamControl
-        streamControl.delegate = self
-        streamControl.startStream()
+        if streamEngine.stream(for: accessory.uniqueIdentifier) != nil {
+            detailStreamDidStart(for: accessory)
+        } else {
+            streamSpinner.startAnimating()
+            streamEngine.startStream(for: accessory)
+        }
+    }
+
+    /// Reparents the camera's render view into the zoom container and applies
+    /// the saved audio setting. Called immediately when the grid stream is
+    /// already live, or from the engine delegate once it starts.
+    func detailStreamDidStart(for accessory: HMAccessory) {
+        guard let liveView = streamEngine.liveRenderView(for: accessory.uniqueIdentifier) else { return }
+        streamSpinner.stopAnimating()
+        activeLiveView = liveView
+        liveView.translatesAutoresizingMaskIntoConstraints = false
+        zoomScrollView.addSubview(liveView)
+        NSLayoutConstraint.activate([
+            liveView.topAnchor.constraint(equalTo: zoomScrollView.contentLayoutGuide.topAnchor),
+            liveView.leadingAnchor.constraint(equalTo: zoomScrollView.contentLayoutGuide.leadingAnchor),
+            liveView.trailingAnchor.constraint(equalTo: zoomScrollView.contentLayoutGuide.trailingAnchor),
+            liveView.bottomAnchor.constraint(equalTo: zoomScrollView.contentLayoutGuide.bottomAnchor),
+            liveView.widthAnchor.constraint(equalTo: zoomScrollView.frameLayoutGuide.widthAnchor),
+            liveView.heightAnchor.constraint(equalTo: zoomScrollView.frameLayoutGuide.heightAnchor)
+        ])
+
+        let savedMuted = loadMuteSetting(for: accessory)
+        isMuted = savedMuted
+        updateMuteButtonState()
+        let audioSetting: HMCameraAudioStreamSetting = savedMuted ? .muted : (HMCameraAudioStreamSetting(rawValue: 2) ?? .muted)
+        streamEngine.setAudio(audioSetting, for: accessory.uniqueIdentifier)
+
+        // The stream source's aspect ratio is authoritative – resize if it
+        // differs from the cached one used for the initial panel size.
+        if let ratio = cameraAspectRatios[accessory.uniqueIdentifier] {
+            updatePanelSize(width: Self.streamWidth, height: Self.streamWidth / ratio, aspectRatio: ratio, isStream: true, animated: true)
+        }
+    }
+
+    /// Returns the detail view's render view to the grid, re-muting the
+    /// stream (grid streams play silent). The stream itself stays live.
+    func releaseDetailLiveView() {
+        if let accessory = activeStreamAccessory {
+            streamEngine.setAudio(.muted, for: accessory.uniqueIdentifier)
+        }
+        if let liveView = activeLiveView, liveView.superview == zoomScrollView {
+            liveView.removeFromSuperview()
+        }
+        activeLiveView = nil
     }
 
     func updateStreamOverlays(for accessory: HMAccessory) {
@@ -88,11 +138,22 @@ extension CameraViewController {
         cleanupActiveStream()
         collectionView.isHidden = cameraCount == 0
         collectionView.collectionViewLayout.invalidateLayout()
+        collectionView.reloadData()
         collectionView.setContentOffset(.zero, animated: false)
 
         let height = computeGridHeight()
-        updatePanelSize(width: Self.gridWidth, height: height, animated: false)
+        updatePanelSize(width: gridPanelWidth, height: height, animated: false)
         startSnapshotTimer()
+        // Covers the doorbell case where the panel opened straight into the
+        // detail view and the rest of the grid never started streaming. In
+        // snapshot mode the detail stream must not linger as a live tile.
+        if !isHomeAssistant {
+            if liveGridEnabled {
+                streamEngine.startStreams(for: cameraAccessories)
+            } else {
+                streamEngine.stopAll()
+            }
+        }
     }
 
     /// Clean up both HK and HA streams
@@ -100,12 +161,10 @@ extension CameraViewController {
         // Reset zoom
         zoomScrollView.setZoomScale(1.0, animated: false)
 
-        // HK cleanup
-        activeStreamControl?.stopStream()
-        activeStreamControl = nil
+        // HK: hand the render view back to the grid; the stream stays live
+        // in the engine and is released by the panel-hide grace if unused.
+        releaseDetailLiveView()
         activeStreamAccessory = nil
-        streamCameraView.cameraSource = nil
-        streamCameraView.isHidden = false
 
         // HA WebRTC cleanup
         if let videoView = webrtcClient?.videoView {

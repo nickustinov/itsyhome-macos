@@ -24,8 +24,11 @@ class CameraSceneDelegate: UIResponder, UIWindowSceneDelegate {
             return
         }
 
-        let gridWidth: CGFloat = 300
-        let height = Self.computePanelHeight(gridWidth: gridWidth)
+        // Pre-size approximation only – CameraViewController corrects the
+        // exact size (spans, real aspect ratios) as soon as it appears.
+        let columns = max(1, min(3, UserDefaults.standard.object(forKey: "cameraGridColumns") as? Int ?? 2))
+        let gridWidth: CGFloat = 12 * 2 + CGFloat(columns) * 276 + CGFloat(columns - 1) * 8
+        let height = Self.computePanelHeight(gridWidth: gridWidth, columns: columns)
 
         windowScene.sizeRestrictions?.minimumSize = CGSize(width: gridWidth, height: height)
         windowScene.sizeRestrictions?.maximumSize = CGSize(width: gridWidth, height: height)
@@ -49,13 +52,14 @@ class CameraSceneDelegate: UIResponder, UIWindowSceneDelegate {
         }
     }
 
-    // Compute panel height using the same constants as CameraViewController
-    private static func computePanelHeight(gridWidth: CGFloat) -> CGFloat {
+    // Compute panel height using the same constants as CameraViewController,
+    // approximating every tile as a 16:9 column tile (spans and detected
+    // ratios are the view controller's concern).
+    private static func computePanelHeight(gridWidth: CGFloat, columns: Int) -> CGFloat {
         let sectionTop: CGFloat = 15
         let sectionBottom: CGFloat = 15
         let sectionSide: CGFloat = 12
         let lineSpacing: CGFloat = 8
-        let labelHeight: CGFloat = 28
 
         let appDelegate = UIApplication.shared.delegate as? AppDelegate
         let count: Int
@@ -66,13 +70,14 @@ class CameraSceneDelegate: UIResponder, UIWindowSceneDelegate {
         }
         guard count > 0 else { return 150 }
 
-        let cellWidth = gridWidth - sectionSide * 2
-        let cellHeight = cellWidth * 9.0 / 16.0 + labelHeight
+        let cellWidth = columns == 1 ? gridWidth - sectionSide * 2 : 276
+        let rowHeight = cellWidth * 9.0 / 16.0
+        let rows = (count + columns - 1) / columns
 
-        if count <= 3 {
-            return sectionTop + CGFloat(count) * cellHeight + CGFloat(count - 1) * lineSpacing + sectionBottom
+        if rows <= 3 {
+            return min(1400, sectionTop + CGFloat(rows) * rowHeight + CGFloat(rows - 1) * lineSpacing + sectionBottom)
         } else {
-            return sectionTop + 3 * cellHeight + 2 * lineSpacing + lineSpacing + cellHeight * 0.5
+            return min(1400, sectionTop + 3 * rowHeight + 2 * lineSpacing + lineSpacing + rowHeight * 0.5)
         }
     }
 }

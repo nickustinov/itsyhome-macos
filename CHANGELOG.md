@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0
+
+- Live multi-stream camera grid – every HomeKit camera in the panel streams live simultaneously (muted, marked with an orange dot) instead of showing 30-second snapshots. Streams are owned by a dedicated engine that survives panel open/close: closing the panel keeps sessions alive for a 10-second grace so reopening is instant, and rapid open/close no longer stacks draining camera sessions. Opening a camera claims its already-running stream – no renegotiation spinner – and going back returns it to the grid still live. Home Assistant tiles keep snapshots with tap-to-stream
+- Camera grid layout – the panel supports 1, 2 or 3 columns (Settings → Cameras, default 2), and any camera can be marked as a full-width tile via the arrows button in the camera list, so important cameras span the whole row while the rest sit side by side. The panel is freely resizable by its corners: tiles scale to fill the dragged size, the chosen size is remembered across opens and relaunches, and changing the column count resets it to the default
+- Live or snapshots – a "Live video in grid" toggle in Settings → Cameras switches the grid between live streams and the previous snapshot behaviour
+
 ## 2.8.0
 
 - Fix camera streams ducking system audio – opening an HLS or WebRTC camera stream no longer lowers the volume of music, podcasts or other playback; the stream players now use a non-ducking audio session that is activated and deactivated in balance with the stream lifecycle (#138, thanks @mvanhorn)

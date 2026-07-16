@@ -19,6 +19,32 @@ final class CameraPanelManager {
     private var cameraStatusItem: NSStatusItem?
     private var cameraPanelWindow: NSWindow?
     private var cameraPanelSize: NSSize = NSSize(width: 300, height: 300)
+    /// Last grid-mode size, restored on dismiss so reopening doesn't flash
+    /// at a stale stream size (the grid can be wider than a stream now).
+    private var lastGridSize: NSSize = NSSize(width: 300, height: 300)
+    /// Whether the panel is currently in stream (detail) mode – decides which
+    /// frame persistence a user resize belongs to.
+    private var isStreamModeActive = false
+    /// The default grid width computed by the Catalyst side; when it changes
+    /// (columns setting), the user's manual grid size is reset.
+    private var lastDefaultGridWidth: CGFloat = 0
+
+    /// User-chosen grid size from a corner drag, persisted across launches.
+    private static let gridSizeKey = "cameraPanelGridSize"
+    private var savedGridSize: NSSize? {
+        get {
+            guard let string = UserDefaults.standard.string(forKey: Self.gridSizeKey) else { return nil }
+            let size = NSSizeFromString(string)
+            return size == .zero ? nil : size
+        }
+        set {
+            if let size = newValue {
+                UserDefaults.standard.set(NSStringFromSize(size), forKey: Self.gridSizeKey)
+            } else {
+                UserDefaults.standard.removeObject(forKey: Self.gridSizeKey)
+            }
+        }
+    }
     private var isCameraPanelOpening = false
     private var pendingCameraPanelShow = false
     private var pendingAutoOpenShow = false
@@ -33,6 +59,7 @@ final class CameraPanelManager {
     private var activeCameraId: UUID?
     private var moveObserver: NSObjectProtocol?
     private var resizeObserver: NSObjectProtocol?
+    private var liveResizeObserver: NSObjectProtocol?
     private var autoCloseTimer: DispatchWorkItem?
     private var autoCloseClickMonitor: Any?
 
@@ -104,11 +131,11 @@ final class CameraPanelManager {
         removeDismissMonitors()
         // Reset window size/position before hiding to avoid slide animation on next open
         if let window = cameraPanelWindow {
-            cameraPanelSize = NSSize(width: 300, height: 300)
+            cameraPanelSize = lastGridSize
             window.styleMask.remove(.resizable)
             window.isMovable = false
             window.isMovableByWindowBackground = false
-            window.aspectRatio = NSSize(width: 0, height: 0)
+            window.resizeIncrements = NSSize(width: 1, height: 1)
             window.minSize = cameraPanelSize
             window.maxSize = cameraPanelSize
             window.level = .popUpMenu
@@ -167,16 +194,46 @@ final class CameraPanelManager {
         setupCameraPanelWindow()
     }
 
-    func resizeCameraPanel(width: CGFloat, height: CGFloat, aspectRatio: CGFloat, animated: Bool) {
-        let isStreamMode = width > 400
+    func resizeCameraPanel(width: CGFloat, height: CGFloat, aspectRatio: CGFloat, isStream isStreamMode: Bool, animated: Bool) {
         // Ignore grid-sized resize while in auto-open mode — the stream dimensions are authoritative
         if isAutoOpenMode && !isStreamMode {
             return
         }
+        isStreamModeActive = isStreamMode
+
+        // The grid honours a user corner-drag over the computed content size,
+        // until the default width changes (columns setting) which resets it.
+        var width = width
+        var height = height
+        if !isStreamMode {
+            if lastDefaultGridWidth != 0, lastDefaultGridWidth != width {
+                savedGridSize = nil
+            }
+            lastDefaultGridWidth = width
+            if let saved = savedGridSize {
+                width = saved.width
+                height = saved.height
+            }
+            // The computed content height is unbounded (portrait cameras make
+            // very tall rows) but the window must stay within its size
+            // restrictions and the screen – setFrame beyond them crashes the
+            // Catalyst window.
+            width = min(max(width, 300), 1600)
+            height = min(max(height, 200), 1400)
+        }
+
         cameraPanelSize = NSSize(width: width, height: height)
+        if !isStreamMode {
+            lastGridSize = cameraPanelSize
+        }
         guard let window = cameraPanelWindow else { return }
 
-        // Enable resizing and moving only in stream mode (wider than grid)
+        // Never mutate the window while the user is dragging a corner –
+        // snapshot/aspect-ratio callbacks can fire mid-drag and a programmatic
+        // setFrame inside AppKit's live-resize event loop traps. The user's
+        // drag wins; didEndLiveResize persists their size.
+        guard !window.inLiveResize else { return }
+
         if isStreamMode {
             window.styleMask.insert(.resizable)
             window.isMovable = true
@@ -194,12 +251,14 @@ final class CameraPanelManager {
                 isPinned = false
                 window.level = .popUpMenu
             }
-            window.styleMask.remove(.resizable)
+            // Freely resizable by its corners, but anchored (not movable) –
+            // the grid content reflows to whatever size the user drags.
+            window.styleMask.insert(.resizable)
             window.isMovable = false
             window.isMovableByWindowBackground = false
-            window.aspectRatio = NSSize(width: 0, height: 0)
-            window.minSize = NSSize(width: width, height: height)
-            window.maxSize = NSSize(width: width, height: height)
+            window.resizeIncrements = NSSize(width: 1, height: 1)
+            window.minSize = NSSize(width: 300, height: 200)
+            window.maxSize = NSSize(width: 1600, height: 1400)
             if window.isVisible {
                 setupDismissMonitors()
             }
@@ -359,8 +418,31 @@ final class CameraPanelManager {
             object: cameraWindow,
             queue: .main
         ) { [weak self] _ in
-            self?.cancelAutoCloseTimer()
-            self?.saveCurrentFrame()
+            guard let self = self else { return }
+            self.cancelAutoCloseTimer()
+            if self.isStreamModeActive {
+                self.saveCurrentFrame()
+            } else if let window = self.cameraPanelWindow {
+                // A corner drag in grid mode becomes the new grid size
+                self.savedGridSize = window.frame.size
+                self.cameraPanelSize = window.frame.size
+                self.lastGridSize = window.frame.size
+                self.recenterUnderStatusItem(window)
+            }
+        }
+
+        // The grid hangs off the status item like a dropdown: while the user
+        // drags a corner, keep it horizontally centered on the item and its
+        // top edge pinned under the menu bar (origin-only moves are safe
+        // during live resize; size changes are not).
+        liveResizeObserver = NotificationCenter.default.addObserver(
+            forName: NSWindow.didResizeNotification,
+            object: cameraWindow,
+            queue: .main
+        ) { [weak self] _ in
+            guard let self = self, !self.isStreamModeActive,
+                  let window = self.cameraPanelWindow, window.inLiveResize else { return }
+            self.recenterUnderStatusItem(window)
         }
 
         // Cancel auto-close when user clicks inside the camera panel
@@ -387,7 +469,10 @@ final class CameraPanelManager {
         }
     }
 
-    private func positionCameraPanelWithSize(_ window: NSWindow, width: CGFloat, height: CGFloat, animate: Bool = false) {
+    /// Re-anchors the grid panel to the status item: horizontally centered on
+    /// the button, top edge 4pt below the menu bar. Origin-only, so it is
+    /// safe to call from inside a live resize.
+    private func recenterUnderStatusItem(_ window: NSWindow) {
         guard let button = cameraStatusItem?.button,
               let buttonWindow = button.window,
               let screen = buttonWindow.screen else { return }
@@ -395,6 +480,31 @@ final class CameraPanelManager {
         let buttonRect = button.convert(button.bounds, to: nil)
         let screenRect = buttonWindow.convertToScreen(buttonRect)
         let visibleFrame = screen.visibleFrame
+        let size = window.frame.size
+
+        var x = screenRect.midX - size.width / 2
+        x = max(visibleFrame.minX, min(x, visibleFrame.maxX - size.width))
+        let origin = NSPoint(x: x, y: screenRect.minY - size.height - 4)
+        if window.frame.origin != origin {
+            window.setFrameOrigin(origin)
+        }
+    }
+
+    private func positionCameraPanelWithSize(_ window: NSWindow, width: CGFloat, height: CGFloat, animate: Bool = false) {
+        guard !window.inLiveResize,
+              let button = cameraStatusItem?.button,
+              let buttonWindow = button.window,
+              let screen = buttonWindow.screen else { return }
+
+        let buttonRect = button.convert(button.bounds, to: nil)
+        let screenRect = buttonWindow.convertToScreen(buttonRect)
+        let visibleFrame = screen.visibleFrame
+
+        // Never exceed the screen: content taller than the visible area
+        // scrolls inside the panel instead of growing the window (setFrame
+        // beyond the scene's size restrictions crashes).
+        let width = min(width, visibleFrame.width)
+        let height = min(height, screenRect.minY - 4 - visibleFrame.minY)
 
         // Start with centered position
         var x = screenRect.midX - width / 2

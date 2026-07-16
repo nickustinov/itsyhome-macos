@@ -37,7 +37,7 @@ extension CameraViewController {
 
         if !hasPendingOrActiveStream && Self.pendingAutoOpenCameraId == nil {
             let height = computeGridHeight()
-            macOSController?.resizeCameraPanel(width: Self.gridWidth, height: height, aspectRatio: Self.defaultAspectRatio, animated: false)
+            macOSController?.resizeCameraPanel(width: gridPanelWidth, height: height, aspectRatio: Self.defaultAspectRatio, isStream: false, animated: false)
         }
     }
 
@@ -150,7 +150,6 @@ extension CameraViewController {
         macOSController?.notifyStreamStarted(cameraIdentifier: cameraId)
 
         streamContainerView.isHidden = false
-        streamCameraView.isHidden = true
         streamSpinner.startAnimating()
         collectionView.isHidden = true
         stopSnapshotTimer()
@@ -165,12 +164,12 @@ extension CameraViewController {
                 let ratio = await self.resolveInitialHAAspectRatio(cameraId: cameraId, entityId: entityId)
                 guard self.activeHACameraId == cameraId, self.activeHAEntityId == entityId else { return }
                 let streamHeight = Self.streamWidth / ratio
-                self.updatePanelSize(width: Self.streamWidth, height: streamHeight, aspectRatio: ratio, animated: false)
+                self.updatePanelSize(width: Self.streamWidth, height: streamHeight, aspectRatio: ratio, isStream: true, animated: false)
             }
         } else {
             let ratio = cameraAspectRatios[cameraId] ?? Self.defaultAspectRatio
             let streamHeight = Self.streamWidth / ratio
-            updatePanelSize(width: Self.streamWidth, height: streamHeight, aspectRatio: ratio, animated: false)
+            updatePanelSize(width: Self.streamWidth, height: streamHeight, aspectRatio: ratio, isStream: true, animated: false)
         }
 
         // Show HA stream overlays

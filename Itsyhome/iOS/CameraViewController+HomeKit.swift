@@ -29,45 +29,42 @@ extension CameraViewController: HMCameraSnapshotControlDelegate {
     }
 }
 
-// MARK: - HMCameraStreamControlDelegate
+// MARK: - CameraStreamEngineDelegate
 
-extension CameraViewController: HMCameraStreamControlDelegate {
+extension CameraViewController: CameraStreamEngineDelegate {
 
-    func cameraStreamControlDidStartStream(_ cameraStreamControl: HMCameraStreamControl) {
-        DispatchQueue.main.async {
-            if let stream = cameraStreamControl.cameraStream {
-                let savedMuted = self.activeStreamAccessory.map { self.loadMuteSetting(for: $0) } ?? false
-                self.isMuted = savedMuted
-                self.updateMuteButtonState()
-
-                let audioSetting: HMCameraAudioStreamSetting = savedMuted ? .muted : (HMCameraAudioStreamSetting(rawValue: 2) ?? .muted)
-                stream.updateAudioStreamSetting(audioSetting) { _ in }
+    func streamEngine(_ engine: CameraStreamEngine, didStartStreamFor cameraId: UUID) {
+        // Read aspect ratio from the stream source (authoritative)
+        if let stream = engine.stream(for: cameraId) {
+            let oldRatio = cameraAspectRatios[cameraId]
+            cacheAspectRatio(from: stream, for: cameraId, fromStream: true)
+            if cameraAspectRatios[cameraId] != oldRatio, !hasPendingOrActiveStream {
+                collectionView.collectionViewLayout.invalidateLayout()
+                updatePanelSize(width: gridPanelWidth, height: computeGridHeight(), animated: false)
             }
-            self.streamSpinner.stopAnimating()
-            self.streamCameraView.isHidden = false
-            self.streamCameraView.cameraSource = cameraStreamControl.cameraStream
+        }
 
-            // Read aspect ratio from the stream source (authoritative)
-            if let uuid = self.activeStreamAccessory?.uniqueIdentifier,
-               let stream = cameraStreamControl.cameraStream {
-                let oldRatio = self.cameraAspectRatios[uuid]
-                self.cacheAspectRatio(from: stream, for: uuid, fromStream: true)
-                let newRatio = self.cameraAspectRatios[uuid]
-
-                if let ratio = newRatio, oldRatio != newRatio {
-                    let width = Self.streamWidth
-                    let streamHeight = width / ratio
-                    self.updatePanelSize(width: width, height: streamHeight, aspectRatio: ratio, animated: true)
-                }
-            }
+        if let accessory = activeStreamAccessory, accessory.uniqueIdentifier == cameraId {
+            // The detail view is waiting for this stream
+            detailStreamDidStart(for: accessory)
+        } else {
+            reloadTile(for: cameraId)
         }
     }
 
-    func cameraStreamControl(_ cameraStreamControl: HMCameraStreamControl, didStopStreamWithError error: Error?) {
-        if error != nil {
-            DispatchQueue.main.async {
-                self.backToGrid()
-            }
+    func streamEngine(_ engine: CameraStreamEngine, didStopStreamFor cameraId: UUID, error: Error?) {
+        if let accessory = activeStreamAccessory, accessory.uniqueIdentifier == cameraId, error != nil {
+            backToGrid()
+            return
         }
+        reloadTile(for: cameraId)
+    }
+
+    /// Reloads a single grid tile so it switches between its live render
+    /// view and the snapshot fallback.
+    private func reloadTile(for cameraId: UUID) {
+        guard !isHomeAssistant,
+              let index = cameraAccessories.firstIndex(where: { $0.uniqueIdentifier == cameraId }) else { return }
+        collectionView.reloadItems(at: [IndexPath(item: index, section: 0)])
     }
 }

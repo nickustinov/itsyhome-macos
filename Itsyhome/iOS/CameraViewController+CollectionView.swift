@@ -22,9 +22,9 @@ extension CameraViewController: UICollectionViewDataSource {
         let name = cameraName(at: indexPath.item)
 
         cell.configure(name: name)
-        cell.updateTimestamp(since: snapshotTimestamps[uuid])
 
         if isHomeAssistant {
+            cell.updateTimestamp(since: snapshotTimestamps[uuid])
             cell.configureForHA(image: haSnapshotImages[uuid])
 
             // Configure HA overlays
@@ -33,9 +33,15 @@ extension CameraViewController: UICollectionViewDataSource {
         } else {
             cell.configureForHomeKit()
             let accessory = cameraAccessories[indexPath.item]
-            if let snapshotControl = snapshotControls[accessory.uniqueIdentifier],
-               let snapshot = snapshotControl.mostRecentSnapshot {
-                cell.cameraView.cameraSource = snapshot
+            if let liveView = streamEngine.liveRenderView(for: uuid), liveView !== activeLiveView {
+                cell.attachLiveView(liveView)
+                cell.showLive()
+            } else {
+                cell.updateTimestamp(since: snapshotTimestamps[uuid])
+                if let snapshotControl = snapshotControls[accessory.uniqueIdentifier],
+                   let snapshot = snapshotControl.mostRecentSnapshot {
+                    cell.cameraView.cameraSource = snapshot
+                }
             }
 
             let items = overlayData[accessory.uniqueIdentifier] ?? []
@@ -68,10 +74,6 @@ extension CameraViewController: UICollectionViewDelegate {
 extension CameraViewController: UICollectionViewDelegateFlowLayout {
 
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        let width = CameraViewController.gridWidth - CameraViewController.sectionSide * 2
-        let uuid = cameraUUID(at: indexPath.item)
-        let ratio = cameraAspectRatios[uuid] ?? CameraViewController.defaultAspectRatio
-        let height = width / ratio + CameraViewController.labelHeight
-        return CGSize(width: width, height: height)
+        tileSize(at: indexPath.item)
     }
 }

@@ -7635,6 +7635,105 @@
         }
       }
     },
+    "history.detail.changes" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld change%2$@ in %3$@"
+          }
+        }
+      }
+    },
+    "history.detail.no_data" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "No data yet"
+          }
+        }
+      }
+    },
+    "history.detail.stats" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "min %1$@   now %2$@   max %3$@"
+          }
+        }
+      }
+    },
+    "history.range.day" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "24h"
+          }
+        }
+      }
+    },
+    "history.range.month" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "30d"
+          }
+        }
+      }
+    },
+    "history.range.week" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "7d"
+          }
+        }
+      }
+    },
+    "history.state.off" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Off"
+          }
+        }
+      }
+    },
+    "history.state.on" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "On"
+          }
+        }
+      }
+    },
+    "menu.batteries" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Batteries"
+          }
+        }
+      }
+    },
     "menu.home" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -10616,6 +10715,50 @@
         }
       }
     },
+    "settings.advanced.history" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Record sensor history"
+          }
+        }
+      }
+    },
+    "settings.advanced.history_clear" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Clear history"
+          }
+        }
+      }
+    },
+    "settings.advanced.history_clear_label" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Stored history"
+          }
+        }
+      }
+    },
+    "settings.advanced.history_subtitle" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Keeps 30 days of temperature, humidity and sensor changes. Hover a sensor in the menu to see its chart."
+          }
+        }
+      }
+    },
     "settings.advanced.sensor_summary" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -12240,6 +12383,94 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "門鈴響起時播放提示音。"
+          }
+        }
+      }
+    },
+    "settings.cameras.full_width_tooltip" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Show as full-width tile in the camera grid"
+          }
+        }
+      }
+    },
+    "settings.cameras.grid_columns" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Grid columns"
+          }
+        }
+      }
+    },
+    "settings.cameras.grid_columns_1" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "1 column"
+          }
+        }
+      }
+    },
+    "settings.cameras.grid_columns_2" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "2 columns"
+          }
+        }
+      }
+    },
+    "settings.cameras.grid_columns_3" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "3 columns"
+          }
+        }
+      }
+    },
+    "settings.cameras.grid_columns_description" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "How many cameras sit side by side in the panel. Mark a camera full width below with the arrows button."
+          }
+        }
+      }
+    },
+    "settings.cameras.grid_live" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Live video in grid"
+          }
+        }
+      }
+    },
+    "settings.cameras.grid_live_description" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Stream every HomeKit camera live in the grid. When off, tiles show periodic snapshots."
           }
         }
       }
@@ -15254,6 +15485,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "在 Home Assistant > 個人檔案 > 安全性 > 長期存取權杖中取得權杖"
+          }
+        }
+      }
+    },
+    "settings.home.favourites" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Favourites"
+          }
+        }
+      }
+    },
+    "settings.home.groups" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Groups"
           }
         }
       }
@@ -18873,171 +19126,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "恢復預設"
-          }
-        }
-      }
-    },
-    "history.detail.changes" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$lld change%2$@ in %3$@"
-          }
-        }
-      }
-    },
-    "history.detail.no_data" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "No data yet"
-          }
-        }
-      }
-    },
-    "history.detail.stats" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "min %1$@   now %2$@   max %3$@"
-          }
-        }
-      }
-    },
-    "history.range.day" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "24h"
-          }
-        }
-      }
-    },
-    "history.range.month" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "30d"
-          }
-        }
-      }
-    },
-    "history.range.week" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "7d"
-          }
-        }
-      }
-    },
-    "history.state.off" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Off"
-          }
-        }
-      }
-    },
-    "history.state.on" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "On"
-          }
-        }
-      }
-    },
-    "menu.batteries" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Batteries"
-          }
-        }
-      }
-    },
-    "settings.advanced.history" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Record sensor history"
-          }
-        }
-      }
-    },
-    "settings.advanced.history_clear" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Clear history"
-          }
-        }
-      }
-    },
-    "settings.advanced.history_clear_label" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Stored history"
-          }
-        }
-      }
-    },
-    "settings.advanced.history_subtitle" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Keeps 30 days of temperature, humidity and sensor changes. Hover a sensor in the menu to see its chart."
-          }
-        }
-      }
-    },
-    "settings.home.favourites" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Favourites"
-          }
-        }
-      }
-    },
-    "settings.home.groups" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Groups"
           }
         }
       }

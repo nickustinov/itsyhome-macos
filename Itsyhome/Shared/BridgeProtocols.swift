@@ -527,7 +527,7 @@ public protocol iOS2Mac: NSObjectProtocol {
     func showError(message: String)
     func executeCommand(_ command: String) -> Bool
     func configureCameraPanel()
-    func resizeCameraPanel(width: CGFloat, height: CGFloat, aspectRatio: CGFloat, animated: Bool)
+    func resizeCameraPanel(width: CGFloat, height: CGFloat, aspectRatio: CGFloat, isStream: Bool, animated: Bool)
     func setCameraPanelPinned(_ pinned: Bool)
     func showCameraPanelForDoorbell(cameraIdentifier: UUID)
     func showCameraPanelForMotion(cameraIdentifier: UUID)
