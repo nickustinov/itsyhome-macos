@@ -419,22 +419,6 @@ class HASecuritySystemMenuItem: NSMenuItem, CharacteristicUpdatable, Characteris
         }
     }
 
-    /// Update available modes (called from platform after fetching entity attributes)
-    func setAvailableModes(_ modes: [String]) {
-        self.availableModes = modes
-        // Rebuild mode buttons
-        for button in modeButtons.values {
-            button.removeFromSuperview()
-        }
-        modeButtons.removeAll()
-        setupModeButtons()
-        updateModeButtons()
-    }
-
-    /// Update whether code is required
-    func setRequiresCode(_ required: Bool) {
-        self.requiresCode = required
-    }
 }
 
 // MARK: - Notification name for alarm errors

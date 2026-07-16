@@ -14,7 +14,6 @@ class ValveMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
 
     private var activeId: UUID?
     private var inUseId: UUID?
-    private let valveType: Int  // 0=generic, 1=irrigation, 2=shower, 3=faucet
 
     private var isActive: Bool = false
     private var isInUse: Bool = false
@@ -39,7 +38,6 @@ class ValveMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
         // Extract characteristic UUIDs from ServiceData
         self.activeId = serviceData.activeId?.uuid
         self.inUseId = serviceData.inUseId?.uuid
-        self.valveType = serviceData.valveTypeValue ?? 0
 
         // Create the custom view
         containerView = HighlightingMenuItemView(frame: NSRect(x: 0, y: 0, width: DS.ControlSize.menuItemWidth, height: DS.ControlSize.menuItemHeight))
@@ -104,15 +102,6 @@ class ValveMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
 
     required init(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
-    }
-
-    private static func iconName(for valveType: Int) -> String {
-        switch valveType {
-        case 1: return "pipe"     // irrigation
-        case 2: return "shower"   // shower
-        case 3: return "drop"     // faucet
-        default: return "pipe"    // generic
-        }
     }
 
     func updateValue(for characteristicId: UUID, value: Any, isLocalChange: Bool = false) {

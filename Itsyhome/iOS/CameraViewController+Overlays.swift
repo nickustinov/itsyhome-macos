@@ -292,13 +292,4 @@ extension CameraViewController {
         }
     }
 
-    func refreshHAStreamOverlayStates() {
-        guard let cameraId = activeHACameraId,
-              let items = haOverlayData[cameraId] else { return }
-
-        for (index, pill) in streamOverlayStack.arrangedSubviews.enumerated() {
-            guard index < items.count else { break }
-            updatePillState(pill, isOn: items[index].isOn)
-        }
-    }
 }

@@ -271,7 +271,6 @@ extension WebhookServer {
             sendResponse(connection: connection, status: 200, body: encode(items))
 
         case "devices":
-            let roomLookup = data.roomLookup()
             var items: [DeviceListItem] = []
 
             // Walk rooms in the user-defined order so /list/devices?room=X and
