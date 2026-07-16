@@ -160,13 +160,19 @@ extension AccessoriesSettingsView: NSTableViewDelegate, NSTableViewDataSource {
             icon: IconResolver.icon(for: group),
             showDragHandle: true,
             isItemHidden: preferences.hiddenAutoGroupIds.contains(group.id),
+            isPinned: preferences.isPinnedGroup(groupId: group.id),
             showEyeButton: true,
+            showPinButton: true,
             itemId: group.id,
             indentLevel: roomId == nil ? 0 : 1
         )
         let rowView = AccessoryRowView(config: config)
         rowView.onEyeToggled = { [weak self] in
             preferences.toggleAutoGroupHidden(id: group.id)
+            self?.rebuild()
+        }
+        rowView.onPinToggled = { [weak self] in
+            preferences.togglePinnedGroup(groupId: group.id)
             self?.rebuild()
         }
         return rowView

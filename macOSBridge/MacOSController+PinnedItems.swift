@@ -54,9 +54,14 @@ extension MacOSController {
                     validPinnedItems[pinId] = .scene(scene)
                 }
             } else if pinId.hasPrefix("group:") {
-                // Group pin
+                // Group pin: a persisted manual group, or a synthesized auto
+                // group re-resolved from its deterministic id.
                 let groupId = String(pinId.dropFirst(6))
-                if let group = deviceGroups.first(where: { $0.id == groupId }) {
+                var group = deviceGroups.first(where: { $0.id == groupId })
+                if group == nil, AutoGroups.isAutoGroupId(groupId), PreferencesManager.shared.autoGroupsEnabled {
+                    group = AutoGroups.resolveGroup(id: groupId, data: data)
+                }
+                if let group = group {
                     let services = group.resolveServices(in: data)
                     if !services.isEmpty {
                         validPinnedItems[pinId] = .group(group, services)

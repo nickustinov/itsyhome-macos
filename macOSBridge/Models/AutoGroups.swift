@@ -124,4 +124,21 @@ enum AutoGroups {
             return (token, group)
         }
     }
+
+    /// Re-synthesizes a group from one of its deterministic ids
+    /// ("autogroup:home:<key>", "autogroup:room:<roomId>:<key>") – for
+    /// consumers that persist group references, like pinned menu bar items.
+    static func resolveGroup(id: String, data: MenuData) -> DeviceGroup? {
+        let parts = id.split(separator: ":").map(String.init)
+        guard parts.first == "autogroup" else { return nil }
+        if parts.count == 3, parts[1] == "home" {
+            return homeGroup(forToken: token(forKey: parts[2]), accessories: data.accessories)
+        }
+        if parts.count == 4, parts[1] == "room" {
+            let roomId = parts[2]
+            let services = data.accessories.flatMap { $0.services }.filter { $0.roomIdentifier == roomId }
+            return roomGroup(forToken: token(forKey: parts[3]), roomId: roomId, services: services)
+        }
+        return nil
+    }
 }

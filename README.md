@@ -32,11 +32,13 @@ A native macOS menu bar app for controlling your HomeKit and Home Assistant smar
 - **HomeKit support** - Full integration with Apple HomeKit devices and scenes
 - **Home Assistant support** - Connect to your Home Assistant server via WebSocket API
 - **Device groups** - Create custom groups to control multiple devices at once
+- **Auto groups** - Similar devices are folded into one-click groups ("All lights", "All blinds", ...) at the top level and in every room, with a master toggle and the member devices in a submenu. Reorderable and hideable like any section, on by default
 - **Scenes** - Execute and toggle scenes with automatic state tracking
 - **Favourites** - Pin frequently used devices, scenes, and groups to the top of the menu
 - **Multi-home support** - Switch between multiple HomeKit homes (HomeKit only)
 - **Native experience** - Built with AppKit for a true macOS look and feel
-- **Menu bar pinning** - Pin rooms, devices, scenes, or groups as separate menu bar items with optional keyboard shortcuts
+- **Menu bar pinning** - Pin rooms, devices, scenes, groups, or auto groups as separate menu bar items with optional keyboard shortcuts
+- **Localized** - Available in 12 languages: English, German, Spanish, French, Italian, Japanese, Korean, Polish, Portuguese (Brazil), Russian, Chinese (Simplified and Traditional)
 - **iCloud sync** - Sync favourites, groups, and settings across your Macs *(Pro)*
 - **Deeplinks** - Control devices from Shortcuts, Alfred, Raycast, Stream Deck *(Pro)*
 - **Cameras** - Live multi-stream camera grid with custom layouts and overlay action buttons to control nearby accessories *(Pro)*
@@ -66,7 +68,7 @@ A native macOS menu bar app for controlling your HomeKit and Home Assistant smar
 | Air purifiers | Manual/Auto modes, speed slider, swing mode |
 | Valves | Open/close toggle, in-use indicator (irrigation, shower, faucet types) |
 | Security systems | Off/Stay/Away/Night modes, triggered state indicator |
-| Cameras | Live video feed with overlay action buttons to control nearby accessories *(Pro)* |
+| Cameras | Live multi-stream grid with custom layouts, plus overlay action buttons to control nearby accessories *(Pro)* |
 | Doorbells | Automatic camera view on ring with live stream and configurable chime sound *(Pro)* |
 | Temperature & Humidity sensors | Summary display per room with ranges, or individual sensor rows |
 | Binary sensors | Contact, motion, occupancy, leak, smoke, CO and CO2 state rows with state-aware icons |
