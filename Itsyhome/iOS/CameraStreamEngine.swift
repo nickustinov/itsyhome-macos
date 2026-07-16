@@ -36,6 +36,14 @@ final class CameraStreamEngine: NSObject {
     /// tear down the new session, so restarts are queued behind it.
     private var stoppingControls: [ObjectIdentifier: UUID] = [:]
     private var pendingRestarts: [UUID: HMAccessory] = [:]
+    /// Negotiation watchdogs. Battery doorbells (e.g. Aqara G4) sleep, and a
+    /// start against a mid-wake camera can hang without any delegate
+    /// callback. The first timeout retries once – the failed attempt usually
+    /// woke the camera – and the second reports a failure instead of leaving
+    /// an eternal spinner.
+    private var startTimeouts: [UUID: DispatchWorkItem] = [:]
+    private var retriedCameras: Set<UUID> = []
+    static let startTimeout: TimeInterval = 10
 
     func stream(for cameraId: UUID) -> HMCameraStream? { streams[cameraId] }
     func control(for cameraId: UUID) -> HMCameraStreamControl? { controls[cameraId] }
@@ -79,6 +87,32 @@ final class CameraStreamEngine: NSObject {
         controls[cameraId] = control
         control.delegate = self
         control.startStream()
+        scheduleStartTimeout(for: accessory)
+    }
+
+    private func scheduleStartTimeout(for accessory: HMAccessory) {
+        let cameraId = accessory.uniqueIdentifier
+        startTimeouts[cameraId]?.cancel()
+        let item = DispatchWorkItem { [weak self] in
+            guard let self else { return }
+            self.startTimeouts.removeValue(forKey: cameraId)
+            guard self.streams[cameraId] == nil, self.controls[cameraId] != nil else { return }
+            if self.retriedCameras.insert(cameraId).inserted {
+                // First hang usually means the camera was asleep and the
+                // attempt woke it – tear the session down and try once more.
+                self.pendingRestarts[cameraId] = accessory
+                self.stopStream(for: cameraId)
+            } else {
+                self.retriedCameras.remove(cameraId)
+                self.stopStream(for: cameraId)
+                let error = NSError(domain: "CameraStreamEngine", code: 1, userInfo: [
+                    NSLocalizedDescriptionKey: "Stream negotiation timed out"
+                ])
+                self.delegate?.streamEngine(self, didStopStreamFor: cameraId, error: error)
+            }
+        }
+        startTimeouts[cameraId] = item
+        DispatchQueue.main.asyncAfter(deadline: .now() + Self.startTimeout, execute: item)
     }
 
     /// Stops streams for cameras that are no longer in the visible set
@@ -110,12 +144,14 @@ final class CameraStreamEngine: NSObject {
     func stopAll() {
         cancelScheduledRelease()
         pendingRestarts.removeAll()
+        retriedCameras.removeAll()
         for cameraId in Array(controls.keys) {
             stopStream(for: cameraId)
         }
     }
 
     private func stopStream(for cameraId: UUID) {
+        startTimeouts.removeValue(forKey: cameraId)?.cancel()
         guard let control = controls.removeValue(forKey: cameraId) else { return }
         streams.removeValue(forKey: cameraId)
         renderViews[cameraId]?.cameraSource = nil
@@ -147,6 +183,8 @@ extension CameraStreamEngine: HMCameraStreamControlDelegate {
         DispatchQueue.main.async {
             guard let cameraId = self.cameraId(for: cameraStreamControl),
                   let stream = cameraStreamControl.cameraStream else { return }
+            self.startTimeouts.removeValue(forKey: cameraId)?.cancel()
+            self.retriedCameras.remove(cameraId)
             self.streams[cameraId] = stream
             // Grid streams play muted; the detail view opts into audio.
             stream.updateAudioStreamSetting(.muted) { _ in }
