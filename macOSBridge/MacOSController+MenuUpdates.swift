@@ -31,10 +31,44 @@ extension MacOSController {
         // (#113). Local changes happen with the menu open, so they still apply.
         guard menuIsOpen || isLocalChange else { return }
 
-        updateMenuItemsRecursively(in: mainMenu, characteristicId: characteristicId, value: value, isLocalChange: isLocalChange)
+        if let refs = updatableItemIndex[characteristicId] {
+            for ref in refs {
+                (ref.item as? CharacteristicUpdatable)?.updateValue(for: characteristicId, value: value, isLocalChange: isLocalChange)
+            }
+        }
+        for ref in unindexedUpdatableItems {
+            (ref.item as? CharacteristicUpdatable)?.updateValue(for: characteristicId, value: value, isLocalChange: isLocalChange)
+        }
 
         for sceneItem in menuBuilder.sceneMenuItems {
             sceneItem.updateValue(for: characteristicId, value: value, isLocalChange: isLocalChange)
+        }
+    }
+
+    /// Rebuilds the characteristic-to-menu-item routing index. Must run after
+    /// every menu rebuild, before the first refresh.
+    func rebuildUpdatableItemIndex() {
+        updatableItemIndex.removeAll()
+        unindexedUpdatableItems.removeAll()
+        indexUpdatableItems(in: mainMenu)
+    }
+
+    private func indexUpdatableItems(in menu: NSMenu) {
+        for item in menu.items {
+            if item is CharacteristicUpdatable {
+                let ref = WeakMenuItemRef(item: item)
+                let ids = (item as? CharacteristicRefreshable)?.characteristicIdentifiers ?? []
+                if ids.isEmpty {
+                    unindexedUpdatableItems.append(ref)
+                } else {
+                    for id in ids {
+                        updatableItemIndex[id, default: []].append(ref)
+                    }
+                }
+            }
+            if let submenu = item.submenu {
+                indexUpdatableItems(in: submenu)
+            }
         }
     }
 
@@ -43,17 +77,6 @@ extension MacOSController {
         for (_, statusItem) in pinnedStatusItems {
             if statusItem.characteristicIdentifiers.contains(characteristicId) {
                 statusItem.updateValue(for: characteristicId, value: value)
-            }
-        }
-    }
-
-    func updateMenuItemsRecursively(in menu: NSMenu, characteristicId: UUID, value: Any, isLocalChange: Bool) {
-        for item in menu.items {
-            if let updatable = item as? CharacteristicUpdatable {
-                updatable.updateValue(for: characteristicId, value: value, isLocalChange: isLocalChange)
-            }
-            if let submenu = item.submenu {
-                updateMenuItemsRecursively(in: submenu, characteristicId: characteristicId, value: value, isLocalChange: isLocalChange)
             }
         }
     }
@@ -84,18 +107,30 @@ extension MacOSController {
     // MARK: - Characteristic Refresh
 
     func refreshCharacteristics() {
-        refreshCharacteristicsRecursively(in: mainMenu)
+        // The same device can appear in several places (its room, favourites,
+        // group and auto-group submenus) – read each characteristic once, not
+        // once per row. Every row still updates: value changes fan out to all
+        // menu items by characteristic id. Menu order is preserved so the
+        // rows the user is looking at refresh first – reads drain roughly in
+        // issue order, and a randomized order leaves the visible top of the
+        // menu waiting behind everything else.
+        var seen: Set<UUID> = []
+        var ordered: [UUID] = []
+        collectCharacteristicIdentifiers(in: mainMenu, seen: &seen, ordered: &ordered)
+        for id in ordered {
+            readCharacteristic(identifier: id)
+        }
     }
 
-    func refreshCharacteristicsRecursively(in menu: NSMenu) {
+    private func collectCharacteristicIdentifiers(in menu: NSMenu, seen: inout Set<UUID>, ordered: inout [UUID]) {
         for item in menu.items {
             if let refreshable = item as? CharacteristicRefreshable {
-                for id in refreshable.characteristicIdentifiers {
-                    readCharacteristic(identifier: id)
+                for id in refreshable.characteristicIdentifiers where seen.insert(id).inserted {
+                    ordered.append(id)
                 }
             }
             if let submenu = item.submenu {
-                refreshCharacteristicsRecursively(in: submenu)
+                collectCharacteristicIdentifiers(in: submenu, seen: &seen, ordered: &ordered)
             }
         }
     }

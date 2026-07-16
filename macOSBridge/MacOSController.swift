@@ -34,6 +34,18 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
     var currentMenuData: MenuData?
     var menuIsOpen = false
     var needsRebuild = false
+
+    /// Menu items indexed by the characteristic ids they display, rebuilt
+    /// together with the menu. Value updates route through this instead of
+    /// walking every submenu: with auto groups a device has rows in several
+    /// places, and a full-tree walk per read response made opening the menu
+    /// visibly stall on large homes.
+    struct WeakMenuItemRef {
+        weak var item: NSMenuItem?
+    }
+    var updatableItemIndex: [UUID: [WeakMenuItemRef]] = [:]
+    /// Updatable items that expose no characteristic ids – always updated.
+    var unindexedUpdatableItems: [WeakMenuItemRef] = []
     private var proStatusCancellable: AnyCancellable?
     var pinnedStatusItems: [String: PinnedStatusItem] = [:]
     private let cameraPanelManager = CameraPanelManager()
@@ -860,6 +872,7 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
         mainMenu.addItem(NSMenuItem.separator())
         addFooterItems()
 
+        rebuildUpdatableItemIndex()
         refreshCharacteristics()
         StartupLogger.log("rebuildMenu complete")
     }

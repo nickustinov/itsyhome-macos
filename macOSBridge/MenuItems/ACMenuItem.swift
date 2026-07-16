@@ -336,6 +336,10 @@ class ACMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable
                 targetState = state
                 updateModeButtons()
                 updateTargetDisplay()
+                // Reshape single/range temperature controls – without this a
+                // Cool-mode AC keeps the Auto-mode dual controls when the
+                // mode value arrives after the initial layout.
+                updateUI()
             }
         } else if characteristicId == coolingThresholdId {
             if let temp = ValueConversion.toDouble(value) {

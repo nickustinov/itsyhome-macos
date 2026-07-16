@@ -420,7 +420,7 @@ class RoomsTableView: NSTableView {
             case .header, .favouritesHeader, .groupsHeader, .scenesHeader,
                  .batteriesHeader, .otherHeader, .sectionDivider:
                 break // section headers and top-level dividers are always draggable
-            case .group, .accessory, .divider, .favourite, .globalGroup, .scene, .groupDevice:
+            case .group, .accessory, .divider, .favourite, .globalGroup, .scene, .groupDevice, .autoGroup:
                 break // rows are draggable for reordering within their section
             default:
                 return // auto separators, "Other" accessories
