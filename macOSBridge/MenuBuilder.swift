@@ -225,6 +225,15 @@ class MenuBuilder {
                 emittedAny = true
 
             default:
+                if AutoGroups.definition(forToken: token) != nil {
+                    guard preferences.autoGroupsEnabled,
+                          let group = AutoGroups.homeGroup(forToken: token, accessories: filteredAccessories),
+                          !preferences.hiddenAutoGroupIds.contains(group.id) else { continue }
+                    flushPendingDivider()
+                    addGroupItem(to: menu, group: group, menuData: data)
+                    emittedAny = true
+                    continue
+                }
                 guard let room = visibleRooms.first(where: { $0.uniqueIdentifier == token }) else { continue }
                 let roomAccessories = accessoriesByRoom[room.uniqueIdentifier] ?? []
                 let roomGroups = groupsByRoom[room.uniqueIdentifier] ?? []
@@ -314,6 +323,16 @@ class MenuBuilder {
                         menu.addItem(NSMenuItem.separator())
                         lastWasDivider = true
                     }
+                } else if AutoGroups.definition(forToken: token) != nil {
+                    seen.insert(token)
+                    if PreferencesManager.shared.autoGroupsEnabled,
+                       let roomId = roomId,
+                       let group = AutoGroups.roomGroup(forToken: token, roomId: roomId, services: allServices),
+                       !PreferencesManager.shared.hiddenAutoGroupIds.contains(group.id),
+                       let menuData = currentMenuData {
+                        addGroupItem(to: menu, group: group, menuData: menuData)
+                        lastWasDivider = false
+                    }
                 } else if let group = groupLookup[token], let menuData = currentMenuData {
                     addGroupItem(to: menu, group: group, menuData: menuData)
                     lastWasDivider = false
@@ -354,6 +373,18 @@ class MenuBuilder {
                 }
                 if let item = createMenuItemForService(displayService) {
                     menu.addItem(item)
+                    lastWasDivider = false
+                }
+            }
+
+            // Auto groups not yet in the saved order land at the bottom
+            // (new feature, or new devices crossed the 2-member threshold).
+            if let roomId = roomId, PreferencesManager.shared.autoGroupsEnabled, let menuData = currentMenuData {
+                let hidden = PreferencesManager.shared.hiddenAutoGroupIds
+                for (token, group) in AutoGroups.roomGroups(roomId: roomId, services: allServices)
+                    where !seen.contains(token) && !hidden.contains(group.id) {
+                    separatorBeforeAppendedItems()
+                    addGroupItem(to: menu, group: group, menuData: menuData)
                     lastWasDivider = false
                 }
             }
@@ -447,6 +478,24 @@ class MenuBuilder {
             }
             isFirstGroup = false
             addServiceItems(services)
+        }
+
+        // Auto groups sit at the bottom of the room's controls, above the
+        // sensor section.
+        if let roomId = roomId, PreferencesManager.shared.autoGroupsEnabled, let menuData = currentMenuData {
+            let hidden = PreferencesManager.shared.hiddenAutoGroupIds
+            let autoGroups = AutoGroups.roomGroups(roomId: roomId, services: allServices)
+                .map { $0.group }
+                .filter { !hidden.contains($0.id) }
+            if !autoGroups.isEmpty {
+                if !isFirstGroup {
+                    menu.addItem(NSMenuItem.separator())
+                }
+                isFirstGroup = false
+                for group in autoGroups {
+                    addGroupItem(to: menu, group: group, menuData: menuData)
+                }
+            }
         }
 
         // Sensor section: one divider, then every sensor row, then the summary.

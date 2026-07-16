@@ -19,6 +19,7 @@ final class MenuSectionOrderTests: XCTestCase {
     private let scenes = PreferencesManager.scenesSectionToken
     private let batteries = PreferencesManager.batteriesSectionToken
     private let other = PreferencesManager.otherSectionToken
+    private let autoTokens = AutoGroups.menuTokens
 
     override func setUp() {
         super.setUp()
@@ -41,11 +42,11 @@ final class MenuSectionOrderTests: XCTestCase {
     // MARK: - Seeding
 
     // First run: no saved layout. The classic menu order – favourites,
-    // groups, scenes (dividers between), rooms, other, then batteries after
-    // a final divider.
+    // groups, scenes (dividers between), rooms, other, batteries, then the
+    // auto-groups block at the bottom after a final divider.
     func testSeedsClassicLayoutWithDividers() {
         let order = prefs.reconciledMenuLayout(roomIds: ["r1", "r2"])
-        XCTAssertEqual(order.count, 11)
+        XCTAssertEqual(order.count, 12 + autoTokens.count)
         XCTAssertEqual(order[0], favourites)
         XCTAssertTrue(isDivider(order[1]))
         XCTAssertEqual(order[2], groups)
@@ -56,6 +57,8 @@ final class MenuSectionOrderTests: XCTestCase {
         XCTAssertEqual(order[8], other)
         XCTAssertTrue(isDivider(order[9]))
         XCTAssertEqual(order[10], batteries)
+        XCTAssertTrue(isDivider(order[11]))
+        XCTAssertEqual(Array(order[12...]), autoTokens)
     }
 
     // Users with a customised legacy roomOrder keep their room sequence.
@@ -70,34 +73,45 @@ final class MenuSectionOrderTests: XCTestCase {
     func testDropsStaleRoomsAndAppendsNewOnesAfterLastRoom() {
         prefs.menuLayout = [favourites, groups, scenes, "gone", "r1", other, batteries]
         let order = prefs.reconciledMenuLayout(roomIds: ["r1", "r2"])
-        XCTAssertEqual(order, [favourites, groups, scenes, "r1", "r2", other, batteries])
+        XCTAssertEqual(order, [favourites, groups, scenes, "r1", "r2", other, batteries] + autoTokens)
     }
 
     func testCustomSectionPositionsSurviveReconciliation() {
-        prefs.menuLayout = ["r1", batteries, favourites, "r2", scenes, groups, other]
+        prefs.menuLayout = ["r1", batteries, favourites, "r2", scenes, groups, other] + autoTokens
         let order = prefs.reconciledMenuLayout(roomIds: ["r1", "r2"])
-        XCTAssertEqual(order, ["r1", batteries, favourites, "r2", scenes, groups, other])
+        XCTAssertEqual(order, ["r1", batteries, favourites, "r2", scenes, groups, other] + autoTokens)
     }
 
     // Dividers stay where the user put them; deleting all of them is a valid
     // state that must not be re-seeded.
     func testUserDividersSurviveAndAreNotReseeded() {
         let divider = PreferencesManager.newDividerToken()
-        prefs.menuLayout = [favourites, groups, scenes, "r1", divider, "r2", other, batteries]
+        prefs.menuLayout = [favourites, groups, scenes, "r1", divider, "r2", other, batteries] + autoTokens
         XCTAssertEqual(prefs.reconciledMenuLayout(roomIds: ["r1", "r2"]),
-                       [favourites, groups, scenes, "r1", divider, "r2", other, batteries])
+                       [favourites, groups, scenes, "r1", divider, "r2", other, batteries] + autoTokens)
 
-        prefs.menuLayout = [favourites, groups, scenes, "r1", "r2", other, batteries]
+        prefs.menuLayout = [favourites, groups, scenes, "r1", "r2", other, batteries] + autoTokens
         XCTAssertEqual(prefs.reconciledMenuLayout(roomIds: ["r1", "r2"]),
-                       [favourites, groups, scenes, "r1", "r2", other, batteries])
+                       [favourites, groups, scenes, "r1", "r2", other, batteries] + autoTokens)
     }
 
     // A layout saved by an older version misses section tokens added later;
-    // they are seeded without touching the rest.
+    // they are seeded without touching the rest – section tokens at their
+    // classic edges, the auto-groups block at the bottom.
     func testMissingSectionTokensAreSeeded() {
         prefs.menuLayout = ["r1", "r2"]
         let order = prefs.reconciledMenuLayout(roomIds: ["r1", "r2"])
-        XCTAssertEqual(order, [favourites, groups, scenes, "r1", "r2", other, batteries])
+        XCTAssertEqual(order, [favourites, groups, scenes, "r1", "r2", other, batteries] + autoTokens)
+    }
+
+    // A customised auto-group order (some hidden between other sections)
+    // survives reconciliation without re-seeding the moved tokens.
+    func testCustomAutoGroupPositionsSurvive() {
+        let lights = AutoGroups.token(forKey: "lights")
+        let rest = autoTokens.filter { $0 != lights }
+        prefs.menuLayout = [lights, favourites, groups] + rest + [scenes, "r1", "r2", other, batteries]
+        XCTAssertEqual(prefs.reconciledMenuLayout(roomIds: ["r1", "r2"]),
+                       [lights, favourites, groups] + rest + [scenes, "r1", "r2", other, batteries])
     }
 
     // Pure read: building the menu must not write preferences (a write posts
@@ -138,7 +152,7 @@ final class MenuSectionOrderTests: XCTestCase {
     // section tokens and dividers must never leak into it.
     func testSettingMenuLayoutMirrorsRoomOrder() {
         let divider = PreferencesManager.newDividerToken()
-        prefs.menuLayout = ["r2", scenes, divider, "r1", batteries]
+        prefs.menuLayout = ["r2", scenes, divider, AutoGroups.token(forKey: "lights"), "r1", batteries]
         XCTAssertEqual(prefs.roomOrder, ["r2", "r1"])
     }
 }

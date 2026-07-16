@@ -65,6 +65,40 @@ extension PreferencesManager {
         "\(dividerPrefix)\(UUID().uuidString)"
     }
 
+    // MARK: - Auto groups
+
+    private static let autoGroupsEnabledKey = "autoGroupsEnabled"
+    private static let hiddenAutoGroupIdsKey = "hiddenAutoGroupIds"
+
+    /// Master switch for synthesized "All lights"-style groups (global).
+    var autoGroupsEnabled: Bool {
+        get { defaults.object(forKey: Self.autoGroupsEnabledKey) as? Bool ?? true }
+        set {
+            defaults.set(newValue, forKey: Self.autoGroupsEnabledKey)
+            postNotification()
+        }
+    }
+
+    /// Individually hidden auto groups (per-home), by deterministic group id
+    /// ("autogroup:home:lights", "autogroup:room:<roomId>:<key>").
+    var hiddenAutoGroupIds: Set<String> {
+        get { Set(defaults.stringArray(forKey: homeKey(Self.hiddenAutoGroupIdsKey)) ?? []) }
+        set {
+            defaults.set(Array(newValue), forKey: homeKey(Self.hiddenAutoGroupIdsKey))
+            postNotification()
+        }
+    }
+
+    func toggleAutoGroupHidden(id: String) {
+        var ids = hiddenAutoGroupIds
+        if ids.contains(id) {
+            ids.remove(id)
+        } else {
+            ids.insert(id)
+        }
+        hiddenAutoGroupIds = ids
+    }
+
     /// The menu's complete top-level layout: every section (favourites,
     /// global groups, scenes, each room, other, batteries) interleaved with
     /// user divider tokens ("divider:<uuid>", same form as in-room dividers).
@@ -75,7 +109,11 @@ extension PreferencesManager {
         get { defaults.stringArray(forKey: homeKey(Keys.menuLayout)) ?? [] }
         set {
             defaults.set(newValue, forKey: homeKey(Keys.menuLayout))
-            roomOrder = newValue.filter { !$0.hasPrefix("section:") && !$0.hasPrefix(Self.dividerPrefix) }
+            // The roomOrder mirror must stay rooms-only – webhook API and
+            // cloud sync consume it.
+            roomOrder = newValue.filter {
+                !$0.hasPrefix("section:") && !$0.hasPrefix(Self.dividerPrefix) && !$0.hasPrefix(AutoGroups.tokenPrefix)
+            }
         }
     }
 
@@ -88,7 +126,8 @@ extension PreferencesManager {
         let validIds = Set(roomIds)
 
         // First run: classic layout - favourites, groups, scenes and the
-        // rooms block split by dividers, then Other and Batteries.
+        // rooms block split by dividers, then Other, Batteries and the
+        // auto-groups block at the bottom.
         if menuLayout.isEmpty {
             var rooms = roomOrder.filter { validIds.contains($0) }
             for id in roomIds where !rooms.contains(id) { rooms.append(id) }
@@ -98,12 +137,13 @@ extension PreferencesManager {
                 Self.scenesSectionToken, Self.newDividerToken()
             ] + rooms + [
                 Self.otherSectionToken, Self.newDividerToken(),
-                Self.batteriesSectionToken
-            ]
+                Self.batteriesSectionToken, Self.newDividerToken()
+            ] + AutoGroups.menuTokens
         }
 
         var order: [String] = []
-        for token in menuLayout where Self.sectionTokens.contains(token) || validIds.contains(token) || token.hasPrefix(Self.dividerPrefix) {
+        for token in menuLayout where Self.sectionTokens.contains(token) || validIds.contains(token)
+            || token.hasPrefix(Self.dividerPrefix) || AutoGroups.definition(forToken: token) != nil {
             if !order.contains(token) { order.append(token) }
         }
 
@@ -116,6 +156,11 @@ extension PreferencesManager {
         for token in [Self.otherSectionToken, Self.batteriesSectionToken] where !order.contains(token) {
             order.append(token)
         }
+
+        // Seed auto-group tokens layouts saved before the feature lack them:
+        // at the bottom, after Batteries – their classic position.
+        let missingAutoTokens = AutoGroups.menuTokens.filter { !order.contains($0) }
+        order.append(contentsOf: missingAutoTokens)
 
         // Append rooms not yet in the saved layout, respecting the legacy
         // roomOrder sequence.

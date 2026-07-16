@@ -66,6 +66,10 @@ enum RoomTableItem {
     /// User divider between top-level sections, persisted in
     /// PreferencesManager.menuLayout.
     case sectionDivider(token: String)
+    /// Synthesized auto group ("All lights"). Top level when roomId is nil
+    /// (draggable via menuLayout), otherwise a row inside its room (draggable
+    /// via the room's accessoryOrder). Eye toggles hiddenAutoGroupIds.
+    case autoGroup(group: DeviceGroup, token: String, roomId: String?)
 
     var isHeader: Bool {
         if case .header = self { return true }
@@ -89,6 +93,7 @@ enum RoomTableItem {
         case .batteriesHeader: return PreferencesManager.batteriesSectionToken
         case .otherHeader: return PreferencesManager.otherSectionToken
         case .sectionDivider(let token): return token
+        case .autoGroup(_, let token, let roomId): return roomId == nil ? token : nil
         default: return nil
         }
     }

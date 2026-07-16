@@ -145,7 +145,31 @@ extension AccessoriesSettingsView: NSTableViewDelegate, NSTableViewDataSource {
             return createGroupDeviceRow(service: service, groupId: groupId)
         case .sectionDivider:
             return createSeparatorRow(indented: false)
+        case .autoGroup(let group, let token, let roomId):
+            return createAutoGroupRowView(group: group, token: token, roomId: roomId)
         }
+    }
+
+    /// Row for a synthesized auto group ("All lights"): drag to reorder
+    /// (menuLayout at the top level, the room's order inside a room), eye to
+    /// hide just this group.
+    private func createAutoGroupRowView(group: DeviceGroup, token: String, roomId: String?) -> NSView {
+        let preferences = PreferencesManager.shared
+        let config = AccessoryRowConfig(
+            name: group.name,
+            icon: IconResolver.icon(for: group),
+            showDragHandle: true,
+            isItemHidden: preferences.hiddenAutoGroupIds.contains(group.id),
+            showEyeButton: true,
+            itemId: group.id,
+            indentLevel: roomId == nil ? 0 : 1
+        )
+        let rowView = AccessoryRowView(config: config)
+        rowView.onEyeToggled = { [weak self] in
+            preferences.toggleAutoGroupHidden(id: group.id)
+            self?.rebuild()
+        }
+        return rowView
     }
 
     /// Row for a device inside an expanded group: draggable to reorder the
@@ -378,6 +402,16 @@ extension AccessoriesSettingsView: NSTableViewDelegate, NSTableViewDataSource {
         case .groupDevice(let service, let groupId):
             let pb = NSPasteboardItem()
             pb.setString("\(groupId)|\(service.uniqueIdentifier)", forType: .groupDeviceItem)
+            return pb
+        case .autoGroup(_, let token, let roomId):
+            let pb = NSPasteboardItem()
+            if let roomId = roomId {
+                // In-room: reorders within the room's item order.
+                pb.setString("\(roomId)|\(token)", forType: .roomAccessoryItem)
+            } else {
+                // Top level: reorders through menuLayout like a section.
+                pb.setString(token, forType: .roomItem)
+            }
             return pb
         default:
             return nil
@@ -637,6 +671,8 @@ extension AccessoriesSettingsView: NSTableViewDelegate, NSTableViewDataSource {
             case .accessory(let service, _, _) where inRoom:
                 roomItemRows.append((i, service.uniqueIdentifier))
             case .divider(let token, _) where inRoom:
+                roomItemRows.append((i, token))
+            case .autoGroup(_, let token, let rid) where inRoom && rid == roomId:
                 roomItemRows.append((i, token))
             case .separator, .groupSeparator:
                 if inRoom {

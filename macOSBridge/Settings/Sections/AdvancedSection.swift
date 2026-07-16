@@ -13,6 +13,7 @@ class AdvancedSection: SettingsCard {
     private let temperaturePopUp = NSPopUpButton()
     private let simpleLightSwitch = NSSwitch()
     private let sensorSummarySwitch = NSSwitch()
+    private let autoGroupsSwitch = NSSwitch()
     private let historySwitch = NSSwitch()
     private var cancellables = Set<AnyCancellable>()
 
@@ -71,6 +72,20 @@ class AdvancedSection: SettingsCard {
         addContentToBox(sensorBox, content: sensorRow, verticalInset: 4)
         stackView.addArrangedSubview(sensorBox)
         sensorBox.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
+
+        // Auto groups box
+        let autoGroupsBox = createCardBox()
+        autoGroupsSwitch.controlSize = .mini
+        autoGroupsSwitch.target = self
+        autoGroupsSwitch.action = #selector(autoGroupsSwitchChanged)
+        let autoGroupsRow = createSettingRow(
+            label: String(localized: "settings.advanced.auto_groups", defaultValue: "Auto groups", bundle: .macOSBridge),
+            subtitle: String(localized: "settings.advanced.auto_groups_subtitle", defaultValue: "Group similar devices (All lights, All blinds, ...) for one-click control, in the menu and in each room.", bundle: .macOSBridge),
+            control: autoGroupsSwitch
+        )
+        addContentToBox(autoGroupsBox, content: autoGroupsRow, verticalInset: 4)
+        stackView.addArrangedSubview(autoGroupsBox)
+        autoGroupsBox.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
 
         // Sensor history: toggle + clear grouped in one card with a separator
         // between the rows (same idiom as the doorbell group in Cameras).
@@ -169,6 +184,7 @@ class AdvancedSection: SettingsCard {
         }
         simpleLightSwitch.state = PreferencesManager.shared.simpleLightControls ? .on : .off
         sensorSummarySwitch.state = PreferencesManager.shared.sensorSummary ? .on : .off
+        autoGroupsSwitch.state = PreferencesManager.shared.autoGroupsEnabled ? .on : .off
         historySwitch.state = PreferencesManager.shared.historyEnabled ? .on : .off
         // History is a Pro feature; disable (not hide) the switch for free
         // users so it can't look functional while the store refuses to record.
@@ -195,6 +211,10 @@ class AdvancedSection: SettingsCard {
 
     @objc private func sensorSummarySwitchChanged(_ sender: NSSwitch) {
         PreferencesManager.shared.sensorSummary = sender.state == .on
+    }
+
+    @objc private func autoGroupsSwitchChanged(_ sender: NSSwitch) {
+        PreferencesManager.shared.autoGroupsEnabled = sender.state == .on
     }
 
     @objc private func historySwitchChanged(_ sender: NSSwitch) {

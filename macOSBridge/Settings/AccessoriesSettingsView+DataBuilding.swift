@@ -132,6 +132,10 @@ extension AccessoriesSettingsView {
                 appendSection { self.appendBatteriesItems(to: &$0, accessories: data.accessories) }
                 continue
             }
+            if AutoGroups.definition(forToken: token) != nil {
+                appendSection { self.appendHomeAutoGroupItem(token: token, to: &$0, data: data) }
+                continue
+            }
             guard let room = data.rooms.first(where: { $0.uniqueIdentifier == token }) else { continue }
             if let divider = pendingDivider {
                 items.append(.sectionDivider(token: divider))
@@ -157,6 +161,12 @@ extension AccessoriesSettingsView {
                     for token in savedOrder {
                         if token.hasPrefix(PreferencesManager.dividerPrefix) {
                             items.append(.divider(token: token, roomId: roomId))
+                        } else if AutoGroups.definition(forToken: token) != nil {
+                            seenIds.insert(token)
+                            if preferences.autoGroupsEnabled,
+                               let group = AutoGroups.roomGroup(forToken: token, roomId: roomId, services: services) {
+                                items.append(.autoGroup(group: group, token: token, roomId: roomId))
+                            }
                         } else if let group = groupLookup[token] {
                             appendGroupRow(group, roomId: roomId, to: &items, data: data)
                             seenIds.insert(token)
@@ -165,12 +175,19 @@ extension AccessoriesSettingsView {
                             seenIds.insert(token)
                         }
                     }
-                    // Append anything that wasn't in the saved order yet
+                    // Append anything that wasn't in the saved order yet;
+                    // auto groups land at the bottom, matching the menu.
                     for group in roomGroups where !seenIds.contains(group.id) {
                         appendGroupRow(group, roomId: roomId, to: &items, data: data)
                     }
                     for service in services where !seenIds.contains(service.uniqueIdentifier) {
                         items.append(.accessory(service: service, roomHidden: isHidden, roomId: roomId))
+                    }
+                    if preferences.autoGroupsEnabled {
+                        for (autoToken, group) in AutoGroups.roomGroups(roomId: roomId, services: services)
+                            where !seenIds.contains(autoToken) {
+                            items.append(.autoGroup(group: group, token: autoToken, roomId: roomId))
+                        }
                     }
                 } else {
                     // Groups at the top of each room, then services by type
@@ -217,6 +234,21 @@ extension AccessoriesSettingsView {
                         }
                         isFirstGroup = false
                         appendServices(typeServices)
+                    }
+
+                    // Auto groups at the bottom of the room's controls,
+                    // above the sensor section – matching the menu.
+                    if preferences.autoGroupsEnabled {
+                        let autoPairs = AutoGroups.roomGroups(roomId: roomId, services: services)
+                        if !autoPairs.isEmpty {
+                            if !isFirstGroup {
+                                items.append(.separator)
+                            }
+                            isFirstGroup = false
+                            for (autoToken, group) in autoPairs {
+                                items.append(.autoGroup(group: group, token: autoToken, roomId: roomId))
+                            }
+                        }
                     }
 
                     // Sensor section: one divider, then every sensor row.
@@ -310,6 +342,15 @@ extension AccessoriesSettingsView {
                 items.append(.scene(scene: scene, sectionHidden: isHidden))
             }
         }
+    }
+
+    /// One top-level auto group row ("All lights" across the home). Shown
+    /// even when eye-hidden – the eye reflects the state – but not at all
+    /// when the feature is off or under 2 devices match.
+    private func appendHomeAutoGroupItem(token: String, to items: inout [RoomTableItem], data: MenuData) {
+        guard PreferencesManager.shared.autoGroupsEnabled,
+              let group = AutoGroups.homeGroup(forToken: token, accessories: data.accessories) else { return }
+        items.append(.autoGroup(group: group, token: token, roomId: nil))
     }
 
     /// Batteries section header (#144). Counts every battery-powered device,

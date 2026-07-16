@@ -94,10 +94,22 @@ extension HomeKitManager {
             let services = accessory.services.compactMap { service -> ServiceInfo? in
                 guard supportedTypes.contains(service.serviceType) else { return nil }
 
+                // Honour the Home app's "show as" override: a switch or
+                // outlet reconfigured to display as a light or fan reports
+                // the chosen type in associatedServiceType. Substituting it
+                // here makes every consumer (menu items, icons, type
+                // grouping, auto groups) see the user's choice.
+                var effectiveType = service.serviceType
+                if let associated = service.associatedServiceType,
+                   service.serviceType == HMServiceTypeSwitch || service.serviceType == HMServiceTypeOutlet,
+                   supportedTypes.contains(associated) {
+                    effectiveType = associated
+                }
+
                 return ServiceInfo(
                     uniqueIdentifier: service.uniqueIdentifier,
                     name: service.name ?? accessory.name,
-                    serviceType: service.serviceType,
+                    serviceType: effectiveType,
                     accessoryName: accessory.name,
                     roomIdentifier: accessory.room?.uniqueIdentifier
                 )
