@@ -30,10 +30,7 @@ class HighlightingMenuItemView: NSView {
         }
         let area = NSTrackingArea(
             rect: bounds,
-            // enabledDuringMouseDrag gives native menu behaviour for the
-            // press–drag–release gesture: rows highlight under a pressed
-            // pointer (including a press that started on the status item).
-            options: [.mouseEnteredAndExited, .activeAlways, .enabledDuringMouseDrag],
+            options: [.mouseEnteredAndExited, .activeAlways],
             owner: self,
             userInfo: nil
         )
@@ -133,72 +130,11 @@ class HighlightingMenuItemView: NSView {
         }
     }
 
-    /// The item highlighted by a press–drag gesture. Coordinated statically
-    /// because AppKit delivers mouseDragged only to the view that received
-    /// the mouseDown – the tracking areas of the rows being dragged over
-    /// never hear about the pointer.
-    private static weak var dragHighlightedItem: HighlightingMenuItemView?
-
-    override func mouseDragged(with event: NSEvent) {
-        Self.updateDragHighlight(to: Self.itemView(at: NSEvent.mouseLocation))
-    }
-
-    private static func updateDragHighlight(to target: HighlightingMenuItemView?) {
-        guard dragHighlightedItem !== target else { return }
-        dragHighlightedItem?.setDragHighlight(false)
-        dragHighlightedItem = target
-        target?.setDragHighlight(true)
-    }
-
-    private func setDragHighlight(_ on: Bool) {
-        guard isMouseInside != on else { return }
-        isMouseInside = on
-        isHighlighted = on
-        updateTextColors(highlighted: on)
-        needsDisplay = true
-        on ? onMouseEnter?() : onMouseExit?()
-    }
-
     override func mouseUp(with event: NSEvent) {
-        Self.dragHighlightedItem = nil
-        // Native menu semantics: the item under the pointer at release is
-        // the one that activates, even when the press started on another
-        // item (press–drag–release). AppKit delivers mouseUp to the view
-        // that received the mouseDown, so route to the view actually under
-        // the pointer – possibly in another window (submenus). Releasing
-        // over no item does nothing, also matching native menus.
-        Self.itemView(at: NSEvent.mouseLocation)?.performRelease(atScreenPoint: NSEvent.mouseLocation)
-    }
+        guard let action = onAction else { return }
 
-    /// The menu item view under a screen point, searching front-to-back
-    /// across the app's windows (each open submenu is its own window).
-    private static func itemView(at screenPoint: NSPoint) -> HighlightingMenuItemView? {
-        var candidates = NSApp.orderedWindows
-        // Menu windows aren't always part of orderedWindows – ask the window
-        // server for the topmost window at the point as well.
-        let number = NSWindow.windowNumber(at: screenPoint, belowWindowWithWindowNumber: 0)
-        if let top = NSApp.window(withWindowNumber: number) {
-            candidates.insert(top, at: 0)
-        }
-        for window in candidates where window.isVisible && window.frame.contains(screenPoint) {
-            guard let frameView = window.contentView?.superview ?? window.contentView else { continue }
-            let windowPoint = window.convertPoint(fromScreen: screenPoint)
-            var view = frameView.hitTest(frameView.convert(windowPoint, from: nil))
-            while let current = view {
-                if let item = current as? HighlightingMenuItemView { return item }
-                view = current.superview
-            }
-        }
-        return nil
-    }
-
-    private func performRelease(atScreenPoint screenPoint: NSPoint) {
-        guard let action = onAction, let window = window else { return }
-
-        // Don't trigger the row action if the release was on a control that
-        // handles its own clicks
-        let windowPoint = window.convertPoint(fromScreen: screenPoint)
-        let location = convert(windowPoint, from: nil)
+        // Don't trigger action if click was on a control that handles its own clicks
+        let location = convert(event.locationInWindow, from: nil)
         if let hitView = hitTest(location),
            hitView is ToggleSwitch || hitView is ModernSlider || hitView is CoverControl ||
            hitView is ClickableColorCircleView || hitView.superview is CoverControl {
