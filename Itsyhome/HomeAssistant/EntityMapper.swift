@@ -5,6 +5,7 @@
 //  Maps Home Assistant entities to Itsyhome ServiceData model
 //
 
+import CryptoKit
 import Foundation
 import os.log
 
@@ -652,26 +653,32 @@ final class EntityMapper {
         return nil
     }
 
-    /// Generate deterministic UUID from string (for stable IDs across sessions)
+    /// App-specific UUIDv5 namespace (stable, application-defined).
+    private static let uuidv5Namespace: [UInt8] = [
+        0x5D, 0x23, 0xA8, 0xB2,
+        0x1F, 0x6C,
+        0x4E, 0x9D,
+        0xB3, 0xAC,
+        0x07, 0xF2, 0xEA, 0x45, 0xC8, 0x11
+    ]
+
+    /// Generate deterministic UUID from string using UUIDv5 (SHA-1, RFC 4122).
+    /// Replacing the previous XOR-fold algorithm which produced collisions for
+    /// entity IDs that differed only within the overwritten version/variant nibbles
+    /// (e.g. `light.chu_fang_deng` and `light.shu_fang_deng`).
     private func deterministicUUID(for string: String) -> UUID {
-        let data = string.data(using: .utf8)!
-        var hash = [UInt8](repeating: 0, count: 16)
+        var input = EntityMapper.uuidv5Namespace
+        input.append(contentsOf: string.utf8)
 
-        data.withUnsafeBytes { bytes in
-            for (index, byte) in bytes.enumerated() {
-                hash[index % 16] ^= byte
-            }
-        }
-
-        // Set version (4) and variant bits
-        hash[6] = (hash[6] & 0x0F) | 0x40
-        hash[8] = (hash[8] & 0x3F) | 0x80
+        var bytes = Array(Insecure.SHA1.hash(data: input).prefix(16))
+        bytes[6] = (bytes[6] & 0x0F) | 0x50  // UUIDv5 version
+        bytes[8] = (bytes[8] & 0x3F) | 0x80  // RFC 4122 variant
 
         return UUID(uuid: (
-            hash[0], hash[1], hash[2], hash[3],
-            hash[4], hash[5], hash[6], hash[7],
-            hash[8], hash[9], hash[10], hash[11],
-            hash[12], hash[13], hash[14], hash[15]
+            bytes[0],  bytes[1],  bytes[2],  bytes[3],
+            bytes[4],  bytes[5],  bytes[6],  bytes[7],
+            bytes[8],  bytes[9],  bytes[10], bytes[11],
+            bytes[12], bytes[13], bytes[14], bytes[15]
         ))
     }
 

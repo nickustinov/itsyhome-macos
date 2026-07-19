@@ -516,6 +516,39 @@ final class EntityMapperTests: XCTestCase {
         XCTAssertEqual(charType, "brightness")
     }
 
+    // Regression test: entity IDs that previously collided due to XOR-folding
+    // must produce distinct service and characteristic UUIDs (issue #146).
+    func testDeterministicUUIDNocollision_chuFangDeng_vs_shuFangDeng() {
+        let entityA = "light.chu_fang_deng"
+        let entityB = "light.shu_fang_deng"
+        loadData(states: [
+            createEntityState(entityId: entityA, state: "on", attributes: [:]),
+            createEntityState(entityId: entityB, state: "off", attributes: [:])
+        ])
+
+        // Service (entity-level) UUIDs must differ
+        let serviceA = mapper.characteristicUUID(entityA, "power")
+        let serviceB = mapper.characteristicUUID(entityB, "power")
+        XCTAssertNotEqual(serviceA, serviceB, "Service UUIDs for \(entityA) and \(entityB) must not collide")
+
+        // Characteristic UUIDs must differ
+        let charA = mapper.characteristicUUID(entityA, "brightness")
+        let charB = mapper.characteristicUUID(entityB, "brightness")
+        XCTAssertNotEqual(charA, charB, "Characteristic UUIDs for \(entityA) and \(entityB) must not collide")
+
+        // Each entity must resolve back to itself from its characteristic UUID
+        XCTAssertEqual(mapper.getEntityIdFromCharacteristic(serviceA), entityA)
+        XCTAssertEqual(mapper.getEntityIdFromCharacteristic(serviceB), entityB)
+    }
+
+    // Verify UUIDs are stable (same input always yields same output)
+    func testDeterministicUUIDIsStable() {
+        let entityId = "light.chu_fang_deng"
+        let uuid1 = mapper.characteristicUUID(entityId, "power")
+        let uuid2 = mapper.characteristicUUID(entityId, "power")
+        XCTAssertEqual(uuid1, uuid2, "deterministicUUID must return the same UUID for the same input")
+    }
+
     // MARK: - Tilt value tests
 
     func testTiltValuesUse0To100Directly() {
