@@ -518,7 +518,7 @@ final class EntityMapperTests: XCTestCase {
 
     // Regression test: entity IDs that previously collided due to XOR-folding
     // must produce distinct service and characteristic UUIDs (issue #146).
-    func testDeterministicUUIDNocollision_chuFangDeng_vs_shuFangDeng() {
+    func testDeterministicUUIDNoCollision_chuFangDeng_vs_shuFangDeng() {
         let entityA = "light.chu_fang_deng"
         let entityB = "light.shu_fang_deng"
         loadData(states: [
