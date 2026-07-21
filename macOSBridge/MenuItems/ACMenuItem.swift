@@ -28,6 +28,15 @@ class ACMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable
     private var heatingThreshold: Double = 20
     private var swingMode: Int = 0     // 0=DISABLED, 1=ENABLED
 
+    // Device-advertised setpoint metadata; steps are derived through
+    // TemperatureFormatter.uiStep so missing metadata keeps whole degrees
+    private let heatingThresholdStep: Double
+    private let heatingThresholdMin: Double?
+    private let heatingThresholdMax: Double?
+    private let coolingThresholdStep: Double
+    private let coolingThresholdMin: Double?
+    private let coolingThresholdMax: Double?
+
     private let containerView: HighlightingMenuItemView
     private let iconView: NSImageView
     private let nameLabel: NSTextField
@@ -91,6 +100,14 @@ class ACMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable
         self.heatingThresholdId = serviceData.heatingThresholdTemperatureId?.uuid
         self.swingModeId = serviceData.swingModeId?.uuid
         self.hasThresholds = coolingThresholdId != nil && heatingThresholdId != nil
+
+        // Per-characteristic setpoint metadata (0.5 °C devices)
+        self.heatingThresholdStep = TemperatureFormatter.uiStep(serviceData.heatingThresholdStep)
+        self.heatingThresholdMin = serviceData.heatingThresholdMin
+        self.heatingThresholdMax = serviceData.heatingThresholdMax
+        self.coolingThresholdStep = TemperatureFormatter.uiStep(serviceData.coolingThresholdStep)
+        self.coolingThresholdMin = serviceData.coolingThresholdMin
+        self.coolingThresholdMax = serviceData.coolingThresholdMax
 
         // Determine valid modes: all 3 by default, or filtered by validValues
         let allModes = serviceData.validTargetHeaterCoolerStates ?? [0, 1, 2]
@@ -166,9 +183,11 @@ class ACMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable
         controlsRow = NSView(frame: NSRect(x: 0, y: DS.Spacing.sm, width: DS.ControlSize.menuItemWidth, height: 26))
         controlsRow.isHidden = true
 
-        // Mode buttons container
+        // Mode buttons container. 34 pt buttons (36 elsewhere) free the width
+        // the widened Auto-mode range control needs; "Cool"/"Heat"/"Auto" and
+        // their localizations still fit, measured at the 10 pt button font
         let modeCount = validModes.count
-        let containerWidth = ModeButtonGroup.widthForButtons(count: max(modeCount, 1))
+        let containerWidth = ModeButtonGroup.widthForButtons(count: max(modeCount, 1), buttonWidth: 34)
         let modeContainer = ModeButtonGroup(frame: NSRect(x: labelX, y: 3, width: containerWidth, height: 22))
 
         if validModes.contains(2) {
@@ -192,7 +211,7 @@ class ACMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable
             targetState = firstMode
         }
 
-        // Single temperature control: [−] 24° [+]
+        // Single temperature control: [−] 24° [+] (32 pt label holds "21.5°")
         let singleTempX = DS.ControlSize.menuItemWidth - DS.Spacing.md - 78
         singleTempContainer = NSView(frame: NSRect(x: singleTempX, y: 0, width: 78, height: 26))
 
@@ -213,12 +232,21 @@ class ACMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable
 
         controlsRow.addSubview(singleTempContainer)
 
-        // Range temperature control: -20+ -24+ (for Auto mode with thresholds)
+        // Range temperature control: -20+ -24+ (for Auto mode with thresholds).
+        // Labels are 32 pt so every half-degree string through "34.5°" clears
+        // NSTextField's roughly 3 pt of cell insets; the stepper gap and right
+        // margin shrink to 4 so the control (x 144) clears the 34 pt-button
+        // mode group ending at x 140. Tradeoff: the right edge lands at 256,
+        // 8 pt past the 248 trailing edge shared by the power toggle and the
+        // single stepper, flush with the hover highlight's 4 pt inset;
+        // accepted over overlapping the mode group. HAClimateMenuItem's range
+        // control keeps the 12 pt margin and the 248 edge, so the two Auto
+        // layouts intentionally differ.
         let miniBtn: CGFloat = 11
-        let miniLabel: CGFloat = 24
-        let miniStepper = miniBtn + miniLabel + miniBtn  // 46
-        let rangeWidth = miniStepper * 2 + 6  // 98
-        let rangeTempX = DS.ControlSize.menuItemWidth - DS.Spacing.md - rangeWidth
+        let miniLabel: CGFloat = 32
+        let miniStepper = miniBtn + miniLabel + miniBtn  // 54
+        let rangeWidth = miniStepper * 2 + 4  // 112
+        let rangeTempX = DS.ControlSize.menuItemWidth - DS.Spacing.xs - rangeWidth
         rangeTempContainer = NSView(frame: NSRect(x: rangeTempX, y: 1, width: rangeWidth, height: 26))
         rangeTempContainer.isHidden = true
 
@@ -239,7 +267,7 @@ class ACMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable
         rangeTempContainer.addSubview(heatPlusButton)
 
         // Cool stepper (right): -24+
-        let coolX = miniStepper + 6
+        let coolX = miniStepper + 4
         coolMinusButton = StepperButton.create(title: "−", size: .mini)
         coolMinusButton.frame.origin = NSPoint(x: coolX, y: 8)
         rangeTempContainer.addSubview(coolMinusButton)
@@ -344,13 +372,13 @@ class ACMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable
         } else if characteristicId == coolingThresholdId {
             if let temp = ValueConversion.toDouble(value) {
                 coolingThreshold = temp
-                coolLabel.stringValue = TemperatureFormatter.format(temp)
+                coolLabel.stringValue = TemperatureFormatter.formatSetpoint(temp)
                 updateTargetDisplay()
             }
         } else if characteristicId == heatingThresholdId {
             if let temp = ValueConversion.toDouble(value) {
                 heatingThreshold = temp
-                heatLabel.stringValue = TemperatureFormatter.format(temp)
+                heatLabel.stringValue = TemperatureFormatter.formatSetpoint(temp)
                 updateTargetDisplay()
             }
         } else if characteristicId == swingModeId {
@@ -421,7 +449,7 @@ class ACMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable
         case 2: targetTemp = coolingThreshold  // cool mode
         default: targetTemp = coolingThreshold // auto - show cooling threshold
         }
-        targetLabel.stringValue = TemperatureFormatter.format(targetTemp)
+        targetLabel.stringValue = TemperatureFormatter.formatSetpoint(targetTemp)
     }
 
     private func currentTargetTemp() -> Double {
@@ -432,17 +460,24 @@ class ACMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable
         }
     }
 
-    private func setTargetTemp(_ temp: Double) {
-        let clamped = min(max(temp, 16), 30)
+    private func currentTargetStep() -> Double {
+        switch targetState {
+        case 1: return heatingThresholdStep
+        default: return coolingThresholdStep
+        }
+    }
 
+    private func setTargetTemp(_ temp: Double) {
         switch targetState {
         case 1: // heat mode
+            let clamped = min(max(temp, heatingThresholdMin ?? 16), heatingThresholdMax ?? 30)
             heatingThreshold = clamped
             if let id = heatingThresholdId {
                 bridge?.writeCharacteristic(identifier: id, value: Float(clamped))
                 notifyLocalChange(characteristicId: id, value: Float(clamped))
             }
         default: // cool or auto
+            let clamped = min(max(temp, coolingThresholdMin ?? 16), coolingThresholdMax ?? 30)
             coolingThreshold = clamped
             if let id = coolingThresholdId {
                 bridge?.writeCharacteristic(identifier: id, value: Float(clamped))
@@ -477,11 +512,13 @@ class ACMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable
     }
 
     @objc private func decreaseTemp(_ sender: NSButton) {
-        setTargetTemp(currentTargetTemp() - 1)
+        // Step through TemperatureFormatter so Fahrenheit mode moves one
+        // displayed °F, not a raw 1 °C (1.8 °F) jump
+        setTargetTemp(TemperatureFormatter.step(currentTargetTemp(), by: -1, step: currentTargetStep()))
     }
 
     @objc private func increaseTemp(_ sender: NSButton) {
-        setTargetTemp(currentTargetTemp() + 1)
+        setTargetTemp(TemperatureFormatter.step(currentTargetTemp(), by: 1, step: currentTargetStep()))
     }
 
     @objc private func swingTapped(_ sender: NSButton) {
@@ -500,10 +537,12 @@ class ACMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable
     // MARK: - Threshold controls (Auto mode)
 
     private func setHeatingThreshold(_ temp: Double) {
-        let maxHeat = coolingThreshold - 1
-        let clamped = min(max(temp, 16), maxHeat)
+        // The 1 °C gap below the cooling threshold stays even on half-degree
+        // devices; some devices reject writes with a smaller spread
+        let maxHeat = min(coolingThreshold - 1, heatingThresholdMax ?? .infinity)
+        let clamped = min(max(temp, heatingThresholdMin ?? 16), maxHeat)
         heatingThreshold = clamped
-        heatLabel.stringValue = TemperatureFormatter.format(clamped)
+        heatLabel.stringValue = TemperatureFormatter.formatSetpoint(clamped)
         if let id = heatingThresholdId {
             bridge?.writeCharacteristic(identifier: id, value: Float(clamped))
             notifyLocalChange(characteristicId: id, value: Float(clamped))
@@ -511,10 +550,10 @@ class ACMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable
     }
 
     private func setCoolingThreshold(_ temp: Double) {
-        let minCool = heatingThreshold + 1
-        let clamped = min(max(temp, minCool), 30)
+        let minCool = max(heatingThreshold + 1, coolingThresholdMin ?? -Double.infinity)
+        let clamped = min(max(temp, minCool), coolingThresholdMax ?? 30)
         coolingThreshold = clamped
-        coolLabel.stringValue = TemperatureFormatter.format(clamped)
+        coolLabel.stringValue = TemperatureFormatter.formatSetpoint(clamped)
         if let id = coolingThresholdId {
             bridge?.writeCharacteristic(identifier: id, value: Float(clamped))
             notifyLocalChange(characteristicId: id, value: Float(clamped))
@@ -522,18 +561,18 @@ class ACMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable
     }
 
     @objc private func decreaseHeatThreshold(_ sender: NSButton) {
-        setHeatingThreshold(heatingThreshold - 1)
+        setHeatingThreshold(TemperatureFormatter.step(heatingThreshold, by: -1, step: heatingThresholdStep))
     }
 
     @objc private func increaseHeatThreshold(_ sender: NSButton) {
-        setHeatingThreshold(heatingThreshold + 1)
+        setHeatingThreshold(TemperatureFormatter.step(heatingThreshold, by: 1, step: heatingThresholdStep))
     }
 
     @objc private func decreaseCoolThreshold(_ sender: NSButton) {
-        setCoolingThreshold(coolingThreshold - 1)
+        setCoolingThreshold(TemperatureFormatter.step(coolingThreshold, by: -1, step: coolingThresholdStep))
     }
 
     @objc private func increaseCoolThreshold(_ sender: NSButton) {
-        setCoolingThreshold(coolingThreshold + 1)
+        setCoolingThreshold(TemperatureFormatter.step(coolingThreshold, by: 1, step: coolingThresholdStep))
     }
 }

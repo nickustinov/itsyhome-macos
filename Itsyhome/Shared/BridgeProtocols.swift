@@ -65,6 +65,9 @@ public struct ServiceData: Codable {
     public let colorTemperatureMax: Double?    // Max Mired value
     public let currentTemperatureId: String?   // Thermostats, temperature sensors, AC
     public let targetTemperatureId: String?    // Thermostats
+    public let targetTemperatureStep: Double?  // Step value (°C)
+    public let targetTemperatureMin: Double?   // Min value (°C)
+    public let targetTemperatureMax: Double?   // Max value (°C)
     public let heatingCoolingStateId: String?  // Thermostats (current mode)
     public let targetHeatingCoolingStateId: String? // Thermostats (target mode)
     public let validTargetHeatingCoolingStates: [Int]?  // Valid values for target state (e.g. [0, 1] = off + heat)
@@ -86,7 +89,13 @@ public struct ServiceData: Codable {
     public let targetHeaterCoolerStateId: String?   // AC target mode (auto/heat/cool)
     public let validTargetHeaterCoolerStates: [Int]?  // Valid values for target state (e.g. [1] = heat only)
     public let coolingThresholdTemperatureId: String?  // AC cooling target temp
+    public let coolingThresholdStep: Double?           // Step value (°C)
+    public let coolingThresholdMin: Double?            // Min value (°C)
+    public let coolingThresholdMax: Double?            // Max value (°C)
     public let heatingThresholdTemperatureId: String?  // AC heating target temp
+    public let heatingThresholdStep: Double?           // Step value (°C)
+    public let heatingThresholdMin: Double?            // Min value (°C)
+    public let heatingThresholdMax: Double?            // Max value (°C)
     // Fan characteristics
     public let rotationSpeedId: String?        // Fan speed
     public let rotationSpeedMin: Double?       // Min speed value
@@ -161,6 +170,9 @@ public struct ServiceData: Codable {
         colorTemperatureMax: Double? = nil,
         currentTemperatureId: UUID? = nil,
         targetTemperatureId: UUID? = nil,
+        targetTemperatureStep: Double? = nil,
+        targetTemperatureMin: Double? = nil,
+        targetTemperatureMax: Double? = nil,
         heatingCoolingStateId: UUID? = nil,
         targetHeatingCoolingStateId: UUID? = nil,
         validTargetHeatingCoolingStates: [Int]? = nil,
@@ -181,7 +193,13 @@ public struct ServiceData: Codable {
         targetHeaterCoolerStateId: UUID? = nil,
         validTargetHeaterCoolerStates: [Int]? = nil,
         coolingThresholdTemperatureId: UUID? = nil,
+        coolingThresholdStep: Double? = nil,
+        coolingThresholdMin: Double? = nil,
+        coolingThresholdMax: Double? = nil,
         heatingThresholdTemperatureId: UUID? = nil,
+        heatingThresholdStep: Double? = nil,
+        heatingThresholdMin: Double? = nil,
+        heatingThresholdMax: Double? = nil,
         rotationSpeedId: UUID? = nil,
         rotationSpeedMin: Double? = nil,
         rotationSpeedMax: Double? = nil,
@@ -252,6 +270,9 @@ public struct ServiceData: Codable {
         self.colorTemperatureMax = colorTemperatureMax
         self.currentTemperatureId = currentTemperatureId?.uuidString
         self.targetTemperatureId = targetTemperatureId?.uuidString
+        self.targetTemperatureStep = targetTemperatureStep
+        self.targetTemperatureMin = targetTemperatureMin
+        self.targetTemperatureMax = targetTemperatureMax
         self.heatingCoolingStateId = heatingCoolingStateId?.uuidString
         self.targetHeatingCoolingStateId = targetHeatingCoolingStateId?.uuidString
         self.validTargetHeatingCoolingStates = validTargetHeatingCoolingStates
@@ -272,7 +293,13 @@ public struct ServiceData: Codable {
         self.targetHeaterCoolerStateId = targetHeaterCoolerStateId?.uuidString
         self.validTargetHeaterCoolerStates = validTargetHeaterCoolerStates
         self.coolingThresholdTemperatureId = coolingThresholdTemperatureId?.uuidString
+        self.coolingThresholdStep = coolingThresholdStep
+        self.coolingThresholdMin = coolingThresholdMin
+        self.coolingThresholdMax = coolingThresholdMax
         self.heatingThresholdTemperatureId = heatingThresholdTemperatureId?.uuidString
+        self.heatingThresholdStep = heatingThresholdStep
+        self.heatingThresholdMin = heatingThresholdMin
+        self.heatingThresholdMax = heatingThresholdMax
         self.rotationSpeedId = rotationSpeedId?.uuidString
         self.rotationSpeedMin = rotationSpeedMin
         self.rotationSpeedMax = rotationSpeedMax

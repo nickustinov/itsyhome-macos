@@ -384,6 +384,21 @@ extension HAEntityState {
     var swingModes: [String] {
         attributes["swing_modes"] as? [String] ?? []
     }
+
+    /// Target temperature step (e.g. 0.5)
+    var targetTempStep: Double? {
+        attributes["target_temp_step"] as? Double
+    }
+
+    /// Minimum target temperature
+    var minTemp: Double? {
+        attributes["min_temp"] as? Double
+    }
+
+    /// Maximum target temperature
+    var maxTemp: Double? {
+        attributes["max_temp"] as? Double
+    }
 }
 
 // MARK: - Cover attributes

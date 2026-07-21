@@ -47,6 +47,20 @@ enum TemperatureFormatter {
         return format(celsius, decimals: decimals)
     }
 
+    /// Format a setpoint value (in Celsius from HomeKit) for display,
+    /// keeping half degrees visible in Celsius mode: a 21.5 setpoint must
+    /// read "21.5°", not "22°". Fahrenheit mode delegates to format's
+    /// whole-degree ceil, unchanged.
+    static func formatSetpoint(_ celsius: Double) -> String {
+        guard !usesFahrenheit else { return format(celsius) }
+        let nearestWhole = celsius.rounded()
+        if abs(celsius - nearestWhole) < 0.05 {
+            // Within 0.05 of a whole number counts as whole (e.g. "21°")
+            return "\(Int(nearestWhole))°"
+        }
+        return String(format: "%.1f°", celsius)
+    }
+
     /// Convert Celsius to Fahrenheit
     static func celsiusToFahrenheit(_ celsius: Double) -> Double {
         celsius * 9.0 / 5.0 + 32.0
@@ -57,12 +71,32 @@ enum TemperatureFormatter {
         (fahrenheit - 32.0) * 5.0 / 9.0
     }
 
+    /// UI stepping increment derived from a characteristic's metadata step.
+    /// nil or non-positive metadata falls back to whole degrees; anything
+    /// else rounds UP to the nearest 0.5 °C with a floor of 0.5 °C, because
+    /// HomeKit's spec default step of 0.1 °C is unusable one click at a time.
+    static func uiStep(_ metadataStep: Double?) -> Double {
+        guard let metadataStep = metadataStep, metadataStep > 0 else { return 1.0 }
+        // The epsilon keeps 0.5 from becoming 1.0 through float noise
+        return max(0.5, ceil(metadataStep / 0.5 - 1e-9) * 0.5)
+    }
+
     /// One user-facing degree step from a Celsius value, in the current
     /// display unit. In Fahrenheit mode the step moves the displayed °F
     /// integer by exactly one degree – stepping the Celsius value directly
-    /// moves 1.8 °F and skips displayed degrees (72 → 70).
-    static func step(_ celsius: Double, by direction: Double) -> Double {
-        guard usesFahrenheit else { return celsius + direction }
+    /// moves 1.8 °F and skips displayed degrees (72 → 70) – and the Celsius
+    /// step grid is ignored. In Celsius mode the value snaps to the next
+    /// line of the step grid, so an off-grid 21.3 steps to 21.5 or 21.0.
+    static func step(_ celsius: Double, by direction: Double, step: Double = 1.0) -> Double {
+        guard usesFahrenheit else {
+            // Epsilons keep on-grid values (and float noise around them)
+            // from double-stepping or standing still.
+            let next = direction > 0
+                ? (floor(celsius / step + 1e-9) + 1) * step
+                : (ceil(celsius / step - 1e-9) - 1) * step
+            // Round the result onto the grid to kill float noise
+            return (next / step).rounded() * step
+        }
         // Mirror format(decimals: 0)'s ceil so the result lands exactly one
         // displayed degree away from what the label currently shows.
         let displayed = ceil(celsiusToFahrenheit(celsius))
