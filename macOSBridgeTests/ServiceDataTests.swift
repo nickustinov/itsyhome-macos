@@ -101,4 +101,70 @@ final class ServiceDataTests: XCTestCase {
         XCTAssertNil(service.carbonMonoxideDetectedId)
         XCTAssertNil(service.carbonDioxideDetectedId)
     }
+
+    // MARK: - Temperature setpoint metadata (Codable round-trip)
+
+    // Setpoint step/min/max metadata crosses the iOS <-> macOSBridge process
+    // boundary as JSON next to the characteristic ids, so all nine fields must
+    // survive encode + decode with their values intact.
+    func testSetpointMetadataRoundTripsThroughCodable() throws {
+        let original = ServiceData(
+            uniqueIdentifier: UUID(),
+            name: "Thermostat",
+            serviceType: ServiceTypes.thermostat,
+            accessoryName: "Thermostat",
+            roomIdentifier: nil,
+            targetTemperatureId: UUID(),
+            targetTemperatureStep: 0.5,
+            targetTemperatureMin: 10.0,
+            targetTemperatureMax: 30.0,
+            coolingThresholdTemperatureId: UUID(),
+            coolingThresholdStep: 1.0,
+            coolingThresholdMin: 18.3,
+            coolingThresholdMax: 33.3,
+            heatingThresholdTemperatureId: UUID(),
+            heatingThresholdStep: 0.1,
+            heatingThresholdMin: 7.2,
+            heatingThresholdMax: 26.1
+        )
+
+        let encoded = try JSONEncoder().encode(original)
+        let decoded = try JSONDecoder().decode(ServiceData.self, from: encoded)
+
+        XCTAssertEqual(decoded.targetTemperatureStep, 0.5)
+        XCTAssertEqual(decoded.targetTemperatureMin, 10.0)
+        XCTAssertEqual(decoded.targetTemperatureMax, 30.0)
+        XCTAssertEqual(decoded.coolingThresholdStep, 1.0)
+        XCTAssertEqual(decoded.coolingThresholdMin, 18.3)
+        XCTAssertEqual(decoded.coolingThresholdMax, 33.3)
+        XCTAssertEqual(decoded.heatingThresholdStep, 0.1)
+        XCTAssertEqual(decoded.heatingThresholdMin, 7.2)
+        XCTAssertEqual(decoded.heatingThresholdMax, 26.1)
+    }
+
+    // Older builds encoded ServiceData without the setpoint metadata fields, so
+    // decoding a legacy payload must yield nil for each rather than throwing.
+    func testSetpointMetadataDecodesAsNilFromLegacyJSON() throws {
+        let legacyJSON = """
+        {
+            "uniqueIdentifier": "\(UUID().uuidString)",
+            "name": "Legacy Thermostat",
+            "serviceType": "\(ServiceTypes.thermostat)",
+            "accessoryName": "Legacy Thermostat",
+            "isReachable": true
+        }
+        """
+
+        let decoded = try JSONDecoder().decode(ServiceData.self, from: Data(legacyJSON.utf8))
+
+        XCTAssertNil(decoded.targetTemperatureStep)
+        XCTAssertNil(decoded.targetTemperatureMin)
+        XCTAssertNil(decoded.targetTemperatureMax)
+        XCTAssertNil(decoded.heatingThresholdStep)
+        XCTAssertNil(decoded.heatingThresholdMin)
+        XCTAssertNil(decoded.heatingThresholdMax)
+        XCTAssertNil(decoded.coolingThresholdStep)
+        XCTAssertNil(decoded.coolingThresholdMin)
+        XCTAssertNil(decoded.coolingThresholdMax)
+    }
 }

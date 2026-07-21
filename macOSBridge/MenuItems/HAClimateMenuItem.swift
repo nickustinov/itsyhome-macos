@@ -28,6 +28,18 @@ class HAClimateMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefr
     private var heatingThreshold: Double = 18
     private var swingMode: Int = 0         // 0=off, 1=auto
 
+    // Device-advertised setpoint metadata; steps are derived through
+    // TemperatureFormatter.uiStep so missing metadata keeps whole degrees
+    private let targetTempStep: Double
+    private let targetTempMin: Double?
+    private let targetTempMax: Double?
+    private let heatingThresholdStep: Double
+    private let heatingThresholdMin: Double?
+    private let heatingThresholdMax: Double?
+    private let coolingThresholdStep: Double
+    private let coolingThresholdMin: Double?
+    private let coolingThresholdMax: Double?
+
     private let containerView: HighlightingMenuItemView
     private let iconView: NSImageView
     private let nameLabel: NSTextField
@@ -101,6 +113,17 @@ class HAClimateMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefr
         let showSwing = swingModes.isEmpty || swingModes.contains("off")
         self.swingModeId = showSwing ? serviceData.swingModeId?.uuid : nil
         self.hasThresholds = coolingThresholdId != nil && heatingThresholdId != nil
+
+        // Per-characteristic setpoint metadata (0.5 °C devices)
+        self.targetTempStep = TemperatureFormatter.uiStep(serviceData.targetTemperatureStep)
+        self.targetTempMin = serviceData.targetTemperatureMin
+        self.targetTempMax = serviceData.targetTemperatureMax
+        self.heatingThresholdStep = TemperatureFormatter.uiStep(serviceData.heatingThresholdStep)
+        self.heatingThresholdMin = serviceData.heatingThresholdMin
+        self.heatingThresholdMax = serviceData.heatingThresholdMax
+        self.coolingThresholdStep = TemperatureFormatter.uiStep(serviceData.coolingThresholdStep)
+        self.coolingThresholdMin = serviceData.coolingThresholdMin
+        self.coolingThresholdMax = serviceData.coolingThresholdMax
 
         // Determine if we need 3 rows (4+ mode buttons) or should hide mode selector (1 mode)
         let modes = serviceData.availableHVACModes ?? []
@@ -228,9 +251,9 @@ class HAClimateMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefr
 
         // Range temperature control: -18+ -24+ (for Auto mode with thresholds)
         let smallBtn: CGFloat = 16
-        let smallLabel: CGFloat = 28
-        let smallStepper = smallBtn + smallLabel + smallBtn  // 60
-        let rangeWidth = smallStepper * 2 + 6  // 126
+        let smallLabel: CGFloat = 32  // Wide enough for a half degree ("21.5°")
+        let smallStepper = smallBtn + smallLabel + smallBtn  // 64
+        let rangeWidth = smallStepper * 2 + 6  // 134
         let rangeTempX = DS.ControlSize.menuItemWidth - DS.Spacing.md - rangeWidth
         rangeTempContainer = NSView(frame: NSRect(x: rangeTempX, y: singleTempParentY, width: rangeWidth, height: 26))
         rangeTempContainer.isHidden = true
@@ -399,7 +422,7 @@ class HAClimateMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefr
         } else if characteristicId == targetTempId {
             if let temp = ValueConversion.toDouble(value) {
                 targetTemp = temp
-                targetLabel.stringValue = TemperatureFormatter.format(temp)
+                targetLabel.stringValue = TemperatureFormatter.formatSetpoint(temp)
             }
         } else if characteristicId == currentStateId {
             if let state = ValueConversion.toInt(value) {
@@ -432,12 +455,12 @@ class HAClimateMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefr
         } else if characteristicId == coolingThresholdId {
             if let temp = ValueConversion.toDouble(value) {
                 coolingThreshold = temp
-                coolLabel.stringValue = TemperatureFormatter.format(temp)
+                coolLabel.stringValue = TemperatureFormatter.formatSetpoint(temp)
             }
         } else if characteristicId == heatingThresholdId {
             if let temp = ValueConversion.toDouble(value) {
                 heatingThreshold = temp
-                heatLabel.stringValue = TemperatureFormatter.format(temp)
+                heatLabel.stringValue = TemperatureFormatter.formatSetpoint(temp)
             }
         } else if characteristicId == swingModeId {
             if let mode = ValueConversion.toInt(value) {
@@ -584,9 +607,9 @@ class HAClimateMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefr
     }
 
     private func setTargetTemp(_ temp: Double) {
-        let clamped = min(max(temp, 10), 30)
+        let clamped = min(max(temp, targetTempMin ?? 10), targetTempMax ?? 30)
         targetTemp = clamped
-        targetLabel.stringValue = TemperatureFormatter.format(clamped)
+        targetLabel.stringValue = TemperatureFormatter.formatSetpoint(clamped)
         if let id = targetTempId {
             bridge?.writeCharacteristic(identifier: id, value: Float(clamped))
             notifyLocalChange(characteristicId: id, value: Float(clamped))
@@ -607,20 +630,22 @@ class HAClimateMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefr
     }
 
     @objc private func decreaseTemp(_ sender: NSButton) {
-        setTargetTemp(TemperatureFormatter.step(targetTemp, by: -1))
+        setTargetTemp(TemperatureFormatter.step(targetTemp, by: -1, step: targetTempStep))
     }
 
     @objc private func increaseTemp(_ sender: NSButton) {
-        setTargetTemp(TemperatureFormatter.step(targetTemp, by: 1))
+        setTargetTemp(TemperatureFormatter.step(targetTemp, by: 1, step: targetTempStep))
     }
 
     // MARK: - Threshold controls (Auto mode)
 
     private func setHeatingThreshold(_ temp: Double) {
-        let maxHeat = coolingThreshold - 1
-        let clamped = min(max(temp, 10), maxHeat)
+        // The 1 °C gap below the cooling threshold stays even on half-degree
+        // devices; some devices reject writes with a smaller spread
+        let maxHeat = min(coolingThreshold - 1, heatingThresholdMax ?? .infinity)
+        let clamped = min(max(temp, heatingThresholdMin ?? 10), maxHeat)
         heatingThreshold = clamped
-        heatLabel.stringValue = TemperatureFormatter.format(clamped)
+        heatLabel.stringValue = TemperatureFormatter.formatSetpoint(clamped)
         if let id = heatingThresholdId {
             bridge?.writeCharacteristic(identifier: id, value: Float(clamped))
             notifyLocalChange(characteristicId: id, value: Float(clamped))
@@ -628,10 +653,10 @@ class HAClimateMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefr
     }
 
     private func setCoolingThreshold(_ temp: Double) {
-        let minCool = heatingThreshold + 1
-        let clamped = min(max(temp, minCool), 30)
+        let minCool = max(heatingThreshold + 1, coolingThresholdMin ?? -Double.infinity)
+        let clamped = min(max(temp, minCool), coolingThresholdMax ?? 30)
         coolingThreshold = clamped
-        coolLabel.stringValue = TemperatureFormatter.format(clamped)
+        coolLabel.stringValue = TemperatureFormatter.formatSetpoint(clamped)
         if let id = coolingThresholdId {
             bridge?.writeCharacteristic(identifier: id, value: Float(clamped))
             notifyLocalChange(characteristicId: id, value: Float(clamped))
@@ -639,19 +664,19 @@ class HAClimateMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefr
     }
 
     @objc private func decreaseHeatThreshold(_ sender: NSButton) {
-        setHeatingThreshold(TemperatureFormatter.step(heatingThreshold, by: -1))
+        setHeatingThreshold(TemperatureFormatter.step(heatingThreshold, by: -1, step: heatingThresholdStep))
     }
 
     @objc private func increaseHeatThreshold(_ sender: NSButton) {
-        setHeatingThreshold(TemperatureFormatter.step(heatingThreshold, by: 1))
+        setHeatingThreshold(TemperatureFormatter.step(heatingThreshold, by: 1, step: heatingThresholdStep))
     }
 
     @objc private func decreaseCoolThreshold(_ sender: NSButton) {
-        setCoolingThreshold(TemperatureFormatter.step(coolingThreshold, by: -1))
+        setCoolingThreshold(TemperatureFormatter.step(coolingThreshold, by: -1, step: coolingThresholdStep))
     }
 
     @objc private func increaseCoolThreshold(_ sender: NSButton) {
-        setCoolingThreshold(TemperatureFormatter.step(coolingThreshold, by: 1))
+        setCoolingThreshold(TemperatureFormatter.step(coolingThreshold, by: 1, step: coolingThresholdStep))
     }
 
     // MARK: - Swing mode

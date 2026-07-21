@@ -70,6 +70,15 @@ final class EntityMapper {
         return value
     }
 
+    /// Convert a temperature step from HA's unit to Celsius. A step is a
+    /// delta, so it scales by 5/9 without the -32 offset.
+    private func normalizeTemperatureStep(_ value: Double) -> Double {
+        if haTemperatureUnit == "°F" {
+            return value * 5.0 / 9.0
+        }
+        return value
+    }
+
     /// Build reverse lookup caches for fast UUID → entityId lookups
     private func buildCharacteristicCache() {
         characteristicToEntity.removeAll()
@@ -434,6 +443,13 @@ final class EntityMapper {
         // Generate deterministic UUIDs for characteristic IDs
         let entityUUID = deterministicUUID(for: state.entityId)
 
+        // Climate setpoint metadata, normalized to internal Celsius. HA has
+        // one step/min/max set per entity, so the same values feed the target
+        // trio and both threshold trios.
+        let climateStep = state.domain == "climate" ? state.targetTempStep.map { normalizeTemperatureStep($0) } : nil
+        let climateMin = state.domain == "climate" ? state.minTemp.map { normalizeTemperature($0) } : nil
+        let climateMax = state.domain == "climate" ? state.maxTemp.map { normalizeTemperature($0) } : nil
+
         return ServiceData(
             uniqueIdentifier: entityUUID,
             name: state.friendlyName,
@@ -453,6 +469,9 @@ final class EntityMapper {
             // Climate characteristics
             currentTemperatureId: (state.currentTemperature != nil || (state.domain == "sensor" && state.deviceClass == "temperature" && state.numericState != nil)) ? characteristicUUID(state.entityId, "current_temp") : nil,
             targetTemperatureId: state.targetTemperature != nil ? characteristicUUID(state.entityId, "target_temp") : nil,
+            targetTemperatureStep: climateStep,
+            targetTemperatureMin: climateMin,
+            targetTemperatureMax: climateMax,
             heatingCoolingStateId: state.hvacAction != nil ? characteristicUUID(state.entityId, "hvac_action") : nil,
             targetHeatingCoolingStateId: state.domain == "climate" ? characteristicUUID(state.entityId, "hvac_mode") : nil,
             availableHVACModes: state.domain == "climate" ? state.hvacModes : nil,
@@ -474,7 +493,13 @@ final class EntityMapper {
             // HeaterCooler characteristics
             activeId: state.domain == "valve" ? characteristicUUID(state.entityId, "active") : nil,
             coolingThresholdTemperatureId: state.targetTempHigh != nil ? characteristicUUID(state.entityId, "target_temp_high") : nil,
+            coolingThresholdStep: climateStep,
+            coolingThresholdMin: climateMin,
+            coolingThresholdMax: climateMax,
             heatingThresholdTemperatureId: state.targetTempLow != nil ? characteristicUUID(state.entityId, "target_temp_low") : nil,
+            heatingThresholdStep: climateStep,
+            heatingThresholdMin: climateMin,
+            heatingThresholdMax: climateMax,
             // Fan characteristics - only provide speed if fan supports percentage (SET_PERCENTAGE feature)
             rotationSpeedId: state.domain == "fan" && state.supportsPercentage ? characteristicUUID(state.entityId, "speed") : nil,
             rotationSpeedMin: 0,
