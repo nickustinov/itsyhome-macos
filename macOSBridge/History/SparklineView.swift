@@ -142,6 +142,13 @@ final class SparklineView: NSView {
 
     // MARK: - Drawing
 
+    // numericPoints emits y in flipped coordinates (y = 0 at the top, max -> 0;
+    // min -> height), so flip this view to match. NSView's default isFlipped is
+    // false (y = 0 at the bottom), which mirrors every numeric series. The
+    // binary timeline is drawn around bounds.midY (symmetric), so flipping it
+    // is a no-op for its layout.
+    override var isFlipped: Bool { true }
+
     override func draw(_ dirtyRect: NSRect) {
         guard let series else { return }
         let since = referenceNow.addingTimeInterval(-(windowOverride ?? Self.window))

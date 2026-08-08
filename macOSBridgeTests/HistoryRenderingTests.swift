@@ -131,6 +131,14 @@ final class HistoryRenderingTests: XCTestCase {
         XCTAssertEqual(v2.frame.width, 48)
     }
 
+    func testSparklineViewUsesFlippedCoordinateSystem() {
+        // HistoryRendering.numericPoints emits y in flipped coordinates
+        // (y = 0 at the top, max value -> 0; min value -> height), so the view
+        // must report isFlipped == true to draw the line the right way up.
+        // NSView's default is false, which mirrors every numeric series.
+        XCTAssertTrue(SparklineView(frame: .zero).isFlipped)
+    }
+
     // MARK: - Coverage gaps
 
     func testNumericPointRunsSplitAcrossUncoveredGap() {
