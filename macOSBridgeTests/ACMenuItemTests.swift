@@ -11,6 +11,20 @@ import AppKit
 
 final class ACMenuItemTests: XCTestCase {
 
+    // Saved temperature unit so the stepper tests can flip it without leaking
+    // state into the other tests in this class (or the global formatter cache).
+    private var savedUnit: String!
+
+    override func setUp() {
+        super.setUp()
+        savedUnit = PreferencesManager.shared.temperatureUnit
+    }
+
+    override func tearDown() {
+        PreferencesManager.shared.temperatureUnit = savedUnit
+        super.tearDown()
+    }
+
     // MARK: - Test helpers
 
     private func createTestServiceData(
@@ -287,5 +301,96 @@ final class ACMenuItemTests: XCTestCase {
         let menuItem = ACMenuItem(serviceData: serviceData, bridge: nil)
 
         XCTAssertTrue(menuItem is LocalChangeNotifiable)
+    }
+
+    // MARK: - Fahrenheit stepper direction & granularity
+    //
+    // Regression guard for the unit-aware stepper. ACMenuItem must drive the
+    // target temperature through TemperatureFormatter.step(_:by:) (like
+    // ThermostatMenuItem / HAClimateMenuItem) so that, in Fahrenheit mode, one
+    // stepper click moves the *displayed* °F value by exactly one degree in the
+    // correct direction (+ warms, − cools). Stepping the stored Celsius value
+    // directly moves ~1.8 °F and skips degrees (72 → 74 on “+”).
+
+    /// Collect every descendant of `view` of the given type.
+    private func allControls<T: NSView>(_ type: T.Type, in view: NSView) -> [T] {
+        var result: [T] = []
+        for subview in view.subviews {
+            if let match = subview as? T { result.append(match) }
+            result.append(contentsOf: allControls(type, in: subview))
+        }
+        return result
+    }
+
+    /// The single-temperature steppers are created at `.regular` size (20×20);
+    /// the Auto-mode range steppers are `.mini` (11×11). Size therefore uniquely
+    /// identifies the [−]/[+] pair. Within their shared container the minus
+    /// button sits left of the plus button.
+    private func singleSteppers(in menuItem: ACMenuItem) -> (minus: NSButton, plus: NSButton) {
+        let regular = allControls(NSButton.self, in: menuItem.view!).filter {
+            abs($0.bounds.width - 20) < 0.5 && abs($0.bounds.height - 20) < 0.5
+        }
+        let sorted = regular.sorted { $0.frame.minX < $1.frame.minX }
+        return (sorted[0], sorted[1])
+    }
+
+    /// The label the user sees between [−] and [+] — it lives in the same
+    /// container as the single steppers.
+    private func singleTargetLabel(in menuItem: ACMenuItem) -> NSTextField {
+        let (minus, _) = singleSteppers(in: menuItem)
+        let fields = minus.superview!.subviews.compactMap { $0 as? NSTextField }
+        return fields[0]
+    }
+
+    /// Cool-only service so the single (non-range) temperature control is shown.
+    private func makeCoolOnlyAC(coolingId: UUID) -> ACMenuItem {
+        let serviceData = createTestServiceData(
+            targetHeaterCoolerStateId: UUID(),
+            validTargetHeaterCoolerStates: [2],
+            coolingThresholdTemperatureId: coolingId
+        )
+        return ACMenuItem(serviceData: serviceData, bridge: nil)
+    }
+
+    func testFahrenheitStepperWarmsAndCoolsExactlyOneDegree() {
+        PreferencesManager.shared.temperatureUnit = "fahrenheit"
+
+        let coolingId = UUID()
+        let menuItem = makeCoolOnlyAC(coolingId: coolingId)
+        // 22 °C → 71.6 °F → ceiling 72 °F.
+        menuItem.updateValue(for: coolingId, value: 22.0)
+
+        let label = singleTargetLabel(in: menuItem)
+        let (minus, plus) = singleSteppers(in: menuItem)
+
+        XCTAssertEqual(label.stringValue, "72°")
+
+        // “+” warms by exactly one displayed degree: 72 → 73 (not ~74).
+        plus.performClick(nil)
+        XCTAssertEqual(label.stringValue, "73°")
+
+        // “−” cools by exactly one displayed degree: 73 → 72 → 71.
+        minus.performClick(nil)
+        XCTAssertEqual(label.stringValue, "72°")
+        minus.performClick(nil)
+        XCTAssertEqual(label.stringValue, "71°")
+    }
+
+    func testCelsiusStepperStillStepsExactlyOneDegree() {
+        // Anti-scope guard: Celsius mode must be untouched (one degree per click).
+        PreferencesManager.shared.temperatureUnit = "celsius"
+
+        let coolingId = UUID()
+        let menuItem = makeCoolOnlyAC(coolingId: coolingId)
+        menuItem.updateValue(for: coolingId, value: 22.0)
+
+        let label = singleTargetLabel(in: menuItem)
+        let (minus, plus) = singleSteppers(in: menuItem)
+
+        XCTAssertEqual(label.stringValue, "22°")
+        plus.performClick(nil)
+        XCTAssertEqual(label.stringValue, "23°")
+        minus.performClick(nil)
+        XCTAssertEqual(label.stringValue, "22°")
     }
 }
