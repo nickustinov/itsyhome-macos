@@ -288,4 +288,132 @@ final class ACMenuItemTests: XCTestCase {
 
         XCTAssertTrue(menuItem is LocalChangeNotifiable)
     }
+
+    // MARK: - Fahrenheit stepper direction & granularity
+    // ACMenuItem used to step the raw Celsius value (±1), which in Fahrenheit
+    // mode jumped the shown °F by ~1.8° (skipping degrees). It must instead use
+    // the unit-aware TemperatureFormatter.step, like Thermostat/HAClimate items.
+
+    /// Recursively collects every NSTextField stringValue in a view tree.
+    private func displayedStrings(in view: NSView) -> [String] {
+        var strings: [String] = []
+        for subview in view.subviews {
+            if let label = subview as? NSTextField {
+                strings.append(label.stringValue)
+            }
+            strings.append(contentsOf: displayedStrings(in: subview))
+        }
+        return strings
+    }
+
+    /// Invokes a private @objc stepper action by selector name (e.g. "increaseTemp:").
+    private func drive(_ selector: String, on item: ACMenuItem) {
+        _ = item.perform(NSSelectorFromString(selector), with: NSButton())
+    }
+
+    /// A Cool-mode AC with both thresholds, seeded to `coolingCelsius`, wired to
+    /// a capturing bridge. Returns the item and its cooling-threshold identifier.
+    private func makeCoolAC(coolingCelsius: Double, bridge: Mac2iOS) -> (ACMenuItem, UUID) {
+        let coolingId = UUID()
+        let heatingId = UUID()
+        let targetStateId = UUID()
+        let serviceData = createTestServiceData(
+            targetHeaterCoolerStateId: targetStateId,
+            validTargetHeaterCoolerStates: [0, 1, 2],
+            coolingThresholdTemperatureId: coolingId,
+            heatingThresholdTemperatureId: heatingId
+        )
+        let item = ACMenuItem(serviceData: serviceData, bridge: bridge)
+        item.updateValue(for: targetStateId, value: 2)  // Cool → reads the cooling threshold
+        item.updateValue(for: coolingId, value: coolingCelsius)
+        return (item, coolingId)
+    }
+
+    func testFahrenheitIncreaseAdvancesExactlyOneDisplayedDegreeUp() {
+        let savedUnit = PreferencesManager.shared.temperatureUnit
+        PreferencesManager.shared.temperatureUnit = "fahrenheit"
+        defer { PreferencesManager.shared.temperatureUnit = savedUnit }
+
+        let bridge = CapturingBridge()
+        let (item, _) = makeCoolAC(coolingCelsius: 23.0, bridge: bridge)  // 23 °C → 74 °F
+
+        drive("increaseTemp:", on: item)
+
+        // + warms by exactly one shown °F: 74 → 75, not the 1.8 °F skip to 76.
+        let labels = displayedStrings(in: item.view!)
+        XCTAssertTrue(labels.contains("75°"), "Increase should show 75°; labels: \(labels)")
+        XCTAssertFalse(labels.contains("76°"), "Increase must not skip to 76°; labels: \(labels)")
+    }
+
+    func testFahrenheitDecreaseAdvancesExactlyOneDisplayedDegreeDown() {
+        let savedUnit = PreferencesManager.shared.temperatureUnit
+        PreferencesManager.shared.temperatureUnit = "fahrenheit"
+        defer { PreferencesManager.shared.temperatureUnit = savedUnit }
+
+        let bridge = CapturingBridge()
+        let (item, _) = makeCoolAC(coolingCelsius: 23.0, bridge: bridge)  // 74 °F
+
+        drive("decreaseTemp:", on: item)
+
+        // − cools by exactly one shown °F: 74 → 73, not the 1.8 °F skip to 72.
+        let labels = displayedStrings(in: item.view!)
+        XCTAssertTrue(labels.contains("73°"), "Decrease should show 73°; labels: \(labels)")
+        XCTAssertFalse(labels.contains("72°"), "Decrease must not skip to 72°; labels: \(labels)")
+    }
+
+    func testStepperDirectionWarmsOnIncreaseCoolsOnDecrease() {
+        // Direction is unit-independent: + always warms, − always cools. Verify
+        // the value written to the bridge in both Celsius and Fahrenheit modes.
+        for unit in ["celsius", "fahrenheit"] {
+            let savedUnit = PreferencesManager.shared.temperatureUnit
+            PreferencesManager.shared.temperatureUnit = unit
+            defer { PreferencesManager.shared.temperatureUnit = savedUnit }
+
+            let bridge = CapturingBridge()
+            let (item, coolingId) = makeCoolAC(coolingCelsius: 23.0, bridge: bridge)
+
+            drive("increaseTemp:", on: item)
+            XCTAssertGreaterThan(bridge.valueAsDouble(for: coolingId), 23.0, "[\(unit)] + must warm")
+
+            bridge.clear()
+            item.updateValue(for: coolingId, value: 23.0)
+            drive("decreaseTemp:", on: item)
+            XCTAssertLessThan(bridge.valueAsDouble(for: coolingId), 23.0, "[\(unit)] − must cool")
+        }
+    }
+}
+
+/// Mac2iOS mock that records writeCharacteristic calls for stepper assertions.
+private final class CapturingBridge: NSObject, Mac2iOS {
+    var homes: [HomeInfo] = []
+    var selectedHomeIdentifier: UUID?
+    var rooms: [RoomInfo] = []
+    var accessories: [AccessoryInfo] = []
+    var scenes: [SceneInfo] = []
+    var characteristicValues: [UUID: Any] = [:]
+
+    private(set) var writes: [UUID: Any] = [:]
+
+    func reloadHomeKit() {}
+    func executeScene(identifier: UUID) {}
+    func readCharacteristic(identifier: UUID) {}
+    func writeCharacteristic(identifier: UUID, value: Any) {
+        writes[identifier] = value
+    }
+    func getCharacteristicValue(identifier: UUID) -> Any? { characteristicValues[identifier] }
+    func openCameraWindow() {}
+    func closeCameraWindow() {}
+    func setCameraWindowHidden(_ hidden: Bool) {}
+    func getRawHomeKitDump() -> String? { nil }
+    func getCameraDebugJSON(entityId: String?, completion: @escaping (String?) -> Void) { completion(nil) }
+
+    func valueAsDouble(for id: UUID) -> Double {
+        guard let value = writes[id] else { return .nan }
+        if let d = value as? Double { return d }
+        if let f = value as? Float { return Double(f) }
+        if let i = value as? Int { return Double(i) }
+        return .nan
+    }
+
+    func clear() { writes.removeAll() }
 }
