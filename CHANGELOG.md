@@ -20,6 +20,7 @@
 - Expand groups in Settings → Home – groups have a chevron revealing their member devices, and dragging those reorders the group. The group's submenu in the menu and its pinned menu-bar dropdown now follow that order instead of regrouping by type, and pinned room dropdowns follow the room's custom order too
 - Fix "Record sensor history" staying greyed out after buying Pro – the Advanced pane checked the Pro status only when it was first shown, so the toggle stayed disabled until the app was relaunched; it now unlocks the moment the purchase completes. The HomeKit bridge pane had the same stale gate (enable switch and upsell banner) and now rebuilds on Pro status changes like the other Pro panes
 - Fix colour-setting scenes never being detected as active – hue and saturation now use the same rounding tolerance as brightness/position, so a scene that set a colour is shown as active right after it fires instead of permanently "off" (#157, thanks @YuriNachos)
+- Fix sensor history chart drawn vertically mirrored – the numeric sparkline line rendered upside down (a rising reading drew a falling line, contradicting the hover readout) because SparklineView used AppKit's default non-flipped coordinate system while the y math assumes a flipped view (y = 0 at the top). SparklineView now overrides `isFlipped` so the line follows the data; the binary on/off timeline uses a symmetric mid-Y and is unchanged (#150, thanks @YuriNachos)
 
 ## 2.7.0
 
