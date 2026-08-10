@@ -138,10 +138,19 @@ enum DebugMockups {
                 roomIdentifier: nil,
                 currentTemperatureId: UUID(),
                 targetTemperatureId: UUID(),
+                targetTemperatureStep: 0.5,
+                targetTemperatureMin: 10,
+                targetTemperatureMax: 30,
                 heatingCoolingStateId: UUID(),
                 targetHeatingCoolingStateId: UUID(),
                 coolingThresholdTemperatureId: UUID(),
-                heatingThresholdTemperatureId: UUID()
+                coolingThresholdStep: 0.5,
+                coolingThresholdMin: 10,
+                coolingThresholdMax: 30,
+                heatingThresholdTemperatureId: UUID(),
+                heatingThresholdStep: 0.5,
+                heatingThresholdMin: 10,
+                heatingThresholdMax: 30
             ),
             ServiceData(
                 uniqueIdentifier: UUID(),
@@ -154,7 +163,13 @@ enum DebugMockups {
                 currentHeaterCoolerStateId: UUID(),
                 targetHeaterCoolerStateId: UUID(),
                 coolingThresholdTemperatureId: UUID(),
+                coolingThresholdStep: 0.5,
+                coolingThresholdMin: 16,
+                coolingThresholdMax: 30,
                 heatingThresholdTemperatureId: UUID(),
+                heatingThresholdStep: 0.5,
+                heatingThresholdMin: 16,
+                heatingThresholdMax: 30,
                 swingModeId: UUID()
             ),
             ServiceData(
@@ -168,7 +183,10 @@ enum DebugMockups {
                 currentHeaterCoolerStateId: UUID(),
                 targetHeaterCoolerStateId: UUID(),
                 validTargetHeaterCoolerStates: [1],
-                heatingThresholdTemperatureId: UUID()
+                heatingThresholdTemperatureId: UUID(),
+                heatingThresholdStep: 0.5,
+                heatingThresholdMin: 16,
+                heatingThresholdMax: 30
             ),
             ServiceData(
                 uniqueIdentifier: UUID(),
@@ -178,6 +196,9 @@ enum DebugMockups {
                 roomIdentifier: nil,
                 currentTemperatureId: UUID(),
                 targetTemperatureId: UUID(),
+                targetTemperatureStep: 0.5,
+                targetTemperatureMin: 10,
+                targetTemperatureMax: 30,
                 heatingCoolingStateId: UUID(),
                 targetHeatingCoolingStateId: UUID(),
                 validTargetHeatingCoolingStates: [0, 1]

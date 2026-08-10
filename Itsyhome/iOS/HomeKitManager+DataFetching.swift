@@ -344,6 +344,25 @@ extension HomeKitManager {
         let colorTempMin = colorTempChar?.metadata?.minimumValue?.doubleValue
         let colorTempMax = colorTempChar?.metadata?.maximumValue?.doubleValue
 
+        // Get target temperature step/min/max from metadata (thermostats)
+        let targetTempChar = findChar(HMCharacteristicTypeTargetTemperature)
+        let targetTempStep = targetTempChar?.metadata?.stepValue?.doubleValue
+        let targetTempMin = targetTempChar?.metadata?.minimumValue?.doubleValue
+        let targetTempMax = targetTempChar?.metadata?.maximumValue?.doubleValue
+
+        // Get heating threshold step/min/max from metadata (heater-coolers and
+        // auto-mode thermostats; heat-only devices like Eve Thermo carry only this one)
+        let heatingThresholdChar = findChar(CharacteristicTypes.heatingThresholdTemperature)
+        let heatingThresholdStep = heatingThresholdChar?.metadata?.stepValue?.doubleValue
+        let heatingThresholdMin = heatingThresholdChar?.metadata?.minimumValue?.doubleValue
+        let heatingThresholdMax = heatingThresholdChar?.metadata?.maximumValue?.doubleValue
+
+        // Get cooling threshold step/min/max from metadata
+        let coolingThresholdChar = findChar(CharacteristicTypes.coolingThresholdTemperature)
+        let coolingThresholdStep = coolingThresholdChar?.metadata?.stepValue?.doubleValue
+        let coolingThresholdMin = coolingThresholdChar?.metadata?.minimumValue?.doubleValue
+        let coolingThresholdMax = coolingThresholdChar?.metadata?.maximumValue?.doubleValue
+
         // Get valve type value (stored directly, not as characteristic ID)
         let valveTypeChar = findChar(CharacteristicTypes.valveType)
         let valveTypeValue = valveTypeChar?.value as? Int
@@ -375,6 +394,9 @@ extension HomeKitManager {
             colorTemperatureMax: colorTempMax,
             currentTemperatureId: charId(HMCharacteristicTypeCurrentTemperature),
             targetTemperatureId: charId(HMCharacteristicTypeTargetTemperature),
+            targetTemperatureStep: targetTempStep,
+            targetTemperatureMin: targetTempMin,
+            targetTemperatureMax: targetTempMax,
             heatingCoolingStateId: charId(HMCharacteristicTypeCurrentHeatingCooling),
             targetHeatingCoolingStateId: charId(HMCharacteristicTypeTargetHeatingCooling),
             validTargetHeatingCoolingStates: validHCoolingStates,
@@ -395,7 +417,13 @@ extension HomeKitManager {
             targetHeaterCoolerStateId: charId(CharacteristicTypes.targetHeaterCoolerState),
             validTargetHeaterCoolerStates: validHCStates,
             coolingThresholdTemperatureId: charId(CharacteristicTypes.coolingThresholdTemperature),
+            coolingThresholdStep: coolingThresholdStep,
+            coolingThresholdMin: coolingThresholdMin,
+            coolingThresholdMax: coolingThresholdMax,
             heatingThresholdTemperatureId: charId(CharacteristicTypes.heatingThresholdTemperature),
+            heatingThresholdStep: heatingThresholdStep,
+            heatingThresholdMin: heatingThresholdMin,
+            heatingThresholdMax: heatingThresholdMax,
             // Fan characteristics
             rotationSpeedId: charId(CharacteristicTypes.rotationSpeed),
             rotationSpeedMin: rotationSpeedMin,

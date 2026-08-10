@@ -362,6 +362,96 @@ final class EntityMapperTests: XCTestCase {
         }
     }
 
+    func testClimateStepAndRangeMetadataMapsToServiceData() {
+        let state = createEntityState(
+            entityId: "climate.eve_thermo",
+            state: "heat",
+            attributes: [
+                "friendly_name": "Eve Thermo",
+                "current_temperature": 21.0,
+                "temperature": 21.5,
+                "target_temp_step": 0.5,
+                "min_temp": 7.0,
+                "max_temp": 35.0,
+                "hvac_modes": ["off", "heat"]
+            ]
+        )
+        loadData(states: [state])
+
+        let menuData = mapper.generateMenuData()
+
+        // HA has one step/min/max set per entity, so the same values feed
+        // the target trio and both threshold trios
+        let service = menuData.accessories.first?.services.first
+        XCTAssertEqual(service?.targetTemperatureStep, 0.5)
+        XCTAssertEqual(service?.targetTemperatureMin, 7.0)
+        XCTAssertEqual(service?.targetTemperatureMax, 35.0)
+        XCTAssertEqual(service?.heatingThresholdStep, 0.5)
+        XCTAssertEqual(service?.heatingThresholdMin, 7.0)
+        XCTAssertEqual(service?.heatingThresholdMax, 35.0)
+        XCTAssertEqual(service?.coolingThresholdStep, 0.5)
+        XCTAssertEqual(service?.coolingThresholdMin, 7.0)
+        XCTAssertEqual(service?.coolingThresholdMax, 35.0)
+    }
+
+    func testClimateWithoutStepMetadataLeavesFieldsNil() {
+        let state = createEntityState(
+            entityId: "climate.basic",
+            state: "heat",
+            attributes: [
+                "friendly_name": "Basic Thermostat",
+                "temperature": 21.0,
+                "hvac_modes": ["off", "heat"]
+            ]
+        )
+        loadData(states: [state])
+
+        let menuData = mapper.generateMenuData()
+
+        let service = menuData.accessories.first?.services.first
+        XCTAssertNil(service?.targetTemperatureStep)
+        XCTAssertNil(service?.targetTemperatureMin)
+        XCTAssertNil(service?.targetTemperatureMax)
+        XCTAssertNil(service?.heatingThresholdStep)
+        XCTAssertNil(service?.heatingThresholdMin)
+        XCTAssertNil(service?.heatingThresholdMax)
+        XCTAssertNil(service?.coolingThresholdStep)
+        XCTAssertNil(service?.coolingThresholdMin)
+        XCTAssertNil(service?.coolingThresholdMax)
+    }
+
+    func testClimateFahrenheitServerScalesStepAndNormalizesRange() {
+        mapper.setTemperatureUnit("°F")
+        let state = createEntityState(
+            entityId: "climate.us_thermostat",
+            state: "heat",
+            attributes: [
+                "friendly_name": "US Thermostat",
+                "temperature": 70.0,
+                "target_temp_step": 1.0,
+                "min_temp": 45.0,
+                "max_temp": 95.0,
+                "hvac_modes": ["off", "heat"]
+            ]
+        )
+        loadData(states: [state])
+
+        let menuData = mapper.generateMenuData()
+
+        let service = menuData.accessories.first?.services.first
+        // The step is a delta, so it scales by 5/9 with no -32 offset
+        XCTAssertEqual(service?.targetTemperatureStep ?? -1, 5.0 / 9.0, accuracy: 0.0001)
+        XCTAssertEqual(service?.heatingThresholdStep ?? -1, 5.0 / 9.0, accuracy: 0.0001)
+        XCTAssertEqual(service?.coolingThresholdStep ?? -1, 5.0 / 9.0, accuracy: 0.0001)
+        // Absolute bounds normalize with the offset: 45°F is 7.22°C, 95°F is 35°C
+        XCTAssertEqual(service?.targetTemperatureMin ?? -1, (45.0 - 32.0) * 5.0 / 9.0, accuracy: 0.0001)
+        XCTAssertEqual(service?.targetTemperatureMax ?? -1, 35.0, accuracy: 0.0001)
+        XCTAssertEqual(service?.heatingThresholdMin ?? -1, (45.0 - 32.0) * 5.0 / 9.0, accuracy: 0.0001)
+        XCTAssertEqual(service?.heatingThresholdMax ?? -1, 35.0, accuracy: 0.0001)
+        XCTAssertEqual(service?.coolingThresholdMin ?? -1, (45.0 - 32.0) * 5.0 / 9.0, accuracy: 0.0001)
+        XCTAssertEqual(service?.coolingThresholdMax ?? -1, 35.0, accuracy: 0.0001)
+    }
+
     // MARK: - Lock mapping tests
 
     func testLockMapsToLockMechanism() {
