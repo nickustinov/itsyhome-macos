@@ -11,18 +11,30 @@ import Network
 
 final class WebhookServerTests: XCTestCase {
 
-    private static let testPort: UInt16 = 18423
+    /// Per-test port so one test's just-stopped NWListener can't race the next
+    /// test's bind: the OS releases a stopped listener asynchronously, and the
+    /// old single shared port (18423) plus a 0.1s tearDown sleep cascaded
+    /// EADDRINUSE across every HTTP test on busy machines. Stays clear of the
+    /// bind-address tests' fixed 18424/18425 ports.
+    private static var nextPort: UInt16 = 19000
+    private static func allocateTestPort() -> UInt16 {
+        let port = nextPort
+        nextPort &+= 1
+        return port
+    }
+    private var testPort: UInt16 = 0
     private var server: WebhookServer!
     private var mockBridge: MockWebhookBridge!
     private var engine: ActionEngine!
 
     override func setUp() {
         super.setUp()
+        testPort = WebhookServerTests.allocateTestPort()
         ProStatusCache.shared.isPro = true
         mockBridge = MockWebhookBridge()
         engine = ActionEngine(bridge: mockBridge)
         engine.updateMenuData(createTestMenuData())
-        server = WebhookServer(port: Self.testPort)
+        server = WebhookServer(port: testPort)
         server.configure(actionEngine: engine)
     }
 
@@ -622,7 +634,7 @@ final class WebhookServerTests: XCTestCase {
         let responseExpectation = expectation(description: "HTTP response")
         var httpResponse: HTTPResponse?
 
-        let url = URL(string: "http://localhost:\(Self.testPort)\(path)")!
+        let url = URL(string: "http://localhost:\(testPort)\(path)")!
         let task = URLSession.shared.dataTask(with: url) { data, response, error in
             if let httpResp = response as? HTTPURLResponse,
                let data,

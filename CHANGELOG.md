@@ -19,6 +19,7 @@
 - Groups reorder anywhere in their room – a group row can be dragged among the room's accessories (previously groups were pinned to the top and a lone group couldn't be dragged at all), and every group and accessory row now shows a drag handle
 - Expand groups in Settings → Home – groups have a chevron revealing their member devices, and dragging those reorders the group. The group's submenu in the menu and its pinned menu-bar dropdown now follow that order instead of regrouping by type, and pinned room dropdowns follow the room's custom order too
 - Fix "Record sensor history" staying greyed out after buying Pro – the Advanced pane checked the Pro status only when it was first shown, so the toggle stayed disabled until the app was relaunched; it now unlocks the moment the purchase completes. The HomeKit bridge pane had the same stale gate (enable switch and upsell banner) and now rebuilds on Pro status changes like the other Pro panes
+- Fix colour-setting scenes never being detected as active – hue and saturation now use the same rounding tolerance as brightness/position, so a scene that set a colour is shown as active right after it fires instead of permanently "off" (#157, thanks @YuriNachos)
 
 ## 2.7.0
 

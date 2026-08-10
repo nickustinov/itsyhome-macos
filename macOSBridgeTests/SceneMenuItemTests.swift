@@ -105,4 +105,53 @@ final class SceneMenuItemTests: XCTestCase {
         let result = SceneStateHelper.offValue(for: action(type: CharacteristicTypes.targetDoorState, target: 1.0))
         XCTAssertNil(result)
     }
+
+    // MARK: - Colour characteristic tolerance (#157)
+
+    func testToleranceForHueAndSaturation() {
+        XCTAssertEqual(SceneStateHelper.tolerance(for: CharacteristicTypes.hue), 1.0)
+        XCTAssertEqual(SceneStateHelper.tolerance(for: CharacteristicTypes.saturation), 1.0)
+    }
+
+    func testColourSceneWithinRoundingToleranceIsActive() {
+        let charId = UUID()
+        let bridge = SceneStubBridge()
+        bridge.values[charId] = 244                       // device reports a rounded int
+        let scene = SceneData(uniqueIdentifier: UUID(), name: "Cosy",
+                              actions: [SceneActionData(characteristicId: charId,
+                                                        characteristicType: CharacteristicTypes.hue,
+                                                        targetValue: 244.6013061341441)])  // delta 0.60
+        XCTAssertEqual(SceneStateHelper.isActive(scene: scene, bridge: bridge), true)
+    }
+
+    func testColourSceneOutsideToleranceIsInactive() {
+        let charId = UUID()
+        let bridge = SceneStubBridge()
+        bridge.values[charId] = 200                       // delta |244.6013 - 200| = 44.6, far above any tolerance
+        let scene = SceneData(uniqueIdentifier: UUID(), name: "Cosy",
+                              actions: [SceneActionData(characteristicId: charId,
+                                                        characteristicType: CharacteristicTypes.hue,
+                                                        targetValue: 244.6013061341441)])
+        XCTAssertEqual(SceneStateHelper.isActive(scene: scene, bridge: bridge), false)
+    }
+}
+
+// Minimal Mac2iOS stub so isActive(scene:bridge:) can be driven in tests.
+private final class SceneStubBridge: NSObject, Mac2iOS {
+    var values: [UUID: Any] = [:]
+    var homes: [HomeInfo] = []
+    var selectedHomeIdentifier: UUID?
+    var rooms: [RoomInfo] = []
+    var accessories: [AccessoryInfo] = []
+    var scenes: [SceneInfo] = []
+    func reloadHomeKit() {}
+    func executeScene(identifier: UUID) {}
+    func readCharacteristic(identifier: UUID) {}
+    func writeCharacteristic(identifier: UUID, value: Any) {}
+    func getCharacteristicValue(identifier: UUID) -> Any? { values[identifier] }
+    func openCameraWindow() {}
+    func closeCameraWindow() {}
+    func setCameraWindowHidden(_ hidden: Bool) {}
+    func getRawHomeKitDump() -> String? { nil }
+    func getCameraDebugJSON(entityId: String?, completion: @escaping (String?) -> Void) { completion(nil) }
 }

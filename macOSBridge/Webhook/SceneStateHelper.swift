@@ -47,6 +47,9 @@ enum SceneStateHelper {
              CharacteristicTypes.brightness,
              CharacteristicTypes.rotationSpeed:
             return 5.0
+        case CharacteristicTypes.hue,
+             CharacteristicTypes.saturation:
+            return 1.0
         default:
             return 0.01
         }
