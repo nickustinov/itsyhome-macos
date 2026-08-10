@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.1.0
+
+- Half-degree thermostat setpoints – temperature setpoints now step and display in the increment the device actually advertises, typically 0.5 °C, instead of hardcoded whole degrees. A 21.5° setpoint set from Apple Home reads 21.5° rather than 22°, the ± steppers can reach it, and setpoint limits follow the device's advertised min/max. Metadata-driven per device: a 0.5° radiator (Eve Thermo and similar) steps by 0.5°, a whole-degree device is unchanged, and Fahrenheit keeps whole-degree stepping and display. Applies to thermostat targets, heater-cooler thresholds and Home Assistant climate targets (#60, #102, thanks @jeffscottmtl)
+- Fix AC temperature skipping degrees in Fahrenheit – heater-cooler steppers moved the underlying Celsius value by 1° (= 1.8 °F), the same bug fixed for thermostats in 3.0.0, so one click jumped 72 to 74. All six AC steppers are now unit-aware and move the displayed degree by exactly one (thanks @jeffscottmtl and @YuriNachos)
+- Fix colour-setting scenes never being detected as active – hue and saturation now use the same rounding tolerance as brightness/position, so a scene that set a colour is shown as active right after it fires instead of permanently "off" (#157, thanks @YuriNachos)
+- Fix sensor history chart drawn vertically mirrored – the numeric sparkline line rendered upside down (a rising reading drew a falling line, contradicting the hover readout) because SparklineView used AppKit's default non-flipped coordinate system while the y math assumes a flipped view (y = 0 at the top). SparklineView now overrides `isFlipped` so the line follows the data; the binary on/off timeline uses a symmetric mid-Y and is unchanged (#150, thanks @YuriNachos)
+- Fix the group colour swatch showing the wrong hue for lights clustered near red – the group's average hue was a plain arithmetic mean of degrees, so two lights at 350° and 10° (both near red) averaged to 180° (cyan). Hue is now averaged as an angle (mean of unit vectors, recovered with atan2), so colours blend correctly across the 0°/360° boundary while ordinary same-area clusters are unchanged (thanks @YuriNachos)
+
 ## 3.0.0
 
 - Respect the Home app's "show as" override – a switch or outlet reconfigured to display as a light or fan in Apple Home now shows up as that type everywhere in Itsyhome: menu row, icon, type grouping and auto groups (previously it always appeared as a switch)
@@ -19,9 +27,6 @@
 - Groups reorder anywhere in their room – a group row can be dragged among the room's accessories (previously groups were pinned to the top and a lone group couldn't be dragged at all), and every group and accessory row now shows a drag handle
 - Expand groups in Settings → Home – groups have a chevron revealing their member devices, and dragging those reorders the group. The group's submenu in the menu and its pinned menu-bar dropdown now follow that order instead of regrouping by type, and pinned room dropdowns follow the room's custom order too
 - Fix "Record sensor history" staying greyed out after buying Pro – the Advanced pane checked the Pro status only when it was first shown, so the toggle stayed disabled until the app was relaunched; it now unlocks the moment the purchase completes. The HomeKit bridge pane had the same stale gate (enable switch and upsell banner) and now rebuilds on Pro status changes like the other Pro panes
-- Fix colour-setting scenes never being detected as active – hue and saturation now use the same rounding tolerance as brightness/position, so a scene that set a colour is shown as active right after it fires instead of permanently "off" (#157, thanks @YuriNachos)
-- Fix sensor history chart drawn vertically mirrored – the numeric sparkline line rendered upside down (a rising reading drew a falling line, contradicting the hover readout) because SparklineView used AppKit's default non-flipped coordinate system while the y math assumes a flipped view (y = 0 at the top). SparklineView now overrides `isFlipped` so the line follows the data; the binary on/off timeline uses a symmetric mid-Y and is unchanged (#150, thanks @YuriNachos)
-- Fix the group colour swatch showing the wrong hue for lights clustered near red – the group's average hue was a plain arithmetic mean of degrees, so two lights at 350° and 10° (both near red) averaged to 180° (cyan). Hue is now averaged as an angle (mean of unit vectors, recovered with atan2), so colours blend correctly across the 0°/360° boundary while ordinary same-area clusters are unchanged (thanks @YuriNachos)
 
 ## 2.7.0
 
