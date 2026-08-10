@@ -36,6 +36,8 @@ extension PinnedStatusItem {
              ServiceTypes.smokeSensor, ServiceTypes.carbonMonoxideSensor,
              ServiceTypes.carbonDioxideSensor:
             return binarySensorStatus(for: service)
+        case ServiceTypes.airQualitySensor:
+            return airQualityStatus(for: service)
         case ServiceTypes.sensor, ServiceTypes.binarySensor:
             return genericSensorStatus(for: service)
         default:
@@ -256,6 +258,16 @@ extension PinnedStatusItem {
         if let idStr = kind.stateCharacteristicId(from: service), let id = UUID(uuidString: idStr),
            let value = cachedValues[id].flatMap(ValueConversion.toDouble) {
             text = kind.formattedValue(value)
+        }
+        return (IconResolver.icon(for: service), text)
+    }
+
+    /// Air quality sensor: the 0–5 index word (Excellent … Poor).
+    private func airQualityStatus(for service: ServiceData) -> (icon: NSImage?, text: String?) {
+        var text: String?
+        if let idStr = service.airQualityId, let id = UUID(uuidString: idStr),
+           let index = cachedValues[id].flatMap(ValueConversion.toInt) {
+            text = SensorKind.airQualityLabel(index)
         }
         return (IconResolver.icon(for: service), text)
     }

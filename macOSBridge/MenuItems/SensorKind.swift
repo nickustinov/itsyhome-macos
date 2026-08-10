@@ -12,6 +12,7 @@ import Foundation
 
 enum SensorKind {
     case contact, motion, occupancy, leak, smoke, carbonMonoxide, carbonDioxide
+    case airQuality
     case temperature, humidity
 
     init?(serviceType: String) {
@@ -23,6 +24,7 @@ enum SensorKind {
         case ServiceTypes.smokeSensor: self = .smoke
         case ServiceTypes.carbonMonoxideSensor: self = .carbonMonoxide
         case ServiceTypes.carbonDioxideSensor: self = .carbonDioxide
+        case ServiceTypes.airQualitySensor: self = .airQuality
         case ServiceTypes.temperatureSensor: self = .temperature
         case ServiceTypes.humiditySensor: self = .humidity
         default: return nil
@@ -42,8 +44,41 @@ enum SensorKind {
         case .smoke: return serviceData.smokeDetectedId
         case .carbonMonoxide: return serviceData.carbonMonoxideDetectedId
         case .carbonDioxide: return serviceData.carbonDioxideDetectedId
+        case .airQuality: return serviceData.airQualityId
         case .temperature: return serviceData.currentTemperatureId
         case .humidity: return serviceData.humidityId
+        }
+    }
+
+    /// A secondary numeric concentration shown after the state word, with its
+    /// unit: the ppm level HAP requires on CO/CO2 sensors, and the CO2 or VOC
+    /// reading an air quality service carries. nil for kinds without one.
+    func levelCharacteristic(from serviceData: ServiceData) -> (id: String, unit: String)? {
+        switch self {
+        case .carbonMonoxide:
+            return serviceData.carbonMonoxideLevelId.map { ($0, "ppm") }
+        case .carbonDioxide:
+            return serviceData.carbonDioxideLevelId.map { ($0, "ppm") }
+        case .airQuality:
+            // Prefer the CO2 ppm when the service carries one (SONOFF-style
+            // monitors); otherwise the VOC density (Eve Room and similar).
+            return serviceData.carbonDioxideLevelId.map { ($0, "ppm") }
+                ?? serviceData.vocDensityId.map { ($0, "µg/m³") }
+        default:
+            return nil
+        }
+    }
+
+    /// Display word for the HAP AirQuality index (1 excellent … 5 poor).
+    /// 0 means unknown; out-of-range values also fall back to nil.
+    static func airQualityLabel(_ index: Int) -> String? {
+        switch index {
+        case 1: return String(localized: "device.sensor.air_quality.excellent", defaultValue: "Excellent", bundle: .macOSBridge)
+        case 2: return String(localized: "device.sensor.air_quality.good", defaultValue: "Good", bundle: .macOSBridge)
+        case 3: return String(localized: "device.sensor.air_quality.fair", defaultValue: "Fair", bundle: .macOSBridge)
+        case 4: return String(localized: "device.sensor.air_quality.inferior", defaultValue: "Inferior", bundle: .macOSBridge)
+        case 5: return String(localized: "device.sensor.air_quality.poor", defaultValue: "Poor", bundle: .macOSBridge)
+        default: return nil
         }
     }
 
@@ -72,7 +107,8 @@ enum SensorKind {
             return (String(localized: "device.sensor.co", defaultValue: "CO", bundle: .macOSBridge), clear)
         case .carbonDioxide:
             return (String(localized: "device.sensor.co2", defaultValue: "CO2", bundle: .macOSBridge), clear)
-        case .temperature, .humidity:
+        case .airQuality, .temperature, .humidity:
+            // Air quality maps its 0–5 index through airQualityLabel(_:).
             return nil
         }
     }

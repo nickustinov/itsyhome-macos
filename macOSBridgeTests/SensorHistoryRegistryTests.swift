@@ -78,4 +78,20 @@ final class SensorHistoryRegistryTests: XCTestCase {
         XCTAssertEqual(registry.count, 1)
         XCTAssertEqual(registry[tempId], SensorMeta(seriesKind: .numeric, name: "Bedroom Sensor"))
     }
+
+    func testAirQualityIndexIsNotRecorded() {
+        // The 0–5 air quality index is neither a numeric line nor a binary
+        // timeline, so the registry must skip it entirely.
+        let aqId = UUID()
+        let service = TestServiceFactory.sensor(
+            serviceType: ServiceTypes.airQualitySensor,
+            name: "Air quality",
+            airQualityId: aqId.uuidString
+        )
+        let data = TestServiceFactory.menuData(services: [service])
+
+        let registry = SensorHistoryRegistry.build(from: data)
+
+        XCTAssertNil(registry[aqId])
+    }
 }

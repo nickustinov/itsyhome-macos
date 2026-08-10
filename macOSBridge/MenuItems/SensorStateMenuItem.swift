@@ -24,6 +24,12 @@ class SensorStateMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRe
     /// (driven instead by the ServiceData sensor fields).
     private let kind: SensorKind?
     private let stateCharacteristicId: UUID?
+    /// Secondary numeric concentration (CO/CO2 ppm, VOC µg/m³) shown after the
+    /// state word, when the service carries one.
+    private let levelCharacteristicId: UUID?
+    private let levelUnit: String?
+    private var lastStateValue: Any?
+    private var lastLevelValue: Double?
 
     private let containerView: HighlightingMenuItemView
     private let iconView: NSImageView
@@ -31,7 +37,11 @@ class SensorStateMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRe
     private let batteryBadge: BatteryBadgeView?
 
     var characteristicIdentifiers: [UUID] {
-        (stateCharacteristicId.map { [$0] } ?? []) + (batteryBadge?.characteristicIds ?? [])
+        var ids: [UUID] = []
+        if let stateCharacteristicId { ids.append(stateCharacteristicId) }
+        if let levelCharacteristicId { ids.append(levelCharacteristicId) }
+        ids.append(contentsOf: batteryBadge?.characteristicIds ?? [])
+        return ids
     }
 
     /// The currently displayed reading (e.g. "Open", "Leak", "21.5°", "—").
@@ -45,6 +55,9 @@ class SensorStateMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRe
         self.kind = kind
         let charId = kind?.stateCharacteristicId(from: serviceData) ?? serviceData.sensorReadingId
         self.stateCharacteristicId = charId.flatMap { UUID(uuidString: $0) }
+        let level = kind?.levelCharacteristic(from: serviceData)
+        self.levelCharacteristicId = level.flatMap { UUID(uuidString: $0.id) }
+        self.levelUnit = level?.unit
 
         // Single-line row matching the other menu items: small icon + name on
         // the left, reading right-aligned. (The aggregate temperature/humidity
@@ -61,9 +74,10 @@ class SensorStateMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRe
         containerView.addSubview(iconView)
         // Icon image is set by apply(nil) below, once the row reflects its state.
 
-        // Reading label (right-aligned)
+        // Reading label (right-aligned). Rows with a concentration level get a
+        // wider label so "Excellent · 91.4 µg/m³" fits; the name truncates.
         let labelY = (height - 17) / 2
-        let valueWidth: CGFloat = 80
+        let valueWidth: CGFloat = level != nil ? 124 : 80
         let valueX = DS.ControlSize.menuItemWidth - valueWidth - DS.Spacing.md
         valueLabel = NSTextField(labelWithString: "—")
         valueLabel.frame = NSRect(x: valueX, y: labelY - 1, width: valueWidth, height: 17)
@@ -102,7 +116,13 @@ class SensorStateMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRe
             batteryBadge.updateValue(for: characteristicId, value: value)
             return
         }
+        if characteristicId == levelCharacteristicId {
+            lastLevelValue = ValueConversion.toDouble(value)
+            apply(lastStateValue)
+            return
+        }
         guard characteristicId == stateCharacteristicId else { return }
+        lastStateValue = value
         apply(value)
     }
 
@@ -110,7 +130,8 @@ class SensorStateMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRe
 
     /// Update the value label and icon for a raw characteristic value (nil
     /// shows the placeholder). Numeric kinds format the reading; binary kinds
-    /// map 1/0 to their state words and drive a state-aware icon.
+    /// map 1/0 to their state words and drive a state-aware icon; kinds with a
+    /// concentration level append it after the state word ("Clear · 563 ppm").
     private func apply(_ value: Any?) {
         guard let kind else {
             applyGeneric(value)
@@ -123,16 +144,36 @@ class SensorStateMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRe
             refreshHistory()
             return
         }
+
+        if kind == .airQuality {
+            let word = value.flatMap(ValueConversion.toInt).flatMap(SensorKind.airQualityLabel)
+            valueLabel.stringValue = combined(word)
+            iconView.image = IconResolver.icon(for: serviceData)
+            return
+        }
+
         let raw = value.flatMap(ValueConversion.toInt)
+        var word: String?
         if let labels = kind.stateLabels {
             switch raw {
-            case 1: valueLabel.stringValue = labels.one
-            case 0: valueLabel.stringValue = labels.zero
-            default: valueLabel.stringValue = "—"
+            case 1: word = labels.one
+            case 0: word = labels.zero
+            default: word = nil
             }
         }
+        valueLabel.stringValue = combined(word)
         iconView.image = IconResolver.sensorIcon(for: serviceData, active: raw == 1)
         refreshHistory()
+    }
+
+    /// State word and concentration level joined for display: "Clear · 563 ppm",
+    /// either part alone when the other is unknown, or the placeholder.
+    private func combined(_ word: String?) -> String {
+        let level = lastLevelValue.flatMap { level in
+            levelUnit.map { GenericSensor.formattedReading(level, unit: $0) }
+        }
+        let parts = [word, level].compactMap { $0 }
+        return parts.isEmpty ? "—" : parts.joined(separator: " · ")
     }
 
     // MARK: - History

@@ -29,7 +29,8 @@ enum TestServiceFactory {
         leakDetectedId: String? = nil,
         smokeDetectedId: String? = nil,
         carbonMonoxideDetectedId: String? = nil,
-        carbonDioxideDetectedId: String? = nil
+        carbonDioxideDetectedId: String? = nil,
+        airQualityId: String? = nil
     ) -> ServiceData {
         ServiceData(
             uniqueIdentifier: UUID(),
@@ -45,7 +46,8 @@ enum TestServiceFactory {
             leakDetectedId: leakDetectedId.flatMap(UUID.init(uuidString:)),
             smokeDetectedId: smokeDetectedId.flatMap(UUID.init(uuidString:)),
             carbonMonoxideDetectedId: carbonMonoxideDetectedId.flatMap(UUID.init(uuidString:)),
-            carbonDioxideDetectedId: carbonDioxideDetectedId.flatMap(UUID.init(uuidString:))
+            carbonDioxideDetectedId: carbonDioxideDetectedId.flatMap(UUID.init(uuidString:)),
+            airQualityId: airQualityId.flatMap(UUID.init(uuidString:))
         )
     }
 

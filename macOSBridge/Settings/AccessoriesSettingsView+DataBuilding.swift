@@ -215,7 +215,7 @@ extension AccessoriesSettingsView {
                         ServiceTypes.contactSensor, ServiceTypes.motionSensor,
                         ServiceTypes.occupancySensor, ServiceTypes.leakSensor,
                         ServiceTypes.smokeSensor, ServiceTypes.carbonMonoxideSensor,
-                        ServiceTypes.carbonDioxideSensor,
+                        ServiceTypes.carbonDioxideSensor, ServiceTypes.airQualitySensor,
                         ServiceTypes.temperatureSensor, ServiceTypes.humiditySensor,
                         ServiceTypes.sensor, ServiceTypes.binarySensor
                     ]

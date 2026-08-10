@@ -15,8 +15,11 @@ enum SensorHistoryRegistry {
         for accessory in data.accessories {
             for service in accessory.services {
                 // Recognised sensor services (contact, motion, temperature/humidity
-                // sensors, ...) register their state characteristic.
+                // sensors, ...) register their state characteristic. Air quality is
+                // excluded: its 0–5 index is neither a numeric line nor a binary
+                // timeline, so recording it would only produce a broken chart.
                 if let kind = SensorKind(serviceType: service.serviceType),
+                   kind != .airQuality,
                    let idString = kind.stateCharacteristicId(from: service),
                    let id = UUID(uuidString: idString) {
                     registry[id] = SensorMeta(seriesKind: kind.seriesKind, name: service.name)

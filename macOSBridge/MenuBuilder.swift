@@ -437,6 +437,7 @@ class MenuBuilder {
             ServiceTypes.smokeSensor,
             ServiceTypes.carbonMonoxideSensor,
             ServiceTypes.carbonDioxideSensor,
+            ServiceTypes.airQualitySensor,
             ServiceTypes.temperatureSensor,
             ServiceTypes.humiditySensor,
             ServiceTypes.sensor,
@@ -456,7 +457,7 @@ class MenuBuilder {
             ServiceTypes.contactSensor, ServiceTypes.motionSensor,
             ServiceTypes.occupancySensor, ServiceTypes.leakSensor,
             ServiceTypes.smokeSensor, ServiceTypes.carbonMonoxideSensor,
-            ServiceTypes.carbonDioxideSensor,
+            ServiceTypes.carbonDioxideSensor, ServiceTypes.airQualitySensor,
             ServiceTypes.temperatureSensor, ServiceTypes.humiditySensor,
             ServiceTypes.sensor, ServiceTypes.binarySensor
         ]
@@ -679,7 +680,7 @@ class MenuBuilder {
         case ServiceTypes.contactSensor, ServiceTypes.motionSensor,
              ServiceTypes.occupancySensor, ServiceTypes.leakSensor,
              ServiceTypes.smokeSensor, ServiceTypes.carbonMonoxideSensor,
-             ServiceTypes.carbonDioxideSensor,
+             ServiceTypes.carbonDioxideSensor, ServiceTypes.airQualitySensor,
              ServiceTypes.temperatureSensor, ServiceTypes.humiditySensor,
              ServiceTypes.sensor, ServiceTypes.binarySensor:
             // Temperature/humidity only reach here when the aggregate summary is

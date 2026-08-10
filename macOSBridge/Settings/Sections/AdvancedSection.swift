@@ -15,6 +15,7 @@ class AdvancedSection: SettingsCard {
     private let sensorSummarySwitch = NSSwitch()
     private let autoGroupsSwitch = NSSwitch()
     private let historySwitch = NSSwitch()
+    private let historyProBadge = AdvancedSection.createProChip()
     private var cancellables = Set<AnyCancellable>()
 
     override init(frame frameRect: NSRect) {
@@ -101,6 +102,7 @@ class AdvancedSection: SettingsCard {
         historySwitch.action = #selector(historySwitchChanged(_:))
         let historyRow = createSettingRow(
             label: String(localized: "settings.advanced.history", defaultValue: "Record sensor history", bundle: .macOSBridge),
+            badge: historyProBadge,
             subtitle: String(localized: "settings.advanced.history_subtitle", defaultValue: "Keeps 30 days of temperature, humidity and sensor changes. Hover a sensor in the menu to see its chart.", bundle: .macOSBridge),
             control: historySwitch
         )
@@ -131,7 +133,32 @@ class AdvancedSection: SettingsCard {
         historyBox.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
     }
 
-    private func createSettingRow(label: String, subtitle: String? = nil, control: NSView) -> NSView {
+    /// A small "PRO" chip shown next to a Pro-gated row's label while the
+    /// user is on the free tier, matching the sidebar's section badge.
+    private static func createProChip() -> NSView {
+        let chip = NSView()
+        chip.translatesAutoresizingMaskIntoConstraints = false
+        chip.wantsLayer = true
+        chip.layer?.backgroundColor = NSColor.systemBlue.cgColor
+        chip.layer?.cornerRadius = 3
+
+        let label = NSTextField(labelWithString: "PRO")
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.font = .systemFont(ofSize: 8, weight: .bold)
+        label.textColor = .white
+        label.alignment = .center
+        chip.addSubview(label)
+
+        NSLayoutConstraint.activate([
+            chip.widthAnchor.constraint(equalToConstant: 28),
+            chip.heightAnchor.constraint(equalToConstant: 14),
+            label.centerXAnchor.constraint(equalTo: chip.centerXAnchor),
+            label.centerYAnchor.constraint(equalTo: chip.centerYAnchor)
+        ])
+        return chip
+    }
+
+    private func createSettingRow(label: String, badge: NSView? = nil, subtitle: String? = nil, control: NSView) -> NSView {
         let container = NSView()
         container.translatesAutoresizingMaskIntoConstraints = false
 
@@ -142,7 +169,15 @@ class AdvancedSection: SettingsCard {
         labelStack.translatesAutoresizingMaskIntoConstraints = false
 
         let labelField = createLabel(label, style: .body)
-        labelStack.addArrangedSubview(labelField)
+        if let badge = badge {
+            let labelLine = NSStackView(views: [labelField, badge])
+            labelLine.orientation = .horizontal
+            labelLine.spacing = 6
+            labelLine.alignment = .centerY
+            labelStack.addArrangedSubview(labelLine)
+        } else {
+            labelStack.addArrangedSubview(labelField)
+        }
 
         if let subtitle = subtitle {
             let subtitleField = createLabel(subtitle, style: .caption)
@@ -189,6 +224,7 @@ class AdvancedSection: SettingsCard {
         // History is a Pro feature; disable (not hide) the switch for free
         // users so it can't look functional while the store refuses to record.
         historySwitch.isEnabled = ProStatusCache.shared.isPro
+        historyProBadge.isHidden = ProStatusCache.shared.isPro
     }
 
     private func setupBindings() {
@@ -196,7 +232,10 @@ class AdvancedSection: SettingsCard {
         // must track purchases made after this pane was first shown.
         ProManager.shared.$isPro
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] isPro in self?.historySwitch.isEnabled = isPro }
+            .sink { [weak self] isPro in
+                self?.historySwitch.isEnabled = isPro
+                self?.historyProBadge.isHidden = isPro
+            }
             .store(in: &cancellables)
     }
 

@@ -398,7 +398,17 @@ enum DebugMockups {
                 serviceType: ServiceTypes.carbonDioxideSensor,
                 accessoryName: "Mock",
                 roomIdentifier: nil,
-                carbonDioxideDetectedId: UUID()
+                carbonDioxideDetectedId: UUID(),
+                carbonDioxideLevelId: UUID()
+            ),
+            ServiceData(
+                uniqueIdentifier: UUID(),
+                name: "Mock air quality",
+                serviceType: ServiceTypes.airQualitySensor,
+                accessoryName: "Mock",
+                roomIdentifier: nil,
+                airQualityId: UUID(),
+                carbonDioxideLevelId: UUID()
             ),
             ServiceData(
                 uniqueIdentifier: UUID(),

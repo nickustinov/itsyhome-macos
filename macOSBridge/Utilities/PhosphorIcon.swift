@@ -310,6 +310,10 @@ extension PhosphorIcon {
         ServiceTypes.carbonDioxideSensor: AccessoryIconConfig(
             defaultIcon: "cloud",
             suggestedIcons: ["cloud", "wind", "warning-octagon", "drop"]
+        ),
+        ServiceTypes.airQualitySensor: AccessoryIconConfig(
+            defaultIcon: "wind",
+            suggestedIcons: ["wind", "cloud", "leaf", "gauge"]
         )
     ]
 }

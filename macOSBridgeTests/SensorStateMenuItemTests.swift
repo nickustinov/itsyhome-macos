@@ -216,4 +216,109 @@ final class SensorStateMenuItemTests: XCTestCase {
         XCTAssertTrue(item is CharacteristicUpdatable)
         XCTAssertTrue(item is CharacteristicRefreshable)
     }
+
+    // MARK: - Concentration levels (#155)
+
+    private func makeCO2Service(stateId: UUID, levelId: UUID) -> ServiceData {
+        ServiceData(
+            uniqueIdentifier: UUID(),
+            name: "CO2 sensor",
+            serviceType: ServiceTypes.carbonDioxideSensor,
+            accessoryName: "Test Accessory",
+            roomIdentifier: nil,
+            carbonDioxideDetectedId: stateId,
+            carbonDioxideLevelId: levelId
+        )
+    }
+
+    func testCO2RowSubscribesToDetectedAndLevel() {
+        let stateId = UUID(), levelId = UUID()
+        let item = SensorStateMenuItem(serviceData: makeCO2Service(stateId: stateId, levelId: levelId), bridge: nil)
+        XCTAssertEqual(Set(item.characteristicIdentifiers), Set([stateId, levelId]))
+    }
+
+    func testCO2RowShowsStateWordWithPpm() {
+        let stateId = UUID(), levelId = UUID()
+        let item = SensorStateMenuItem(serviceData: makeCO2Service(stateId: stateId, levelId: levelId), bridge: nil)
+
+        item.updateValue(for: stateId, value: 0)
+        XCTAssertEqual(item.displayedState, "Clear")
+
+        item.updateValue(for: levelId, value: 563.0)
+        XCTAssertEqual(item.displayedState, "Clear · 563 ppm")
+
+        item.updateValue(for: stateId, value: 1)
+        XCTAssertEqual(item.displayedState, "CO2 · 563 ppm")
+    }
+
+    func testCO2RowShowsPpmAloneBeforeStateArrives() {
+        let stateId = UUID(), levelId = UUID()
+        let item = SensorStateMenuItem(serviceData: makeCO2Service(stateId: stateId, levelId: levelId), bridge: nil)
+        item.updateValue(for: levelId, value: 812.0)
+        XCTAssertEqual(item.displayedState, "812 ppm")
+    }
+
+    func testCO2RowWithoutLevelKeepsPlainStateWord() {
+        // A CO2 service with no level characteristic behaves exactly as before.
+        let stateId = UUID()
+        let item = SensorStateMenuItem(serviceData: makeService(type: ServiceTypes.carbonDioxideSensor, charId: stateId), bridge: nil)
+        item.updateValue(for: stateId, value: 0)
+        XCTAssertEqual(item.displayedState, "Clear")
+    }
+
+    // MARK: - Air quality (#154)
+
+    private func makeAirQualityService(aqId: UUID, co2LevelId: UUID? = nil, vocId: UUID? = nil) -> ServiceData {
+        ServiceData(
+            uniqueIdentifier: UUID(),
+            name: "Air quality",
+            serviceType: ServiceTypes.airQualitySensor,
+            accessoryName: "Test Accessory",
+            roomIdentifier: nil,
+            airQualityId: aqId,
+            carbonDioxideLevelId: co2LevelId,
+            vocDensityId: vocId
+        )
+    }
+
+    func testAirQualityKindMapsFromServiceType() {
+        XCTAssertEqual(SensorKind(serviceType: ServiceTypes.airQualitySensor), .airQuality)
+    }
+
+    func testAirQualityShowsIndexWord() {
+        let aqId = UUID()
+        let item = SensorStateMenuItem(serviceData: makeAirQualityService(aqId: aqId), bridge: nil)
+
+        let expectations: [(Int, String)] = [
+            (1, "Excellent"), (2, "Good"), (3, "Fair"), (4, "Inferior"), (5, "Poor")
+        ]
+        for (index, word) in expectations {
+            item.updateValue(for: aqId, value: index)
+            XCTAssertEqual(item.displayedState, word)
+        }
+    }
+
+    func testAirQualityUnknownIndexShowsPlaceholder() {
+        let aqId = UUID()
+        let item = SensorStateMenuItem(serviceData: makeAirQualityService(aqId: aqId), bridge: nil)
+        item.updateValue(for: aqId, value: 0)
+        XCTAssertEqual(item.displayedState, "—")
+    }
+
+    func testAirQualityShowsCO2LevelAfterWord() {
+        let aqId = UUID(), levelId = UUID()
+        let item = SensorStateMenuItem(serviceData: makeAirQualityService(aqId: aqId, co2LevelId: levelId), bridge: nil)
+        item.updateValue(for: aqId, value: 2)
+        item.updateValue(for: levelId, value: 563.0)
+        XCTAssertEqual(item.displayedState, "Good · 563 ppm")
+    }
+
+    func testAirQualityFallsBackToVOCDensity() {
+        // Eve Room-style service: no CO2 level, VOC density instead.
+        let aqId = UUID(), vocId = UUID()
+        let item = SensorStateMenuItem(serviceData: makeAirQualityService(aqId: aqId, vocId: vocId), bridge: nil)
+        item.updateValue(for: aqId, value: 1)
+        item.updateValue(for: vocId, value: 91.4)
+        XCTAssertEqual(item.displayedState, "Excellent · 91.4 µg/m³")
+    }
 }

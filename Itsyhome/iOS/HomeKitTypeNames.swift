@@ -33,6 +33,7 @@ enum HomeKitTypeNames {
         case ServiceTypes.smokeSensor: return "SmokeSensor"
         case ServiceTypes.carbonMonoxideSensor: return "CarbonMonoxideSensor"
         case ServiceTypes.carbonDioxideSensor: return "CarbonDioxideSensor"
+        case ServiceTypes.airQualitySensor: return "AirQualitySensor"
         case HMServiceTypeSecuritySystem: return "SecuritySystem"
         case HMServiceTypeHumidifierDehumidifier: return "HumidifierDehumidifier"
         case HMServiceTypeAirPurifier: return "AirPurifier"

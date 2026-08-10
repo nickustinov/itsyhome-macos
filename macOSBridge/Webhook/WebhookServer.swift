@@ -408,6 +408,7 @@ final class WebhookServer {
         case ServiceTypes.smokeSensor: return "smoke-sensor"
         case ServiceTypes.carbonMonoxideSensor: return "carbon-monoxide-sensor"
         case ServiceTypes.carbonDioxideSensor: return "carbon-dioxide-sensor"
+        case ServiceTypes.airQualitySensor: return "air-quality-sensor"
         case ServiceTypes.sensor: return "sensor"
         case ServiceTypes.binarySensor: return "binary-sensor"
         case ServiceTypes.securitySystem: return "security-system"
