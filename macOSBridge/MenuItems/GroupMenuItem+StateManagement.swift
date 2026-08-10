@@ -116,7 +116,9 @@ extension GroupMenuItem {
             currentBrightness = brightnessStates.values.reduce(0, +) / Double(brightnessStates.count)
         }
         if !hueStates.isEmpty {
-            currentHue = hueStates.values.reduce(0, +) / Double(hueStates.count)
+            // Hue is an angle: use the circular mean so lights around the 0°/360°
+            // boundary (e.g. 350° and 10°) average to red (~0°), not cyan (~180°).
+            currentHue = HueMath.circularMean(of: Array(hueStates.values))
         }
         if !saturationStates.isEmpty {
             currentSaturation = saturationStates.values.reduce(0, +) / Double(saturationStates.count)
@@ -207,7 +209,7 @@ extension GroupMenuItem {
     private func handleHueUpdate(characteristicId: UUID, value: Any) {
         if let newHue = ValueConversion.toDouble(value) {
             hueStates[characteristicId] = newHue
-            currentHue = hueStates.values.reduce(0, +) / Double(hueStates.count)
+            currentHue = HueMath.circularMean(of: Array(hueStates.values))
             lastColorSource = "rgb"
             updateSliderColor()
             (colorPickerView as? ColorWheelPickerView)?.updateColor(hue: currentHue, saturation: currentSaturation)
