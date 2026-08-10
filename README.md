@@ -416,4 +416,4 @@ MIT License © 2026 Nick Ustinov - see [LICENSE](LICENSE) for details.
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit issues and pull requests.
+Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for build instructions, project structure, and conventions.
