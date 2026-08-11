@@ -86,4 +86,23 @@ final class HueMathTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(mean, 0)
         XCTAssertLessThan(mean, 360)
     }
+
+    // MARK: - shortestDistance (hue comparison across the 0°/360° boundary)
+
+    func testShortestDistanceAcrossZeroBoundary() {
+        // 359° and 1° are 2° apart on the wheel, not 358°.
+        XCTAssertEqual(HueMath.shortestDistance(359, 1), 2, accuracy: 0.001)
+        XCTAssertEqual(HueMath.shortestDistance(1, 359), 2, accuracy: 0.001)
+    }
+
+    func testShortestDistanceWithinRangeMatchesAbsoluteDifference() {
+        XCTAssertEqual(HueMath.shortestDistance(40, 60), 20, accuracy: 0.001)
+        XCTAssertEqual(HueMath.shortestDistance(180, 0), 180, accuracy: 0.001)
+    }
+
+    func testShortestDistanceIsBoundedBy180() {
+        // The result is the shorter way around the wheel.
+        XCTAssertLessThanOrEqual(HueMath.shortestDistance(0, 359), 1.0)
+        XCTAssertLessThanOrEqual(HueMath.shortestDistance(90, 270), 180.0)
+    }
 }

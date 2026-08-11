@@ -128,7 +128,13 @@ class SceneMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefresha
                 return false
             }
             let tolerance = SceneStateHelper.tolerance(for: action.characteristicType)
-            return abs(currentValue - action.targetValue) < tolerance
+            // Hue wraps at 0°/360°: compare it by the shortest on-wheel distance
+            // so a colour scene near red (e.g. target 358°, lamp reports 1°) is
+            // detected as active instead of reading 357° out of tolerance.
+            let delta = action.characteristicType == CharacteristicTypes.hue
+                ? HueMath.shortestDistance(currentValue, action.targetValue)
+                : abs(currentValue - action.targetValue)
+            return delta < tolerance
         }
 
         isActive = allMatch
