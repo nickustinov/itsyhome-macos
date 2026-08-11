@@ -229,8 +229,16 @@ struct CloudSyncTranslator {
         guard let dict = try? JSONDecoder().decode([String: String].self, from: data) else { return nil }
         var translated: [String: String] = [:]
         for (stable, iconName) in dict {
+            // A service stable name is "roomName::accessoryName::serviceName".
+            // Resolve it first: when a room is named like a reserved prefix
+            // ("scene", "group", "room"), the service stable starts with that
+            // prefix ("scene::Lamp::Light") and would otherwise be misrouted by
+            // the prefix branches below, silently dropping the icon.
+            if let serviceId = stableToServiceId[stable] {
+                translated[serviceId] = iconName
+            }
             // Check for scene prefix
-            if stable.hasPrefix(Self.sceneIconPrefix) {
+            else if stable.hasPrefix(Self.sceneIconPrefix) {
                 let sceneName = String(stable.dropFirst(Self.sceneIconPrefix.count))
                 if let sceneId = sceneNameToId[sceneName] {
                     translated[sceneId] = iconName
@@ -248,11 +256,8 @@ struct CloudSyncTranslator {
                     translated[roomId] = iconName
                 }
             }
-            // Try as service stable name
-            else if let serviceId = stableToServiceId[stable] {
-                translated[serviceId] = iconName
-            }
         }
         return try? JSONEncoder().encode(translated)
     }
+
 }
