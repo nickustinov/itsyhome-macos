@@ -109,6 +109,7 @@ final class HAAuthManager {
             client.disconnect()
             return true
         } catch {
+            client.disconnect()
             let nsError = error as NSError
             logger.error("Credential validation failed: \(nsError.domain, privacy: .public) \(nsError.code, privacy: .public) – \(nsError.localizedDescription, privacy: .public)")
             throw error
