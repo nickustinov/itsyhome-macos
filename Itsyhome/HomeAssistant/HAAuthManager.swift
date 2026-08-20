@@ -109,6 +109,7 @@ final class HAAuthManager {
             client.disconnect()
             return true
         } catch {
+            client.disconnect()
             logger.error("Credential validation failed: \(error.localizedDescription)")
             throw error
         }

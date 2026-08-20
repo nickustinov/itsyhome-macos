@@ -17,7 +17,34 @@ final class HACameraSignaling: NSObject {
     // MARK: - Properties
 
     private var webSocketTask: URLSessionWebSocketTask?
-    private var urlSession: URLSession!
+
+    private let sessionConfiguration: URLSessionConfiguration = {
+        let config = URLSessionConfiguration.default
+        config.timeoutIntervalForRequest = 15
+        return config
+    }()
+
+    private var activeURLSession: URLSession?
+    private let sessionLock = NSLock()
+
+    /// The session backing the signalling WebSocket.
+    ///
+    /// One signalling client is created per stream, so the session has to be
+    /// invalidated in `disconnect()`: until it is, it keeps a strong reference
+    /// to this client and to the connection it used.
+    private var urlSession: URLSession {
+        sessionLock.lock()
+        defer { sessionLock.unlock() }
+
+        if let session = activeURLSession {
+            return session
+        }
+
+        let session = URLSession(configuration: sessionConfiguration, delegate: self, delegateQueue: nil)
+        activeURLSession = session
+        return session
+    }
+
     private var messageId: Int = 1
     private var pendingRequests: [Int: (Result<Any, Error>) -> Void] = [:]
     private let lock = NSLock()
@@ -35,13 +62,6 @@ final class HACameraSignaling: NSObject {
     private var subscriptionId: Int?
 
     // MARK: - Initialization
-
-    override init() {
-        super.init()
-        let config = URLSessionConfiguration.default
-        config.timeoutIntervalForRequest = 15
-        urlSession = URLSession(configuration: config, delegate: self, delegateQueue: nil)
-    }
 
     deinit {
         disconnect()
@@ -106,6 +126,12 @@ final class HACameraSignaling: NSObject {
         isAuthenticated = false
         webSocketTask?.cancel(with: .goingAway, reason: nil)
         webSocketTask = nil
+
+        sessionLock.lock()
+        let session = activeURLSession
+        activeURLSession = nil
+        sessionLock.unlock()
+        session?.invalidateAndCancel()
 
         lock.lock()
         let authCont = authContinuation
