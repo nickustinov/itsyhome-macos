@@ -237,7 +237,8 @@ final class HomeAssistantClient: NSObject {
                 self.receiveMessage()  // Continue receiving
 
             case .failure(let error):
-                logger.error("WebSocket receive error: \(error.localizedDescription)")
+                let nsError = error as NSError
+                logger.error("WebSocket receive error: \(nsError.domain, privacy: .public) \(nsError.code, privacy: .public) – \(nsError.localizedDescription, privacy: .public)")
                 self.handleDisconnection(error: error)
             }
         }
