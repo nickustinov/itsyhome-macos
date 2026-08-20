@@ -170,6 +170,30 @@ final class HomeAssistantClientTests: XCTestCase {
         }
     }
 
+    // MARK: - Session lifecycle tests
+
+    func testClientIsReleasedAfterDisconnect() throws {
+        // Given a client that has been disconnected
+        weak var weakClient: HomeAssistantClient?
+
+        try autoreleasepool {
+            let client = try HomeAssistantClient(serverURL: URL(string: "http://homeassistant.local:8123")!,
+                                                 accessToken: "test")
+            weakClient = client
+            client.disconnect()
+        }
+
+        // When its session has finished invalidating
+        let deadline = Date().addingTimeInterval(2)
+        while weakClient != nil && Date() < deadline {
+            RunLoop.current.run(until: Date().addingTimeInterval(0.05))
+        }
+
+        // Then nothing holds on to the client – a URLSession that is never
+        // invalidated retains its delegate for the lifetime of the process
+        XCTAssertNil(weakClient, "Client leaked – its URLSession still retains it as delegate")
+    }
+
     func testServiceCallFailedError() {
         let error = HomeAssistantClientError.serviceCallFailed("Entity not found")
         XCTAssertEqual(error.errorDescription, "Service call failed: Entity not found")
