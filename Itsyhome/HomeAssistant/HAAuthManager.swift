@@ -110,7 +110,8 @@ final class HAAuthManager {
             return true
         } catch {
             client.disconnect()
-            logger.error("Credential validation failed: \(error.localizedDescription)")
+            let nsError = error as NSError
+            logger.error("Credential validation failed: \(nsError.domain, privacy: .public) \(nsError.code, privacy: .public) – \(nsError.localizedDescription, privacy: .public)")
             throw error
         }
     }
@@ -131,7 +132,8 @@ final class HAAuthManager {
             return (devices.count, areas.count)
         } catch {
             client.disconnect()
-            logger.error("Credential validation failed: \(error.localizedDescription)")
+            let nsError = error as NSError
+            logger.error("Credential validation failed: \(nsError.domain, privacy: .public) \(nsError.code, privacy: .public) – \(nsError.localizedDescription, privacy: .public)")
             throw error
         }
     }
