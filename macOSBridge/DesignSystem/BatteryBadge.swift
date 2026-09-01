@@ -119,6 +119,13 @@ final class BatteryBadgeView: NSView {
         container.addSubview(self)
     }
 
+    /// Re-centre the badge on the name label's vertical position. Expandable
+    /// rows (thermostat, AC, climate) move row 1 up when their controls row
+    /// appears, so the badge must follow the name it was installed next to.
+    func alignVertically(with nameLabel: NSTextField) {
+        frame.origin.y = nameLabel.frame.midY - frame.height / 2
+    }
+
     func updateValue(for characteristicId: UUID, value: Any) {
         if characteristicId == levelCharId, let level = ValueConversion.toInt(value) {
             self.level = level

@@ -383,6 +383,7 @@ class ThermostatMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRef
         nameLabel.frame.origin.y = labelY
         tempLabel.frame.origin.y = labelY - 2
         powerToggle.frame.origin.y = switchY
+        batteryBadge?.alignVertically(with: nameLabel)
 
         // Show range control in Auto mode with thresholds, single control otherwise
         let showRange = targetState == 3 && hasThresholds

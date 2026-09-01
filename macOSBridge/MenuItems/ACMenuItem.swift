@@ -406,6 +406,7 @@ class ACMenuItem: NSMenuItem, CharacteristicUpdatable, CharacteristicRefreshable
         nameLabel.frame.origin.y = labelY
         tempLabel.frame.origin.y = labelY - 2
         powerToggle.frame.origin.y = switchY
+        batteryBadge?.alignVertically(with: nameLabel)
         if let swingGroup = swingButtonGroup {
             swingGroup.frame.origin.y = topAreaY + (collapsedHeight - 18) / 2
         }

@@ -41,7 +41,8 @@ final class HAClimateMenuItemTests: XCTestCase {
         heatingThresholdTemperatureId: UUID? = nil,
         heatingThresholdStep: Double? = nil,
         heatingThresholdMin: Double? = nil,
-        heatingThresholdMax: Double? = nil
+        heatingThresholdMax: Double? = nil,
+        batteryLevelId: UUID? = nil
     ) -> ServiceData {
         ServiceData(
             uniqueIdentifier: UUID(),
@@ -64,8 +65,48 @@ final class HAClimateMenuItemTests: XCTestCase {
             heatingThresholdTemperatureId: heatingThresholdTemperatureId,
             heatingThresholdStep: heatingThresholdStep,
             heatingThresholdMin: heatingThresholdMin,
-            heatingThresholdMax: heatingThresholdMax
+            heatingThresholdMax: heatingThresholdMax,
+            batteryLevelId: batteryLevelId
         )
+    }
+
+    // MARK: - Battery badge layout
+
+    private func findBatteryBadge(in view: NSView) -> BatteryBadgeView? {
+        for subview in view.subviews {
+            if let badge = subview as? BatteryBadgeView { return badge }
+            if let badge = findBatteryBadge(in: subview) { return badge }
+        }
+        return nil
+    }
+
+    private func findNameLabel(in view: NSView, named name: String) -> NSTextField? {
+        for subview in view.subviews {
+            if let field = subview as? NSTextField, field.stringValue == name { return field }
+            if let field = findNameLabel(in: subview, named: name) { return field }
+        }
+        return nil
+    }
+
+    func testBatteryBadgeStaysAlignedWithNameWhenRowExpands() throws {
+        // Switching the climate device to heat expands the row and moves row 1
+        // up – the battery badge must move with the name instead of overlapping
+        // the mode buttons (#163)
+        let stateId = UUID()
+        let batteryId = UUID()
+        let serviceData = createTestServiceData(targetHeatingCoolingStateId: stateId,
+                                                batteryLevelId: batteryId)
+        let menuItem = HAClimateMenuItem(serviceData: serviceData, bridge: nil)
+        let view = try XCTUnwrap(menuItem.view)
+        let badge = try XCTUnwrap(findBatteryBadge(in: view))
+        let nameLabel = try XCTUnwrap(findNameLabel(in: view, named: "Test Climate"))
+
+        menuItem.updateValue(for: batteryId, value: 85)
+        menuItem.updateValue(for: stateId, value: 1)  // heat -> expanded
+
+        XCTAssertFalse(badge.isHidden)
+        XCTAssertEqual(badge.frame.midY, nameLabel.frame.midY, accuracy: 0.5,
+                       "Battery badge must follow the name label when the row expands")
     }
 
     /// Recursively collects every NSTextField string value in a view tree

@@ -39,7 +39,8 @@ final class ACMenuItemTests: XCTestCase {
         heatingThresholdStep: Double? = nil,
         heatingThresholdMin: Double? = nil,
         heatingThresholdMax: Double? = nil,
-        swingModeId: UUID? = nil
+        swingModeId: UUID? = nil,
+        batteryLevelId: UUID? = nil
     ) -> ServiceData {
         ServiceData(
             uniqueIdentifier: UUID(),
@@ -60,8 +61,46 @@ final class ACMenuItemTests: XCTestCase {
             heatingThresholdStep: heatingThresholdStep,
             heatingThresholdMin: heatingThresholdMin,
             heatingThresholdMax: heatingThresholdMax,
-            swingModeId: swingModeId
+            swingModeId: swingModeId,
+            batteryLevelId: batteryLevelId
         )
+    }
+
+    // MARK: - Battery badge layout
+
+    private func findBatteryBadge(in view: NSView) -> BatteryBadgeView? {
+        for subview in view.subviews {
+            if let badge = subview as? BatteryBadgeView { return badge }
+            if let badge = findBatteryBadge(in: subview) { return badge }
+        }
+        return nil
+    }
+
+    private func findNameLabel(in view: NSView, named name: String) -> NSTextField? {
+        for subview in view.subviews {
+            if let field = subview as? NSTextField, field.stringValue == name { return field }
+            if let field = findNameLabel(in: subview, named: name) { return field }
+        }
+        return nil
+    }
+
+    func testBatteryBadgeStaysAlignedWithNameWhenRowExpands() throws {
+        // Activating the AC expands the row and moves row 1 up – the battery
+        // badge must move with the name instead of overlapping the mode buttons (#163)
+        let activeId = UUID()
+        let batteryId = UUID()
+        let serviceData = createTestServiceData(activeId: activeId, batteryLevelId: batteryId)
+        let menuItem = ACMenuItem(serviceData: serviceData, bridge: nil)
+        let view = try XCTUnwrap(menuItem.view)
+        let badge = try XCTUnwrap(findBatteryBadge(in: view))
+        let nameLabel = try XCTUnwrap(findNameLabel(in: view, named: "Test AC"))
+
+        menuItem.updateValue(for: batteryId, value: 85)
+        menuItem.updateValue(for: activeId, value: 1)  // on -> expanded
+
+        XCTAssertFalse(badge.isHidden)
+        XCTAssertEqual(badge.frame.midY, nameLabel.frame.midY, accuracy: 0.5,
+                       "Battery badge must follow the name label when the row expands")
     }
 
     /// Recursively collects every NSTextField string value in a view tree
