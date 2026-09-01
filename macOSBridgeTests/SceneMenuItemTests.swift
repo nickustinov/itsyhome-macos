@@ -134,6 +134,35 @@ final class SceneMenuItemTests: XCTestCase {
                                                         targetValue: 244.6013061341441)])
         XCTAssertEqual(SceneStateHelper.isActive(scene: scene, bridge: bridge), false)
     }
+
+    // MARK: - Hue comparison across the 0°/360° boundary
+
+    func testColourSceneActiveAcrossHueWraparound() {
+        // A red scene targets hue 359.4°; the lamp rounds it to 0° (also red).
+        // The linear difference is 359.4° (inactive), but on the colour wheel
+        // the two are only 0.6° apart, inside the 1.0 hue tolerance -> active.
+        let charId = UUID()
+        let bridge = SceneStubBridge()
+        bridge.values[charId] = 0                          // lamp reports 0° (red)
+        let scene = SceneData(uniqueIdentifier: UUID(), name: "Red",
+                              actions: [SceneActionData(characteristicId: charId,
+                                                        characteristicType: CharacteristicTypes.hue,
+                                                        targetValue: 359.4)])  // 0.6° around the wheel
+        XCTAssertEqual(SceneStateHelper.isActive(scene: scene, bridge: bridge), true)
+    }
+
+    func testColourSceneInactiveAcrossHueWraparoundWhenFar() {
+        // target 300°, lamp reports 60°: 120° apart on the wheel either way, so
+        // well outside tolerance -> inactive (linear diff would be 240°).
+        let charId = UUID()
+        let bridge = SceneStubBridge()
+        bridge.values[charId] = 60
+        let scene = SceneData(uniqueIdentifier: UUID(), name: "Colour",
+                              actions: [SceneActionData(characteristicId: charId,
+                                                        characteristicType: CharacteristicTypes.hue,
+                                                        targetValue: 300)])
+        XCTAssertEqual(SceneStateHelper.isActive(scene: scene, bridge: bridge), false)
+    }
 }
 
 // Minimal Mac2iOS stub so isActive(scene:bridge:) can be driven in tests.

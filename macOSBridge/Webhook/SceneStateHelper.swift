@@ -73,7 +73,15 @@ enum SceneStateHelper {
                 // scene; the user can still re-fire to converge.
                 return false
             }
-            if abs(current - action.targetValue) >= tolerance(for: action.characteristicType) {
+            // Hue is an angle on a wheel: 359° and 1° are 2° apart, not 358°.
+            // Compare it by the shortest on-wheel distance so a colour scene
+            // whose target sits across the 0°/360° boundary still reads as
+            // active when the lamp reports the wrapped value.
+            let tol = tolerance(for: action.characteristicType)
+            let delta = action.characteristicType == CharacteristicTypes.hue
+                ? HueMath.shortestDistance(current, action.targetValue)
+                : abs(current - action.targetValue)
+            if delta >= tol {
                 return false
             }
         }

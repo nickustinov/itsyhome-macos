@@ -32,4 +32,15 @@ enum HueMath {
         // atan2 returns [-180, 180]; normalize to [0, 360).
         return meanDegrees < 0 ? meanDegrees + 360 : meanDegrees
     }
+
+    /// Shortest on-wheel distance between two hue values given in degrees,
+    /// in [0, 180]. Hue wraps at the 0°/360° boundary, so the plain absolute
+    /// difference is wrong there: 359° and 1° are 2° apart on the wheel, not
+    /// 358°. Used wherever two hue values must be compared (e.g. deciding
+    /// whether a colour scene is active), mirroring `circularMean`'s
+    /// angular treatment.
+    static func shortestDistance(_ a: Double, _ b: Double) -> Double {
+        let raw = abs(a - b).truncatingRemainder(dividingBy: 360)
+        return raw > 180 ? 360 - raw : raw
+    }
 }
