@@ -61,7 +61,46 @@ final class HomeAssistantClient: NSObject {
     private let accessToken: String
 
     private var webSocketTask: URLSessionWebSocketTask?
-    private var urlSession: URLSession!
+
+    private let sessionConfiguration: URLSessionConfiguration = {
+        let config = URLSessionConfiguration.default
+        config.timeoutIntervalForRequest = 30
+        config.timeoutIntervalForResource = 300
+        return config
+    }()
+
+    private var activeURLSession: URLSession?
+    private let sessionLock = NSLock()
+
+    /// The session backing the WebSocket and REST calls, created by `connect()`
+    /// and torn down in `disconnect()`.
+    ///
+    /// A session keeps a strong reference to its delegate until it is
+    /// invalidated, so one that is never invalidated leaks this client along
+    /// with every connection it pooled – and the process eventually runs out of
+    /// network flows.
+    private func makeSession() -> URLSession {
+        sessionLock.lock()
+        defer { sessionLock.unlock() }
+
+        if let session = activeURLSession {
+            return session
+        }
+
+        let session = URLSession(configuration: sessionConfiguration, delegate: self, delegateQueue: nil)
+        activeURLSession = session
+        return session
+    }
+
+    /// The session of an established connection, or `nil` once disconnected.
+    ///
+    /// Deliberately does not create one: a request that outlives `disconnect()`
+    /// would otherwise get a session nothing is left to invalidate.
+    private var currentSession: URLSession? {
+        sessionLock.lock()
+        defer { sessionLock.unlock() }
+        return activeURLSession
+    }
 
     private var messageId: Int = 1
     private var pendingRequests: [Int: (Result<Any, Error>) -> Void] = [:]
@@ -76,6 +115,7 @@ final class HomeAssistantClient: NSObject {
 
     private var pingTimer: Timer?
     private var pingTimeout: DispatchWorkItem?
+    private var reconnectWorkItem: DispatchWorkItem?
 
     weak var delegate: HomeAssistantClientDelegate?
 
@@ -117,11 +157,6 @@ final class HomeAssistantClient: NSObject {
         self.accessToken = accessToken
 
         super.init()
-
-        let config = URLSessionConfiguration.default
-        config.timeoutIntervalForRequest = 30
-        config.timeoutIntervalForResource = 300
-        self.urlSession = URLSession(configuration: config, delegate: self, delegateQueue: nil)
     }
 
     deinit {
@@ -133,9 +168,18 @@ final class HomeAssistantClient: NSObject {
     func connect() async throws {
         logger.info("Connecting to Home Assistant at \(self.serverURL.absoluteString, privacy: .public)")
 
-        webSocketTask = urlSession.webSocketTask(with: serverURL)
-        webSocketTask?.maximumMessageSize = 16 * 1024 * 1024
-        webSocketTask?.resume()
+        // Drop any previous task – reconnects would otherwise leave the old one
+        // and its connection alive for the lifetime of the session. Clearing
+        // the reference first means its cancellation is seen as stale rather
+        // than as a disconnection to react to.
+        let previousTask = webSocketTask
+        webSocketTask = nil
+        previousTask?.cancel(with: .goingAway, reason: nil)
+
+        let task = makeSession().webSocketTask(with: serverURL)
+        task.maximumMessageSize = 16 * 1024 * 1024
+        webSocketTask = task
+        task.resume()
 
         // Start receiving messages
         receiveMessage()
@@ -166,8 +210,22 @@ final class HomeAssistantClient: NSObject {
         stopPingPong()
         isAuthenticated = false
 
+        // A reconnect scheduled up to 30s ago would otherwise fire after
+        // teardown and build a fresh session nothing is left to invalidate
+        reconnectWorkItem?.cancel()
+        reconnectWorkItem = nil
+        reconnectAttempts = 0
+
         webSocketTask?.cancel(with: .goingAway, reason: nil)
         webSocketTask = nil
+
+        // Invalidating is what releases the session's strong reference to this
+        // client, and with it the pooled connections
+        sessionLock.lock()
+        let session = activeURLSession
+        activeURLSession = nil
+        sessionLock.unlock()
+        session?.invalidateAndCancel()
 
         stateLock.lock()
         // Cancel auth continuation if pending
@@ -189,8 +247,12 @@ final class HomeAssistantClient: NSObject {
     // MARK: - Message handling
 
     private func receiveMessage() {
-        webSocketTask?.receive { [weak self] result in
-            guard let self = self else { return }
+        guard let task = webSocketTask else { return }
+
+        task.receive { [weak self] result in
+            // Ignore a task we have already replaced – its failure is the
+            // cancellation we asked for, not a disconnection to react to
+            guard let self = self, self.webSocketTask === task else { return }
 
             switch result {
             case .success(let message):
@@ -198,7 +260,8 @@ final class HomeAssistantClient: NSObject {
                 self.receiveMessage()  // Continue receiving
 
             case .failure(let error):
-                logger.error("WebSocket receive error: \(error.localizedDescription)")
+                let nsError = error as NSError
+                logger.error("WebSocket receive error: \(nsError.domain, privacy: .public) \(nsError.code, privacy: .public) – \(nsError.localizedDescription, privacy: .public)")
                 self.handleDisconnection(error: error)
             }
         }
@@ -362,12 +425,14 @@ final class HomeAssistantClient: NSObject {
 
         logger.info("Scheduling reconnect in \(delay, privacy: .public) seconds (attempt \(self.reconnectAttempts))")
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+        let workItem = DispatchWorkItem { [weak self] in
             guard let self = self else { return }
             Task {
                 try? await self.connect()
             }
         }
+        reconnectWorkItem = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: workItem)
     }
 
     // MARK: - Ping/Pong
@@ -744,7 +809,11 @@ final class HomeAssistantClient: NSObject {
             request.httpBody = try JSONSerialization.data(withJSONObject: body)
         }
 
-        let (data, response) = try await urlSession.data(for: request)
+        guard let session = currentSession else {
+            throw HomeAssistantClientError.notConnected
+        }
+
+        let (data, response) = try await session.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse,
               200..<300 ~= httpResponse.statusCode else {
@@ -764,6 +833,10 @@ extension HomeAssistantClient: URLSessionWebSocketDelegate {
 
     func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didCloseWith closeCode: URLSessionWebSocketTask.CloseCode, reason: Data?) {
         logger.info("WebSocket connection closed: \(closeCode.rawValue)")
+
+        // Ignore a task we have already replaced or cancelled ourselves
+        guard self.webSocketTask === webSocketTask else { return }
+
         handleDisconnection(error: nil)
     }
 }

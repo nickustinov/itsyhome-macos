@@ -170,6 +170,50 @@ final class HomeAssistantClientTests: XCTestCase {
         }
     }
 
+    // MARK: - Session lifecycle tests
+
+    func testClientIsReleasedAfterDisconnect() async throws {
+        // Given a client that has connected – nothing is discarded on a port
+        // that refuses connections, but the attempt is what builds the session
+        weak var weakClient: HomeAssistantClient?
+
+        do {
+            let client = try HomeAssistantClient(serverURL: URL(string: "http://127.0.0.1:9")!,
+                                                 accessToken: "test")
+            weakClient = client
+            try? await client.connect()
+            client.disconnect()
+        }
+
+        // When its session has finished invalidating
+        let deadline = Date().addingTimeInterval(5)
+        while weakClient != nil && Date() < deadline {
+            RunLoop.current.run(until: Date().addingTimeInterval(0.05))
+        }
+
+        // Then nothing holds on to the client – a URLSession that is never
+        // invalidated retains its delegate for the lifetime of the process
+        XCTAssertNil(weakClient, "Client leaked – its URLSession still retains it as delegate")
+    }
+
+    func testRESTRequestAfterDisconnectDoesNotBuildANewSession() async throws {
+        // Given a disconnected client
+        let client = try HomeAssistantClient(serverURL: URL(string: "http://127.0.0.1:9")!,
+                                             accessToken: "test")
+        client.disconnect()
+
+        // When a REST call arrives late
+        do {
+            _ = try await client.restRequest(path: "api/config")
+            XCTFail("Expected the request to fail rather than open a new session")
+        } catch {
+            // Then it fails instead of creating a session nothing would invalidate
+            guard case HomeAssistantClientError.notConnected = error else {
+                return XCTFail("Expected notConnected, got \(error)")
+            }
+        }
+    }
+
     func testServiceCallFailedError() {
         let error = HomeAssistantClientError.serviceCallFailed("Entity not found")
         XCTAssertEqual(error.errorDescription, "Service call failed: Entity not found")
