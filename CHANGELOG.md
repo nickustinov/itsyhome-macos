@@ -1,9 +1,13 @@
 # Changelog
 
-## 3.1.0
+## 3.2.0
 
+- Fix Home Assistant connections failing with "NSURLErrorDomain error 12" after long uptime – every connect and credential check created a URLSession that was never invalidated, so each one leaked its client and pooled connections until the process ran out of network flows and only a relaunch helped. Sessions are now created on connect and invalidated on disconnect, reconnects no longer strand old WebSocket tasks, and a pending reconnect is cancelled on disconnect (thanks @damonDevelops)
 - Fix red colour scenes never detected as active across the hue seam – scene-active detection compared hue as a plain number, so a scene targeting hue 359° whose bulb reported 0° (both red) read 359° out of tolerance and showed as inactive. Hue is now compared by the shortest on-wheel distance, matching the circular averaging already used for group colour, so colour scenes near the 0°/360° boundary read as active (thanks @YuriNachos)
 - Fix custom icons lost on cross-device sync when a room is named like a reserved prefix – a custom icon on an accessory in a room named "scene", "group" or "room" produced a service stable key that began with that prefix (e.g. "scene::Lamp::Light"), so on restore the icon was claimed by the scene/group/room namespace and silently dropped. Service stable names are now resolved before the prefix namespaces during cloud decode (thanks @YuriNachos)
+
+## 3.1.0
+
 - Half-degree thermostat setpoints – temperature setpoints now step and display in the increment the device actually advertises, typically 0.5 °C, instead of hardcoded whole degrees. A 21.5° setpoint set from Apple Home reads 21.5° rather than 22°, the ± steppers can reach it, and setpoint limits follow the device's advertised min/max. Metadata-driven per device: a 0.5° radiator (Eve Thermo and similar) steps by 0.5°, a whole-degree device is unchanged, and Fahrenheit keeps whole-degree stepping and display. Applies to thermostat targets, heater-cooler thresholds and Home Assistant climate targets (#60, #102, thanks @jeffscottmtl)
 - Fix AC temperature skipping degrees in Fahrenheit – heater-cooler steppers moved the underlying Celsius value by 1° (= 1.8 °F), the same bug fixed for thermostats in 3.0.0, so one click jumped 72 to 74. All six AC steppers are now unit-aware and move the displayed degree by exactly one (thanks @jeffscottmtl and @YuriNachos)
 - Fix colour-setting scenes never being detected as active – hue and saturation now use the same rounding tolerance as brightness/position, so a scene that set a colour is shown as active right after it fires instead of permanently "off" (#157, thanks @YuriNachos)
