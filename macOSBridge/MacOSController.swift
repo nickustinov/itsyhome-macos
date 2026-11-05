@@ -57,6 +57,7 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
     private var lastErrorMessage: String?
     private var lastErrorTime: Date?
     private var networkMonitor: NWPathMonitor?
+    private let localNetworkPermissionAlertGate = LocalNetworkPermissionAlertGate()
     private var isConnectingToHA = false
     private var lastEntityCategoryFilter: String = UserDefaults.standard.string(forKey: "entityCategoryFilter") ?? "hideAll"
 
@@ -258,16 +259,19 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
         if HAAuthManager.shared.isConfigured {
             connectToHomeAssistant()
         } else {
+            localNetworkPermissionAlertGate.reset()
             disconnectFromHomeAssistant()
         }
     }
 
     @objc private func handlePlatformDidChange() {
+        localNetworkPermissionAlertGate.reset()
         updateStatusItemIcon()
         setupMenu()  // Refresh menu for the new platform
     }
 
     @objc private func handleSystemWake() {
+        localNetworkPermissionAlertGate.reset()
         // Re-evaluate SSID after wake (WiFi may reconnect)
         if ProStatusCache.shared.isPro && PreferencesManager.shared.networkAutoSwitchEnabled {
             DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
@@ -290,12 +294,22 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
         monitor.pathUpdateHandler = { [weak self] path in
             DispatchQueue.main.async {
                 guard let self else { return }
-                guard PlatformManager.shared.selectedPlatform == .homeAssistant else { return }
-                guard HAAuthManager.shared.isConfigured else { return }
+                self.localNetworkPermissionAlertGate.update(status: path.status, reason: path.unsatisfiedReason) { [weak self] in
+                    guard let self else { return }
+                    guard PlatformManager.shared.selectedPlatform == .homeAssistant else { return }
+                    guard HAAuthManager.shared.isConfigured else { return }
+                    guard let currentPath = self.networkMonitor?.currentPath,
+                          currentPath.status == .unsatisfied,
+                          currentPath.unsatisfiedReason == .localNetworkDenied else { return }
 
-                if path.status == .unsatisfied, path.unsatisfiedReason == .localNetworkDenied {
                     StartupLogger.error("Local network access denied by system policy")
+                    // The gate limits this warning per episode, so a new episode may alert again.
+                    self.lastErrorMessage = nil
                     self.showError(message: String(localized: "alert.error.local_network_denied", defaultValue: "Itsyhome needs local network access to reach Home Assistant. Enable it in System Settings \u{2192} Privacy & Security \u{2192} Local Network.", bundle: .macOSBridge))
+                }
+                guard PlatformManager.shared.selectedPlatform == .homeAssistant,
+                      HAAuthManager.shared.isConfigured else {
+                    self.localNetworkPermissionAlertGate.reset()
                     return
                 }
 
@@ -388,6 +402,7 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
     }
 
     deinit {
+        localNetworkPermissionAlertGate.reset()
         networkMonitor?.cancel()
     }
 
