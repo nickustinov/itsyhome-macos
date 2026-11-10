@@ -111,20 +111,19 @@ extension GroupMenuItem {
             notifyLocalChange(characteristicId: id, value: Float(newSat))
         }
 
-        // Write saturation first, then hue 150ms later. The delay keeps the two
-        // writes from being simultaneous (which made Philips Hue bulbs land on
-        // the wrong colour, 2.4.1); hue goes LAST so that on Govee/Matter
-        // bridges, where a later write overrides an earlier one, the hue value
-        // sticks and colour changes apply instead of being ignored (#127).
-        for id in saturationIds {
-            bridge.writeCharacteristic(identifier: id, value: Float(newSat))
-        }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { [weak self] in
-            guard let self, let bridge = self.bridge else { return }
-            for id in self.hueIds {
-                bridge.writeCharacteristic(identifier: id, value: Float(newHue))
+        ColorWriteSequence.run(
+            writeSaturation: {
+                for id in saturationIds {
+                    bridge.writeCharacteristic(identifier: id, value: Float(newSat))
+                }
+            },
+            writeHue: { [weak self] in
+                guard let self, let bridge = self.bridge else { return }
+                for id in self.hueIds {
+                    bridge.writeCharacteristic(identifier: id, value: Float(newHue))
+                }
             }
-        }
+        )
     }
 
     func setColorTemp(_ mired: Double) {

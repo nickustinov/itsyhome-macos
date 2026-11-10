@@ -5,6 +5,7 @@
 //  Manages Itsyhome Pro purchases using StoreKit 2
 //
 
+import Combine
 import StoreKit
 
 @MainActor
@@ -163,10 +164,11 @@ enum StoreError: Error {
 final class ProStatusCache: @unchecked Sendable {
     static let shared = ProStatusCache()
 
-    // Set to true for TestFlight builds, false for App Store
+    // Local testing switches, honoured only in Debug builds – a Release archive
+    // always keeps the paywall, even if one is left on. debugOverride forces Pro
+    // (debug builds can't see the App Store purchase); debugForceNotPro previews
+    // the non-Pro state (e.g. Pro badges).
     static let debugOverride = false
-
-    // Debug-only: flip to true to force non-Pro state (e.g. for previewing Pro badges)
     static let debugForceNotPro = false
 
     private let lock = NSLock()
@@ -174,8 +176,10 @@ final class ProStatusCache: @unchecked Sendable {
 
     var isPro: Bool {
         get {
+            #if DEBUG
             if Self.debugForceNotPro { return false }
             if Self.debugOverride { return true }
+            #endif
             lock.lock()
             defer { lock.unlock() }
             return _isPro
@@ -188,4 +192,18 @@ final class ProStatusCache: @unchecked Sendable {
     }
 
     private init() {}
+
+    /// The effective Pro status, read on the main queue each time `changes` fires.
+    /// ProManager publishes the App Store entitlement, which a Debug build's
+    /// `debugOverride` leaves false – a subscriber that uses the status itself,
+    /// not only as a cue to refresh, must take it from here.
+    static func effectiveStatus<Changes: Publisher>(
+        on changes: Changes,
+        isPro: @escaping () -> Bool = { ProStatusCache.shared.isPro }
+    ) -> AnyPublisher<Bool, Never> where Changes.Output == Bool, Changes.Failure == Never {
+        changes
+            .receive(on: DispatchQueue.main)
+            .map { _ in isPro() }
+            .eraseToAnyPublisher()
+    }
 }

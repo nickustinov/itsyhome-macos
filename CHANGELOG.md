@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.3.0
+
+- Fix HomeKit Secure Video cameras staying active after the camera panel closed – closing the panel from a camera's full view restarted the 30-second snapshot timer, so every camera kept capturing snapshots in the background (pulsing, "someone else is viewing" on iPhone) until the panel was next closed from the grid. The timer now only runs while the panel is visible. Deferred stream restarts (the sleepy-doorbell retry, restarts queued behind a stop) no longer cancel the post-close shutdown, a stream that finishes connecting after its camera was released is now stopped instead of left running, and a doorbell ring with the panel hidden no longer starts a stream the panel may never show (#177, thanks @martpolak)
+- Fix controls greyed out after every unlock on Macs without a home hub – without an Apple TV or HomePod the Mac talks to its bridges directly, and HomeKit left those accessories unreachable after a lock until the menu's Refresh asked it to re-check. Itsyhome now refreshes HomeKit by itself a few seconds after the screen unlocks, the display or system wakes, or the network comes back, and accessories greyed out by a refresh are un-greyed as soon as they report a value again (#178, thanks @jaklan)
+- Fix Home Assistant camera streams turning down all other audio on the Mac – WebRTC streams played through Apple's voice-processing audio unit, which ducks every other app's audio while it is open, even with the camera muted. Streams now use the AVAudioEngine-based audio device, which never enables voice processing for a receive-only stream, with a playback-only audio session that mixes with other apps (#138, thanks @cyb3rphantom)
+- Fix webhook colour changes landing on the wrong colour on Philips Hue bulbs – `/color` wrote hue and saturation at the same time, the bug the menu colour picker fixed in 2.4.1. All colour changes (menu, groups, webhooks) now share one write order: saturation first, hue 150 ms later (#171, thanks @alxalxnet)
+- Fix spurious "local network access" alerts after waking the Mac – macOS briefly misreports the permission as denied during sleep/wake, and the alert fired on the first report. It now only appears when the denial lasts more than five seconds, once per episode (#153, thanks @willsmi1256 and @mvanhorn)
+
 ## 3.2.0
 
 - Fix the battery indicator overlapping the mode buttons on expanded climate rows – radiators and other battery-powered thermostats drew their battery badge on top of the Cool/Heat/Auto buttons when the row was on. The expanding rows (thermostat, AC, Home Assistant climate) repositioned every row-1 element except the badge; it now follows the device name (#163, thanks @norbertpotocki)

@@ -339,6 +339,11 @@ class CameraViewController: UIViewController {
     @objc private func handleDoorbellRang(_ notification: Notification) {
         guard let cameraId = notification.userInfo?["cameraIdentifier"] as? UUID else { return }
         homeKitManager?.pendingDoorbellCameraId = nil
+        // A hidden panel is opened by the macOS side, which hands over the
+        // camera via autoOpenCamera once its Pro/cameras/doorbell gates pass.
+        // Streaming here would start a session nobody sees – and keep it
+        // running forever when those gates decline to show the panel (#177).
+        guard panelVisible else { return }
         streamDoorbellCamera(id: cameraId)
     }
 

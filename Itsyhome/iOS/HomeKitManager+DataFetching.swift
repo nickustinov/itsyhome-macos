@@ -141,6 +141,11 @@ extension HomeKitManager {
             accessory.delegate = self
         }
 
+        // The menu is rebuilt from this snapshot, so the recovery fallback in
+        // accessory(_:service:didUpdateValueFor:) must know which rows it
+        // greys – otherwise a later value update can never un-grey them (#178).
+        unreachableAccessoryIds = Set(home.accessories.filter { !$0.isReachable }.map(\.uniqueIdentifier))
+
         // Subscribe to doorbell and motion events
         subscribeToDoorbellEvents()
         subscribeToMotionEvents()

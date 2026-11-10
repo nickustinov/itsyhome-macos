@@ -36,6 +36,9 @@ final class CameraStreamEngine: NSObject {
     /// tear down the new session, so restarts are queued behind it.
     private var stoppingControls: [ObjectIdentifier: UUID] = [:]
     private var pendingRestarts: [UUID: HMAccessory] = [:]
+    /// Camera of every control this engine has started, kept after release so
+    /// a session that finishes negotiating once nobody owns it can be stopped.
+    private var cameraIdsByControl: [ObjectIdentifier: UUID] = [:]
     /// Negotiation watchdogs. Battery doorbells (e.g. Aqara G4) sleep, and a
     /// start against a mid-wake camera can hang without any delegate
     /// callback. The first timeout retries once – the failed attempt usually
@@ -73,8 +76,11 @@ final class CameraStreamEngine: NSObject {
         accessory.cameraProfiles?.first?.streamControl != nil
     }
 
+    /// Never cancels a scheduled release: only the panel showing does that.
+    /// Deferred restarts (watchdog retry, restarts queued behind a stop) can
+    /// land inside the release grace, and cancelling it there left every grid
+    /// stream running with the panel closed (#177).
     func startStream(for accessory: HMAccessory) {
-        cancelScheduledRelease()
         let cameraId = accessory.uniqueIdentifier
         guard controls[cameraId] == nil else { return } // live or negotiating
         guard let control = accessory.cameraProfiles?.first?.streamControl else { return }
@@ -85,6 +91,7 @@ final class CameraStreamEngine: NSObject {
             return
         }
         controls[cameraId] = control
+        cameraIdsByControl[ObjectIdentifier(control)] = cameraId
         control.delegate = self
         control.startStream()
         scheduleStartTimeout(for: accessory)
@@ -155,8 +162,13 @@ final class CameraStreamEngine: NSObject {
         guard let control = controls.removeValue(forKey: cameraId) else { return }
         streams.removeValue(forKey: cameraId)
         renderViews[cameraId]?.cameraSource = nil
-        // Keep the delegate so the stop confirmation is observed and any
-        // queued restart of this control runs strictly after it.
+        beginStop(control, cameraId: cameraId)
+    }
+
+    /// Stops the control's session. Keeps the delegate so the stop
+    /// confirmation is observed and any queued restart of this control runs
+    /// strictly after it.
+    private func beginStop(_ control: HMCameraStreamControl, cameraId: UUID) {
         let key = ObjectIdentifier(control)
         stoppingControls[key] = cameraId
         control.stopStream()
@@ -181,8 +193,17 @@ extension CameraStreamEngine: HMCameraStreamControlDelegate {
 
     func cameraStreamControlDidStartStream(_ cameraStreamControl: HMCameraStreamControl) {
         DispatchQueue.main.async {
-            guard let cameraId = self.cameraId(for: cameraStreamControl),
-                  let stream = cameraStreamControl.cameraStream else { return }
+            guard let cameraId = self.cameraId(for: cameraStreamControl) else {
+                // The session finished negotiating after its camera was
+                // released (stopped mid-negotiation, or the stop safety net
+                // already gave up on it). Nobody owns it, so stop it instead
+                // of leaving the camera streaming (#177).
+                if let orphanId = self.cameraIdsByControl[ObjectIdentifier(cameraStreamControl)] {
+                    self.beginStop(cameraStreamControl, cameraId: orphanId)
+                }
+                return
+            }
+            guard let stream = cameraStreamControl.cameraStream else { return }
             self.startTimeouts.removeValue(forKey: cameraId)?.cancel()
             self.retriedCameras.remove(cameraId)
             self.streams[cameraId] = stream

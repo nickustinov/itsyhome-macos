@@ -18,6 +18,8 @@ final class ActionEngineTests: XCTestCase {
     private let lightId = UUID()
     private let powerStateId = UUID()
     private let brightnessId = UUID()
+    private let hueId = UUID()
+    private let saturationId = UUID()
     private let lockId = UUID()
     private let lockTargetStateId = UUID()
     private let securityId = UUID()
@@ -42,7 +44,9 @@ final class ActionEngineTests: XCTestCase {
             accessoryName: "Room/Test Light",
             roomIdentifier: roomId,
             powerStateId: powerStateId,
-            brightnessId: brightnessId
+            brightnessId: brightnessId,
+            hueId: hueId,
+            saturationId: saturationId
         )
 
         let lock = ServiceData(
@@ -182,6 +186,40 @@ final class ActionEngineTests: XCTestCase {
 
         XCTAssertEqual(result, .success)
         XCTAssertEqual(mockBridge.writtenCharacteristics[brightnessId] as? Int, 0)
+    }
+
+    // MARK: - Color tests
+
+    func testSetColorWritesSaturationFirstThenHueAfterDelay() {
+        var callbackOrder: [UUID] = []
+        engine.onCharacteristicWrite = { id, _ in callbackOrder.append(id) }
+
+        let result = engine.execute(target: "Room/Test Light", action: .setColor(hue: 240, saturation: 80))
+
+        XCTAssertEqual(result, .success)
+        XCTAssertEqual(mockBridge.writeLog, [saturationId], "Saturation must be written immediately, hue not yet")
+        XCTAssertEqual(mockBridge.writtenCharacteristics[saturationId] as? Double, 80)
+
+        let hueWritten = expectation(description: "Hue written after the saturation delay")
+        DispatchQueue.main.asyncAfter(deadline: .now() + ColorWriteSequence.hueDelay + 0.1) { hueWritten.fulfill() }
+        wait(for: [hueWritten], timeout: 1)
+
+        XCTAssertEqual(mockBridge.writeLog, [saturationId, hueId])
+        XCTAssertEqual(mockBridge.writtenCharacteristics[hueId] as? Double, 240)
+        XCTAssertEqual(callbackOrder, [saturationId, hueId])
+    }
+
+    func testSetColorClampsValues() {
+        let result = engine.execute(target: "Room/Test Light", action: .setColor(hue: 400, saturation: -5))
+
+        XCTAssertEqual(result, .success)
+        XCTAssertEqual(mockBridge.writtenCharacteristics[saturationId] as? Double, 0)
+
+        let hueWritten = expectation(description: "Hue written after the saturation delay")
+        DispatchQueue.main.asyncAfter(deadline: .now() + ColorWriteSequence.hueDelay + 0.1) { hueWritten.fulfill() }
+        wait(for: [hueWritten], timeout: 1)
+
+        XCTAssertEqual(mockBridge.writtenCharacteristics[hueId] as? Double, 360)
     }
 
     // MARK: - Lock tests
@@ -400,6 +438,7 @@ private class MockMac2iOS: NSObject, Mac2iOS {
 
     var characteristicValues: [UUID: Any] = [:]
     var writtenCharacteristics: [UUID: Any] = [:]
+    var writeLog: [UUID] = []
     var executedScenes: [UUID] = []
 
     func reloadHomeKit() {}
@@ -412,6 +451,7 @@ private class MockMac2iOS: NSObject, Mac2iOS {
 
     func writeCharacteristic(identifier: UUID, value: Any) {
         writtenCharacteristics[identifier] = value
+        writeLog.append(identifier)
     }
 
     func getCharacteristicValue(identifier: UUID) -> Any? {

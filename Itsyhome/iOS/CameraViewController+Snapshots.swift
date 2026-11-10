@@ -33,6 +33,10 @@ extension CameraViewController {
 
     func startSnapshotTimer() {
         stopSnapshotTimer()
+        // Snapshots only refresh visible tiles. backToGrid runs while the panel
+        // hides (closing from the detail view), and restarting the timer there
+        // kept every camera capturing every 30s with the panel closed (#177).
+        guard panelVisible else { return }
         if isHomeAssistant {
             startHASnapshotTimer()
             return

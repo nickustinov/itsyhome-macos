@@ -58,6 +58,11 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
     private var lastErrorTime: Date?
     private var networkMonitor: NWPathMonitor?
     private let localNetworkPermissionAlertGate = LocalNetworkPermissionAlertGate()
+    private var lastNetworkPathStatus: NWPath.Status?
+    /// Coalesces unlock, wake and network-back signals into one HomeKit reload.
+    private lazy var homeKitResumeRefresh = DebouncedAction(delay: 3) { [weak self] in
+        self?.refreshHomeKitAfterResume()
+    }
     private var isConnectingToHA = false
     private var lastEntityCategoryFilter: String = UserDefaults.standard.string(forKey: "entityCategoryFilter") ?? "hideAll"
 
@@ -198,6 +203,21 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
             object: nil
         )
 
+        // A lock with only the display asleep never posts didWake, so watch
+        // display wake and screen unlock as well.
+        NSWorkspace.shared.notificationCenter.addObserver(
+            self,
+            selector: #selector(handleScreenResume),
+            name: NSWorkspace.screensDidWakeNotification,
+            object: nil
+        )
+        DistributedNotificationCenter.default().addObserver(
+            self,
+            selector: #selector(handleScreenResume),
+            name: NSNotification.Name("com.apple.screenIsUnlocked"),
+            object: nil
+        )
+
         HotkeyManager.shared.onHotkeyTriggered = { [weak self] favouriteId in
             self?.handleHotkeyForFavourite(favouriteId)
         }
@@ -272,6 +292,7 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
 
     @objc private func handleSystemWake() {
         localNetworkPermissionAlertGate.reset()
+        scheduleHomeKitResumeRefresh()
         // Re-evaluate SSID after wake (WiFi may reconnect)
         if ProStatusCache.shared.isPro && PreferencesManager.shared.networkAutoSwitchEnabled {
             DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
@@ -289,28 +310,55 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
         connectToHomeAssistant()
     }
 
+    @objc private func handleScreenResume() {
+        scheduleHomeKitResumeRefresh()
+    }
+
+    /// Without a home hub the Mac talks to its bridges directly, and after a
+    /// lock or sleep HomeKit leaves those accessories unreachable until
+    /// something asks it to re-check – until now only the menu's Refresh
+    /// did, so every unlock left the menu greyed out (#178).
+    private func scheduleHomeKitResumeRefresh() {
+        guard PlatformManager.shared.selectedPlatform == .homeKit else { return }
+        homeKitResumeRefresh.trigger()
+    }
+
+    private func refreshHomeKitAfterResume() {
+        // Rebuilding under an open menu reshuffles it – wait until it closes.
+        guard !menuIsOpen else {
+            homeKitResumeRefresh.trigger()
+            return
+        }
+        StartupLogger.log("Screen unlocked, woke or network returned – refreshing HomeKit")
+        iOSBridge?.reloadHomeKit()
+    }
+
     private func startNetworkMonitor() {
         let monitor = NWPathMonitor()
         monitor.pathUpdateHandler = { [weak self] path in
             DispatchQueue.main.async {
                 guard let self else { return }
-                self.localNetworkPermissionAlertGate.update(status: path.status, reason: path.unsatisfiedReason) { [weak self] in
-                    guard let self else { return }
-                    guard PlatformManager.shared.selectedPlatform == .homeAssistant else { return }
-                    guard HAAuthManager.shared.isConfigured else { return }
-                    guard let currentPath = self.networkMonitor?.currentPath,
-                          currentPath.status == .unsatisfied,
-                          currentPath.unsatisfiedReason == .localNetworkDenied else { return }
-
-                    StartupLogger.error("Local network access denied by system policy")
-                    // The gate limits this warning per episode, so a new episode may alert again.
-                    self.lastErrorMessage = nil
-                    self.showError(message: String(localized: "alert.error.local_network_denied", defaultValue: "Itsyhome needs local network access to reach Home Assistant. Enable it in System Settings \u{2192} Privacy & Security \u{2192} Local Network.", bundle: .macOSBridge))
+                // The first report is the launch state, not a change.
+                let networkReturned = path.status == .satisfied
+                    && self.lastNetworkPathStatus != nil
+                    && self.lastNetworkPathStatus != .satisfied
+                self.lastNetworkPathStatus = path.status
+                if networkReturned {
+                    self.scheduleHomeKitResumeRefresh()
                 }
+
                 guard PlatformManager.shared.selectedPlatform == .homeAssistant,
                       HAAuthManager.shared.isConfigured else {
                     self.localNetworkPermissionAlertGate.reset()
                     return
+                }
+
+                // Sleep/wake transitions briefly misreport the permission as
+                // denied, so only alert once a denial outlasts the gate's grace
+                // period; any other path update cancels it (#153).
+                self.localNetworkPermissionAlertGate.update(status: path.status, reason: path.unsatisfiedReason) { [weak self] in
+                    StartupLogger.error("Local network access denied by system policy")
+                    self?.showError(message: String(localized: "alert.error.local_network_denied", defaultValue: "Itsyhome needs local network access to reach Home Assistant. Enable it in System Settings \u{2192} Privacy & Security \u{2192} Local Network.", bundle: .macOSBridge))
                 }
 
                 guard path.status == .satisfied else { return }
@@ -402,7 +450,7 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
     }
 
     deinit {
-        localNetworkPermissionAlertGate.reset()
+        DistributedNotificationCenter.default().removeObserver(self)
         networkMonitor?.cancel()
     }
 

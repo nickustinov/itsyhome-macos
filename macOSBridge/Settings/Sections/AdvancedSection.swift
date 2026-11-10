@@ -230,8 +230,7 @@ class AdvancedSection: SettingsCard {
     private func setupBindings() {
         // The section is cached for the window's lifetime, so the Pro gate
         // must track purchases made after this pane was first shown.
-        ProManager.shared.$isPro
-            .receive(on: DispatchQueue.main)
+        ProStatusCache.effectiveStatus(on: ProManager.shared.$isPro)
             .sink { [weak self] isPro in
                 self?.historySwitch.isEnabled = isPro
                 self?.historyProBadge.isHidden = isPro

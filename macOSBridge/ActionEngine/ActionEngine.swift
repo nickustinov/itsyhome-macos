@@ -387,8 +387,10 @@ class ActionEngine {
         }
         let clampedHue = max(0, min(360, hue))
         let clampedSat = max(0, min(100, saturation))
-        writeCharacteristic(identifier: hueId, value: clampedHue, bridge: bridge)
-        writeCharacteristic(identifier: satId, value: clampedSat, bridge: bridge)
+        ColorWriteSequence.run(
+            writeSaturation: { writeCharacteristic(identifier: satId, value: clampedSat, bridge: bridge) },
+            writeHue: { [weak self] in self?.writeCharacteristic(identifier: hueId, value: clampedHue, bridge: bridge) }
+        )
         return true
     }
 

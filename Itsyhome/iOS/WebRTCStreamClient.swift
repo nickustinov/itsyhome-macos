@@ -32,9 +32,19 @@ final class WebRTCStreamClient: NSObject {
 
     override init() {
         LKRTCInitializeSSL()
-        let decoderFactory = LKRTCDefaultVideoDecoderFactory()
-        let encoderFactory = LKRTCDefaultVideoEncoderFactory()
-        factory = LKRTCPeerConnectionFactory(encoderFactory: encoderFactory, decoderFactory: decoderFactory)
+        // The platform-default audio device always plays through Apple's
+        // voice-processing I/O unit, and on macOS that unit ducks every other
+        // app's audio for as long as it is open – muting the track doesn't
+        // close it (#138). The AVAudioEngine-based device only enables voice
+        // processing on the input node, which a receive-only camera stream
+        // never uses.
+        factory = LKRTCPeerConnectionFactory(
+            audioDeviceModuleType: .audioEngine,
+            bypassVoiceProcessing: true,
+            encoderFactory: LKRTCDefaultVideoEncoderFactory(),
+            decoderFactory: LKRTCDefaultVideoDecoderFactory(),
+            audioProcessingModule: nil
+        )
         super.init()
     }
 
@@ -175,8 +185,13 @@ final class WebRTCStreamClient: NSObject {
     private func activateAudioSessionIfNeeded() {
         guard !didActivateAudioSession else { return }
 
+        // Playback-only, mixed with other audio – the same session the HLS
+        // player uses. webRTC() would inherit the process's current category
+        // (soloAmbient by default), which doesn't accept mixWithOthers.
         let configuration = LKRTCAudioSessionConfiguration.webRTC()
-        configuration.categoryOptions.insert(.mixWithOthers)
+        configuration.category = AVAudioSession.Category.playback.rawValue
+        configuration.mode = AVAudioSession.Mode.default.rawValue
+        configuration.categoryOptions = [.mixWithOthers]
         LKRTCAudioSessionConfiguration.setWebRTC(configuration)
 
         let audioSession = LKRTCAudioSession.sharedInstance()
