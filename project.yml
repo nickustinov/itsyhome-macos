@@ -48,8 +48,8 @@ targets:
         DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER: NO
         TARGETED_DEVICE_FAMILY: "6"
         # App metadata
-        MARKETING_VERSION: "3.3.0"
-        CURRENT_PROJECT_VERSION: "33001"
+        MARKETING_VERSION: "3.3.1"
+        CURRENT_PROJECT_VERSION: "33101"
         INFOPLIST_KEY_CFBundleDisplayName: Itsyhome
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.utilities
     scheme:
@@ -71,7 +71,9 @@ targets:
         platformFilter: maccatalyst
         embed: true
         codeSign: true
-        copyPhase:
+        # In Contents/PlugIns Xcode scans the plugin and bundles the Swift
+        # back-deployment libraries it needs (not in Resources – 3.3.0)
+        copy:
           destination: plugins
       - sdk: HomeKit.framework
         embed: false

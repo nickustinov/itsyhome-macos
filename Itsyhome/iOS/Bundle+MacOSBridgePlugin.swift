@@ -2,25 +2,18 @@
 //  Bundle+MacOSBridgePlugin.swift
 //  Itsyhome
 //
-//  Localization bundle for Catalyst-side user-facing strings
+//  The macOSBridge plugin bundle, for loading it and for Catalyst-side strings
 //
 
 import Foundation
 
 extension Bundle {
-    /// The macOSBridge plugin bundle – it owns Localizable.xcstrings, so
-    /// Catalyst-side user-facing strings localize through it. Checked in the
-    /// same two locations as AppDelegate.loadMacOSPlugin (xcodegen places the
-    /// bundle in Resources in some configurations). Falls back to the main
-    /// bundle (English default values) if the plugin isn't found.
-    static let macOSBridge: Bundle = {
-        let bundleFileName = "macOSBridge.bundle"
-        for base in [Bundle.main.builtInPlugInsURL, Bundle.main.resourceURL] {
-            if let url = base?.appendingPathComponent(bundleFileName),
-               let bundle = Bundle(url: url) {
-                return bundle
-            }
-        }
-        return .main
-    }()
+    /// The macOSBridge plugin in Contents/PlugIns, or nil if it's missing.
+    static let macOSBridgePlugin: Bundle? = Bundle.main.builtInPlugInsURL
+        .flatMap { Bundle(url: $0.appendingPathComponent("macOSBridge.bundle")) }
+
+    /// The plugin owns Localizable.xcstrings, so Catalyst-side user-facing
+    /// strings localize through it. Falls back to the main bundle (English
+    /// default values) if the plugin is missing.
+    static let macOSBridge: Bundle = macOSBridgePlugin ?? .main
 }

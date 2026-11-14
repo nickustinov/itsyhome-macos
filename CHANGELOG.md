@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.3.1
+
+- Fix Itsyhome not starting on macOS Sonoma and Sequoia – 3.3.0 launched with no menu bar icon and no window. The menu bar plugin needs a Swift library that macOS 26 and later include but older systems don't, and the app didn't bundle it: the plugin was copied into Resources instead of PlugIns, the one place Xcode doesn't scan for the libraries a plugin needs. The plugin is now in PlugIns, the library ships with the app, and a failed plugin load is logged with the reason
+
 ## 3.3.0
 
 - Fix HomeKit Secure Video cameras staying active after the camera panel closed – closing the panel from a camera's full view restarted the 30-second snapshot timer, so every camera kept capturing snapshots in the background (pulsing, "someone else is viewing" on iPhone) until the panel was next closed from the grid. The timer now only runs while the panel is visible. Deferred stream restarts (the sleepy-doorbell retry, restarts queued behind a stop) no longer cancel the post-close shutdown, a stream that finishes connecting after its camera was released is now stopped instead of left running, and a doorbell ring with the panel hidden no longer starts a stream the panel may never show (#177, thanks @martpolak)

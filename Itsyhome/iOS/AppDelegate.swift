@@ -40,39 +40,23 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     #if targetEnvironment(macCatalyst)
     private func loadMacOSPlugin() {
         startupLog.info("[iOS] Loading macOS plugin...")
-        let bundleFileName = "macOSBridge.bundle"
 
-        // Try PlugIns folder first, then Resources (xcodegen puts it in Resources)
-        var bundleURL: URL?
-
-        if let pluginsURL = Bundle.main.builtInPlugInsURL {
-            let pluginsPath = pluginsURL.appendingPathComponent(bundleFileName)
-            if FileManager.default.fileExists(atPath: pluginsPath.path) {
-                bundleURL = pluginsPath
-                startupLog.info("[iOS] Found plugin in PlugIns folder")
-            }
-        }
-
-        if bundleURL == nil, let resourcesURL = Bundle.main.resourceURL {
-            let resourcesPath = resourcesURL.appendingPathComponent(bundleFileName)
-            if FileManager.default.fileExists(atPath: resourcesPath.path) {
-                bundleURL = resourcesPath
-                startupLog.info("[iOS] Found plugin in Resources folder")
-            }
-        }
-
-        guard let bundleURL = bundleURL else {
-            startupLog.error("[iOS] Plugin bundle not found in PlugIns or Resources")
+        guard let bundle = Bundle.macOSBridgePlugin else {
+            startupLog.error("[iOS] Plugin bundle not found in PlugIns")
             return
         }
 
-        guard let bundle = Bundle(url: bundleURL) else {
-            startupLog.error("[iOS] Failed to create bundle from URL: \(bundleURL.path, privacy: .public)")
+        // Load explicitly: principalClass alone returns nil without saying why,
+        // and the error holds dyld's reason (e.g. a library that isn't bundled).
+        do {
+            try bundle.loadAndReturnError()
+        } catch {
+            startupLog.error("[iOS] Failed to load plugin: \(String(describing: error), privacy: .public)")
             return
         }
 
         guard let pluginClass = bundle.principalClass as? iOS2Mac.Type else {
-            startupLog.error("[iOS] Failed to get principalClass as iOS2Mac.Type — principalClass: \(String(describing: bundle.principalClass), privacy: .public)")
+            startupLog.error("[iOS] Failed to get principalClass as iOS2Mac.Type – principalClass: \(String(describing: bundle.principalClass), privacy: .public)")
             return
         }
 
