@@ -282,8 +282,35 @@ final class PreferencesManagerTests: XCTestCase {
 
     func testMoveFavourite() {
         prefs.orderedFavouriteIds = ["a", "b", "c"]
-        prefs.moveFavourite(from: 2, to: 0)
+        prefs.moveFavourite(id: "c", to: 0, displayedIds: ["a", "b", "c"])
         XCTAssertEqual(prefs.orderedFavouriteIds, ["c", "a", "b"])
+    }
+
+    func testMoveFavouriteToTheEnd() {
+        prefs.orderedFavouriteIds = ["a", "b", "c"]
+        prefs.moveFavourite(id: "a", to: 2, displayedIds: ["a", "b", "c"])
+        XCTAssertEqual(prefs.orderedFavouriteIds, ["b", "c", "a"])
+    }
+
+    // #183: the saved list also holds favourites that aren't shown (a deleted
+    // group, an accessory removed in the Home app). Moving by saved index
+    // moved one of those instead, so the dragged row snapped back.
+    func testMoveFavouriteLandsWhereDroppedWithHiddenFavouritesInTheList() {
+        prefs.orderedFavouriteIds = ["gone-1", "a", "gone-2", "b", "c"]
+        prefs.moveFavourite(id: "a", to: 1, displayedIds: ["a", "b", "c"])
+        XCTAssertEqual(prefs.orderedFavouriteIds, ["gone-1", "gone-2", "b", "a", "c"])
+    }
+
+    func testMoveFavouriteToTheTopWithHiddenFavouritesInTheList() {
+        prefs.orderedFavouriteIds = ["gone-1", "a", "gone-2", "b", "c"]
+        prefs.moveFavourite(id: "c", to: 0, displayedIds: ["a", "b", "c"])
+        XCTAssertEqual(prefs.orderedFavouriteIds, ["gone-1", "c", "a", "gone-2", "b"])
+    }
+
+    func testMoveFavouriteIgnoresAnUnknownId() {
+        prefs.orderedFavouriteIds = ["a", "b"]
+        prefs.moveFavourite(id: "x", to: 0, displayedIds: ["a", "b"])
+        XCTAssertEqual(prefs.orderedFavouriteIds, ["a", "b"])
     }
 
     // MARK: - Favourite scenes (per-home)
@@ -299,12 +326,6 @@ final class PreferencesManagerTests: XCTestCase {
         XCTAssertFalse(prefs.isFavourite(sceneId: id))
     }
 
-    func testMoveFavouriteScene() {
-        prefs.orderedFavouriteSceneIds = ["s1", "s2", "s3"]
-        prefs.moveFavouriteScene(from: 0, to: 2)
-        XCTAssertEqual(prefs.orderedFavouriteSceneIds, ["s2", "s3", "s1"])
-    }
-
     // MARK: - Favourite services (per-home)
 
     func testToggleFavouriteService() {
@@ -316,12 +337,6 @@ final class PreferencesManagerTests: XCTestCase {
 
         prefs.toggleFavourite(serviceId: id)
         XCTAssertFalse(prefs.isFavourite(serviceId: id))
-    }
-
-    func testMoveFavouriteService() {
-        prefs.orderedFavouriteServiceIds = ["a", "b", "c"]
-        prefs.moveFavouriteService(from: 1, to: 0)
-        XCTAssertEqual(prefs.orderedFavouriteServiceIds, ["b", "a", "c"])
     }
 
     // MARK: - Hidden scenes (per-home)
@@ -445,6 +460,26 @@ final class PreferencesManagerTests: XCTestCase {
 
         prefs.deleteDeviceGroup(id: "g1")
         XCTAssertNil(prefs.shortcut(for: "g1"))
+    }
+
+    func testDeleteDeviceGroupRemovesItsFavourite() {
+        let group = DeviceGroup(id: "g1", name: "Test", icon: "folder", deviceIds: [])
+        prefs.addDeviceGroup(group)
+        prefs.toggleFavouriteGroup(groupId: "g1")
+
+        prefs.deleteDeviceGroup(id: "g1")
+        XCTAssertFalse(prefs.isFavouriteGroup(groupId: "g1"))
+        XCTAssertFalse(prefs.orderedFavouriteIds.contains("groupFav:g1"))
+    }
+
+    func testDeleteDeviceGroupLeavesOtherFavouritesAlone() {
+        let group = DeviceGroup(id: "g1", name: "Test", icon: "folder", deviceIds: [])
+        prefs.addDeviceGroup(group)
+        prefs.addFavourite(id: "a")
+
+        prefs.deleteDeviceGroup(id: "g1")
+        XCTAssertEqual(prefs.orderedFavouriteIds, ["a"])
+        XCTAssertFalse(prefs.isFavouriteGroup(groupId: "g1"))
     }
 
     func testMoveDeviceGroup() {

@@ -20,12 +20,20 @@ extension PreferencesManager {
         }
     }
 
-    func moveFavourite(from sourceIndex: Int, to destinationIndex: Int) {
+    /// Moves favourite `id` to position `index` among `displayedIds`, the
+    /// favourites on screen. The saved list can also hold favourites that
+    /// aren't shown – a deleted accessory or scene – so the move goes by ID:
+    /// the favourite lands before the one shown after it, or at the end (#183).
+    func moveFavourite(id: String, to index: Int, displayedIds: [String]) {
         var ids = orderedFavouriteIds
-        guard sourceIndex >= 0, sourceIndex < ids.count,
-              destinationIndex >= 0, destinationIndex < ids.count else { return }
-        let item = ids.remove(at: sourceIndex)
-        ids.insert(item, at: destinationIndex)
+        guard ids.contains(id), index >= 0 else { return }
+        let shownAfterMove = displayedIds.filter { $0 != id }
+        ids.removeAll { $0 == id }
+        if index < shownAfterMove.count, let insertAt = ids.firstIndex(of: shownAfterMove[index]) {
+            ids.insert(id, at: insertAt)
+        } else {
+            ids.append(id)
+        }
         orderedFavouriteIds = ids
     }
 
@@ -77,13 +85,6 @@ extension PreferencesManager {
         orderedFavouriteSceneIds = ids
     }
 
-    func moveFavouriteScene(from sourceIndex: Int, to destinationIndex: Int) {
-        var ids = orderedFavouriteSceneIds
-        let item = ids.remove(at: sourceIndex)
-        ids.insert(item, at: destinationIndex)
-        orderedFavouriteSceneIds = ids
-    }
-
     // MARK: - Favourite services (per-home)
 
     var orderedFavouriteServiceIds: [String] {
@@ -113,13 +114,6 @@ extension PreferencesManager {
             ids.append(serviceId)
             addFavourite(id: serviceId)
         }
-        orderedFavouriteServiceIds = ids
-    }
-
-    func moveFavouriteService(from sourceIndex: Int, to destinationIndex: Int) {
-        var ids = orderedFavouriteServiceIds
-        let item = ids.remove(at: sourceIndex)
-        ids.insert(item, at: destinationIndex)
         orderedFavouriteServiceIds = ids
     }
 

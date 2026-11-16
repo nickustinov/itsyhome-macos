@@ -6,7 +6,11 @@
 //
 
 import Combine
+import OSLog
 import StoreKit
+
+/// Notice level, so entitlement checks stay in the system log of a release build.
+private let logger = Logger(subsystem: "com.nickustinov.itsyhome", category: "Pro")
 
 @MainActor
 final class ProManager: ObservableObject {
@@ -22,12 +26,17 @@ final class ProManager: ObservableObject {
     @Published private(set) var isLoading: Bool = false
 
     private var transactionListener: Task<Void, Error>?
+    private var recheckTask: Task<Void, Never>?
 
     private init() {
         transactionListener = listenForTransactions()
         Task {
-            await loadProducts()
+            // Entitlements first: the check works offline from the local cache
+            // and starts the Pro features, while the product fetch needs the
+            // network and can take seconds at login.
             await updateProStatus()
+            recheckUntilPro()
+            await loadProducts()
         }
     }
 
@@ -102,7 +111,8 @@ final class ProManager: ObservableObject {
 
     // MARK: - Entitlement check
 
-    func updateProStatus() async {
+    @discardableResult
+    func updateProStatus() async -> Bool {
         var hasProEntitlement = false
 
         for await result in Transaction.currentEntitlements {
@@ -114,7 +124,27 @@ final class ProManager: ObservableObject {
             }
         }
 
-        isPro = hasProEntitlement
+        // currentEntitlements can come back empty for a valid purchase;
+        // latest(for:) looks up the product's own transaction instead.
+        var foundByLatest = false
+        if !hasProEntitlement {
+            for productID in ProProducts.all {
+                if case .verified(let transaction) = await Transaction.latest(for: productID),
+                   transaction.revocationDate == nil {
+                    hasProEntitlement = true
+                    foundByLatest = true
+                    break
+                }
+            }
+        }
+
+        logger.notice("Entitlement check: Pro \(hasProEntitlement ? "found" : "not found", privacy: .public)\(foundByLatest ? " (latest(for:) fallback)" : "", privacy: .public)")
+
+        // Publish changes only: Settings rebuilds its Pro sections on every
+        // value, and rechecks of a free copy would otherwise redraw it.
+        if isPro != hasProEntitlement {
+            isPro = hasProEntitlement
+        }
 
         // Start or stop Pro features based on status
         if hasProEntitlement {
@@ -129,6 +159,25 @@ final class ProManager: ObservableObject {
             AutomationEngine.shared.stop()
             HistoryStore.shared.flush()
         }
+        return hasProEntitlement
+    }
+
+    // MARK: - Rechecks (#182)
+
+    /// Checks again on the `ProRecheck` schedule while no Pro was found.
+    private func recheckUntilPro() {
+        guard !isPro, recheckTask == nil else { return }
+        recheckTask = Task {
+            await ProRecheck.run { await self.updateProStatus() }
+            recheckTask = nil
+        }
+    }
+
+    /// For unlock, wake and network return: StoreKit may have caught up with
+    /// the App Store since the last check.
+    func recheckIfNotPro() {
+        guard !isPro else { return }
+        Task { await updateProStatus() }
     }
 
     // MARK: - Transaction listener

@@ -58,6 +58,7 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
     private var lastErrorTime: Date?
     private var networkMonitor: NWPathMonitor?
     private let localNetworkPermissionAlertGate = LocalNetworkPermissionAlertGate()
+    private let reviewPrompter = ReviewPrompter()
     private var lastNetworkPathStatus: NWPath.Status?
     /// Coalesces unlock, wake and network-back signals into one HomeKit reload.
     private lazy var homeKitResumeRefresh = DebouncedAction(delay: 3) { [weak self] in
@@ -292,7 +293,7 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
 
     @objc private func handleSystemWake() {
         localNetworkPermissionAlertGate.reset()
-        scheduleHomeKitResumeRefresh()
+        handleResume()
         // Re-evaluate SSID after wake (WiFi may reconnect)
         if ProStatusCache.shared.isPro && PreferencesManager.shared.networkAutoSwitchEnabled {
             DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
@@ -311,6 +312,14 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
     }
 
     @objc private func handleScreenResume() {
+        handleResume()
+    }
+
+    /// Unlock, wake and network return. The App Store may be reachable again
+    /// as well, so Pro is checked once more if the last check didn't find it
+    /// (#182).
+    private func handleResume() {
+        Task { @MainActor in ProManager.shared.recheckIfNotPro() }
         scheduleHomeKitResumeRefresh()
     }
 
@@ -344,7 +353,7 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
                     && self.lastNetworkPathStatus != .satisfied
                 self.lastNetworkPathStatus = path.status
                 if networkReturned {
-                    self.scheduleHomeKitResumeRefresh()
+                    self.handleResume()
                 }
 
                 guard PlatformManager.shared.selectedPlatform == .homeAssistant,
@@ -586,6 +595,7 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
             return
         }
         updateMenuItems(for: characteristicId, value: value, isLocalChange: true)
+        reviewPrompter.userChangedSomething()
     }
 
     @objc private func preferencesDidChange() {
@@ -1042,6 +1052,7 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
     public func menuWillOpen(_ menu: NSMenu) {
         if menu == mainMenu {
             menuIsOpen = true
+            reviewPrompter.menuWillOpen()
             if cameraPanelManager.isPanelVisible && !cameraPanelManager.isPinned {
                 cameraPanelManager.dismissCameraPanel()
             }
@@ -1061,6 +1072,7 @@ public class MacOSController: NSObject, iOS2Mac, NSMenuDelegate, PlatformPickerD
                 }
                 HotkeyManager.shared.registerShortcuts()
             }
+            reviewPrompter.menuDidClose()
         }
     }
 }

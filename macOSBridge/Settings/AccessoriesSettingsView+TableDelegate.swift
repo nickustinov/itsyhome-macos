@@ -535,7 +535,7 @@ extension AccessoriesSettingsView: NSTableViewDelegate, NSTableViewDataSource {
         if originalRow < newRow { newRow -= 1 }
         if originalRow == newRow { return false }
 
-        PreferencesManager.shared.moveFavourite(from: originalRow, to: newRow)
+        PreferencesManager.shared.moveFavourite(id: draggedId, to: newRow, displayedIds: favouriteItems.map(\.id))
         rebuildFavouritesList()
         rebuildRoomData()
         roomsTableView?.reloadData()

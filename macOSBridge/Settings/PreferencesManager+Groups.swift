@@ -50,6 +50,11 @@ extension PreferencesManager {
         groups.removeAll { $0.id == id }
         deviceGroups = groups
         removeShortcut(for: id)
+        // A deleted group's favourite no longer shows, so it would only sit
+        // in the saved favourites list.
+        if isFavouriteGroup(groupId: id) {
+            toggleFavouriteGroup(groupId: id)
+        }
     }
 
     func moveDeviceGroup(from sourceIndex: Int, to destinationIndex: Int) {

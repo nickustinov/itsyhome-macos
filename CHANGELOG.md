@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.4.0
+
+- Ask for an App Store rating – once the menu has been used on a few different days, and only when it closes after you changed something in it. At most once every 120 days
+- Fix Itsyhome Pro sometimes switching off after launching at login – deeplinks, webhooks and the other Pro features stopped until Restore purchases. Pro was checked once at launch, and right after login the Mac's App Store purchase list can still be empty. Itsyhome now also looks up the Pro purchase on its own, and while it finds none it checks again after 10 seconds, a minute and five minutes, and on every unlock, wake or network return. Each check is written to the system log (#182, thanks @GeezusChrotch)
+- Fix favourites snapping back when dragged to a new place in Settings – the drop was worked out on the favourites shown, but applied to the saved list, which also keeps favourites that no longer show (a deleted group, or an accessory or scene removed in the Home app). The move hit one of those instead. Favourites now land where they're dropped, and deleting a group removes its favourite (#183, thanks @dgreenberg19)
+
 ## 3.3.1
 
 - Fix Itsyhome not starting on macOS Sonoma and Sequoia – 3.3.0 launched with no menu bar icon and no window. The menu bar plugin needs a Swift library that macOS 26 and later include but older systems don't, and the app didn't bundle it: the plugin was copied into Resources instead of PlugIns, the one place Xcode doesn't scan for the libraries a plugin needs. The plugin is now in PlugIns, the library ships with the app, and a failed plugin load is logged with the reason
