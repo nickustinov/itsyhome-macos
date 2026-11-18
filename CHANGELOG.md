@@ -5,6 +5,7 @@
 - Ask for an App Store rating – once the menu has been used on a few different days, and only when it closes after you changed something in it. At most once every 120 days
 - Fix Itsyhome Pro sometimes switching off after launching at login – deeplinks, webhooks and the other Pro features stopped until Restore purchases. Pro was checked once at launch, and right after login the Mac's App Store purchase list can still be empty. Itsyhome now also looks up the Pro purchase on its own, and while it finds none it checks again after 10 seconds, a minute and five minutes, and on every unlock, wake or network return. Each check is written to the system log (#182, thanks @GeezusChrotch)
 - Fix favourites snapping back when dragged to a new place in Settings – the drop was worked out on the favourites shown, but applied to the saved list, which also keeps favourites that no longer show (a deleted group, or an accessory or scene removed in the Home app). The move hit one of those instead. Favourites now land where they're dropped, and deleting a group removes its favourite (#183, thanks @dgreenberg19)
+- Fix a light switching off when a colour drag ended outside the picker – the menu passed the release to the row under the cursor, which took it as a click. The colour wheel and colour temperature strip now follow the drag to the end and keep the release (#184, thanks @sekmo)
 
 ## 3.3.1
 
