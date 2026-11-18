@@ -23,4 +23,15 @@ extension NSView {
             handler(next, false)
         }
     }
+
+    /// Follows a press until mouse-up and returns whether it ended inside the view.
+    func trackClick(from event: NSEvent) -> Bool {
+        var releasedInside = false
+        trackMouse(from: event) { next, isFinal in
+            if isFinal {
+                releasedInside = bounds.contains(convert(next.locationInWindow, from: nil))
+            }
+        }
+        return releasedInside
+    }
 }

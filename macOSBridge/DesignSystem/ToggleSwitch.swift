@@ -55,7 +55,6 @@ class ToggleSwitch: NSControl {
 
     private var trackingArea: NSTrackingArea?
     private var isHovered = false
-    private var isMouseDown = false
 
     // MARK: - Initialization
 
@@ -238,20 +237,7 @@ class ToggleSwitch: NSControl {
     }
 
     override func mouseDown(with event: NSEvent) {
-        guard isEnabled else { return }
-        // Verify click is inside our bounds
-        let location = convert(event.locationInWindow, from: nil)
-        if bounds.contains(location) {
-            isMouseDown = true
-        }
-    }
-
-    override func mouseUp(with event: NSEvent) {
-        guard isEnabled, isMouseDown else { return }
-        isMouseDown = false
-        // Only toggle if mouse is still inside the control
-        let location = convert(event.locationInWindow, from: nil)
-        if bounds.contains(location) {
+        if trackClick(from: event), isEnabled {
             isOn.toggle()
         }
     }

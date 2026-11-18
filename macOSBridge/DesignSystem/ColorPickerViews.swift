@@ -13,10 +13,10 @@ final class ClickableColorCircleView: NSView {
     var onClick: (() -> Void)?
 
     override func mouseDown(with event: NSEvent) {
-        onClick?()
+        if trackClick(from: event) {
+            onClick?()
+        }
     }
-
-    override func mouseUp(with event: NSEvent) {}
 }
 
 // MARK: - Rectangular hue/saturation picker (RGB)

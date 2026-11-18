@@ -318,9 +318,14 @@ class CoverControl: NSControl {
     }
 
     override func mouseDown(with event: NSEvent) {
-        guard isEnabled else { return }
+        if isEnabled {
+            selectSegment(at: convert(event.locationInWindow, from: nil))
+        }
+        // The action runs on press. Tracking keeps the release away from the row.
+        _ = trackClick(from: event)
+    }
 
-        let location = convert(event.locationInWindow, from: nil)
+    private func selectSegment(at location: NSPoint) {
         let trackX = (bounds.width - controlWidth) / 2
         let relativeX = location.x - trackX
 
