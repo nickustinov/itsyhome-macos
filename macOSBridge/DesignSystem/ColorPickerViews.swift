@@ -7,26 +7,6 @@
 
 import AppKit
 
-// MARK: - Mouse tracking
-
-extension NSView {
-    /// Follows a drag until mouse-up, consuming the events. Menus deliver mouse-up to
-    /// whatever is under the cursor, so without this a release outside the view would
-    /// reach the enclosing menu item row and trigger its action.
-    func trackMouse(from event: NSEvent, handler: (NSEvent, _ isFinal: Bool) -> Void) {
-        handler(event, false)
-        guard let window = window else { return }
-
-        while let next = window.nextEvent(matching: [.leftMouseUp, .leftMouseDragged]) {
-            if next.type == .leftMouseUp {
-                handler(next, true)
-                return
-            }
-            handler(next, false)
-        }
-    }
-}
-
 // MARK: - Clickable color circle
 
 final class ClickableColorCircleView: NSView {
@@ -140,7 +120,7 @@ class ColorWheelPickerView: NSView {
     }
 
     override func mouseDown(with event: NSEvent) {
-        trackMouse(from: event) { [weak self] e, isFinal in self?.handleMouse(e, isFinal: isFinal) }
+        trackMouse(from: event) { next, isFinal in handleMouse(next, isFinal: isFinal) }
     }
 
     private func handleMouse(_ event: NSEvent, isFinal: Bool) {
@@ -260,7 +240,7 @@ class ColorTempPickerView: NSView {
     }
 
     override func mouseDown(with event: NSEvent) {
-        trackMouse(from: event) { [weak self] e, isFinal in self?.handleMouse(e, isFinal: isFinal) }
+        trackMouse(from: event) { next, isFinal in handleMouse(next, isFinal: isFinal) }
     }
 
     private func handleMouse(_ event: NSEvent, isFinal: Bool) {
