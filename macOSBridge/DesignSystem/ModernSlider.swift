@@ -229,33 +229,15 @@ class ModernSlider: NSControl {
     override func mouseDown(with event: NSEvent) {
         guard isEnabled else { return }
         isDragging = true
-        updateValueFromEvent(event)
-
-        // Use tracking loop for menu item compatibility - menus intercept normal mouseUp
-        guard let window = window else { return }
-        var keepTracking = true
-
-        while keepTracking {
-            guard let nextEvent = window.nextEvent(matching: [.leftMouseUp, .leftMouseDragged]) else {
-                continue
-            }
-
-            switch nextEvent.type {
-            case .leftMouseDragged:
-                updateValueFromEvent(nextEvent)
-            case .leftMouseUp:
-                updateValueFromEvent(nextEvent, force: true)
-                keepTracking = false
-                isDragging = false
-                if !isHovered {
-                    animateThumbScale(scale: 1.0)
-                }
-                if !isContinuous {
-                    sendAction(action, to: target)
-                }
-            default:
-                break
-            }
+        trackMouse(from: event) { next, isFinal in
+            updateValueFromEvent(next, force: isFinal)
+        }
+        isDragging = false
+        if !isHovered {
+            animateThumbScale(scale: 1.0)
+        }
+        if !isContinuous {
+            sendAction(action, to: target)
         }
     }
 

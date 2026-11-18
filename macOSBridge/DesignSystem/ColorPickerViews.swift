@@ -119,9 +119,9 @@ class ColorWheelPickerView: NSView {
         indicator.stroke()
     }
 
-    override func mouseDown(with event: NSEvent) { handleMouse(event, isFinal: false) }
-    override func mouseDragged(with event: NSEvent) { handleMouse(event, isFinal: false) }
-    override func mouseUp(with event: NSEvent) { handleMouse(event, isFinal: true) }
+    override func mouseDown(with event: NSEvent) {
+        trackMouse(from: event) { next, isFinal in handleMouse(next, isFinal: isFinal) }
+    }
 
     private func handleMouse(_ event: NSEvent, isFinal: Bool) {
         let point = convert(event.locationInWindow, from: nil)
@@ -239,9 +239,9 @@ class ColorTempPickerView: NSView {
         indicator.stroke()
     }
 
-    override func mouseDown(with event: NSEvent) { handleMouse(event, isFinal: false) }
-    override func mouseDragged(with event: NSEvent) { handleMouse(event, isFinal: false) }
-    override func mouseUp(with event: NSEvent) { handleMouse(event, isFinal: true) }
+    override func mouseDown(with event: NSEvent) {
+        trackMouse(from: event) { next, isFinal in handleMouse(next, isFinal: isFinal) }
+    }
 
     private func handleMouse(_ event: NSEvent, isFinal: Bool) {
         let point = convert(event.locationInWindow, from: nil)
